@@ -1,7 +1,7 @@
 import { useState, useEffect } from 'react';
 import { MapContainer, ImageOverlay, Marker, Popup, TileLayer, useMap } from 'react-leaflet';
 import 'leaflet/dist/leaflet.css';
-import './TestPage.css';
+import './Map.css';
 import L from 'leaflet';
 
 // Fix for default marker icon
@@ -34,7 +34,7 @@ function MapController({ center }) {
   return null;
 }
 
-const TestPage = () => {
+const Map = () => {
   const initialCenter = [41.5700, 2.2611];
   
   // State for Car Position
@@ -150,16 +150,16 @@ const TestPage = () => {
       {/* Controls / Info Panel */}
       <div className="controls-panel">
         <div className="header-row">
-            <h3>{editMode ? "🛠️ MODO EDICIÓN" : "🏎️ MODO CONDUCCIÓN"}</h3>
+            <h3>{editMode ? "🛠️ EDIT MODE" : "🏎️ DRIVE MODE"}</h3>
             <button onClick={() => setEditMode(!editMode)}>
-                Cambiar a {editMode ? "Conducir" : "Editar"}
+                Switch to {editMode ? "Drive" : "Edit"}
             </button>
         </div>
         
         {editMode ? (
             <div className="info-content">
-                <p>Usa <strong>Flechas</strong> para MOVER la imagen.</p>
-                <p>Usa <strong>Shift + Flechas</strong> para CAMBIAR TAMAÑO.</p>
+                <p>Use <strong>Arrows</strong> to MOVE the image.</p>
+                <p>Use <strong>Shift + Arrows</strong> to RESIZE.</p>
                 <div className="code-block">
                     <pre>
 {`const bounds = [
@@ -168,11 +168,11 @@ const TestPage = () => {
 ];`}
                     </pre>
                 </div>
-                <small>Copia estos valores cuando esté cuadrada.</small>
+                <small>Copy these values when aligned.</small>
             </div>
         ) : (
              <div className="info-content">
-                <p>Usa <strong>Flechas</strong> para mover el coche.</p>
+                <p>Use <strong>Arrows</strong> to move the car.</p>
             </div>
         )}
       </div>
@@ -180,4 +180,4 @@ const TestPage = () => {
   );
 };
 
-export default TestPage;
+export default Map;
