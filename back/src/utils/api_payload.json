@@ -1,0 +1,113 @@
+{
+  "__COMENTARIO_GENERAL": "Este archivo contiene los payloads JSON (cuerpos de solicitud) que el Frontend debe enviar al Backend para crear recursos. Los campos con '*' en el comentario son obligatorios según la base de datos.",
+
+
+  "__ESTRUCTURA_RESPUESTA_EXITO": {
+    "success": true,
+    "message": "Operación realizada con éxito",
+    "data": { "id": 123, "detalles": "..." }
+  },
+  "__ESTRUCTURA_RESPUESTA_ERROR": {
+    "success": false,
+    "message": "Descripción del error para el usuario",
+    "error_code": "CODIGO_INTERNO_ERROR",
+    "details": ["Campo 'email' es obligatorio", "Formato inválido"]
+  },
+
+
+
+  "POST_USUARIO": {
+    "nombre": "Juan Pérez", 
+    "email": "juan.perez@example.com", 
+    "password": "Password123!", 
+    "rol": "visitante" 
+  },
+  "POST_CATEGORIA": {
+    "nombre": "Monumento Histórico", 
+    "icono_url": "https://example.com/icons/monumento.png",
+    "color_hex": "#FF5733"
+  },
+  "POST_EVENTO": {
+    "nombre": "Festival de Jazz", 
+    "descripcion": "Un festival anual de jazz en el parque central.",
+    "fecha_inicio": "2023-10-15T18:00:00", 
+    "fecha_fin": "2023-10-15T23:00:00", 
+    "estado": "programado"
+  },
+  "POST_NODO_NAVEGACION": {
+    "latitud": 41.3851, 
+    "longitud": 2.1734, 
+    "descripcion": "Entrada norte del parque"
+  },
+  "POST_RUTA_TRAMO": {
+    "id_nodo_origen": 1, 
+    "id_nodo_destino": 2, 
+    "distancia_metros": 150.50,
+    "es_accesible": true,
+    "tipo_terreno": "asfalto",
+    "es_bidireccional": true
+  },
+  "POST_POI_SIMPLE": {
+    "nombre": "Estatua de Colón", 
+    "descripcion": "Monumento dedicado a Cristóbal Colón.",
+    "latitud": 41.3758, 
+    "longitud": 2.1778, 
+    "id_categoria": 1, 
+    "es_accesible": false,
+    "es_fijo": true,
+    "imagen_url": "https://example.com/images/colon.jpg",
+    "id_nodo_acceso": 5 
+  },
+  "POST_POI_COMPLETO_CON_DETALLES": {
+    "__descripcion": "Ejemplo de creación de un POI junto con sus horarios y multimedia en una sola petición (si la API lo soporta transacción).",
+    "nombre": "Estatua de Colón",
+    "descripcion": "Monumento con horarios especiales.",
+    "latitud": 41.3758,
+    "longitud": 2.1778,
+    "id_categoria": 1,
+    "es_accesible": false,
+    "imagen_url": "https://example.com/images/colon.jpg",
+    "id_nodo_acceso": 5,
+    "horarios": [
+      {
+        "id_evento": 12, 
+        "dia_semana": "Lunes", 
+        "hora_apertura": "09:00", 
+        "hora_cierre": "20:00" 
+      },
+      {
+        "id_evento": 12,
+        "dia_semana": "Martes",
+        "hora_apertura": "09:00",
+        "hora_cierre": "14:00"
+      }
+    ],
+    "multimedia": [
+      {
+        "url_archivo": "https://example.com/frente.jpg", 
+        "tipo": "imagen",
+        "titulo": "Fachada",
+        "orden": 1
+      }
+    ]
+  },
+  "POST_INCIDENCIA": {
+    "id_poi": 10, 
+    "id_usuario_reporta": 5,
+    "tipo": "Mantenimiento", 
+    "descripcion": "La luz nocturna no funciona.",
+    "estado": "activa"
+  },
+  "POST_TRADUCCION": {
+    "tabla_origen": "pois", 
+    "id_registro_origen": 10, 
+    "codigo_idioma": "en", 
+    "campo_traducido": "descripcion", 
+    "texto": "Monument dedicated to Christopher Columbus." 
+  },
+  "POST_EVENTO_POI_CONFIG": {
+    "id_evento": 1, 
+    "id_poi": 10, 
+    "estado": "ocupado"
+  }
+}

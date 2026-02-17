@@ -119,17 +119,3 @@ CREATE TABLE IF NOT EXISTS traducciones (
     texto TEXT NOT NULL,
     UNIQUE(tabla_origen, id_registro_origen, codigo_idioma, campo_traducido)
 );
-
--- 12. USUARIO_UBICACIONES (Depende de Usuario y Pois)
-CREATE TABLE IF NOT EXISTS usuario_ubicaciones (
-    id_ubicacion INTEGER PRIMARY KEY AUTOINCREMENT,
-    id_usuario INTEGER NOT NULL,
-    id_poi INTEGER,
-    latitud_guardada DECIMAL(10, 8),
-    longitud_guardada DECIMAL(11, 8),
-    tipo VARCHAR(20) DEFAULT 'favorito',
-    nombre_personalizado VARCHAR(50),
-    fecha_guardado DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario),
-    FOREIGN KEY (id_poi) REFERENCES pois(id_poi)
-);
