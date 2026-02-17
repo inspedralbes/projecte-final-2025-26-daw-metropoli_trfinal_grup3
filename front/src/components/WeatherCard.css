@@ -1,0 +1,74 @@
+/* WeatherCard.css */
+.weather-card {
+    background: #1a1a1a;
+    color: #ffffff;
+    border-radius: 8px;
+    padding: 16px;
+    width: 280px;
+    font-family: 'Roboto Condensed', 'Inter', sans-serif;
+    border: 1px solid #333;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+}
+
+.weather-header {
+    border-bottom: 2px solid #e74c3c;
+    /* Racing red accent */
+    margin-bottom: 12px;
+    padding-bottom: 4px;
+}
+
+.weather-header h3 {
+    margin: 0;
+    font-size: 1rem;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    font-weight: 700;
+    color: #ecf0f1;
+}
+
+.weather-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+}
+
+.weather-item {
+    background: #2c2c2c;
+    padding: 8px;
+    border-radius: 4px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+}
+
+.item-label {
+    font-size: 0.75rem;
+    color: #95a5a6;
+    text-transform: uppercase;
+    font-weight: 600;
+    margin-bottom: 4px;
+}
+
+.item-value {
+    font-size: 1.25rem;
+    font-weight: 700;
+    color: #fff;
+}
+
+.weather-status-bar {
+    margin-top: 12px;
+    padding-top: 8px;
+    border-top: 1px solid #333;
+    text-align: center;
+    font-size: 0.9rem;
+    color: #bdc3c7;
+}
+
+.status-text {
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+}

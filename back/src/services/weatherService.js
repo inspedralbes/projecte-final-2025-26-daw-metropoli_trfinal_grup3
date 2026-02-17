@@ -1,6 +1,6 @@
 const fs = require('fs');
 
-const url = 'https://api.open-meteo.com/v1/forecast?latitude=41.5697&longitude=2.2578&hourly=temperature_2m,precipitation_probability,precipitation,soil_temperature_0cm&timezone=Europe%2FMadrid';
+const url = 'https://api.open-meteo.com/v1/forecast?latitude=41.5697&longitude=2.2578&hourly=temperature_2m,precipitation_probability,precipitation,soil_temperature_0cm,wind_speed_10m&timezone=Europe%2FMadrid';
 
 async function actualizarTiempo() {
     console.log("Actualizando datos del tiempo...");
