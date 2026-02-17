@@ -1,4 +1,4 @@
-const ubicacionService = require('../services/ubicacionService');
+import ubicacionService from '../services/ubicacionService.js';
 
 const createUbicacion = async (req, res) => {
     try {
@@ -10,24 +10,40 @@ const createUbicacion = async (req, res) => {
             data: nuevaUbicacion
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: error.message,
+            error_code: 'ERROR_INTERNO'
+        });
     }
 };
 
 const getUbicaciones = async (req, res) => {
     try {
-        const { id_usuario } = req.params; // Asumiendo que viene por URL, o req.user si hubiera auth
+        const { id_usuario } = req.params;
         if (!id_usuario) {
-            return res.status(400).json({ success: false, message: 'ID de usuario requerido' });
+             return res.status(400).json({ 
+                 success: false, 
+                 message: 'ID de usuario requerido',
+                 error_code: 'PARAMETROS_FALTANTES'
+             });
         }
         const ubicaciones = await ubicacionService.getUbicacionesByUsuario(id_usuario);
-        res.json({ success: true, data: ubicaciones });
+        res.json({ 
+            success: true, 
+            message: 'Ubicaciones del usuario recuperadas',
+            data: ubicaciones 
+        });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: error.message,
+            error_code: 'ERROR_INTERNO'
+        });
     }
 };
 
-module.exports = {
+export default {
     createUbicacion,
     getUbicaciones
 };

@@ -1,4 +1,4 @@
-const horarioService = require('../services/horarioService');
+import horarioService from '../services/horarioService.js';
 
 const createHorario = async (req, res) => {
     try {
@@ -10,7 +10,11 @@ const createHorario = async (req, res) => {
             data: result
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: error.message,
+            error_code: 'ERROR_INTERNO'
+        });
     }
 };
 
@@ -18,16 +22,28 @@ const getHorariosByPoi = async (req, res) => {
     try {
         const { id_poi } = req.params;
         if (!id_poi) {
-            return res.status(400).json({ success: false, message: 'ID de POI requerido' });
+            return res.status(400).json({ 
+                success: false, 
+                message: 'ID de POI requerido',
+                error_code: 'PARAMETROS_FALTANTES'
+            });
         }
         const horarios = await horarioService.getHorariosByPoi(id_poi);
-        res.json({ success: true, data: horarios });
+        res.json({ 
+            success: true, 
+            message: 'Horarios recuperados',
+            data: horarios 
+        });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: error.message,
+            error_code: 'ERROR_INTERNO'
+        });
     }
 };
 
-module.exports = {
+export default {
     createHorario,
     getHorariosByPoi
 };

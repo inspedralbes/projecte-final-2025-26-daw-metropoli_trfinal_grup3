@@ -1,8 +1,8 @@
-const pool = require('../config/mysql');
+import { query } from '../config/mysql.js';
 
 const create = async (tramo) => {
     const { id_nodo_origen, id_nodo_destino, distancia_metros, es_accesible, tipo_terreno, es_bidireccional } = tramo;
-    const [result] = await pool.query(
+    const [result] = await query(
         'INSERT INTO rutas_tramos (id_nodo_origen, id_nodo_destino, distancia_metros, es_accesible, tipo_terreno, es_bidireccional) VALUES (?, ?, ?, ?, ?, ?)',
         [id_nodo_origen, id_nodo_destino, distancia_metros, es_accesible, tipo_terreno, es_bidireccional]
     );
@@ -10,11 +10,11 @@ const create = async (tramo) => {
 };
 
 const getAll = async () => {
-    const [rows] = await pool.query('SELECT * FROM rutas_tramos');
+    const [rows] = await query('SELECT * FROM rutas_tramos');
     return rows;
 };
 
-module.exports = {
+export default {
     create,
     getAll
 };

@@ -1,7 +1,7 @@
-const poiModel = require('../models/poiModel');
-const horarioModel = require('../models/horarioModel');
-const multimediaModel = require('../models/multimediaModel');
-const pool = require('../config/mysql');
+import poiModel from '../models/poiModel.js';
+import horarioModel from '../models/horarioModel.js';
+import multimediaModel from '../models/multimediaModel.js';
+import pool from '../config/mysql.js';
 
 const createPoiSimple = async (poiData) => {
     return await poiModel.create(poiData);
@@ -10,6 +10,7 @@ const createPoiSimple = async (poiData) => {
 const createPoiCompleto = async (fullData) => {
     const { horarios, multimedia, ...poiData } = fullData;
     
+    // Obtenemos una conexión del pool para la transacción
     const connection = await pool.getConnection();
     try {
         await connection.beginTransaction();
@@ -45,7 +46,7 @@ const getAllPois = async () => {
     return await poiModel.getAll();
 };
 
-module.exports = {
+export default {
     createPoiSimple,
     createPoiCompleto,
     getAllPois

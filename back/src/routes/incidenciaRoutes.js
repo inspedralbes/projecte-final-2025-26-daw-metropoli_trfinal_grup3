@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
+import incidenciaController from '../controllers/incidenciaController.js';
+
 const router = express.Router();
-const incidenciaController = require('../controllers/incidenciaController');
 
 router.post('/', incidenciaController.createIncidencia);
 router.get('/', incidenciaController.getIncidencias);
 
-module.exports = router;
+export default router;

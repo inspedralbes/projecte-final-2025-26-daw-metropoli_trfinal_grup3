@@ -1,8 +1,8 @@
-const pool = require('../config/mysql');
+import { query } from '../config/mysql.js';
 
 const create = async (evento) => {
     const { nombre, descripcion, fecha_inicio, fecha_fin, estado } = evento;
-    const [result] = await pool.query(
+    const [result] = await query(
         'INSERT INTO eventos (nombre, descripcion, fecha_inicio, fecha_fin, estado) VALUES (?, ?, ?, ?, ?)',
         [nombre, descripcion, fecha_inicio, fecha_fin, estado]
     );
@@ -10,11 +10,11 @@ const create = async (evento) => {
 };
 
 const getAll = async () => {
-    const [rows] = await pool.query('SELECT * FROM eventos');
+    const [rows] = await query('SELECT * FROM eventos');
     return rows;
 };
 
-module.exports = {
+export default {
     create,
     getAll
 };

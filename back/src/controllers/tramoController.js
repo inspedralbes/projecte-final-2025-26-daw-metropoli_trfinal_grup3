@@ -1,4 +1,4 @@
-const tramoService = require('../services/tramoService');
+import tramoService from '../services/tramoService.js';
 
 const createTramo = async (req, res) => {
     try {
@@ -10,20 +10,32 @@ const createTramo = async (req, res) => {
             data: nuevoTramo
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: error.message,
+            error_code: 'ERROR_INTERNO'
+        });
     }
 };
 
 const getTramos = async (req, res) => {
     try {
         const tramos = await tramoService.getAllTramos();
-        res.json({ success: true, data: tramos });
+        res.json({ 
+            success: true, 
+            message: 'Tramos recuperados',
+            data: tramos 
+        });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: error.message,
+            error_code: 'ERROR_INTERNO'
+        });
     }
 };
 
-module.exports = {
+export default {
     createTramo,
     getTramos
 };

@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
+import traduccionController from '../controllers/traduccionController.js';
+
 const router = express.Router();
-const traduccionController = require('../controllers/traduccionController');
 
 router.post('/', traduccionController.createTraduccion);
 router.get('/', traduccionController.getTraducciones);
 
-module.exports = router;
+export default router;

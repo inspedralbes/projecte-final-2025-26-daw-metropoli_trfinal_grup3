@@ -1,4 +1,4 @@
-const eventoService = require('../services/eventoService');
+import eventoService from '../services/eventoService.js';
 
 const createEvento = async (req, res) => {
     try {
@@ -10,20 +10,32 @@ const createEvento = async (req, res) => {
             data: nuevoEvento
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: error.message,
+            error_code: 'ERROR_INTERNO'
+        });
     }
 };
 
 const getEventos = async (req, res) => {
     try {
         const eventos = await eventoService.getAllEventos();
-        res.json({ success: true, data: eventos });
+        res.json({ 
+            success: true, 
+            message: 'Eventos recuperados',
+            data: eventos 
+        });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: error.message,
+            error_code: 'ERROR_INTERNO'
+        });
     }
 };
 
-module.exports = {
+export default {
     createEvento,
     getEventos
 };

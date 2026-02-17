@@ -1,8 +1,12 @@
-const express = require('express');
+import 'dotenv/config'; // Cargar variables de entorno
+import express from 'express';
+import cors from 'cors';
+import routes from './src/routes/index.js';
+
 const app = express();
 const port = 3000;
-const routes = require('./src/routes');
 
+app.use(cors()); // Habilitar CORS para peticiones del frontend
 app.use(express.json());
 
 app.use('/api', routes);

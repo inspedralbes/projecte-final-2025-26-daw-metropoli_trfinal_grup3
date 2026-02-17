@@ -1,4 +1,4 @@
-const eventoModel = require('../models/eventoModel');
+import eventoModel from '../models/eventoModel.js';
 
 const createEvento = async (eventoData) => {
     return await eventoModel.create(eventoData);
@@ -8,7 +8,7 @@ const getAllEventos = async () => {
     return await eventoModel.getAll();
 };
 
-module.exports = {
+export default {
     createEvento,
     getAllEventos
 };

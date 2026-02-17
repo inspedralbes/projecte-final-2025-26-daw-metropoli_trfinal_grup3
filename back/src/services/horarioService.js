@@ -1,4 +1,4 @@
-const horarioModel = require('../models/horarioModel');
+import horarioModel from '../models/horarioModel.js';
 
 // Este servicio puede ser usado por el POI service o independientemente
 const createHorario = async (horarioData) => {
@@ -12,7 +12,7 @@ const getHorariosByPoi = async (idPoi) => {
     return await horarioModel.getByPoiId(idPoi);
 };
 
-module.exports = {
+export default {
     createHorario,
     getHorariosByPoi
 };

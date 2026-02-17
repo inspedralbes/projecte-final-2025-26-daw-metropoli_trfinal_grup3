@@ -1,14 +1,14 @@
-const incidenciaModel = require('../models/incidenciaModel');
+import incidenciaModel from '../models/incidenciaModel.js';
 
 const createIncidencia = async (incidenciaData) => {
-    return await incidenciaModel.cre2ate(incidenciaData);
+    return await incidenciaModel.create(incidenciaData);
 };
 
 const getAllIncidencias = async () => {
     return await incidenciaModel.getAll();
 };
 
-module.exports = {
+export default {
     createIncidencia,
     getAllIncidencias
 };
