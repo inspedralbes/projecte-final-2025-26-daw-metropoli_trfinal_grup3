@@ -9,7 +9,6 @@ const tramoRoutes = require('./tramoRoutes');
 const poiRoutes = require('./poiRoutes');
 const horarioRoutes = require('./horarioRoutes');
 const multimediaRoutes = require('./multimediaRoutes');
-const ubicacionRoutes = require('./ubicacionRoutes');
 const incidenciaRoutes = require('./incidenciaRoutes');
 const traduccionRoutes = require('./traduccionRoutes');
 
@@ -21,7 +20,6 @@ router.use('/tramos', tramoRoutes);
 router.use('/pois', poiRoutes);
 router.use('/horarios', horarioRoutes);
 router.use('/multimedia', multimediaRoutes);
-router.use('/ubicaciones', ubicacionRoutes);
 router.use('/incidencias', incidenciaRoutes);
 router.use('/traducciones', traduccionRoutes);
 
