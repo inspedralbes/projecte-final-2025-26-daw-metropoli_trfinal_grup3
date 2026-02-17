@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import {
   MapContainer,
   ImageOverlay,
@@ -41,12 +41,12 @@ const createCustomIcon = (iconName, bgColor) =>
 // const WCIcon = createCustomIcon('wc', 'bg-slate-600');
 // const FoodIcon = createCustomIcon('restaurant', 'bg-slate-600');
 
-// Car Icon
-const CarIcon = L.divIcon({
-  className: "custom-car-icon",
-  html: '<div style="font-size: 24px;">🏎️</div>',
-  iconSize: [30, 30],
-  iconAnchor: [15, 15],
+// User Location Icon
+const UserIcon = L.divIcon({
+  className: "user-location-icon",
+  html: '<div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-lg animate-pulse"></div>',
+  iconSize: [16, 16],
+  iconAnchor: [8, 8],
 });
 
 // Circuit Bounds for navigation lock
@@ -56,8 +56,9 @@ const circuitBounds = [
 ];
 
 const Map = () => {
+  const mapRef = useRef(null);
   const initialCenter = [41.57, 2.2611];
-  const [carPosition, setCarPosition] = useState(initialCenter);
+  const [userPosition, setUserPosition] = useState(null);
   // eslint-disable-next-line no-unused-vars
   const [imageBounds, setImageBounds] = useState([
     [41.57 - 0.008, 2.2611 - 0.012],
@@ -66,29 +67,43 @@ const Map = () => {
 
   // State for future logic
   const [selectedFeature, setSelectedFeature] = useState(null); // To store clicking on a marker
-  // eslint-disable-next-line no-unused-vars
   const [markers, setMarkers] = useState([]); // Empty for now, to be populated by API/logic
 
-  useEffect(() => {
-    const handleKeyDown = (e) => {
-      const carStep = 0.0001;
-      switch (e.key) {
-        case "ArrowUp":
-          setCarPosition(([lat, lng]) => [lat + carStep, lng]);
-          break;
-        case "ArrowDown":
-          setCarPosition(([lat, lng]) => [lat - carStep, lng]);
-          break;
-        case "ArrowLeft":
-          setCarPosition(([lat, lng]) => [lat, lng - carStep]);
-          break;
-        case "ArrowRight":
-          setCarPosition(([lat, lng]) => [lat, lng + carStep]);
-          break;
+  const handleLocate = () => {
+    if (!navigator.geolocation) {
+      alert("Geolocation is not supported by your browser");
+      return;
+    }
+
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { latitude, longitude } = position.coords;
+        const newPos = [latitude, longitude];
+        setUserPosition(newPos);
+        
+        // Fly to user location using the map instance
+        if (mapRef.current) {
+          mapRef.current.flyTo(newPos, 16, {
+            animate: true,
+            duration: 1.5
+          });
+        }
+      },
+      (error) => {
+        console.error("Error getting location:", error);
+        alert("Unable to retrieve your location. Please ensure you have granted permission.");
+      },
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
       }
-    };
-    window.addEventListener("keydown", handleKeyDown);
-    return () => window.removeEventListener("keydown", handleKeyDown);
+    );
+  };
+
+  // Trigger location on mount (optional, or just wait for user click)
+  useEffect(() => {
+    // handleLocate(); // Uncomment if you want to locate automatically on open
   }, []);
 
   return (
@@ -96,11 +111,10 @@ const Map = () => {
       {/* Background Map Container */}
       <div className="absolute inset-0 z-0 map-container-bg w-full h-full">
         <MapContainer
+          ref={mapRef}
           center={initialCenter}
           zoom={15}
           minZoom={14}
-          maxBounds={circuitBounds}
-          maxBoundsViscosity={1.0}
           scrollWheelZoom={true}
           className="w-full h-full outline-none"
           zoomControl={false}
@@ -111,12 +125,12 @@ const Map = () => {
             url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
             attribution="&copy; OSM &copy; CARTO"
           />
-          <ImageOverlay
+          {/* <ImageOverlay
             url="/circuit_map_final.png"
             bounds={imageBounds}
             opacity={0.7}
             zIndex={10}
-          />
+          /> */}
 
           {/* Dynamic Markers rendering (currently empty) */}
           {markers.map((marker, index) => (
@@ -125,9 +139,11 @@ const Map = () => {
             </Marker>
           ))}
 
-          <Marker position={carPosition} icon={CarIcon}>
-            <Popup>Driver</Popup>
-          </Marker>
+          {userPosition && (
+            <Marker position={userPosition} icon={UserIcon}>
+              <Popup>You are here</Popup>
+            </Marker>
+          )}
         </MapContainer>
       </div>
 
@@ -175,7 +191,10 @@ const Map = () => {
 
         {/* Right Side Controls (FABs) */}
         <div className="absolute right-5 bottom-48 flex flex-col gap-4 pointer-events-auto z-40">
-          <button className="bg-primary text-white p-3.5 rounded-xl shadow-lg shadow-primary/30 active:scale-95 transition-transform flex items-center justify-center">
+          <button 
+            onClick={handleLocate}
+            className="bg-primary text-white p-3.5 rounded-xl shadow-lg shadow-primary/30 active:scale-95 transition-transform flex items-center justify-center"
+          >
             <span className="material-symbols-outlined text-2xl">
               my_location
             </span>
