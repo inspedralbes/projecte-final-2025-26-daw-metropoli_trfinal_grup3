@@ -1,6 +1,8 @@
 import { Link, useLocation } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const Navbar = () => {
+  const { t } = useTranslation();
   const location = useLocation();
 
   // Helper to check if a path is active
@@ -36,7 +38,7 @@ const Navbar = () => {
                   : "text-primary opacity-0 group-active:opacity-100 transition-opacity"
               }`}
             >
-              Home
+              {t("nav.home")}
             </span>
           </Link>
           <Link
@@ -63,7 +65,7 @@ const Navbar = () => {
                   : "text-primary opacity-0 group-active:opacity-100 transition-opacity"
               }`}
             >
-              Events
+              {t("nav.events")}
             </span>
           </Link>
         </div>
@@ -79,7 +81,7 @@ const Navbar = () => {
                   map
                 </span>
                 <span className="text-xs font-black uppercase tracking-widest mt-1 drop-shadow-sm">
-                  Map
+                  {t("nav.map")}
                 </span>
               </button>
             </div>
@@ -92,7 +94,7 @@ const Navbar = () => {
                   map
                 </span>
                 <span className="text-xs font-black uppercase tracking-widest mt-1 drop-shadow-sm">
-                  Map
+                  {t("nav.map")}
                 </span>
               </button>
             </Link>
@@ -125,7 +127,7 @@ const Navbar = () => {
                   : "text-primary opacity-0 group-active:opacity-100 transition-opacity"
               }`}
             >
-              Community
+              {t("nav.community")}
             </span>
           </Link>
           <Link
@@ -152,7 +154,7 @@ const Navbar = () => {
                   : "text-primary opacity-0 group-active:opacity-100 transition-opacity"
               }`}
             >
-              Settings
+              {t("nav.settings")}
             </span>
           </Link>
         </div>

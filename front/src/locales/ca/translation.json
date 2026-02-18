@@ -1,0 +1,46 @@
+{
+  "home": {
+    "title": "F1 BARCELONA",
+    "liveNow": "En Directe",
+    "spanishGP": "Gran Premi d'Espanya 2026",
+    "raceWeekend": "CAP DE SETMANA DE CURSA",
+    "days": "Dies",
+    "hours": "Hores",
+    "minutes": "Mins",
+    "viewSchedule": "Veure Horari",
+    "liveMap": "Mapa en Directe",
+    "gpsTrack": "Localitzador GPS de Pista",
+    "dining": "Menjar",
+    "orderFood": "Demanar Menjar i Beguda",
+    "fanZone": "Fan Zone",
+    "experience": "Experiència",
+    "driverQA": "Q&A amb Pilots en 15 min",
+    "discoverNearby": "Descobrir a Prop",
+    "seeAll": "Veure Tot",
+    "air": "Aire",
+    "track": "Pista",
+    "rain": "Pluja",
+    "wind": "Vent"
+  },
+  "nav": {
+    "home": "Inici",
+    "events": "Esdeveniments",
+    "map": "Mapa",
+    "community": "Comunitat",
+    "settings": "Configuració"
+  },
+  "settings": {
+    "title": "Configuració",
+    "language": "Idioma",
+    "appLanguage": "Idioma",
+    "appPreferences": "Preferències",
+    "pushNotifications": "Rebre Notificacions",
+    "locationServices": "Permetre Ubicació",
+    "darkMode": "Mode Fosc",
+    "account": "Compte",
+    "privacySecurity": "Privadesa i Seguretat",
+    "helpSupport": "Ajuda i Suport",
+    "footerApp": "App Circuit de Barcelona-Catalunya",
+    "footerVersion": "Versió 1.0.0 (Build 2026.05)"
+  }
+}

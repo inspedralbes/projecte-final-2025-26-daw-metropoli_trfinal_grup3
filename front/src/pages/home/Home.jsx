@@ -1,7 +1,10 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
+import Navbar from "../../layouts/Navbar";
 
 const Home = () => {
+  const { t } = useTranslation();
   // Countdown Timer Logic
   const calculateTimeLeft = () => {
     const raceDate = new Date("2026-05-31T15:00:00"); // Example date
@@ -59,7 +62,7 @@ const Home = () => {
             F1
           </span>
           <div className="h-6 w-[1px] bg-slate-200 dark:bg-white/20 mx-1 transition-colors"></div>
-          <span className="text-xs font-bold tracking-[0.2em] text-slate-400 dark:text-white/80 transition-colors">
+          <span className="text-secondary dark:text-white font-bold tracking-[0.2em] text-xs transition-colors">
             BARCELONA
           </span>
         </div>
@@ -90,20 +93,17 @@ const Home = () => {
           <div className="absolute top-5 right-5 bg-primary px-3 py-1 rounded-full flex items-center gap-2 shadow-lg shadow-primary/40">
             <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
             <span className="text-[10px] font-bold uppercase tracking-wider text-white">
-              Live Now
+              {t("home.liveNow")}
             </span>
           </div>
 
           <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
             <p className="text-primary font-bold italic text-sm mb-1 uppercase tracking-wider">
-              Spanish Grand Prix 2026
+              {t("home.spanishGP")}
             </p>
             <h1 className="text-4xl font-black italic leading-[0.9] mb-4 drop-shadow-lg">
-              RACE
+              {t("home.raceWeekend")}
               <br />
-              <span className="text-transparent bg-clip-text bg-gradient-to-r from-yellow-400 to-orange-500">
-                WEEKEND
-              </span>
             </h1>
 
             {/* Timer & Button Row */}
@@ -114,7 +114,7 @@ const Home = () => {
                     {String(timeLeft.days).padStart(2, "0")}
                   </span>
                   <span className="text-[9px] uppercase text-white/70 font-bold tracking-wider">
-                    Days
+                    {t("home.days")}
                   </span>
                 </div>
                 <div className="text-white/40 font-light text-xl self-start">
@@ -125,7 +125,7 @@ const Home = () => {
                     {String(timeLeft.hours).padStart(2, "0")}
                   </span>
                   <span className="text-[9px] uppercase text-white/70 font-bold tracking-wider">
-                    Hrs
+                    {t("home.hours")}
                   </span>
                 </div>
                 <div className="text-white/40 font-light text-xl self-start">
@@ -136,7 +136,7 @@ const Home = () => {
                     {String(timeLeft.minutes).padStart(2, "0")}
                   </span>
                   <span className="text-[9px] uppercase text-white/70 font-bold tracking-wider">
-                    Mins
+                    {t("home.minutes")}
                   </span>
                 </div>
               </div>
@@ -145,9 +145,7 @@ const Home = () => {
                 to="/events"
                 className="bg-primary hover:bg-[#ff1e3c] text-white px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-primary/30 transition-colors"
               >
-                View
-                <br />
-                Schedule
+                {t("home.viewSchedule")}
               </Link>
             </div>
           </div>
@@ -174,10 +172,10 @@ const Home = () => {
                 </span>
               </div>
               <h3 className="text-lg font-bold italic text-white leading-tight drop-shadow-md">
-                Live Map
+                {t("home.liveMap")}
               </h3>
               <p className="text-xs text-white/70 mt-1 drop-shadow-sm">
-                GPS Track Locator
+                {t("home.gpsTrack")}
               </p>
             </div>
           </Link>
@@ -196,10 +194,10 @@ const Home = () => {
                 <span className="material-symbols-outlined">restaurant</span>
               </div>
               <h3 className="text-lg font-bold italic text-white leading-tight drop-shadow-md">
-                Dining
+                {t("home.dining")}
               </h3>
               <p className="text-xs text-white/70 mt-1 drop-shadow-sm">
-                Order Food & Drinks
+                {t("home.orderFood")}
               </p>
             </div>
           </button>
@@ -228,15 +226,15 @@ const Home = () => {
               <div>
                 <div className="flex items-center gap-2 mb-0.5">
                   <h3 className="text-white font-bold italic text-lg leading-none drop-shadow-md">
-                    Fan Zone
+                    {t("home.fanZone")}
                   </h3>
                   <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
                 </div>
                 <h3 className="text-white font-bold italic text-lg leading-none mb-1 drop-shadow-md">
-                  Experience
+                  {t("home.experience")}
                 </h3>
                 <p className="text-xs text-white/60 drop-shadow-sm">
-                  Driver Q&A starting in 15 mins
+                  {t("home.driverQA")}
                 </p>
               </div>
             </div>
@@ -252,11 +250,11 @@ const Home = () => {
             <div className="flex items-center gap-2">
               <div className="w-4 h-1 bg-primary rounded-full"></div>
               <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-white/60 transition-colors">
-                Discover Nearby
+                {t("home.discoverNearby")}
               </h3>
             </div>
             <button className="text-[10px] font-bold text-primary uppercase tracking-wider hover:text-slate-600 dark:hover:text-white transition-colors">
-              See All
+              {t("home.seeAll")}
             </button>
           </div>
 
@@ -309,7 +307,7 @@ const Home = () => {
               24°C
             </span>
             <span className="text-[9px] font-bold uppercase text-slate-400 dark:text-white/30 mt-1 tracking-wider transition-colors">
-              Air
+              {t("home.air")}
             </span>
           </div>
           <div className="w-[1px] h-8 bg-slate-100 dark:bg-white/10 transition-colors"></div>
@@ -321,7 +319,7 @@ const Home = () => {
               38°C
             </span>
             <span className="text-[9px] font-bold uppercase text-slate-400 dark:text-white/30 mt-1 tracking-wider transition-colors">
-              Track
+              {t("home.track")}
             </span>
           </div>
           <div className="w-[1px] h-8 bg-slate-100 dark:bg-white/10 transition-colors"></div>
@@ -333,7 +331,7 @@ const Home = () => {
               12%
             </span>
             <span className="text-[9px] font-bold uppercase text-slate-400 dark:text-white/30 mt-1 tracking-wider transition-colors">
-              Rain
+              {t("home.rain")}
             </span>
           </div>
           <div className="w-[1px] h-8 bg-slate-100 dark:bg-white/10 transition-colors"></div>
@@ -345,85 +343,13 @@ const Home = () => {
               5<span className="text-xs ml-0.5">km/h</span>
             </span>
             <span className="text-[9px] font-bold uppercase text-slate-400 dark:text-white/30 mt-1 tracking-wider transition-colors">
-              Wind
+              {t("home.wind")}
             </span>
           </div>
         </div>
       </div>
 
-      {/* Bottom Navigation */}
-      <div className="fixed bottom-0 left-0 right-0 z-50 pointer-events-auto">
-        {/* Nav Bar Background */}
-        <div className="bg-white dark:bg-[#0a0506] border-t border-slate-100 dark:border-white/5 px-6 pt-2 pb-6 flex justify-between items-center relative shadow-[0_-5px_20px_rgba(0,0,0,0.05)] dark:shadow-[0_-5px_30px_rgba(0,0,0,0.5)] transition-colors duration-300">
-          {/* Left Links */}
-          <div className="flex gap-8">
-            <Link
-              to="/home"
-              className="flex flex-col items-center gap-1.5 text-primary group pointer-events-none"
-            >
-              <span className="material-symbols-outlined text-2xl group-active:scale-110 transition-transform font-variation-settings-filled">
-                home
-              </span>
-              <span className="text-[9px] font-bold uppercase tracking-wider text-primary absolute -bottom-3">
-                Home
-              </span>
-            </Link>
-            <Link
-              to="/events"
-              className="flex flex-col items-center gap-1.5 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 active:text-primary group transition-colors"
-            >
-              <span className="material-symbols-outlined text-2xl group-active:scale-110 transition-transform">
-                calendar_month
-              </span>
-              <span className="text-[9px] font-bold uppercase tracking-wider opacity-0 group-active:opacity-100 transition-opacity absolute -bottom-3 text-primary">
-                Events
-              </span>
-            </Link>
-          </div>
-
-          {/* Central Map Button - Floats Above */}
-          <div className="absolute left-1/2 -translate-x-1/2 -top-12">
-            <Link to="/" className="relative group block">
-              {/* Glow Effect */}
-              <div className="absolute inset-0 bg-primary rounded-full blur-xl opacity-30 group-hover:opacity-50 transition-opacity duration-300"></div>
-              <button className="relative bg-gradient-to-br from-[#ff3355] to-[#cc1133] text-white w-20 h-20 rounded-full flex flex-col items-center justify-center shadow-2xl shadow-primary/40 active:scale-95 transition-all duration-200 border-[6px] border-white dark:border-[#0a0506] ring-1 ring-slate-100 dark:ring-white/10">
-                <span className="material-symbols-outlined text-[32px] leading-none drop-shadow-md">
-                  map
-                </span>
-                <span className="text-[9px] font-black uppercase tracking-widest mt-0.5 drop-shadow-sm">
-                  Map
-                </span>
-              </button>
-            </Link>
-          </div>
-
-          {/* Right Links */}
-          <div className="flex gap-8">
-            <Link
-              to="/community"
-              className="flex flex-col items-center gap-1.5 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 active:text-primary group transition-colors"
-            >
-              <span className="material-symbols-outlined text-2xl group-active:scale-110 transition-transform">
-                groups
-              </span>
-              <span className="text-[9px] font-bold uppercase tracking-wider opacity-0 group-active:opacity-100 transition-opacity absolute -bottom-3 text-primary">
-                Community
-              </span>
-            </Link>
-            <Link
-              to="/settings"
-              className="flex flex-col items-center gap-1.5 text-slate-400 hover:text-slate-600 dark:text-slate-500 dark:hover:text-slate-300 active:text-primary group transition-colors"
-            >
-              <span className="material-symbols-outlined text-2xl group-active:scale-110 transition-transform">
-                settings
-              </span>
-              <span className="text-[9px] font-bold uppercase tracking-wider opacity-0 group-active:opacity-100 transition-opacity absolute -bottom-3 text-primary">
-                Settings
-              </span>
-            </Link>
-          </div>
-        </div>
-      </div>
+      <Navbar />
     </div>
   );
 };
