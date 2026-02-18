@@ -1,8 +1,11 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Navbar from "../../layouts/Navbar";
+import LanguageSwitcher from "../../components/LanguageSwitcher";
 
 const Settings = () => {
+  const { t } = useTranslation();
   const [notifications, setNotifications] = useState(true);
   const [location, setLocation] = useState(true);
   // Initialize dark mode from localStorage or system preference
@@ -48,17 +51,38 @@ const Settings = () => {
             </span>
           </Link>
         </div>
+
         <h2 className="text-2xl font-bold text-slate-800 dark:text-white transition-colors">
-          Settings
+          {t("settings.title")}
         </h2>
       </div>
 
       {/* Scrollable Content */}
       <div className="flex-grow overflow-y-auto pb-32 px-5 space-y-8">
+        {/* Language Settings Section */}
+        <div>
+          <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">
+            {t("settings.language")}
+          </h3>
+          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-colors p-4 flex justify-between items-center">
+            <div className="flex items-center gap-3">
+              <div className="w-8 h-8 rounded-full bg-orange-50 dark:bg-orange-900/30 text-orange-500 flex items-center justify-center transition-colors">
+                <span className="material-symbols-outlined text-lg">
+                  language
+                </span>
+              </div>
+              <span className="text-slate-700 dark:text-slate-200 font-semibold text-sm transition-colors">
+                {t("settings.appLanguage")}
+              </span>
+            </div>
+            <LanguageSwitcher />
+          </div>
+        </div>
+
         {/* App Settings Section */}
         <div>
           <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">
-            App Preferences
+            {t("settings.appPreferences")}
           </h3>
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
             {/* Notifications Toggle */}
@@ -70,7 +94,7 @@ const Settings = () => {
                   </span>
                 </div>
                 <span className="text-slate-700 dark:text-slate-200 font-semibold text-sm transition-colors">
-                  Push Notifications
+                  {t("settings.pushNotifications")}
                 </span>
               </div>
               <button
@@ -92,7 +116,7 @@ const Settings = () => {
                   </span>
                 </div>
                 <span className="text-slate-700 dark:text-slate-200 font-semibold text-sm transition-colors">
-                  Location Services
+                  {t("settings.locationServices")}
                 </span>
               </div>
               <button
@@ -114,7 +138,7 @@ const Settings = () => {
                   </span>
                 </div>
                 <span className="text-slate-700 dark:text-slate-200 font-semibold text-sm transition-colors">
-                  Dark Mode
+                  {t("settings.darkMode")}
                 </span>
               </div>
               <button
@@ -132,7 +156,7 @@ const Settings = () => {
         {/* Account Section */}
         <div>
           <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">
-            Account
+            {t("settings.account")}
           </h3>
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
             <button className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800 active:bg-slate-100 dark:active:bg-slate-700 transition-colors border-b border-slate-50 dark:border-slate-800 last:border-0">
@@ -143,7 +167,7 @@ const Settings = () => {
                   </span>
                 </div>
                 <span className="text-slate-700 dark:text-slate-200 font-semibold text-sm transition-colors">
-                  Privacy & Security
+                  {t("settings.privacySecurity")}
                 </span>
               </div>
               <span className="material-symbols-outlined text-slate-300">
@@ -158,7 +182,7 @@ const Settings = () => {
                   </span>
                 </div>
                 <span className="text-slate-700 dark:text-slate-200 font-semibold text-sm transition-colors">
-                  Help & Support
+                  {t("settings.helpSupport")}
                 </span>
               </div>
               <span className="material-symbols-outlined text-slate-300">
@@ -170,10 +194,10 @@ const Settings = () => {
 
         <div className="text-center pt-4">
           <p className="text-xs text-slate-400 mb-2">
-            Circuit de Barcelona-Catalunya App
+            {t("settings.footerApp")}
           </p>
           <p className="text-[10px] text-slate-300">
-            Version 1.0.0 (Build 2026.05)
+            {t("settings.footerVersion")}
           </p>
         </div>
       </div>

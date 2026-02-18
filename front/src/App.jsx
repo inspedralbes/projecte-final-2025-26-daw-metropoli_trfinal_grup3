@@ -1,11 +1,11 @@
-import { Routes, Route } from 'react-router-dom';
-import Home from './pages/home/Home';
-import Events from './pages/events/Events';
-import Map from './pages/map/Map';
-import Community from './pages/community/Community';
-import Settings from './pages/settings/Settings';
-import Profile from './pages/profile/Profile';
-import './App.css';
+import { Routes, Route } from "react-router-dom";
+import Home from "./pages/home/Home";
+import Events from "./pages/events/Events";
+import Map from "./pages/map/Map";
+import Community from "./pages/community/Community";
+import Settings from "./pages/settings/Settings";
+import Profile from "./pages/profile/Profile";
+import "./App.css";
 
 function App() {
   return (
