@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
+import horarioController from '../controllers/horarioController.js';
+
 const router = express.Router();
-const horarioController = require('../controllers/horarioController');
 
 router.post('/', horarioController.createHorario);
 router.get('/:id_poi', horarioController.getHorariosByPoi);
 
-module.exports = router;
+export default router;

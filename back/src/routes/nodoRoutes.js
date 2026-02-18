@@ -1,9 +1,10 @@
-const express = require('express');
+import express from 'express';
+import nodoController from '../controllers/nodoController.js';
+
 const router = express.Router();
-const nodoController = require('../controllers/nodoController');
 
 router.post('/', nodoController.createNodo);
 router.get('/', nodoController.getNodos);
 router.get('/:id', nodoController.getNodoById);
 
-module.exports = router;
+export default router;

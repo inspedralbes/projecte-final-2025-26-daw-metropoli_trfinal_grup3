@@ -1,4 +1,4 @@
-const nodoModel = require('../models/nodoModel');
+import nodoModel from '../models/nodoModel.js';
 
 const createNodo = async (nodoData) => {
     return await nodoModel.create(nodoData);
@@ -12,7 +12,7 @@ const getNodoById = async (id) => {
     return await nodoModel.getById(id);
 };
 
-module.exports = {
+export default {
     createNodo,
     getAllNodos,
     getNodoById

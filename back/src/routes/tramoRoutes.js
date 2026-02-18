@@ -1,8 +1,9 @@
-const express = require('express');
+import express from 'express';
+import tramoController from '../controllers/tramoController.js';
+
 const router = express.Router();
-const tramoController = require('../controllers/tramoController');
 
 router.post('/', tramoController.createTramo);
 router.get('/', tramoController.getTramos);
 
-module.exports = router;
+export default router;

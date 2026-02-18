@@ -1,4 +1,4 @@
-const traduccionModel = require('../models/traduccionModel');
+import traduccionModel from '../models/traduccionModel.js';
 
 const createTraduccion = async (traduccionData) => {
     return await traduccionModel.create(traduccionData);
@@ -8,7 +8,7 @@ const getAllTraducciones = async () => {
     return await traduccionModel.getAll();
 };
 
-module.exports = {
+export default {
     createTraduccion,
     getAllTraducciones
 };

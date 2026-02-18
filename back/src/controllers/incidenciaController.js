@@ -1,4 +1,4 @@
-const incidenciaService = require('../services/incidenciaService');
+import incidenciaService from '../services/incidenciaService.js';
 
 const createIncidencia = async (req, res) => {
     try {
@@ -10,20 +10,32 @@ const createIncidencia = async (req, res) => {
             data: nuevaIncidencia
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: error.message,
+            error_code: 'ERROR_INTERNO' 
+        });
     }
 };
 
 const getIncidencias = async (req, res) => {
     try {
         const incidencias = await incidenciaService.getAllIncidencias();
-        res.json({ success: true, data: incidencias });
+        res.json({ 
+            success: true, 
+            message: 'Incidencias recuperadas',
+            data: incidencias 
+        });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: error.message,
+            error_code: 'ERROR_INTERNO'
+        });
     }
 };
 
-module.exports = {
+export default {
     createIncidencia,
     getIncidencias
 };

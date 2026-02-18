@@ -1,17 +1,17 @@
-const express = require('express');
-const router = express.Router();
+import express from 'express';
+import usuarioRoutes from './usuarioRoutes.js';
+import categoriaRoutes from './categoriaRoutes.js';
+import eventoRoutes from './eventoRoutes.js';
+import nodoRoutes from './nodoRoutes.js';
+import tramoRoutes from './tramoRoutes.js';
+import poiRoutes from './poiRoutes.js';
+import horarioRoutes from './horarioRoutes.js';
+import multimediaRoutes from './multimediaRoutes.js';
+import incidenciaRoutes from './incidenciaRoutes.js';
+import traduccionRoutes from './traduccionRoutes.js';
+import calculoRutaRoutes from './calculoRutaRoutes.js';
 
-const usuarioRoutes = require('./usuarioRoutes');
-const categoriaRoutes = require('./categoriaRoutes');
-const eventoRoutes = require('./eventoRoutes');
-const nodoRoutes = require('./nodoRoutes');
-const tramoRoutes = require('./tramoRoutes');
-const poiRoutes = require('./poiRoutes');
-const horarioRoutes = require('./horarioRoutes');
-const multimediaRoutes = require('./multimediaRoutes');
-const ubicacionRoutes = require('./ubicacionRoutes');
-const incidenciaRoutes = require('./incidenciaRoutes');
-const traduccionRoutes = require('./traduccionRoutes');
+const router = express.Router();
 
 router.use('/usuarios', usuarioRoutes);
 router.use('/categorias', categoriaRoutes);
@@ -21,8 +21,8 @@ router.use('/tramos', tramoRoutes);
 router.use('/pois', poiRoutes);
 router.use('/horarios', horarioRoutes);
 router.use('/multimedia', multimediaRoutes);
-router.use('/ubicaciones', ubicacionRoutes);
 router.use('/incidencias', incidenciaRoutes);
 router.use('/traducciones', traduccionRoutes);
+router.use('/rutas', calculoRutaRoutes);
 
-module.exports = router;
+export default router;

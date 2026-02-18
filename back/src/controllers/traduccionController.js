@@ -1,4 +1,4 @@
-const traduccionService = require('../services/traduccionService');
+import traduccionService from '../services/traduccionService.js';
 
 const createTraduccion = async (req, res) => {
     try {
@@ -10,20 +10,32 @@ const createTraduccion = async (req, res) => {
             data: nuevaTraduccion
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: error.message,
+            error_code: 'ERROR_INTERNO'
+        });
     }
 };
 
 const getTraducciones = async (req, res) => {
     try {
         const traducciones = await traduccionService.getAllTraducciones();
-        res.json({ success: true, data: traducciones });
+        res.json({ 
+            success: true, 
+            message: 'Traducciones recuperadas',
+            data: traducciones 
+        });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: error.message,
+            error_code: 'ERROR_INTERNO'
+        });
     }
 };
 
-module.exports = {
+export default {
     createTraduccion,
     getTraducciones
 };

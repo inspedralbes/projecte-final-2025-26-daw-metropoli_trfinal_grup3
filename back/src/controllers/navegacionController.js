@@ -46,7 +46,7 @@ const getTramos = async (req, res) => {
     }
 };
 
-module.exports = {
+export default {
     createNodo,
     createTramo,
     getNodos,

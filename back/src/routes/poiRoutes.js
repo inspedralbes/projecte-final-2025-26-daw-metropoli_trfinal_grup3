@@ -1,9 +1,10 @@
-const express = require('express');
+import express from 'express';
+import poiController from '../controllers/poiController.js';
+
 const router = express.Router();
-const poiController = require('../controllers/poiController');
 
 router.post('/', poiController.createPoiSimple);
 router.post('/completo', poiController.createPoiCompleto);
 router.get('/', poiController.getPois);
 
-module.exports = router;
+export default router;

@@ -1,4 +1,4 @@
-const multimediaService = require('../services/multimediaService');
+import multimediaService from '../services/multimediaService.js';
 
 const createMultimedia = async (req, res) => {
     try {
@@ -10,7 +10,11 @@ const createMultimedia = async (req, res) => {
             data: result
         });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: error.message,
+            error_code: 'ERROR_INTERNO'
+        });
     }
 };
 
@@ -18,16 +22,28 @@ const getMultimediaByPoi = async (req, res) => {
     try {
         const { id_poi } = req.params;
         if (!id_poi) {
-            return res.status(400).json({ success: false, message: 'ID de POI requerido' });
+            return res.status(400).json({ 
+                success: false, 
+                message: 'ID de POI requerido',
+                error_code: 'PARAMETROS_FALTANTES'
+            });
         }
         const multimedia = await multimediaService.getMultimediaByPoi(id_poi);
-        res.json({ success: true, data: multimedia });
+        res.json({ 
+            success: true, 
+            message: 'Contenido multimedia recuperado',
+            data: multimedia 
+        });
     } catch (error) {
-        res.status(500).json({ success: false, message: error.message });
+        res.status(500).json({ 
+            success: false, 
+            message: error.message,
+            error_code: 'ERROR_INTERNO'
+        });
     }
 };
 
-module.exports = {
+export default {
     createMultimedia,
     getMultimediaByPoi
 };
