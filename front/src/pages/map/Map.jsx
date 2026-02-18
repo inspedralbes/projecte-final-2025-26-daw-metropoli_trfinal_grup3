@@ -59,6 +59,9 @@ const Map = () => {
   const mapRef = useRef(null);
   const initialCenter = [41.57, 2.2611];
   const [userPosition, setUserPosition] = useState(null);
+  const [isLegendOpen, setIsLegendOpen] = useState(false); // State for collapsible legend
+  const [isSatelliteView, setIsSatelliteView] = useState(false); // State for satellite view toggle
+
   // eslint-disable-next-line no-unused-vars
   const [imageBounds, setImageBounds] = useState([
     [41.57 - 0.008, 2.2611 - 0.012],
@@ -107,7 +110,10 @@ const Map = () => {
   }, []);
 
   return (
-    <div className="relative h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display overflow-hidden select-none transition-colors duration-300">
+    <div 
+      className="relative h-[100dvh] w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display overflow-hidden select-none transition-colors duration-300"
+      style={{ overscrollBehavior: 'none', touchAction: 'none' }} // Prevent pull-to-refresh / overscroll
+    >
       {/* Background Map Container */}
       <div className="absolute inset-0 z-0 map-container-bg w-full h-full">
         <MapContainer
@@ -121,9 +127,19 @@ const Map = () => {
           attributionControl={false}
         >
           {/* Light Mode Tiles (Carto Positron or OSM Standard) */}
+          {/* Conditionally render TileLayer based on isSatelliteView */}
           <TileLayer
-            url="https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-            attribution="&copy; OSM &copy; CARTO"
+            key={isSatelliteView ? "satellite" : "standard"}
+            url={
+              isSatelliteView
+                ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+                : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+            }
+            attribution={
+              isSatelliteView
+                ? "&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
+                : "&copy; OSM &copy; CARTO"
+            }
           />
           {/* <ImageOverlay
             url="/circuit_map_final.png"
@@ -180,17 +196,69 @@ const Map = () => {
                 placeholder="Search Grandstand, Food, WC..."
                 type="text"
               />
-              <button className="text-slate-400 hover:text-primary transition-colors">
-                <span className="material-symbols-outlined text-xl">tune</span>
-              </button>
             </div>
           </div>
+        </div>
+
+        {/* Legend Toggle Tab (Left Side) */}
+        <button 
+          onClick={() => setIsLegendOpen(!isLegendOpen)}
+          className={`absolute left-0 top-1/2 -translate-y-1/2 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-slate-700 dark:text-slate-200 py-6 px-1.5 rounded-r-2xl border-y border-r border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none active:scale-95 transition-all duration-300 flex items-center justify-center pointer-events-auto ${isLegendOpen ? 'translate-x-[16rem]' : 'translate-x-0'}`}
+          aria-label="Toggle Legend"
+        >
+          <span className="material-symbols-outlined text-xl">
+            {isLegendOpen ? 'chevron_left' : 'chevron_right'}
+          </span>
+        </button>
+
+        {/* Collapsible Sidebar Legend */}
+        <div 
+          className={`absolute left-0 top-0 bottom-0 w-64 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200 dark:border-slate-800 shadow-2xl transition-transform duration-300 z-40 pointer-events-auto flex flex-col justify-center px-6 ${isLegendOpen ? 'translate-x-0' : '-translate-x-full'}`}
+        >
+           <div className="mb-6">
+              <span className="text-xs uppercase tracking-widest font-bold text-slate-400 block mb-6 border-b border-slate-100 dark:border-slate-800 pb-2">
+                Map Legend
+              </span>
+              
+              <div className="space-y-6">
+                 <div className="flex items-center gap-4 group">
+                   <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
+                      <div className="w-3 h-3 rounded-full bg-primary shadow-sm"></div>
+                   </div>
+                   <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Grandstands</span>
+                 </div>
+                 <div className="flex items-center gap-4 group">
+                   <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center group-hover:bg-indigo-500/20 transition-colors">
+                      <div className="w-3 h-3 rounded-full bg-indigo-500 shadow-sm"></div>
+                   </div>
+                   <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Fan Zone</span>
+                 </div>
+                 <div className="flex items-center gap-4 group">
+                   <div className="w-8 h-8 rounded-full bg-slate-500/10 flex items-center justify-center group-hover:bg-slate-500/20 transition-colors">
+                      <div className="w-3 h-3 rounded-full bg-slate-500 shadow-sm"></div>
+                   </div>
+                   <span className="text-sm font-medium text-slate-600 dark:text-slate-300">WC</span>
+                 </div>
+                 <div className="flex items-center gap-4 group">
+                   <div className="w-8 h-8 rounded-full bg-orange-400/10 flex items-center justify-center group-hover:bg-orange-400/20 transition-colors">
+                      <div className="w-3 h-3 rounded-full bg-orange-400 shadow-sm"></div>
+                   </div>
+                   <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Food</span>
+                 </div>
+                 <div className="flex items-center gap-4 group">
+                   <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                      <div className="w-3 h-3 bg-blue-500 rounded-full border-2 border-white shadow-sm"></div>
+                   </div>
+                   <span className="text-sm font-medium text-slate-600 dark:text-slate-300">You</span>
+                 </div>
+              </div>
+           </div>
         </div>
 
         <div className="flex-grow"></div>
 
         {/* Right Side Controls (FABs) */}
-        <div className="absolute right-5 bottom-48 flex flex-col gap-4 pointer-events-auto z-40">
+        <div className="absolute right-5 bottom-32 flex flex-col gap-4 pointer-events-auto z-40">
           <button 
             onClick={handleLocate}
             className="bg-primary text-white p-3.5 rounded-xl shadow-lg shadow-primary/30 active:scale-95 transition-transform flex items-center justify-center"
@@ -199,14 +267,19 @@ const Map = () => {
               my_location
             </span>
           </button>
-          <button className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-slate-700 dark:text-slate-200 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-lg shadow-slate-200/50 dark:shadow-none active:scale-95 transition-transform flex items-center justify-center">
-            <span className="material-symbols-outlined text-2xl">layers</span>
+          <button 
+            onClick={() => setIsSatelliteView(!isSatelliteView)}
+            className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-slate-700 dark:text-slate-200 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-lg shadow-slate-200/50 dark:shadow-none active:scale-95 transition-transform flex items-center justify-center"
+          >
+            <span className="material-symbols-outlined text-2xl">
+              {isSatelliteView ? "map" : "satellite_alt"}
+            </span>
           </button>
         </div>
 
         {/* Info Card - Only shows when a feature is selected */}
         {selectedFeature && (
-          <div className="px-4 mb-4 pointer-events-auto animate-[slideUp_0.3s_ease-out]">
+          <div className="px-4 mb-24 pointer-events-auto animate-[slideUp_0.3s_ease-out]">
             <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-2xl shadow-slate-200/50 dark:shadow-none transition-colors">
               <div className="flex justify-between items-start mb-3">
                 <div>
@@ -242,46 +315,6 @@ const Map = () => {
             </div>
           </div>
         )}
-
-        {/* Bottom Legend Card */}
-        <div className="px-4 mb-24 pointer-events-auto">
-          <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-2xl shadow-slate-200/50 dark:shadow-none transition-colors">
-            <div className="flex items-center justify-between mb-4">
-              <span className="text-[10px] uppercase tracking-widest font-bold text-slate-400">
-                Map Legend
-              </span>
-              <span className="text-[10px] text-primary font-bold uppercase tracking-wide">
-                Points of Interest
-              </span>
-            </div>
-            <div className="flex gap-6 overflow-x-auto no-scrollbar items-center">
-              <div className="flex items-center gap-2 shrink-0">
-                <div className="w-3 h-3 rounded-full bg-primary/90 shadow-sm"></div>
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                  Grandstands
-                </span>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <div className="w-3 h-3 rounded-full bg-indigo-500 shadow-sm"></div>
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                  Fan Zone
-                </span>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <div className="w-3 h-3 rounded-full bg-slate-500 shadow-sm"></div>
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                  WC
-                </span>
-              </div>
-              <div className="flex items-center gap-2 shrink-0">
-                <div className="w-3 h-3 rounded-full bg-slate-500 shadow-sm"></div>
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                  Food
-                </span>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
 
       <Navbar />
