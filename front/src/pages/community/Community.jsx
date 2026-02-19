@@ -3,7 +3,7 @@ import Navbar from '../../layouts/Navbar';
 
 const Community = () => {
     const [activeTab, setActiveTab] = useState('Recent');
-    const tabs = ['Recent', 'Official', 'Fan Zone', 'Marketplace'];
+    const tabs = ['Recent', 'Official', 'Fan Zone', 'Popular'];
 
     return (
         <div className="relative h-screen w-full bg-gray-50 dark:bg-[#12080a] text-slate-800 dark:text-white font-display overflow-hidden select-none flex flex-col transition-colors duration-300">
