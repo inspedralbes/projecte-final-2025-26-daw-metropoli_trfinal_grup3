@@ -22,6 +22,10 @@ export const getWeather = (req, res) => {
             return res.status(500).json({ error: 'Error interno al obtener los datos del tiempo.' });
         }
 
+        if (!data || data.trim() === '') {
+             return res.json([]); // Return empty array if file is empty
+        }
+
         try {
             const weatherData = JSON.parse(data);
             res.json(weatherData);

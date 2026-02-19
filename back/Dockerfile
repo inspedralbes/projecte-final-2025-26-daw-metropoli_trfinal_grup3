@@ -6,8 +6,6 @@ COPY package*.json ./
 
 RUN npm install
 
-# Copy the rest of the application code
-# Note: In dev, we mount the volume so this is less critical but good for consistency
 COPY . .
 
 EXPOSE 3000
