@@ -1,10 +1,10 @@
 import { query } from '../config/mysql.js';
 
 const create = async (evento) => {
-    const { nombre, descripcion, fecha_inicio, fecha_fin, estado } = evento;
+    const { nombre, descripcion, foto, fecha_inicio, fecha_fin, estado } = evento;
     const [result] = await query(
-        'INSERT INTO eventos (nombre, descripcion, fecha_inicio, fecha_fin, estado) VALUES (?, ?, ?, ?, ?)',
-        [nombre, descripcion, fecha_inicio, fecha_fin, estado]
+        'INSERT INTO eventos (nombre, descripcion, foto, fecha_inicio, fecha_fin, estado) VALUES (?, ?, ?, ?, ?, ?)',
+        [nombre, descripcion, foto, fecha_inicio, fecha_fin, estado]
     );
     return { id_evento: result.insertId, ...evento };
 };
@@ -27,6 +27,10 @@ const update = async (id, evento) => {
     if (evento.descripcion) {
         fields.push("descripcion = ?");
         values.push(evento.descripcion);
+    }
+    if (evento.foto) {
+        fields.push("foto = ?");
+        values.push(evento.foto);
     }
     if (evento.fecha_inicio) {
         fields.push("fecha_inicio = ?");

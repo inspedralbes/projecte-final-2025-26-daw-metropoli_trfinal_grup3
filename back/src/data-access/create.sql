@@ -21,6 +21,7 @@ CREATE TABLE IF NOT EXISTS eventos (
     id_evento INTEGER PRIMARY KEY AUTOINCREMENT,
     nombre VARCHAR(100) NOT NULL,
     descripcion TEXT,
+    foto VARCHAR(255),
     fecha_inicio DATETIME NOT NULL,
     fecha_fin DATETIME NOT NULL,
     estado VARCHAR(20) DEFAULT 'programado'
@@ -118,4 +119,17 @@ CREATE TABLE IF NOT EXISTS traducciones (
     campo_traducido VARCHAR(50) NOT NULL,
     texto TEXT NOT NULL,
     UNIQUE(tabla_origen, id_registro_origen, codigo_idioma, campo_traducido)
+);
+
+-- 12. COMUNIDAD (Publicaciones)
+CREATE TABLE IF NOT EXISTS comunidad (
+    id_publicacion INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_usuario INTEGER NOT NULL,
+    texto TEXT,
+    foto VARCHAR(255),
+    fecha_publicacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    likes INTEGER DEFAULT 0,
+    tipo_publicacion VARCHAR(20) DEFAULT 'popular', -- Valores: 'oficial', 'fanzone', 'popular'
+    ubicacion VARCHAR(255),
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
 );
