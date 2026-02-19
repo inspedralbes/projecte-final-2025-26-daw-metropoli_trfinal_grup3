@@ -3,6 +3,7 @@ import express from 'express';
 import cors from 'cors';
 import routes from './src/routes/index.js';
 import weatherRoutes from './src/routes/weatherRoutes.js';
+import './src/services/weatherService.js';
 
 const app = express();
 const port = 3000;

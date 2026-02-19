@@ -10,6 +10,7 @@ import multimediaRoutes from './multimediaRoutes.js';
 import incidenciaRoutes from './incidenciaRoutes.js';
 import traduccionRoutes from './traduccionRoutes.js';
 import calculoRutaRoutes from './calculoRutaRoutes.js';
+import weatherRoutes from './weatherRoutes.js';
 
 const router = express.Router();
 
@@ -24,5 +25,6 @@ router.use('/multimedia', multimediaRoutes);
 router.use('/incidencias', incidenciaRoutes);
 router.use('/traducciones', traduccionRoutes);
 router.use('/rutas', calculoRutaRoutes);
+router.use('/tiempo', weatherRoutes);
 
 export default router;

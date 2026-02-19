@@ -45,6 +45,7 @@ services:
     volumes:
       - db_data:/var/lib/mysql
       - ./back/src/data-access/create.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./back/src/data-access/test_navigation_data.sql:/docker-entrypoint-initdb.d/z_test_navigation_data.sql
     networks:
       - app-network
 
@@ -52,7 +53,7 @@ services:
     image: phpmyadmin/phpmyadmin
     restart: always
     ports:
-      - "8080:80"
+      - "8081:80"
     environment:
       PMA_HOST: db
       MYSQL_ROOT_PASSWORD: password

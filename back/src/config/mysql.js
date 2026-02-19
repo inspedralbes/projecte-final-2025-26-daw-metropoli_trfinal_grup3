@@ -14,14 +14,27 @@ const pool = mysql.createPool({
 
 // Verificar conexión al iniciar
 // Esto nos ayuda a saber rápidamente si la BD está lista o hay un error
-pool.getConnection()
-    .then(connection => {
-        console.log('✅ Conectado exitosamente a MySQL');
-        connection.release();
-    })
-    .catch(error => {
-        console.error('❌ Error al conectar a MySQL:', error.message);
-    });
+// Función para verificar conexión con reintentos
+const checkConnection = async (retries = 5, delay = 5000) => {
+    for (let i = 0; i < retries; i++) {
+        try {
+            const connection = await pool.getConnection();
+            console.log('✅ Conectado exitosamente a MySQL');
+            connection.release();
+            return;
+        } catch (error) {
+            console.error(`❌ Error al conectar a MySQL (Intento ${i + 1}/${retries}):`, error.message);
+            if (i < retries - 1) {
+                console.log(`⏳ Reintentando en ${delay / 1000} segundos...`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            } else {
+                console.error('❌ No se pudo conectar a la base de datos después de múltiples intentos.');
+            }
+        }
+    }
+};
+
+checkConnection();
 
 // Función helper para ejecutar consultas de forma sencilla
 // Recibe el SQL y los parámetros (opcional)

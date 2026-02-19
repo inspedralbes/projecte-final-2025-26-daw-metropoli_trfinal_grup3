@@ -1,6 +1,6 @@
 -- 1. USUARIOS (Independiente)
 CREATE TABLE IF NOT EXISTS usuario (
-    id_usuario INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_usuario INTEGER PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(100) NOT NULL,
     email VARCHAR(150) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
@@ -10,7 +10,7 @@ CREATE TABLE IF NOT EXISTS usuario (
 
 -- 2. CATEGORIAS (Independiente)
 CREATE TABLE IF NOT EXISTS categoria (
-    id_categoria INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_categoria INTEGER PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(50) NOT NULL,
     icono_url VARCHAR(255),
     color_hex VARCHAR(7)
@@ -18,7 +18,7 @@ CREATE TABLE IF NOT EXISTS categoria (
 
 -- 3. EVENTOS (Independiente)
 CREATE TABLE IF NOT EXISTS eventos (
-    id_evento INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_evento INTEGER PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(100) NOT NULL,
     descripcion TEXT,
     fecha_inicio DATETIME NOT NULL,
@@ -28,7 +28,7 @@ CREATE TABLE IF NOT EXISTS eventos (
 
 -- 4. NODOS DE NAVEGACIÓN (¡OJO! Movido ANTES de POIS)
 CREATE TABLE IF NOT EXISTS nodos_navegacion (
-    id_nodo INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_nodo INTEGER PRIMARY KEY AUTO_INCREMENT,
     latitud DECIMAL(10, 8) NOT NULL,
     longitud DECIMAL(11, 8) NOT NULL,
     descripcion VARCHAR(100)
@@ -36,7 +36,7 @@ CREATE TABLE IF NOT EXISTS nodos_navegacion (
 
 -- 5. RUTAS/TRAMOS (Depende de Nodos)
 CREATE TABLE IF NOT EXISTS rutas_tramos (
-    id_tramo INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_tramo INTEGER PRIMARY KEY AUTO_INCREMENT,
     id_nodo_origen INTEGER NOT NULL,
     id_nodo_destino INTEGER NOT NULL,
     distancia_metros DECIMAL(10, 2),
@@ -49,7 +49,7 @@ CREATE TABLE IF NOT EXISTS rutas_tramos (
 
 -- 6. POIS (Ahora sí, porque Nodos y Categorías ya existen)
 CREATE TABLE IF NOT EXISTS pois (
-    id_poi INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_poi INTEGER PRIMARY KEY AUTO_INCREMENT,
     nombre VARCHAR(100) NOT NULL,
     descripcion TEXT,
     latitud DECIMAL(10, 8) NOT NULL,
@@ -75,7 +75,7 @@ CREATE TABLE IF NOT EXISTS evento_poi_config (
 
 -- 8. HORARIOS DETALLADOS (Depende de Pois y Eventos)
 CREATE TABLE IF NOT EXISTS poi_horarios (
-    id_horario INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_horario INTEGER PRIMARY KEY AUTO_INCREMENT,
     id_poi INTEGER NOT NULL,
     id_evento INTEGER NOT NULL,
     dia_semana VARCHAR(10) NOT NULL,
@@ -87,7 +87,7 @@ CREATE TABLE IF NOT EXISTS poi_horarios (
 
 -- 9. MULTIMEDIA (Depende de Pois)
 CREATE TABLE IF NOT EXISTS poi_multimedia (
-    id_media INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_media INTEGER PRIMARY KEY AUTO_INCREMENT,
     id_poi INTEGER NOT NULL,
     url_archivo VARCHAR(255) NOT NULL,
     tipo VARCHAR(20) DEFAULT 'imagen',
@@ -98,7 +98,7 @@ CREATE TABLE IF NOT EXISTS poi_multimedia (
 
 -- 10. INCIDENCIAS (Depende de Pois y Usuarios)
 CREATE TABLE IF NOT EXISTS incidencias (
-    id_incidencia INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_incidencia INTEGER PRIMARY KEY AUTO_INCREMENT,
     id_poi INTEGER NOT NULL,
     id_usuario_reporta INTEGER,
     tipo VARCHAR(50) NOT NULL,
@@ -111,7 +111,7 @@ CREATE TABLE IF NOT EXISTS incidencias (
 
 -- 11. TRADUCCIONES (Independiente lógicamente, referencialmente débil)
 CREATE TABLE IF NOT EXISTS traducciones (
-    id_traduccion INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_traduccion INTEGER PRIMARY KEY AUTO_INCREMENT,
     tabla_origen VARCHAR(50) NOT NULL,
     id_registro_origen INTEGER NOT NULL,
     codigo_idioma VARCHAR(5) NOT NULL,
