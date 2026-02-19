@@ -1,11 +1,15 @@
-const fs = require('fs');
-const path = require('path');
+import fs from 'fs';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
 
 // Ruta al archivo JSON donde se guarda el tiempo
 // Asumimos que weatherService.js guarda 'tiempo.json' en la raíz del proyecto (donde se ejecuta index.js)
 const DATA_FILE = path.join(__dirname, '../../tiempo.json');
 
-const getWeather = (req, res) => {
+export const getWeather = (req, res) => {
     fs.readFile(DATA_FILE, 'utf8', (err, data) => {
         if (err) {
             console.error('Error al leer los datos del tiempo:', err);
@@ -28,6 +32,6 @@ const getWeather = (req, res) => {
     });
 };
 
-module.exports = {
+export default {
     getWeather
 };

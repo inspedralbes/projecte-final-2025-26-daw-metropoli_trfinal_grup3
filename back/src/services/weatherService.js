@@ -1,4 +1,4 @@
-const fs = require('fs');
+import fs from 'fs';
 
 const url = 'https://api.open-meteo.com/v1/forecast?latitude=41.5697&longitude=2.2578&hourly=temperature_2m,precipitation_probability,precipitation,soil_temperature_0cm,wind_speed_10m&timezone=Europe%2FMadrid';
 
@@ -22,6 +22,6 @@ async function actualizarTiempo() {
 actualizarTiempo();
 setInterval(actualizarTiempo, 30 * 60 * 1000);
 
-module.exports = {
+export default {
     actualizarTiempo
 };

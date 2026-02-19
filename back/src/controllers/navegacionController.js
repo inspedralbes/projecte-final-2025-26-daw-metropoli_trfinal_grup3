@@ -1,4 +1,4 @@
-const navegacionService = require('../services/navegacionService');
+import navegacionService from '../services/navegacionService.js';
 
 const createNodo = async (req, res) => {
     try {
