@@ -3,9 +3,9 @@ import Navbar from "../../layouts/Navbar";
 
 const Profile = () => {
   return (
-    <div className="relative h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display overflow-hidden select-none flex flex-col transition-colors duration-300">
+    <div className="relative h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display overflow-hidden select-none flex flex-col transition-colors duration-300 overscroll-none">
       {/* Top Bar - Fixed */}
-      <div className="w-full pt-12 px-5 pb-4 bg-gray-50 dark:bg-slate-950 z-20 transition-colors duration-300">
+      <div className="w-full pt-6 px-5 pb-4 bg-gray-50 dark:bg-slate-950 z-20 transition-colors duration-300 touch-none">
         <div className="flex justify-between items-center mb-6">
           <div className="flex items-center gap-2">
             <img

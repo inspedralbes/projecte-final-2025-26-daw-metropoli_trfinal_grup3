@@ -54,14 +54,19 @@ const Home = () => {
   ];
 
   return (
-    <div className="relative h-screen w-full bg-gray-50 dark:bg-[#12080a] text-slate-800 dark:text-white font-display overflow-hidden select-none flex flex-col transition-colors duration-300">
+    <div className="relative h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-white font-display overflow-hidden select-none flex flex-col transition-colors duration-300 overscroll-none">
       {/* Top Bar */}
-      <div className="w-full pt-12 px-5 pb-2 z-20 flex justify-between items-center transition-colors">
+      <div className="w-full pt-6 px-5 pb-2 z-20 flex justify-between items-center transition-colors touch-none">
         <div className="flex items-center gap-2">
+          <img
+            src="/logo/logo1.png"
+            alt="Circuit de Catalunya"
+            className="h-12 w-auto object-contain block dark:hidden"
+          />
           <img
             src="/logo/logo.png"
             alt="Circuit de Catalunya"
-            className="h-12 w-auto object-contain"
+            className="h-12 w-auto object-contain hidden dark:block"
           />
         </div>
         <Link
@@ -178,27 +183,30 @@ const Home = () => {
             </div>
           </Link>
 
-          <button className="relative h-40 rounded-[24px] overflow-hidden group shadow-md hover:shadow-lg transition-all dark:shadow-none text-left bg-white dark:bg-[#1e1e1e]">
+          <Link
+            to="/community"
+            className="relative h-40 rounded-[24px] overflow-hidden group shadow-md hover:shadow-lg transition-all dark:shadow-none text-left bg-white dark:bg-[#1e1e1e]"
+          >
             <div className="absolute inset-0">
               <img
-                src="https://images.unsplash.com/photo-1555939594-58d7cb561ad1?auto=format&fit=crop&q=80&w=800"
-                alt="Dining Background"
+                src="https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&q=80&w=800"
+                alt="Groups Background"
                 className="w-full h-full object-cover opacity-60 dark:opacity-40 group-hover:scale-110 transition-transform duration-500"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-black/10"></div>
             </div>
             <div className="relative z-10 p-5 h-full flex flex-col justify-end">
               <div className="w-10 h-10 bg-white/20 backdrop-blur-sm text-white rounded-xl flex items-center justify-center mb-auto border border-white/10 group-hover:bg-white group-hover:text-slate-800 transition-colors">
-                <span className="material-symbols-outlined">restaurant</span>
+                <span className="material-symbols-outlined">groups</span>
               </div>
               <h3 className="text-lg font-bold italic text-white leading-tight drop-shadow-md">
-                {t("home.dining")}
+                {t("home.groups") || "Groups"}
               </h3>
               <p className="text-xs text-white/70 mt-1 drop-shadow-sm">
-                {t("home.orderFood")}
+                {t("home.connectWithFans") || "Connect with fans"}
               </p>
             </div>
-          </button>
+          </Link>
         </div>
 
         {/* Fan Zone Banner */}

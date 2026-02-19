@@ -31,40 +31,47 @@ const Settings = () => {
   }, [darkMode]);
 
   return (
-    <div className="relative h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display overflow-hidden select-none flex flex-col transition-colors duration-300">
-      {/* Top Bar - Fixed */}
-      <div className="w-full pt-12 px-5 pb-4 bg-gray-50 dark:bg-slate-950 z-20 transition-colors duration-300">
-        <div className="flex justify-between items-center mb-6">
-          <div className="flex items-center gap-2">
-            <img
-              src="/logo/logo.png"
-              alt="Circuit Logo"
-              className="h-12 w-auto object-contain"
-            />
-          </div>
-          <Link
-            to="/profile"
-            className="bg-white dark:bg-slate-900 p-2 rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 active:bg-slate-100 dark:active:bg-slate-800 transition-colors"
-          >
-            <span className="material-symbols-outlined text-2xl block">
-              person
-            </span>
-          </Link>
+    <div className="relative h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-white font-display overflow-hidden select-none flex flex-col transition-colors duration-300 overscroll-none">
+      {/* Standard Header */}
+      <div className="w-full pt-6 px-5 pb-2 z-20 flex justify-between items-center transition-colors shrink-0 touch-none">
+        <div className="flex items-center gap-2">
+            <Link to="/">
+                <img
+                    src="/logo/logo1.png"
+                    alt="Circuit de Catalunya"
+                    className="h-12 w-auto object-contain block dark:hidden"
+                />
+                <img
+                    src="/logo/logo.png"
+                    alt="Circuit de Catalunya"
+                    className="h-12 w-auto object-contain hidden dark:block"
+                />
+            </Link>
         </div>
-
-        <h2 className="text-2xl font-bold text-slate-800 dark:text-white transition-colors">
-          {t("settings.title")}
-        </h2>
+        <Link
+            to="/profile"
+            className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden shadow-sm"
+        >
+            <img
+                src="https://i.pravatar.cc/150?img=12"
+                alt="Profile"
+                className="w-full h-full object-cover rounded-full"
+            />
+        </Link>
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-grow overflow-y-auto pb-32 px-5 space-y-8">
+      <div className="flex-grow overflow-y-auto pb-32 px-5 space-y-8 pt-4">
+        <h2 className="text-2xl font-bold text-slate-800 dark:text-white transition-colors">
+          {t("settings.title")}
+        </h2>
+
         {/* Language Settings Section */}
         <div>
           <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">
             {t("settings.language")}
           </h3>
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-colors p-4 flex justify-between items-center">
+          <div className="bg-white dark:bg-[#1e1e1e] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-colors p-4 flex justify-between items-center">
             <div className="flex items-center gap-3">
               <div className="w-8 h-8 rounded-full bg-orange-50 dark:bg-orange-900/30 text-orange-500 flex items-center justify-center transition-colors">
                 <span className="material-symbols-outlined text-lg">
@@ -84,7 +91,7 @@ const Settings = () => {
           <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">
             {t("settings.appPreferences")}
           </h3>
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
+          <div className="bg-white dark:bg-[#1e1e1e] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
             {/* Notifications Toggle */}
             <div className="w-full flex items-center justify-between p-4 border-b border-slate-50 dark:border-slate-800 last:border-0 transition-colors">
               <div className="flex items-center gap-3">
@@ -158,7 +165,7 @@ const Settings = () => {
           <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">
             {t("settings.account")}
           </h3>
-          <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
+          <div className="bg-white dark:bg-[#1e1e1e] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden transition-colors">
             <button className="w-full flex items-center justify-between p-4 hover:bg-slate-50 dark:hover:bg-slate-800 active:bg-slate-100 dark:active:bg-slate-700 transition-colors border-b border-slate-50 dark:border-slate-800 last:border-0">
               <div className="flex items-center gap-3">
                 <div className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 text-slate-500 dark:text-slate-400 flex items-center justify-center transition-colors">

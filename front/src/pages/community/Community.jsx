@@ -1,4 +1,5 @@
 import React, { useState } from 'react';
+import { Link } from 'react-router-dom';
 import Navbar from '../../layouts/Navbar';
 
 const Community = () => {
@@ -6,29 +7,35 @@ const Community = () => {
     const tabs = ['Recent', 'Official', 'Fan Zone', 'Popular'];
 
     return (
-        <div className="relative h-screen w-full bg-gray-50 dark:bg-[#12080a] text-slate-800 dark:text-white font-display overflow-hidden select-none flex flex-col transition-colors duration-300">
+        <div className="relative h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-white font-display overflow-hidden select-none flex flex-col transition-colors duration-300 overscroll-none">
              {/* Background Pattern - Keeping it subtle if needed, or removing to match Home exactly. Home doesn't have it, but Community might need it. Let's keep it subtle or remove. Home has clean bg. I'll make it very subtle or remove to match Home's clean look. Let's keep the carbon fiber but extremely subtle if requested, but for "visual alignment" with Home, Home uses clean colors. I will stick to Home's clean background for consistency. */}
              
             {/* Header - Aligned with Home */}
-            <div className="w-full pt-12 px-5 pb-2 z-20 flex justify-between items-center transition-colors shrink-0">
+            <div className="w-full pt-6 px-5 pb-2 z-20 flex justify-between items-center transition-colors shrink-0 touch-none">
                 <div className="flex items-center gap-2">
-                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center p-1.5">
-                         <img src="/logo/logo.png" alt="App Icon" className="w-full h-full object-contain dark:hidden" />
-                         <img src="/logo/logo-white.png" alt="App Icon" className="w-full h-full object-contain hidden dark:block" />
-                    </div>
-                    <div className="h-4 w-[1px] bg-slate-200 dark:bg-white/20 mx-1 transition-colors"></div>
-                    <span className="text-secondary dark:text-white font-bold tracking-[0.2em] text-xs transition-colors uppercase">
-                        Comunidad
-                    </span>
+                    <Link to="/">
+                        <img
+                            src="/logo/logo1.png"
+                            alt="Circuit de Catalunya"
+                            className="h-12 w-auto object-contain block dark:hidden"
+                        />
+                        <img
+                            src="/logo/logo.png"
+                            alt="Circuit de Catalunya"
+                            className="h-12 w-auto object-contain hidden dark:block"
+                        />
+                    </Link>
                 </div>
-                <div className="flex items-center gap-3">
-                     <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-400 dark:text-white/60 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
-                        <span className="material-symbols-outlined text-[20px]">search</span>
-                    </button>
-                    <button className="w-10 h-10 rounded-full border border-slate-200 dark:border-white/10 flex items-center justify-center text-slate-400 dark:text-white/60 hover:bg-slate-100 dark:hover:bg-white/10 transition-colors">
-                        <span className="material-symbols-outlined text-[20px]">notifications</span>
-                    </button>
-                </div>
+                <Link
+                    to="/profile"
+                    className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden shadow-sm"
+                >
+                    <img
+                        src="https://i.pravatar.cc/150?img=12"
+                        alt="Profile"
+                        className="w-full h-full object-cover rounded-full"
+                    />
+                </Link>
             </div>
 
             {/* Scrollable Content */}
@@ -157,6 +164,15 @@ const Community = () => {
             <button className="fixed bottom-24 right-5 w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg shadow-primary/40 z-[80] active:scale-90 transition-transform cursor-pointer hover:bg-[#ff1e3c]">
                 <span className="material-symbols-outlined text-3xl font-bold">add</span>
             </button>
+
+
+
+            {/* Group QR Invite Ball */}
+             <div className="fixed left-0 top-1/2 -translate-y-1/2 w-12 h-24 bg-white/10 backdrop-blur-md rounded-r-2xl border-y border-r border-white/20 z-50 flex items-center justify-center shadow-lg cursor-pointer hover:bg-white/20 transition-all active:scale-95 group">
+                 <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center group-hover:bg-primary transition-colors">
+                    <span className="material-symbols-outlined text-white text-xl">qr_code_2</span>
+                 </div>
+            </div>
 
             <Navbar />
         </div>

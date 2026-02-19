@@ -111,7 +111,7 @@ const Map = () => {
 
   return (
     <div 
-      className="relative h-[100dvh] w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display overflow-hidden select-none transition-colors duration-300"
+      className="relative h-[100dvh] w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display overflow-hidden select-none transition-colors duration-300 overscroll-none"
       style={{ overscrollBehavior: 'none', touchAction: 'none' }} // Prevent pull-to-refresh / overscroll
     >
       {/* Background Map Container */}
@@ -166,22 +166,31 @@ const Map = () => {
       {/* UI Overlay */}
       <div className="relative z-30 flex flex-col h-full pointer-events-none">
         {/* Top Bar */}
-        <div className="w-full pt-12 px-5 pointer-events-auto">
+        <div className="w-full pt-6 px-5 pointer-events-auto touch-none">
           <div className="flex justify-between items-center mb-6">
             <div className="flex items-center gap-2">
-              <img
-                src="/logo/logo.png"
-                alt="Circuit Logo"
-                className="h-12 w-auto object-contain"
-              />
+                <Link to="/">
+                    <img
+                        src="/logo/logo1.png"
+                        alt="Circuit Logo"
+                        className="h-12 w-auto object-contain block dark:hidden"
+                    />
+                    <img
+                        src="/logo/logo.png"
+                        alt="Circuit Logo"
+                        className="h-12 w-auto object-contain hidden dark:block"
+                    />
+                </Link>
             </div>
             <Link
-              to="/profile"
-              className="bg-white/80 dark:bg-slate-900/80 backdrop-blur-md p-2 rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 active:bg-slate-100 dark:active:bg-slate-800 transition-colors"
+                to="/profile"
+                className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden shadow-sm bg-white dark:bg-slate-900"
             >
-              <span className="material-symbols-outlined text-2xl block">
-                person
-              </span>
+                <img
+                    src="https://i.pravatar.cc/150?img=12"
+                    alt="Profile"
+                    className="w-full h-full object-cover rounded-full"
+                />
             </Link>
           </div>
 
