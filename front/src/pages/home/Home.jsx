@@ -58,13 +58,11 @@ const Home = () => {
       {/* Top Bar */}
       <div className="w-full pt-12 px-5 pb-2 z-20 flex justify-between items-center transition-colors">
         <div className="flex items-center gap-2">
-          <span className="text-primary font-black italic text-2xl tracking-tighter">
-            F1
-          </span>
-          <div className="h-6 w-[1px] bg-slate-200 dark:bg-white/20 mx-1 transition-colors"></div>
-          <span className="text-secondary dark:text-white font-bold tracking-[0.2em] text-xs transition-colors">
-            BARCELONA
-          </span>
+          <img
+            src="/logo/logo.png"
+            alt="Circuit de Catalunya"
+            className="h-12 w-auto object-contain"
+          />
         </div>
         <Link
           to="/profile"
