@@ -6,6 +6,7 @@ import Admin from "./pages/admin/Admin";
 import Community from "./pages/community/Community";
 import Settings from "./pages/settings/Settings";
 import Profile from "./pages/profile/Profile";
+import EditProfile from "./pages/profile/EditProfile";
 import "./App.css";
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
         <Route path="/community" element={<Community />} />
         <Route path="/settings" element={<Settings />} />
         <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/edit" element={<EditProfile />} />
       </Routes>
     </div>
   );

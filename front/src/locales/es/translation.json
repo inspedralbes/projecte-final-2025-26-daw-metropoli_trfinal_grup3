@@ -52,6 +52,24 @@
     "achievements": "Logros",
     "friendsList": "Mis Amigos",
     "recentPosts": "Actividad Reciente",
-    "yourAchievements": "Insignias y Premios"
+    "yourAchievements": "Insignias y Premios",
+    "editProfile": "Editar Perfil"
+  },
+  "editProfile": {
+    "title": "Editar Perfil",
+    "save": "Guardar",
+    "saved": "Guardado",
+    "changeAvatar": "Toca el ícono para cambiar tu foto",
+    "chooseAvatar": "Elige un avatar",
+    "name": "Nombre",
+    "namePlaceholder": "Tu nombre",
+    "bio": "Biografía",
+    "bioPlaceholder": "Cuéntanos algo sobre ti...",
+    "infoNote": "Los cambios en el nombre y la foto son visibles para el resto de usuarios de la comunidad.",
+    "dangerZone": "Zona de Peligro",
+    "deleteAccount": "Eliminar cuenta",
+    "errorName": "El nombre no puede estar vacío",
+    "errorNameLong": "El nombre no puede superar 40 caracteres",
+    "errorBioLong": "La biografía no puede superar 100 caracteres"
   }
 }

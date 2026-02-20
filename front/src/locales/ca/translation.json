@@ -49,6 +49,24 @@
     "achievements": "Assoliments",
     "friendsList": "Els meus Amics",
     "recentPosts": "Activitat Recent",
-    "yourAchievements": "Insígnies i Premis"
+    "yourAchievements": "Insígnies i Premis",
+    "editProfile": "Editar Perfil"
+  },
+  "editProfile": {
+    "title": "Editar Perfil",
+    "save": "Desar",
+    "saved": "Desat",
+    "changeAvatar": "Toca la icona per canviar la teva foto",
+    "chooseAvatar": "Tria un avatar",
+    "name": "Nom",
+    "namePlaceholder": "El teu nom",
+    "bio": "Biografia",
+    "bioPlaceholder": "Explica'ns alguna cosa sobre tu...",
+    "infoNote": "Els canvis al nom i la foto s\u00f3n visibles per a la resta d'usuaris de la comunitat.",
+    "dangerZone": "Zona de Perill",
+    "deleteAccount": "Eliminar compte",
+    "errorName": "El nom no pot estar buit",
+    "errorNameLong": "El nom no pot superar 40 car\u00e0cters",
+    "errorBioLong": "La biografia no pot superar 100 car\u00e0cters"
   }
 }

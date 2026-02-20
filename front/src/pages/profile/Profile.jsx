@@ -46,6 +46,13 @@ const Profile = () => {
           <p className="text-slate-500 dark:text-slate-400 text-sm transition-colors">
             F1 Enthusiast & Gold Member
           </p>
+          <Link
+            to="/profile/edit"
+            className="mt-2 flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-primary text-primary text-xs font-bold active:bg-primary/10 transition-colors"
+          >
+            <span className="material-symbols-outlined text-base">edit</span>
+            {t("profile.editProfile")}
+          </Link>
         </div>
 
         {/* Stats / Quick Info */}
