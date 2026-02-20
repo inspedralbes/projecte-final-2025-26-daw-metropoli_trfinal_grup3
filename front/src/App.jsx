@@ -13,7 +13,14 @@ function App() {
   return (
     <div className="map-page-wrapper">
       <Routes>
-        <Route path="/" element={<TestPage />} />
+        <Route path="/home" element={<Home />} />
+        <Route path="/events" element={<Events />} />
+        <Route path="/" element={<Map />} />
+        <Route path="/admin" element={<Admin />} />
+        <Route path="/community" element={<Community />} />
+        <Route path="/settings" element={<Settings />} />
+        <Route path="/profile" element={<Profile />} />
+        <Route path="/profile/edit" element={<EditProfile />} />
       </Routes>
     </div>
   );
