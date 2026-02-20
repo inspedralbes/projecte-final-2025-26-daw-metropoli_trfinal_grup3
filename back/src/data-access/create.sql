@@ -1,3 +1,6 @@
+
+
+
 -- 1. USUARIOS (Independiente)
 CREATE TABLE IF NOT EXISTS usuario (
     id_usuario INTEGER PRIMARY KEY AUTO_INCREMENT,
