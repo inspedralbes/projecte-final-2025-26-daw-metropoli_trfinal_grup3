@@ -1,0 +1,56 @@
+{
+  "home": {
+    "title": "F1 BARCELONA",
+    "liveNow": "Live Now",
+    "spanishGP": "Spanish Grand Prix 2026",
+    "raceWeekend": "RACE WEEKEND",
+    "days": "Days",
+    "hours": "Hrs",
+    "minutes": "Mins",
+    "viewSchedule": "View Schedule",
+    "liveMap": "Live Map",
+    "gpsTrack": "GPS Track Locator",
+    "dining": "Dining",
+    "orderFood": "Order Food & Drinks",
+    "fanZone": "Fan Zone",
+    "experience": "Experience",
+    "driverQA": "Driver Q&A starting in 15 mins",
+    "discoverNearby": "Discover Nearby",
+    "seeAll": "See All",
+    "air": "Air",
+    "track": "Track",
+    "rain": "Rain",
+    "wind": "Wind"
+  },
+  "nav": {
+    "home": "Home",
+    "events": "Events",
+    "map": "Map",
+    "community": "Community",
+    "settings": "Settings"
+  },
+  "settings": {
+    "title": "Settings",
+    "language": "Language",
+    "appLanguage": "Language",
+    "appPreferences": "App Preferences",
+    "pushNotifications": "Push Notifications",
+    "locationServices": "Location Services",
+    "darkMode": "Dark Mode",
+    "account": "Account",
+    "personalDetails": "Personal Details",
+    "paymentMethods": "Payment Methods",
+    "helpSupport": "Help & Support",
+    "logout": "Log Out",
+    "footerApp": "Circuit de Barcelona-Catalunya App",
+    "footerVersion": "Version 1.0.0 (Build 2026.05)"
+  },
+  "profile": {
+    "friends": "Friends",
+    "posts": "Posts",
+    "achievements": "Achievements",
+    "friendsList": "My Friends",
+    "recentPosts": "Recent Activity",
+    "yourAchievements": "Badges & Awards"
+  }
+}

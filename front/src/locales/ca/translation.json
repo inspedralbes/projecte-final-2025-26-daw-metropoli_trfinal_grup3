@@ -1,0 +1,72 @@
+{
+  "home": {
+    "title": "F1 BARCELONA",
+    "liveNow": "En Directe",
+    "spanishGP": "Gran Premi d'Espanya 2026",
+    "raceWeekend": "CAP DE SETMANA DE CURSA",
+    "days": "Dies",
+    "hours": "Hores",
+    "minutes": "Mins",
+    "viewSchedule": "Veure Horari",
+    "liveMap": "Mapa en Directe",
+    "gpsTrack": "Localitzador GPS de Pista",
+    "dining": "Menjar",
+    "orderFood": "Demanar Menjar i Beguda",
+    "fanZone": "Fan Zone",
+    "experience": "Experiència",
+    "driverQA": "Q&A amb Pilots en 15 min",
+    "discoverNearby": "Descobrir a Prop",
+    "seeAll": "Veure Tot",
+    "air": "Aire",
+    "track": "Pista",
+    "rain": "Pluja",
+    "wind": "Vent"
+  },
+  "nav": {
+    "home": "Inici",
+    "events": "Esdeveniments",
+    "map": "Mapa",
+    "community": "Comunitat",
+    "settings": "Configuració"
+  },
+  "settings": {
+    "title": "Configuració",
+    "language": "Idioma",
+    "appLanguage": "Idioma",
+    "appPreferences": "Preferències de l'App",
+    "pushNotifications": "Notificacions Push",
+    "locationServices": "Serveis d'Ubicació",
+    "darkMode": "Mode Fosc",
+    "account": "Compte",
+    "personalDetails": "Dades Personals",
+    "paymentMethods": "Mètodes de Pagament",
+    "helpSupport": "Ajuda i Suport",
+    "logout": "Tancar Sessió"
+  },
+  "profile": {
+    "friends": "Amics",
+    "posts": "Publicacions",
+    "achievements": "Assoliments",
+    "friendsList": "Els meus Amics",
+    "recentPosts": "Activitat Recent",
+    "yourAchievements": "Insígnies i Premis",
+    "editProfile": "Editar Perfil"
+  },
+  "editProfile": {
+    "title": "Editar Perfil",
+    "save": "Desar",
+    "saved": "Desat",
+    "changeAvatar": "Toca la icona per canviar la teva foto",
+    "chooseAvatar": "Tria un avatar",
+    "name": "Nom",
+    "namePlaceholder": "El teu nom",
+    "bio": "Biografia",
+    "bioPlaceholder": "Explica'ns alguna cosa sobre tu...",
+    "infoNote": "Els canvis al nom i la foto s\u00f3n visibles per a la resta d'usuaris de la comunitat.",
+    "dangerZone": "Zona de Perill",
+    "deleteAccount": "Eliminar compte",
+    "errorName": "El nom no pot estar buit",
+    "errorNameLong": "El nom no pot superar 40 car\u00e0cters",
+    "errorBioLong": "La biografia no pot superar 100 car\u00e0cters"
+  }
+}

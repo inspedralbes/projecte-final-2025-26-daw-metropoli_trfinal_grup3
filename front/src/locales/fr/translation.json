@@ -1,0 +1,54 @@
+{
+  "home": {
+    "title": "F1 BARCELONA",
+    "liveNow": "En Direct",
+    "spanishGP": "Grand Prix d'Espagne 2026",
+    "raceWeekend": "WEEK-END DE COURSE",
+    "days": "Jours",
+    "hours": "Hrs",
+    "minutes": "Mins",
+    "viewSchedule": "Voir Programme",
+    "liveMap": "Carte en Direct",
+    "gpsTrack": "Localisateur GPS de Piste",
+    "dining": "Restauration",
+    "orderFood": "Commander Nourriture et Boissons",
+    "fanZone": "Fan Zone",
+    "experience": "Expérience",
+    "driverQA": "Q&A Pilotes dans 15 min",
+    "discoverNearby": "Découvrir à Proximité",
+    "seeAll": "Voir Tout",
+    "air": "Air",
+    "track": "Piste",
+    "rain": "Pluie",
+    "wind": "Vent"
+  },
+  "nav": {
+    "home": "Accueil",
+    "events": "Événements",
+    "map": "Carte",
+    "community": "Communauté",
+    "settings": "Paramètres"
+  },
+  "settings": {
+    "title": "Paramètres",
+    "language": "Langue",
+    "appLanguage": "Langue",
+    "appPreferences": "Préférences",
+    "pushNotifications": "Recevoir des Notifications",
+    "locationServices": "Autoriser la Localisation",
+    "darkMode": "Mode Sombre",
+    "account": "Compte",
+    "privacySecurity": "Confidentialité et Sécurité",
+    "helpSupport": "Aide et Support",
+    "footerApp": "App Circuit de Barcelona-Catalunya",
+    "footerVersion": "Version 1.0.0 (Build 2026.05)"
+  },
+  "profile": {
+    "friends": "Amis",
+    "posts": "Messages",
+    "achievements": "Réalisations",
+    "friendsList": "Mes Amis",
+    "recentPosts": "Activité Récente",
+    "yourAchievements": "Badges et Récompenses"
+  }
+}
