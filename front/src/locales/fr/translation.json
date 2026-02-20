@@ -42,5 +42,13 @@
     "helpSupport": "Aide et Support",
     "footerApp": "App Circuit de Barcelona-Catalunya",
     "footerVersion": "Version 1.0.0 (Build 2026.05)"
+  },
+  "profile": {
+    "friends": "Amis",
+    "posts": "Messages",
+    "achievements": "Réalisations",
+    "friendsList": "Mes Amis",
+    "recentPosts": "Activité Récente",
+    "yourAchievements": "Badges et Récompenses"
   }
 }

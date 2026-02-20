@@ -33,14 +33,22 @@
     "title": "Configuració",
     "language": "Idioma",
     "appLanguage": "Idioma",
-    "appPreferences": "Preferències",
-    "pushNotifications": "Rebre Notificacions",
-    "locationServices": "Permetre Ubicació",
+    "appPreferences": "Preferències de l'App",
+    "pushNotifications": "Notificacions Push",
+    "locationServices": "Serveis d'Ubicació",
     "darkMode": "Mode Fosc",
     "account": "Compte",
-    "privacySecurity": "Privadesa i Seguretat",
+    "personalDetails": "Dades Personals",
+    "paymentMethods": "Mètodes de Pagament",
     "helpSupport": "Ajuda i Suport",
-    "footerApp": "App Circuit de Barcelona-Catalunya",
-    "footerVersion": "Versió 1.0.0 (Build 2026.05)"
+    "logout": "Tancar Sessió"
+  },
+  "profile": {
+    "friends": "Amics",
+    "posts": "Publicacions",
+    "achievements": "Assoliments",
+    "friendsList": "Els meus Amics",
+    "recentPosts": "Activitat Recent",
+    "yourAchievements": "Insígnies i Premis"
   }
 }

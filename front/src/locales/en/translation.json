@@ -33,14 +33,24 @@
     "title": "Settings",
     "language": "Language",
     "appLanguage": "Language",
-    "appPreferences": "Preferences",
-    "pushNotifications": "Receive Notifications",
-    "locationServices": "Allow Location",
+    "appPreferences": "App Preferences",
+    "pushNotifications": "Push Notifications",
+    "locationServices": "Location Services",
     "darkMode": "Dark Mode",
     "account": "Account",
-    "privacySecurity": "Privacy & Security",
+    "personalDetails": "Personal Details",
+    "paymentMethods": "Payment Methods",
     "helpSupport": "Help & Support",
+    "logout": "Log Out",
     "footerApp": "Circuit de Barcelona-Catalunya App",
     "footerVersion": "Version 1.0.0 (Build 2026.05)"
+  },
+  "profile": {
+    "friends": "Friends",
+    "posts": "Posts",
+    "achievements": "Achievements",
+    "friendsList": "My Friends",
+    "recentPosts": "Recent Activity",
+    "yourAchievements": "Badges & Awards"
   }
 }
