@@ -112,33 +112,32 @@ const Admin = () => {
   };
 
   return (
-    <div className="relative h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display overflow-hidden flex flex-col transition-colors duration-300">
+    <div className="relative min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display select-none transition-colors duration-300 md:pl-16">
       {/* Top Bar */}
-      <div className="w-full pt-12 px-5 pb-4 bg-gray-50 dark:bg-slate-950 z-20 transition-colors duration-300 border-b border-slate-200 dark:border-slate-800">
+      <div className="w-full pt-6 px-5 pb-4 bg-gray-50 dark:bg-slate-950 z-20 transition-colors duration-300 border-b border-slate-200 dark:border-slate-800 md:max-w-6xl md:mx-auto">
         <div className="flex justify-between items-center">
-          <div className="flex items-center gap-2">
-            <img
-              src="/logo/logo.png"
-              alt="Circuit Logo"
-              className="h-12 w-auto object-contain"
-            />
-            <span className="text-xl font-bold uppercase tracking-wider text-slate-800 dark:text-white ml-2">
-              Admin Panel
-            </span>
+          <div className="flex items-center gap-3">
+            <img src="/logo/logo.png" alt="Circuit Logo" className="h-10 w-auto object-contain block dark:hidden" />
+            <img src="/logo/logo1.png" alt="Circuit Logo" className="h-10 w-auto object-contain hidden dark:block" />
+            <div>
+              <h1 className="text-xl font-black italic uppercase tracking-tighter text-slate-800 dark:text-white leading-none">
+                Admin <span className="text-primary">Panel</span>
+              </h1>
+              <p className="text-xs text-slate-400 font-medium">Circuit de Catalunya</p>
+            </div>
           </div>
           <Link
             to="/profile"
-            className="bg-white dark:bg-slate-900 p-2 rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 active:bg-slate-100 dark:active:bg-slate-800 transition-colors"
+            className="bg-white dark:bg-slate-900 p-2 rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
-            <span className="material-symbols-outlined text-2xl block">
-              person
-            </span>
+            <span className="material-symbols-outlined text-2xl block">person</span>
           </Link>
         </div>
       </div>
 
       {/* Scrollable Content */}
-      <div className="flex-grow overflow-y-auto pb-32 px-5 space-y-8 pt-6">
+      <div className="overflow-y-auto no-scrollbar pb-24 md:pb-10 px-5 pt-6 md:max-w-6xl md:mx-auto">
+        <div className="lg:grid lg:grid-cols-2 lg:gap-8 lg:items-start space-y-8 lg:space-y-0">
         {/* Section 1: Map Management */}
         <div>
           <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
@@ -463,6 +462,7 @@ const Admin = () => {
             </div>
           )}
         </div>
+        </div>{/* end lg:grid */}
       </div>
 
       <Navbar />
