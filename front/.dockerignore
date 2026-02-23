@@ -5,5 +5,4 @@ npm-debug.log
 Dockerfile
 Dockerfile.prod
 dist
-public
 README.md
