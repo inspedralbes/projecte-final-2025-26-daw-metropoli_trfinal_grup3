@@ -30,7 +30,7 @@ let DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// Custom Icons
+// Es crea un icona personalitzada per al mapa segons el tipus de punt
 const createCustomIcon = (iconName, bgColor) =>
   L.divIcon({
     className: "custom-map-icon",
@@ -41,6 +41,8 @@ const createCustomIcon = (iconName, bgColor) =>
     iconAnchor: [16, 16],
   });
 
+// Es crea un marcador que es posiciona on l'usuari fa click
+// lat es l'eix vertical i lng es l'eix horitzontal
 const LocationMarker = ({ setPosition, position }) => {
   useMapEvents({
     click(e) {
@@ -64,11 +66,16 @@ const Admin = () => {
   const [pointType, setPointType] = useState("grandstand");
   const [savedPoints, setSavedPoints] = useState([]);
 
-  // Event State
-  const [eventName, setEventName] = useState("");
-  const [eventDate, setEventDate] = useState(null);
+  // Event State — camps que coincideixen amb el backend
+  const [eventNombre, setEventNombre] = useState("");
+  const [eventDescripcion, setEventDescripcion] = useState("");
+  const [eventFoto, setEventFoto] = useState("");
+  const [eventFechaInicio, setEventFechaInicio] = useState(null);
+  const [eventFechaFin, setEventFechaFin] = useState(null);
+  const [eventEstado, setEventEstado] = useState("activo");
   const [savedEvents, setSavedEvents] = useState([]);
 
+  // Funció per guardar un punt al mapa
   const handleSavePoint = () => {
     if (!selectedPosition || !pointName) return;
     const newPoint = {
@@ -77,21 +84,31 @@ const Admin = () => {
       type: pointType,
       position: selectedPosition,
     };
+    // Juntem savedPoints amb newPoint amb el spread per crear un nou array amb aquestes 2 dades
     setSavedPoints([...savedPoints, newPoint]);
     setPointName("");
     setSelectedPosition(null);
   };
 
+  // Funció per guardar un esdeveniment
   const handleSaveEvent = () => {
-    if (!eventName || !eventDate) return;
+    if (!eventNombre || !eventFechaInicio || !eventFechaFin) return;
     const newEvent = {
       id: Date.now(),
-      name: eventName,
-      date: eventDate.toISOString(),
+      nombre: eventNombre,
+      descripcion: eventDescripcion,
+      foto: eventFoto,
+      fecha_inicio: eventFechaInicio.toISOString(),
+      fecha_fin: eventFechaFin.toISOString(),
+      estado: eventEstado,
     };
-    setSavedEvents([...savedEvents, newEvent]);
-    setEventName("");
-    setEventDate(null);
+    setSavedEvents((prev) => [...prev, newEvent]);
+    setEventNombre("");
+    setEventDescripcion("");
+    setEventFoto("");
+    setEventFechaInicio(null);
+    setEventFechaFin(null);
+    setEventEstado("activo");
   };
 
   return (
@@ -226,9 +243,10 @@ const Admin = () => {
           </h3>
 
           <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 space-y-4">
+            {/* Nombre */}
             <div>
               <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
-                Event Name
+                Nombre
               </label>
               <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
                 <span className="material-symbols-outlined text-slate-400">
@@ -236,43 +254,143 @@ const Admin = () => {
                 </span>
                 <input
                   type="text"
-                  value={eventName}
-                  onChange={(e) => setEventName(e.target.value)}
+                  value={eventNombre}
+                  onChange={(e) => setEventNombre(e.target.value)}
                   className="bg-transparent border-none outline-none w-full text-slate-700 dark:text-slate-200 text-sm font-medium placeholder-slate-400"
                   placeholder="e.g. Qualifying Session"
                 />
               </div>
             </div>
 
+            {/* Descripcion */}
             <div>
               <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
-                Date & Time
+                Descripción
+              </label>
+              <div className="flex items-start gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                <span className="material-symbols-outlined text-slate-400 mt-0.5">
+                  description
+                </span>
+                <textarea
+                  value={eventDescripcion}
+                  onChange={(e) => setEventDescripcion(e.target.value)}
+                  rows={3}
+                  className="bg-transparent border-none outline-none w-full text-slate-700 dark:text-slate-200 text-sm font-medium placeholder-slate-400 resize-none"
+                  placeholder="Descripción del evento..."
+                />
+              </div>
+            </div>
+
+            {/* Foto (URL) */}
+            <div>
+              <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
+                Foto (URL)
+              </label>
+              <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                <span className="material-symbols-outlined text-slate-400">
+                  image
+                </span>
+                <input
+                  type="text"
+                  value={eventFoto}
+                  onChange={(e) => setEventFoto(e.target.value)}
+                  className="bg-transparent border-none outline-none w-full text-slate-700 dark:text-slate-200 text-sm font-medium placeholder-slate-400"
+                  placeholder="https://..."
+                />
+              </div>
+              {/* Preview de la foto si hay URL */}
+              {eventFoto && (
+                <img
+                  src={eventFoto}
+                  alt="preview"
+                  className="mt-2 w-full h-32 object-cover rounded-xl border border-slate-100 dark:border-slate-700"
+                  onError={(e) => (e.target.style.display = "none")}
+                />
+              )}
+            </div>
+
+            {/* Fecha Inicio */}
+            <div>
+              <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
+                Fecha Inicio
               </label>
               <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
                 <span className="material-symbols-outlined text-slate-400">
                   calendar_month
                 </span>
                 <DatePicker
-                  selected={eventDate}
-                  onChange={(date) => setEventDate(date)}
+                  selected={eventFechaInicio}
+                  onChange={(date) => setEventFechaInicio(date)}
                   showTimeSelect
                   dateFormat="Pp"
                   locale="es"
+                  selectsStart
+                  startDate={eventFechaInicio}
+                  endDate={eventFechaFin}
                   className="bg-transparent border-none outline-none w-full text-slate-700 dark:text-slate-200 text-sm font-medium placeholder-slate-400"
                   wrapperClassName="w-full"
                   popperClassName="shadow-xl rounded-xl overflow-hidden border border-slate-100 dark:border-slate-700"
-                  placeholderText="Select date and time"
+                  placeholderText="Selecciona fecha y hora de inicio"
                 />
+              </div>
+            </div>
+
+            {/* Fecha Fin */}
+            <div>
+              <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
+                Fecha Fin
+              </label>
+              <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                <span className="material-symbols-outlined text-slate-400">
+                  event_available
+                </span>
+                <DatePicker
+                  selected={eventFechaFin}
+                  onChange={(date) => setEventFechaFin(date)}
+                  showTimeSelect
+                  dateFormat="Pp"
+                  locale="es"
+                  selectsEnd
+                  startDate={eventFechaInicio}
+                  endDate={eventFechaFin}
+                  minDate={eventFechaInicio}
+                  className="bg-transparent border-none outline-none w-full text-slate-700 dark:text-slate-200 text-sm font-medium placeholder-slate-400"
+                  wrapperClassName="w-full"
+                  popperClassName="shadow-xl rounded-xl overflow-hidden border border-slate-100 dark:border-slate-700"
+                  placeholderText="Selecciona fecha y hora de fin"
+                />
+              </div>
+            </div>
+
+            {/* Estado */}
+            <div>
+              <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
+                Estado
+              </label>
+              <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                <span className="material-symbols-outlined text-slate-400">
+                  toggle_on
+                </span>
+                <select
+                  value={eventEstado}
+                  onChange={(e) => setEventEstado(e.target.value)}
+                  className="bg-transparent border-none outline-none w-full text-slate-700 dark:text-slate-200 text-sm font-medium appearance-none"
+                >
+                  <option value="activo">Activo</option>
+                  <option value="inactivo">Inactivo</option>
+                  <option value="cancelado">Cancelado</option>
+                </select>
               </div>
             </div>
 
             <div className="pt-2">
               <button
                 onClick={handleSaveEvent}
-                className="w-full bg-slate-800 dark:bg-white text-white dark:text-slate-900 font-bold py-3.5 rounded-xl shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2"
+                disabled={!eventNombre || !eventFechaInicio || !eventFechaFin}
+                className="w-full bg-slate-800 dark:bg-white text-white dark:text-slate-900 font-bold py-3.5 rounded-xl shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
               >
                 <span className="material-symbols-outlined">save</span>
-                Create Event
+                Crear Evento
               </button>
             </div>
           </div>
@@ -281,7 +399,7 @@ const Admin = () => {
           {savedEvents.length > 0 && (
             <div className="mt-6">
               <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 ml-1">
-                Created Events
+                Eventos Creados
               </h3>
               <div className="space-y-3">
                 {savedEvents.map((event) => (
@@ -290,18 +408,46 @@ const Admin = () => {
                     className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex justify-between items-center group"
                   >
                     <div className="flex items-center gap-4">
-                      <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                        <span className="material-symbols-outlined">event</span>
-                      </div>
+                      {event.foto ? (
+                        <img
+                          src={event.foto}
+                          alt={event.nombre}
+                          className="w-10 h-10 rounded-full object-cover"
+                        />
+                      ) : (
+                        <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                          <span className="material-symbols-outlined">
+                            event
+                          </span>
+                        </div>
+                      )}
                       <div>
-                        <p className="font-bold text-slate-800 dark:text-white">
-                          {event.name}
-                        </p>
+                        <div className="flex items-center gap-2">
+                          <p className="font-bold text-slate-800 dark:text-white text-sm">
+                            {event.nombre}
+                          </p>
+                          <span
+                            className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${
+                              event.estado === "activo"
+                                ? "bg-emerald-100 text-emerald-600"
+                                : event.estado === "cancelado"
+                                  ? "bg-red-100 text-red-500"
+                                  : "bg-slate-100 text-slate-500"
+                            }`}
+                          >
+                            {event.estado}
+                          </span>
+                        </div>
                         <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                          {new Date(event.date).toLocaleDateString()} •{" "}
-                          {new Date(event.date).toLocaleTimeString([], {
-                            hour: "2-digit",
-                            minute: "2-digit",
+                          {new Date(event.fecha_inicio).toLocaleDateString(
+                            "es",
+                            { day: "numeric", month: "short" },
+                          )}{" "}
+                          →{" "}
+                          {new Date(event.fecha_fin).toLocaleDateString("es", {
+                            day: "numeric",
+                            month: "short",
+                            year: "numeric",
                           })}
                         </p>
                       </div>

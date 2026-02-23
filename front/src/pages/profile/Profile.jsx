@@ -218,7 +218,7 @@ const Profile = () => {
                 ].map((badge, idx) => (
                   <div
                     key={idx}
-                    className="flex items-center gap-4 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-slate-800"
+                    className="flex flex-col items-center text-center gap-3 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800"
                   >
                     <div
                       className={`w-12 h-12 rounded-full ${badge.bg} ${badge.color} flex items-center justify-center`}
