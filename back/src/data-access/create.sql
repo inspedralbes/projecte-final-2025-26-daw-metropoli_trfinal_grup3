@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS traducciones (
 
 -- 12. COMUNIDAD (Publicaciones)
 CREATE TABLE IF NOT EXISTS comunidad (
-    id_publicacion INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_publicacion INTEGER PRIMARY KEY AUTO_INCREMENT,
     id_usuario INTEGER NOT NULL,
     texto TEXT,
     foto VARCHAR(255),

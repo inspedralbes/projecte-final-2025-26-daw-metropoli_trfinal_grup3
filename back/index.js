@@ -2,7 +2,6 @@ import 'dotenv/config'; // Cargar variables de entorno
 import express from 'express';
 import cors from 'cors';
 import routes from './src/routes/index.js';
-import weatherRoutes from './src/routes/weatherRoutes.js';
 import './src/services/weatherService.js';
 
 const app = express();
@@ -17,8 +16,6 @@ app.use('/api', routes);
 app.get('/', (req, res) => {
   res.send('MetroPoli Backend API is running');
 });
-
-app.use('/api/weather', weatherRoutes);
 
 app.listen(port, () => {
   console.log(`Server listening on port ${port}`);
