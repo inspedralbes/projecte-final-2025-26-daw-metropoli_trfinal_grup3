@@ -14,7 +14,8 @@ services:
       - DB_PASSWORD=password
       - DB_NAME=metropoli
     depends_on:
-      - db
+      db:
+        condition: service_healthy
     networks:
       - app-network
 
@@ -49,6 +50,11 @@ services:
       - ./back/src/data-access/test_navigation_data.sql:/docker-entrypoint-initdb.d/z_test_navigation_data.sql
     networks:
       - app-network
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-ppassword" ]
+      interval: 3s
+      timeout: 3s
+      retries: 10
 
   phpmyadmin:
     image: phpmyadmin/phpmyadmin

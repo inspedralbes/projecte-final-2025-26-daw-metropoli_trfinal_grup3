@@ -37,9 +37,13 @@ INSERT INTO categoria (id_categoria, nombre, icono_url, color_hex) VALUES
 -- 4. Insertar POIs (Puntos de Interés)
 -- Vinculados a nodos de acceso
 INSERT INTO pois (id_poi, nombre, descripcion, latitud, longitud, id_categoria, es_accesible, es_fijo, id_nodo_acceso) VALUES
+(1, 'Cafetería Central', 'Café y snacks', 41.5705, 2.2615, 1, 1, 1, 4), -- Cerca de Nodo D
+(2, 'Baños Entrada', 'Baños públicos', 41.5642, 2.2572, 2, 1, 1, 1), -- Cerca de Nodo A
+(3, 'Stand Tecnológico', 'Exposición de robots', 41.5752, 2.2652, 3, 0, 0, 6); -- Cerca de Nodo F
+
 -- 5. Insertar Usuario de prueba
-INSERT INTO usuario (id_usuario, nombre, email, password_hash, rol) VALUES
-(1, 'Fan Metropoli', 'fan@metropoli.com', 'hash_placeholder', 'visitante');
+INSERT INTO usuario (nombre, email, password_hash, rol) VALUES
+('Fan Metropoli', 'fan@metropoli.com', 'hash_placeholder', 'visitante');
 
 -- 6. Insertar publicaciones de comunidad (sin imágenes)
 INSERT INTO comunidad (id_usuario, texto, tipo_publicacion, ubicacion) VALUES
@@ -48,7 +52,3 @@ INSERT INTO comunidad (id_usuario, texto, tipo_publicacion, ubicacion) VALUES
 (1, 'COMUNICADO OFICIAL: La sesión de clasificación comenzará a las 15:00h. Por favor, ocupen sus asientos con antelación.', 'oficial', 'Tribuna Principal'),
 (1, 'La cafetería central tiene menú especial del día por solo 8€, muy recomendable 👌', 'fanzone', 'Cafetería Central'),
 (1, 'El equipo de logística está haciendo un trabajo increíble este año. Todo perfectamente organizado. ¡Chapó!', 'popular', NULL);
-
-(1, 'Cafetería Central', 'Café y snacks', 41.5705, 2.2615, 1, 1, 1, 4), -- Cerca de Nodo D
-(2, 'Baños Entrada', 'Baños públicos', 41.5642, 2.2572, 2, 1, 1, 1), -- Cerca de Nodo A
-(3, 'Stand Tecnológico', 'Exposición de robots', 41.5752, 2.2652, 3, 0, 0, 6); -- Cerca de Nodo F
