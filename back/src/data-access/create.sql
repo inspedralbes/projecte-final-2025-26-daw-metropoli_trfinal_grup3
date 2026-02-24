@@ -126,7 +126,7 @@ CREATE TABLE IF NOT EXISTS traducciones (
 
 -- 12. COMUNIDAD (Publicaciones)
 CREATE TABLE IF NOT EXISTS comunidad (
-    id_publicacion INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_publicacion INTEGER PRIMARY KEY AUTO_INCREMENT,
     id_usuario INTEGER NOT NULL,
     texto TEXT,
     foto VARCHAR(255),
@@ -135,4 +135,15 @@ CREATE TABLE IF NOT EXISTS comunidad (
     tipo_publicacion VARCHAR(20) DEFAULT 'popular', -- Valores: 'oficial', 'fanzone', 'popular'
     ubicacion VARCHAR(255),
     FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
+);
+
+-- 13. CÓDIGOS QR (Depende de Nodos)
+CREATE TABLE IF NOT EXISTS qr_codes (
+    id_qr INTEGER PRIMARY KEY AUTO_INCREMENT,
+    slug VARCHAR(100) NOT NULL,    
+    id_nodo_inicio INTEGER NOT NULL,        
+    ruta_archivo_qr VARCHAR(255) NOT NULL,
+    activo BOOLEAN DEFAULT 1,
+    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_nodo_inicio) REFERENCES nodos_navegacion(id_nodo)
 );
