@@ -42,4 +42,4 @@ Aquí podeu trobar més informació sobre la nostra planificació i disseny del 
 # Aquest fitxer ha de contenir com a mínim:
 
 - Petita descripció
-- URL de producció (quan la tingueu)
+- URL de producció (quan la tingueu).
