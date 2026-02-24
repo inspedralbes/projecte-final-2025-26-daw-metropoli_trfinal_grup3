@@ -31,6 +31,8 @@ export const generateQrCode = async (req, res) => {
 
     const filePath = path.join(publicDir, fileName);
     const dbUrlPath = `/public/qrs/${fileName}`; // Absolute path relative to server root
+    // The data payload the frontend QR Scanner is expecting
+    const qrData = JSON.stringify({ nodo_actual: parseInt(id_nodo, 10) });
 
     // Generate and save to filesystem as a physical PNG file
     await QRCode.toFile(filePath, qrData, {
@@ -68,4 +70,23 @@ export const generateQrCode = async (req, res) => {
       error: error.message
     });
   }
+};
+
+// Get all generated QR Codes
+export const getQrCodes = async (req, res) => {
+    try {
+        const qrs = await qrModel.getAll();
+        res.status(200).json({
+            success: true,
+            message: 'QR Codes retrieved successfully',
+            data: qrs
+        });
+    } catch (error) {
+        console.error('Error fetching QR codes:', error);
+        res.status(500).json({
+            success: false,
+            message: 'Error retrieving QR codes',
+            error: error.message
+        });
+    }
 };

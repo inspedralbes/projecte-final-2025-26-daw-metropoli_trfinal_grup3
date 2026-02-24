@@ -14,7 +14,19 @@ const getByIdNodo = async (id_nodo_inicio) => {
     return rows[0]; 
 };
 
+// Obtiene todos los QRs generados ordenados del más reciente al más antiguo
+const getAll = async () => {
+    const [rows] = await query(`
+        SELECT q.*, n.descripcion as nodo_descripcion 
+        FROM qr_codes q
+        LEFT JOIN nodos_navegacion n ON q.id_nodo_inicio = n.id_nodo
+        ORDER BY q.fecha_creacion DESC
+    `);
+    return rows;
+};
+
 export default {
     create,
-    getByIdNodo
+    getByIdNodo,
+    getAll
 };

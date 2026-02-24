@@ -13,6 +13,7 @@ import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
+import AdminQRTab from "../../components/admin/AdminQRTab";
 import { registerLocale } from "react-datepicker";
 import es from "date-fns/locale/es";
 
@@ -210,6 +211,13 @@ const Admin = () => {
           >
             <span className="material-symbols-outlined text-lg">map</span>
             Mapa
+          </button>
+          <button
+            onClick={() => setActiveTab('qrs')}
+            className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 ${activeTab === 'qrs' ? 'bg-white dark:bg-slate-800 text-primary shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
+          >
+            <span className="material-symbols-outlined text-lg">qr_code_2</span>
+            Códigos QR
           </button>
         </div>
 
@@ -570,6 +578,12 @@ const Admin = () => {
 
             </div>
           )}
+
+          {/* Section 3: QR Code Management */}
+          {activeTab === 'qrs' && (
+            <AdminQRTab />
+          )}
+
         </div>
 
       </div>
