@@ -8,7 +8,9 @@ CREATE TABLE IF NOT EXISTS usuario (
     email VARCHAR(150) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     rol VARCHAR(20) DEFAULT 'visitante',
-    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
+    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
+    email_verificado BOOLEAN DEFAULT FALSE,
+    token_verificacion VARCHAR(255) NULL
 );
 
 -- 2. CATEGORIAS (Independiente)

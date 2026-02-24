@@ -7,8 +7,8 @@ const register = async (req, res) => {
 
         if (!nombre || !email || !password) {
             return res.status(400).json({
-                success: false,
-                message: 'nombre, email y password son obligatorios',
+                success:    false,
+                message:    'nombre, email y password son obligatorios',
                 error_code: 'MISSING_FIELDS',
             });
         }
@@ -17,20 +17,20 @@ const register = async (req, res) => {
 
         return res.status(201).json({
             success: true,
-            message: 'Usuario registrado correctamente',
-            data: nuevoUsuario,
+            message: 'Usuario registrado. Revisa tu correo para verificar tu cuenta.',
+            data:    nuevoUsuario,
         });
     } catch (error) {
         if (error.code === 'EMAIL_EXISTS') {
             return res.status(409).json({
-                success: false,
-                message: error.message,
+                success:    false,
+                message:    error.message,
                 error_code: error.code,
             });
         }
         return res.status(500).json({
-            success: false,
-            message: error.message,
+            success:    false,
+            message:    error.message,
             error_code: 'ERROR_INTERNO',
         });
     }
@@ -43,8 +43,8 @@ const login = async (req, res) => {
 
         if (!email || !password) {
             return res.status(400).json({
-                success: false,
-                message: 'email y password son obligatorios',
+                success:    false,
+                message:    'email y password son obligatorios',
                 error_code: 'MISSING_FIELDS',
             });
         }
@@ -54,19 +54,26 @@ const login = async (req, res) => {
         return res.status(200).json({
             success: true,
             message: 'Login exitoso',
-            data: result,   // { token, usuario }
+            data:    result,   // { token, usuario }
         });
     } catch (error) {
         if (error.code === 'INVALID_CREDENTIALS') {
             return res.status(401).json({
-                success: false,
-                message: error.message,
+                success:    false,
+                message:    error.message,
+                error_code: error.code,
+            });
+        }
+        if (error.code === 'EMAIL_NOT_VERIFIED') {
+            return res.status(403).json({
+                success:    false,
+                message:    error.message,
                 error_code: error.code,
             });
         }
         return res.status(500).json({
-            success: false,
-            message: error.message,
+            success:    false,
+            message:    error.message,
             error_code: 'ERROR_INTERNO',
         });
     }

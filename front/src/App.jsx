@@ -9,6 +9,7 @@ import Profile from "./pages/profile/Profile";
 import EditProfile from "./pages/profile/EditProfile";
 import Login from "./pages/auth/Login";
 import SignUp from "./pages/auth/SignUp";
+import VerifyEmail from "./pages/auth/VerifyEmail";
 import "./App.css";
 
 function App() {
@@ -17,6 +18,7 @@ function App() {
       <Routes>
         <Route path="/login" element={<Login />} />
         <Route path="/signup" element={<SignUp />} />
+        <Route path="/verify-email" element={<VerifyEmail />} />
         <Route path="/home" element={<Home />} />
         <Route path="/events" element={<Events />} />
         <Route path="/" element={<Map />} />

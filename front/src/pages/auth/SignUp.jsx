@@ -1,49 +1,134 @@
 import { useState, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
 import ReCAPTCHA from "react-google-recaptcha";
 
-// ⚠️ Replace with your real reCAPTCHA v2 Site Key from https://www.google.com/recaptcha/admin
-const RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"; // ← test key (works locally, always passes)
+const RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 const SignUp = () => {
-  const [showPassword, setShowPassword] = useState(false);
-  const [showConfirm, setShowConfirm] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState(null);
-  const captchaRef = useRef(null);
+  const [showPassword, setShowPassword]   = useState(false);
+  const [showConfirm, setShowConfirm]     = useState(false);
+  const [captchaToken, setCaptchaToken]   = useState(null);
+  const [step, setStep]                   = useState("form");    // "form" | "check-email"
+  const [loading, setLoading]             = useState(false);
+  const [error, setError]                 = useState(null);
+  const captchaRef                        = useRef(null);
 
-  // Google OAuth
   const loginWithGoogle = useGoogleLogin({
-    onSuccess: (tokenResponse) => {
-      console.log("Google token:", tokenResponse);
-      // TODO: send to backend
-    },
-    onError: (error) => console.error("Google login failed:", error),
+    onSuccess: (tokenResponse) => console.log("Google token:", tokenResponse),
+    onError:   (error)         => console.error("Google login failed:", error),
   });
 
-  // Apple OAuth
   const loginWithApple = () => {
     const params = new URLSearchParams({
       response_type: "code id_token",
-      client_id: "YOUR_APPLE_SERVICE_ID", // ⚠️ Replace
-      redirect_uri: window.location.origin + "/auth/apple/callback",
-      scope: "name email",
+      client_id:     "YOUR_APPLE_SERVICE_ID",
+      redirect_uri:  window.location.origin + "/auth/apple/callback",
+      scope:         "name email",
       response_mode: "form_post",
-      state: crypto.randomUUID(),
+      state:         crypto.randomUUID(),
     });
     window.location.href = `https://appleid.apple.com/auth/authorize?${params.toString()}`;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+
     if (!captchaToken) {
-      alert("Please complete the CAPTCHA before creating your account.");
+      setError("Por favor completa el CAPTCHA antes de continuar.");
       return;
     }
-    // TODO: connect to backend auth — pass captchaToken for server-side verification
-    console.log("reCAPTCHA token:", captchaToken);
+
+    const nombre   = e.target.name.value.trim();
+    const email    = e.target.email.value.trim();
+    const password = e.target.password.value;
+    const confirm  = e.target.confirm.value;
+
+    if (password !== confirm) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
+
+    setLoading(true);
+    try {
+      const res  = await fetch(`${API_BASE}/auth/register`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ nombre, email, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Error al registrar. Inténtalo de nuevo.");
+        captchaRef.current?.reset();
+        setCaptchaToken(null);
+        return;
+      }
+
+      setStep("check-email");
+    } catch {
+      setError("No se pudo conectar con el servidor. Inténtalo más tarde.");
+      captchaRef.current?.reset();
+      setCaptchaToken(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
+  // ── Pantalla "Revisa tu correo" ──────────────────────────────────────────────
+  if (step === "check-email") {
+    return (
+      <div
+        className="relative flex min-h-screen w-full flex-col items-center justify-center p-6 overflow-hidden"
+        style={{ backgroundColor: "#121011" }}
+      >
+        <div className="w-full max-w-md z-10 text-center space-y-6">
+          <div
+            className="p-8 rounded-2xl shadow-2xl space-y-5"
+            style={{
+              background:    "rgba(34,16,19,0.9)",
+              backdropFilter:"blur(12px)",
+              border:        "1px solid rgba(238,43,75,0.15)",
+            }}
+          >
+            {/* Icon */}
+            <div className="flex justify-center">
+              <span
+                className="material-symbols-outlined"
+                style={{ fontSize: "64px", color: "#ee2b4b" }}
+              >
+                mark_email_unread
+              </span>
+            </div>
+
+            <div>
+              <h2 className="text-2xl font-bold text-slate-100">¡Revisa tu correo!</h2>
+              <p className="mt-2 text-slate-400 text-sm leading-relaxed">
+                Te hemos enviado un enlace de verificación. Haz clic en él para
+                activar tu cuenta y poder iniciar sesión.
+              </p>
+            </div>
+
+            <p className="text-xs text-slate-600">
+              ¿No ves el email? Revisa la carpeta de spam o correo no deseado.
+            </p>
+
+            <Link
+              to="/login"
+              className="block w-full text-center font-bold py-3 rounded-xl transition-all hover:opacity-90"
+              style={{ backgroundColor: "#ee2b4b", color: "#fff" }}
+            >
+              Ir al Login
+            </Link>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // ── Formulario de registro ───────────────────────────────────────────────────
   return (
     <div
       className="relative flex min-h-screen w-full flex-col items-center justify-center p-6 overflow-hidden"
@@ -51,8 +136,8 @@ const SignUp = () => {
         backgroundColor: "#121011",
         backgroundImage:
           "linear-gradient(45deg, #1a1819 25%, transparent 25%), linear-gradient(-45deg, #1a1819 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #1a1819 75%), linear-gradient(-45deg, transparent 75%, #1a1819 75%)",
-        backgroundSize: "8px 8px",
-        backgroundPosition: "0 0, 0 4px, 4px 4px, 4px 0",
+        backgroundSize:    "8px 8px",
+        backgroundPosition:"0 0, 0 4px, 4px 4px, 4px 0",
       }}
     >
       {/* Background Glow */}
@@ -88,12 +173,23 @@ const SignUp = () => {
         <div
           className="p-6 rounded-2xl shadow-2xl"
           style={{
-            background: "rgba(34,16,19,0.8)",
-            backdropFilter: "blur(12px)",
-            border: "1px solid rgba(238,43,75,0.10)",
+            background:    "rgba(34,16,19,0.8)",
+            backdropFilter:"blur(12px)",
+            border:        "1px solid rgba(238,43,75,0.10)",
           }}
         >
           <form onSubmit={handleSubmit} className="space-y-5">
+
+            {/* Error banner */}
+            {error && (
+              <div
+                className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm"
+                style={{ background: "rgba(238,43,75,0.12)", border: "1px solid rgba(238,43,75,0.30)", color: "#fca5a5" }}
+              >
+                <span className="material-symbols-outlined" style={{ fontSize: "18px", flexShrink: 0 }}>error</span>
+                {error}
+              </div>
+            )}
 
             {/* Full Name */}
             <div className="space-y-2">
@@ -108,6 +204,7 @@ const SignUp = () => {
                   className="w-full border border-slate-700/50 rounded-xl py-3.5 pl-12 pr-4 text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                   style={{ backgroundColor: "rgba(18,16,17,0.5)" }}
                   id="name"
+                  name="name"
                   placeholder="Lewis Hamilton"
                   type="text"
                   autoComplete="name"
@@ -129,6 +226,7 @@ const SignUp = () => {
                   className="w-full border border-slate-700/50 rounded-xl py-3.5 pl-12 pr-4 text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                   style={{ backgroundColor: "rgba(18,16,17,0.5)" }}
                   id="email"
+                  name="email"
                   placeholder="lewis@f1.com"
                   type="email"
                   autoComplete="email"
@@ -137,7 +235,7 @@ const SignUp = () => {
               </div>
             </div>
 
-            {/* Password + Confirm — same row */}
+            {/* Password + Confirm */}
             <div className="grid grid-cols-2 gap-3">
               {/* Password */}
               <div className="space-y-2">
@@ -152,6 +250,7 @@ const SignUp = () => {
                     className="w-full border border-slate-700/50 rounded-xl py-3.5 pl-10 pr-8 text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                     style={{ backgroundColor: "rgba(18,16,17,0.5)" }}
                     id="password"
+                    name="password"
                     placeholder="••••••••"
                     type={showPassword ? "text" : "password"}
                     autoComplete="new-password"
@@ -182,6 +281,7 @@ const SignUp = () => {
                     className="w-full border border-slate-700/50 rounded-xl py-3.5 pl-10 pr-8 text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                     style={{ backgroundColor: "rgba(18,16,17,0.5)" }}
                     id="confirm"
+                    name="confirm"
                     placeholder="••••••••"
                     type={showConfirm ? "text" : "password"}
                     autoComplete="new-password"
@@ -237,12 +337,21 @@ const SignUp = () => {
               className="w-full text-white font-bold py-4 rounded-xl transform transition-all active:scale-[0.98] hover:opacity-90 flex items-center justify-center gap-2 group disabled:opacity-40 disabled:cursor-not-allowed"
               style={{ backgroundColor: "#ee2b4b", boxShadow: "0 10px 25px -5px rgba(238,43,75,0.2)" }}
               type="submit"
-              disabled={!captchaToken}
+              disabled={!captchaToken || loading}
             >
-              CREATE ACCOUNT
-              <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform" style={{ fontSize: "20px" }}>
-                chevron_right
-              </span>
+              {loading ? (
+                <>
+                  <span className="material-symbols-outlined animate-spin" style={{ fontSize: "20px" }}>autorenew</span>
+                  CREATING ACCOUNT…
+                </>
+              ) : (
+                <>
+                  CREATE ACCOUNT
+                  <span className="material-symbols-outlined group-hover:translate-x-1 transition-transform" style={{ fontSize: "20px" }}>
+                    chevron_right
+                  </span>
+                </>
+              )}
             </button>
           </form>
 
@@ -260,7 +369,6 @@ const SignUp = () => {
 
           {/* Social Buttons */}
           <div className="grid grid-cols-2 gap-4">
-            {/* Google */}
             <button
               type="button"
               onClick={() => loginWithGoogle()}
@@ -276,7 +384,6 @@ const SignUp = () => {
               <span className="text-sm font-medium text-slate-300">Google</span>
             </button>
 
-            {/* Apple */}
             <button
               type="button"
               onClick={loginWithApple}

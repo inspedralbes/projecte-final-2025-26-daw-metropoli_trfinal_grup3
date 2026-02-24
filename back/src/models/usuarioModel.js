@@ -1,10 +1,10 @@
 import { query } from '../config/mysql.js';
 
 const create = async (usuario) => {
-    const { nombre, email, password, rol } = usuario;
+    const { nombre, email, password, rol, token_verificacion } = usuario;
     const [result] = await query(
-        'INSERT INTO usuario (nombre, email, password_hash, rol) VALUES (?, ?, ?, ?)',
-        [nombre, email, password, rol]
+        'INSERT INTO usuario (nombre, email, password_hash, rol, token_verificacion, email_verificado) VALUES (?, ?, ?, ?, ?, FALSE)',
+        [nombre, email, password, rol, token_verificacion]
     );
     return { id_usuario: result.insertId, ...usuario };
 };
@@ -12,6 +12,18 @@ const create = async (usuario) => {
 const findByEmail = async (email) => {
     const [rows] = await query('SELECT * FROM usuario WHERE email = ?', [email]);
     return rows[0];
+};
+
+const findByToken = async (token) => {
+    const [rows] = await query('SELECT * FROM usuario WHERE token_verificacion = ?', [token]);
+    return rows[0];
+};
+
+const verifyEmail = async (id_usuario) => {
+    await query(
+        'UPDATE usuario SET email_verificado = TRUE, token_verificacion = NULL WHERE id_usuario = ?',
+        [id_usuario]
+    );
 };
 
 const getAll = async () => {
@@ -22,5 +34,7 @@ const getAll = async () => {
 export default {
     create,
     findByEmail,
+    findByToken,
+    verifyEmail,
     getAll
 };

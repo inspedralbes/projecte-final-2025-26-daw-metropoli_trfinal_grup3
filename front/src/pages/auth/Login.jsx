@@ -3,54 +3,78 @@ import { Link, useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
 import ReCAPTCHA from "react-google-recaptcha";
 
-// ⚠️ Replace with your real reCAPTCHA v2 Site Key from https://www.google.com/recaptcha/admin
-const RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI"; // ← test key (works locally, always passes)
+const RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI";
+const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
   const [captchaToken, setCaptchaToken] = useState(null);
-  const captchaRef = useRef(null);
-  const navigate = useNavigate();
+  const [loading, setLoading]           = useState(false);
+  const [error, setError]               = useState(null);
+  const captchaRef                      = useRef(null);
+  const navigate                        = useNavigate();
 
-  // ──────────────────────────────────────────────
-  // Google OAuth
-  // ──────────────────────────────────────────────
   const loginWithGoogle = useGoogleLogin({
-    onSuccess: (tokenResponse) => {
-      console.log("Google token:", tokenResponse);
-      // TODO: send tokenResponse.access_token to your backend for verification
-      // navigate("/home"); // uncomment when backend is ready
-    },
-    onError: (error) => {
-      console.error("Google login failed:", error);
-    },
+    onSuccess: (tokenResponse) => console.log("Google token:", tokenResponse),
+    onError:   (error)         => console.error("Google login failed:", error),
   });
 
-  // ──────────────────────────────────────────────
-  // Apple OAuth  (Sign in with Apple — redirect flow)
-  // Docs: https://developer.apple.com/sign-in-with-apple/
-  // ──────────────────────────────────────────────
   const loginWithApple = () => {
     const params = new URLSearchParams({
       response_type: "code id_token",
-      client_id: "YOUR_APPLE_SERVICE_ID",          // ⚠️ Replace with your Apple Service ID
-      redirect_uri: window.location.origin + "/auth/apple/callback",
-      scope: "name email",
+      client_id:     "YOUR_APPLE_SERVICE_ID",
+      redirect_uri:  window.location.origin + "/auth/apple/callback",
+      scope:         "name email",
       response_mode: "form_post",
-      state: crypto.randomUUID(),
+      state:         crypto.randomUUID(),
     });
-    window.location.href =
-      `https://appleid.apple.com/auth/authorize?${params.toString()}`;
+    window.location.href = `https://appleid.apple.com/auth/authorize?${params.toString()}`;
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
+    setError(null);
+
     if (!captchaToken) {
-      alert("Please complete the CAPTCHA before signing in.");
+      setError("Por favor completa el CAPTCHA antes de continuar.");
       return;
     }
-    // TODO: connect to backend auth — pass captchaToken for server-side verification
-    console.log("reCAPTCHA token:", captchaToken);
+
+    const email    = e.target.email.value.trim();
+    const password = e.target.password.value;
+
+    setLoading(true);
+    try {
+      const res  = await fetch(`${API_BASE}/auth/login`, {
+        method:  "POST",
+        headers: { "Content-Type": "application/json" },
+        body:    JSON.stringify({ email, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        // Specific message for unverified accounts
+        if (data.error_code === "EMAIL_NOT_VERIFIED") {
+          setError("Debes verificar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada.");
+        } else {
+          setError(data.message || "Credenciales incorrectas.");
+        }
+        captchaRef.current?.reset();
+        setCaptchaToken(null);
+        return;
+      }
+
+      // Save token and redirect
+      localStorage.setItem("token",   data.data.token);
+      localStorage.setItem("usuario", JSON.stringify(data.data.usuario));
+      navigate("/home");
+    } catch {
+      setError("No se pudo conectar con el servidor. Inténtalo más tarde.");
+      captchaRef.current?.reset();
+      setCaptchaToken(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   return (
@@ -60,8 +84,8 @@ const Login = () => {
         backgroundColor: "#121011",
         backgroundImage:
           "linear-gradient(45deg, #1a1819 25%, transparent 25%), linear-gradient(-45deg, #1a1819 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #1a1819 75%), linear-gradient(-45deg, transparent 75%, #1a1819 75%)",
-        backgroundSize: "8px 8px",
-        backgroundPosition: "0 0, 0 4px, 4px 4px, 4px 0",
+        backgroundSize:    "8px 8px",
+        backgroundPosition:"0 0, 0 4px, 4px 4px, 4px 0",
       }}
     >
       {/* Background Glow */}
@@ -78,7 +102,6 @@ const Login = () => {
 
         {/* ── Logo & Title ── */}
         <div className="flex flex-col items-center space-y-4">
-          {/* Logo — no box, just the image with a subtle glow */}
           <img
             src="/logo/logo.png"
             alt="Circuit de Barcelona-Catalunya"
@@ -98,12 +121,23 @@ const Login = () => {
         <div
           className="p-6 rounded-2xl shadow-2xl"
           style={{
-            background: "rgba(34,16,19,0.8)",
-            backdropFilter: "blur(12px)",
-            border: "1px solid rgba(238,43,75,0.10)",
+            background:    "rgba(34,16,19,0.8)",
+            backdropFilter:"blur(12px)",
+            border:        "1px solid rgba(238,43,75,0.10)",
           }}
         >
           <form onSubmit={handleSubmit} className="space-y-5">
+
+            {/* Error banner */}
+            {error && (
+              <div
+                className="flex items-start gap-3 px-4 py-3 rounded-xl text-sm"
+                style={{ background: "rgba(238,43,75,0.12)", border: "1px solid rgba(238,43,75,0.30)", color: "#fca5a5" }}
+              >
+                <span className="material-symbols-outlined mt-0.5" style={{ fontSize: "18px", flexShrink: 0 }}>error</span>
+                {error}
+              </div>
+            )}
 
             {/* Email */}
             <div className="space-y-2">
@@ -118,6 +152,7 @@ const Login = () => {
                   className="w-full border border-slate-700/50 rounded-xl py-3.5 pl-12 pr-4 text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                   style={{ backgroundColor: "rgba(18,16,17,0.5)" }}
                   id="email"
+                  name="email"
                   placeholder="name@example.com"
                   type="email"
                   autoComplete="email"
@@ -144,6 +179,7 @@ const Login = () => {
                   className="w-full border border-slate-700/50 rounded-xl py-3.5 pl-12 pr-12 text-slate-100 placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
                   style={{ backgroundColor: "rgba(18,16,17,0.5)" }}
                   id="password"
+                  name="password"
                   placeholder="••••••••"
                   type={showPassword ? "text" : "password"}
                   autoComplete="current-password"
@@ -179,12 +215,17 @@ const Login = () => {
 
             {/* Submit */}
             <button
-              className="w-full text-white font-bold py-4 rounded-xl transform transition-all active:scale-[0.98] mt-2 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed"
+              className="w-full text-white font-bold py-4 rounded-xl transform transition-all active:scale-[0.98] mt-2 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
               style={{ backgroundColor: "#ee2b4b", boxShadow: "0 10px 25px -5px rgba(238,43,75,0.2)" }}
               type="submit"
-              disabled={!captchaToken}
+              disabled={!captchaToken || loading}
             >
-              LOG IN
+              {loading ? (
+                <>
+                  <span className="material-symbols-outlined animate-spin" style={{ fontSize: "20px" }}>autorenew</span>
+                  SIGNING IN…
+                </>
+              ) : "LOG IN"}
             </button>
           </form>
 
@@ -200,16 +241,14 @@ const Login = () => {
             </div>
           </div>
 
-          {/* ── Social Buttons ── */}
+          {/* Social Buttons */}
           <div className="grid grid-cols-2 gap-4">
-            {/* Google */}
             <button
               type="button"
               onClick={() => loginWithGoogle()}
               className="flex items-center justify-center gap-2 border border-slate-700/50 rounded-xl py-3 px-4 transition-all hover:bg-white/10 active:scale-95"
               style={{ backgroundColor: "rgba(255,255,255,0.05)" }}
             >
-              {/* Official Google "G" SVG */}
               <svg className="w-5 h-5" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                 <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
                 <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -219,7 +258,6 @@ const Login = () => {
               <span className="text-sm font-medium text-slate-300">Google</span>
             </button>
 
-            {/* Apple */}
             <button
               type="button"
               onClick={loginWithApple}
