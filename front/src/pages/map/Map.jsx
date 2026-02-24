@@ -1,7 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import {
   MapContainer,
-  ImageOverlay,
   Marker,
   Popup,
   TileLayer,
@@ -13,17 +12,10 @@ import communicationManager from "../../services/communicationManager"; // API
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
-// Fix for default marker icon
 import icon from "leaflet/dist/images/marker-icon.png";
 import iconShadow from "leaflet/dist/images/marker-shadow.png";
 
-let DefaultIcon = L.icon({
-  iconUrl: icon,
-  shadowUrl: iconShadow,
-  iconSize: [25, 41],
-  iconAnchor: [12, 41],
-});
-
+let DefaultIcon = L.icon({ iconUrl: icon, shadowUrl: iconShadow, iconSize: [25, 41], iconAnchor: [12, 41] });
 L.Marker.prototype.options.icon = DefaultIcon;
 
 // Custom Icons using Material Symbols for Light Mode
@@ -50,12 +42,6 @@ const UserIcon = L.divIcon({
   iconSize: [16, 16],
   iconAnchor: [8, 8],
 });
-
-// Circuit Bounds for navigation lock
-const circuitBounds = [
-  [41.5496, 2.233], // South-West corner
-  [41.5855, 2.2858], // North-East corner
-];
 
 const Map = () => {
   const mapRef = useRef(null);
@@ -126,11 +112,7 @@ const Map = () => {
   };
 
   const handleLocate = () => {
-    if (!navigator.geolocation) {
-      alert("Geolocation is not supported by your browser");
-      return;
-    }
-
+    if (!navigator.geolocation) { alert("Geolocation not supported"); return; }
     navigator.geolocation.getCurrentPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
@@ -145,56 +127,57 @@ const Map = () => {
           });
         }
       },
-      (error) => {
-        console.error("Error getting location:", error);
-        alert("Unable to retrieve your location. Please ensure you have granted permission.");
-      },
-      {
-        enableHighAccuracy: true,
-        timeout: 10000,
-        maximumAge: 0
-      }
+      (error) => { console.error(error); alert("Unable to retrieve your location."); },
+      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
     );
   };
 
-  // Trigger location on mount (optional, or just wait for user click)
-  useEffect(() => {
-    // handleLocate(); // Uncomment if you want to locate automatically on open
-  }, []);
+  useEffect(() => { }, []);
+
+  const legendItems = [
+    { color: "bg-primary", label: "Grandstands" },
+    { color: "bg-indigo-500", label: "Fan Zone" },
+    { color: "bg-slate-500", label: "WC" },
+    { color: "bg-orange-400", label: "Food" },
+    { color: "bg-blue-500", label: "You" },
+  ];
 
   return (
     <div
       className="relative h-[100dvh] w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display overflow-hidden select-none transition-colors duration-300 overscroll-none"
       style={{ overscrollBehavior: 'none', touchAction: 'none' }} // Prevent pull-to-refresh / overscroll
     >
-      {/* Background Map Container */}
+      {/* Background Map */}
       <div className="absolute inset-0 z-0 map-container-bg w-full h-full">
         <MapContainer
           ref={mapRef}
           center={initialCenter}
           zoom={15}
-          minZoom={14}
+          minZoom={13}
           scrollWheelZoom={true}
           className="w-full h-full outline-none"
           zoomControl={false}
           attributionControl={false}
         >
-          {/* Light Mode Tiles (Carto Positron or OSM Standard) */}
-          {/* Conditionally render TileLayer based on isSatelliteView */}
           <TileLayer
             key={isSatelliteView ? "satellite" : "standard"}
-            url={
-              isSatelliteView
-                ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-                : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
+            url={isSatelliteView
+              ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
+              : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
             }
-            attribution={
-              isSatelliteView
-                ? "&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS, AEX, GeoEye, Getmapping, Aerogrid, IGN, IGP, UPR-EGP, and the GIS User Community"
-                : "&copy; OSM &copy; CARTO"
+            attribution={isSatelliteView
+              ? "&copy; Esri &mdash; Source: Esri, i-cubed, USDA, USGS..."
+              : "&copy; OSM &copy; CARTO"
             }
           />
+          {/* <ImageOverlay
+            url="/circuit_map_final.png"
+            bounds={imageBounds}
+            opacity={0.7}
+            zIndex={10}
+          /> */}
 
+          {/* Dynamic Markers rendering (currently empty) */}
           {/* Dijkstra Route rendering */}
           {route && <Polyline positions={route} color="#3b82f6" weight={5} opacity={0.8} dashArray="10, 10" />}
 
@@ -225,7 +208,6 @@ const Map = () => {
               </Popup>
             </Marker>
           ))}
-
           {userPosition && (
             <Marker position={userPosition} icon={UserIcon}>
               <Popup>You are here</Popup>
@@ -266,11 +248,9 @@ const Map = () => {
           </div>
 
           {/* Search Bar */}
-          <div className="w-full">
-            <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl flex items-center px-4 py-3.5 gap-3 pointer-events-auto border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none transition-colors">
-              <span className="material-symbols-outlined text-primary text-xl">
-                search
-              </span>
+          <div className="w-full md:max-w-sm">
+            <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl flex items-center px-4 py-3.5 gap-3 pointer-events-auto border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
+              <span className="material-symbols-outlined text-primary text-xl">search</span>
               <input
                 className="bg-transparent border-none outline-none text-slate-700 dark:text-slate-200 placeholder-slate-400 w-full text-sm font-medium focus:ring-0 p-0"
                 placeholder="Search Grandstand, Food, WC..."
@@ -283,12 +263,10 @@ const Map = () => {
         {/* Legend Toggle Tab (Left Side) */}
         <button
           onClick={() => setIsLegendOpen(!isLegendOpen)}
-          className={`absolute left-0 top-1/2 -translate-y-1/2 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-slate-700 dark:text-slate-200 py-6 px-1.5 rounded-r-2xl border-y border-r border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none active:scale-95 transition-all duration-300 flex items-center justify-center pointer-events-auto ${isLegendOpen ? 'translate-x-[16rem]' : 'translate-x-0'}`}
+          className={`absolute top-1/2 -translate-y-1/2 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-slate-700 dark:text-slate-200 py-6 px-1.5 rounded-r-2xl border-y border-r border-slate-200 dark:border-slate-800 shadow-xl active:scale-95 transition-all duration-300 flex items-center justify-center pointer-events-auto ${isLegendOpen ? 'translate-x-[16rem]' : 'translate-x-0'} left-0`}
           aria-label="Toggle Legend"
         >
-          <span className="material-symbols-outlined text-xl">
-            {isLegendOpen ? 'chevron_left' : 'chevron_right'}
-          </span>
+          <span className="material-symbols-outlined text-xl">{isLegendOpen ? "chevron_left" : "chevron_right"}</span>
         </button>
 
         {/* Collapsible Sidebar Legend */}
@@ -351,55 +329,33 @@ const Map = () => {
             onClick={handleLocate}
             className="bg-primary text-white p-3.5 rounded-xl shadow-lg shadow-primary/30 active:scale-95 transition-transform flex items-center justify-center"
           >
-            <span className="material-symbols-outlined text-2xl">
-              my_location
-            </span>
+            <span className="material-symbols-outlined text-2xl">my_location</span>
           </button>
           <button
             onClick={() => setIsSatelliteView(!isSatelliteView)}
-            className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-slate-700 dark:text-slate-200 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-lg shadow-slate-200/50 dark:shadow-none active:scale-95 transition-transform flex items-center justify-center"
+            className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-slate-700 dark:text-slate-200 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-lg active:scale-95 transition-transform flex items-center justify-center"
           >
-            <span className="material-symbols-outlined text-2xl">
-              {isSatelliteView ? "map" : "satellite_alt"}
-            </span>
+            <span className="material-symbols-outlined text-2xl">{isSatelliteView ? "map" : "satellite_alt"}</span>
           </button>
         </div>
 
-        {/* Info Card - Only shows when a feature is selected */}
+        {/* Info Card */}
         {selectedFeature && (
-          <div className="px-4 mb-24 pointer-events-auto animate-[slideUp_0.3s_ease-out]">
-            <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-2xl shadow-slate-200/50 dark:shadow-none transition-colors">
+          <div className="px-4 mb-24 pointer-events-auto">
+            <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-2xl">
               <div className="flex justify-between items-start mb-3">
                 <div>
-                  <h3 className="text-lg font-bold text-slate-800 dark:text-white">
-                    {selectedFeature.name || "Selected Item"}
-                  </h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400 flex items-center gap-1">
-                    <span className="material-icons text-xs text-primary">
-                      place
-                    </span>
-                    {selectedFeature.description || "Details unavailable"}
-                  </p>
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-white">{selectedFeature.name || "Selected Item"}</h3>
+                  <p className="text-sm text-slate-500 dark:text-slate-400">{selectedFeature.description || "Details unavailable"}</p>
                 </div>
-                <button
-                  onClick={() => setSelectedFeature(null)}
-                  className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-                >
+                <button onClick={() => setSelectedFeature(null)} className="text-slate-400 hover:text-slate-600">
                   <span className="material-icons">close</span>
                 </button>
               </div>
-              {/* Placeholder for future images/details */}
-              <div className="flex gap-2 mb-4">
-                <div className="h-20 w-32 bg-slate-100 dark:bg-slate-800 rounded-lg border border-slate-200 dark:border-slate-700 flex items-center justify-center text-slate-400 text-xs">
-                  No Image
-                </div>
-              </div>
-              <div className="flex gap-3">
-                <button className="flex-1 bg-primary text-white font-semibold py-3 px-4 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2 active:bg-red-600 transition-colors">
-                  <span className="material-icons text-sm">navigation</span>
-                  Navigate
-                </button>
-              </div>
+              <button className="w-full bg-primary text-white font-semibold py-3 px-4 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+                <span className="material-icons text-sm">navigation</span>
+                Navigate
+              </button>
             </div>
           </div>
         )}

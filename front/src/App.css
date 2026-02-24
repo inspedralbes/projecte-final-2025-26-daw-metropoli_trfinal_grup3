@@ -1,20 +1,21 @@
 #root {
-  max-width: 1280px;
   margin: 0 auto;
-  text-align: center;
+  text-align: left;
 }
 
 html,
 body,
 #root {
-  height: 100%;
+  min-height: 100%;
+  height: auto;
   width: 100%;
   margin: 0;
   padding: 0;
+  overflow-x: hidden;
 }
 
 .map-page-wrapper {
-  height: 100%;
+  min-height: 100dvh;
   width: 100%;
   display: flex;
   flex-direction: column;
