@@ -13,7 +13,7 @@ services:
       - DB_USER=root
       - DB_PASSWORD=password
       - DB_NAME=metropoli
-    command: npm start
+    command: npm run dev
     depends_on:
       db:
         condition: service_healthy   # ← espera a que MySQL esté 100% listo

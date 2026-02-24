@@ -13,6 +13,10 @@ const SignUp = () => {
   const [step, setStep]                   = useState("form");    // "form" | "check-email"
   const [loading, setLoading]             = useState(false);
   const [error, setError]                 = useState(null);
+  const [verifyCode, setVerifyCode]       = useState("");
+  const [verifyLoading, setVerifyLoading] = useState(false);
+  const [verifyError, setVerifyError]     = useState(null);
+  const [verifyStatus, setVerifyStatus]   = useState("idle"); // "idle" | "loading" | "success" | "error"
   const captchaRef                        = useRef(null);
 
   const loginWithGoogle = useGoogleLogin({
@@ -77,6 +81,31 @@ const SignUp = () => {
     }
   };
 
+  const handleVerifyCode = async (e) => {
+    if (e) e.preventDefault();
+    if (verifyCode.length < 6) return;
+
+    setVerifyLoading(true);
+    setVerifyError(null);
+
+    try {
+      const res = await fetch(`${API_BASE}/auth/verify-email?token=${encodeURIComponent(verifyCode)}`);
+      const data = await res.json();
+
+      if (data.success) {
+        setVerifyStatus("success");
+      } else {
+        setVerifyStatus("error");
+        setVerifyError(data.message || "Código inválido.");
+      }
+    } catch (err) {
+      setVerifyStatus("error");
+      setVerifyError("Error de conexión.");
+    } finally {
+      setVerifyLoading(false);
+    }
+  };
+
   // ── Pantalla "Revisa tu correo" ──────────────────────────────────────────────
   if (step === "check-email") {
     return (
@@ -86,42 +115,89 @@ const SignUp = () => {
       >
         <div className="w-full max-w-md z-10 text-center space-y-6">
           <div
-            className="p-8 rounded-2xl shadow-2xl space-y-5"
+            className="p-8 rounded-2xl shadow-2xl space-y-6"
             style={{
               background:    "rgba(34,16,19,0.9)",
               backdropFilter:"blur(12px)",
               border:        "1px solid rgba(238,43,75,0.15)",
             }}
           >
-            {/* Icon */}
-            <div className="flex justify-center">
-              <span
-                className="material-symbols-outlined"
-                style={{ fontSize: "64px", color: "#ee2b4b" }}
-              >
-                mark_email_unread
-              </span>
-            </div>
+            {verifyStatus === "success" ? (
+              <div className="space-y-6">
+                <span className="material-symbols-outlined mx-auto block" style={{ fontSize: "64px", color: "#22c55e" }}>
+                  verified
+                </span>
+                <h2 className="text-2xl font-bold text-slate-100">¡Cuenta activada!</h2>
+                <p className="text-slate-400 text-sm">Tu correo ha sido verificado correctamente. Ya puedes iniciar sesión.</p>
+                <Link
+                  to="/login"
+                  className="block w-full font-bold py-4 rounded-xl transition-all hover:opacity-90"
+                  style={{ backgroundColor: "#ee2b4b", color: "#fff" }}
+                >
+                  Ir al Login
+                </Link>
+              </div>
+            ) : (
+              <>
+                {/* Icon */}
+                <div className="flex justify-center">
+                  <span
+                    className="material-symbols-outlined text-primary"
+                    style={{ fontSize: "64px" }}
+                  >
+                    mark_email_unread
+                  </span>
+                </div>
 
-            <div>
-              <h2 className="text-2xl font-bold text-slate-100">¡Revisa tu correo!</h2>
-              <p className="mt-2 text-slate-400 text-sm leading-relaxed">
-                Te hemos enviado un enlace de verificación. Haz clic en él para
-                activar tu cuenta y poder iniciar sesión.
-              </p>
-            </div>
+                <div>
+                  <h2 className="text-2xl font-bold text-slate-100">¡Revisa tu correo!</h2>
+                  <p className="mt-2 text-slate-400 text-sm leading-relaxed">
+                    Te hemos enviado un <strong>código de 6 dígitos</strong>. Introdúcelo aquí debajo para activar tu cuenta.
+                  </p>
+                </div>
 
-            <p className="text-xs text-slate-600">
-              ¿No ves el email? Revisa la carpeta de spam o correo no deseado.
-            </p>
+                <form onSubmit={handleVerifyCode} className="space-y-4">
+                  <input
+                    type="text"
+                    maxLength="6"
+                    value={verifyCode}
+                    onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, ""))}
+                    placeholder="000000"
+                    className="w-full text-center text-3xl font-bold tracking-[0.5em] py-4 bg-white/5 border border-slate-700/50 rounded-xl text-slate-100 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all"
+                    required
+                  />
 
-            <Link
-              to="/login"
-              className="block w-full text-center font-bold py-3 rounded-xl transition-all hover:opacity-90"
-              style={{ backgroundColor: "#ee2b4b", color: "#fff" }}
-            >
-              Ir al Login
-            </Link>
+                  {verifyError && (
+                    <p className="text-primary text-sm font-medium">{verifyError}</p>
+                  )}
+
+                  <button
+                    type="submit"
+                    disabled={verifyLoading || verifyCode.length < 6}
+                    className="w-full font-bold py-4 rounded-xl transition-all hover:opacity-90 disabled:opacity-50 flex items-center justify-center gap-2"
+                    style={{ backgroundColor: "#ee2b4b", color: "#fff" }}
+                  >
+                    {verifyLoading ? (
+                      <span className="material-symbols-outlined animate-spin">autorenew</span>
+                    ) : (
+                      "Verificar Código"
+                    )}
+                  </button>
+                </form>
+
+                <div className="pt-4 border-t border-slate-800">
+                  <p className="text-slate-500 text-xs text-left">
+                    ¿No ves el email? Revisa la carpeta de <strong>spam</strong> o correo no deseado.
+                  </p>
+                  <button 
+                    onClick={() => setStep("form")}
+                    className="text-primary text-xs font-semibold mt-4 block mx-auto hover:underline"
+                  >
+                    Volver al registro
+                  </button>
+                </div>
+              </>
+            )}
           </div>
         </div>
       </div>

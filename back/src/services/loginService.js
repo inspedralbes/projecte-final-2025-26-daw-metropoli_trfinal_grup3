@@ -21,8 +21,8 @@ const register = async ({ nombre, email, password, rol = 'visitante' }) => {
     // 2. Hash password
     const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
 
-    // 3. Generate verification token (random UUID)
-    const token_verificacion = crypto.randomUUID();
+    // 3. Generate 6-digit verification code
+    const token_verificacion = Math.floor(100000 + Math.random() * 900000).toString();
 
     // 4. Persist user
     const nuevoUsuario = await usuarioModel.create({
