@@ -3,7 +3,14 @@ import eventoService from '../services/eventoService.js';
 const createEvento = async (req, res) => {
     try {
         const { nombre, descripcion, foto, fecha_inicio, fecha_fin, estado } = req.body;
-        const nuevoEvento = await eventoService.createEvento({ nombre, descripcion, foto, fecha_inicio, fecha_fin, estado });
+        const nuevoEvento = await eventoService.createEvento({
+            nombre,
+            descripcion,
+            foto,
+            fecha_inicio: new Date(fecha_inicio),
+            fecha_fin: new Date(fecha_fin),
+            estado
+        });
         res.status(201).json({
             success: true,
             message: 'Evento creado',
@@ -52,6 +59,10 @@ const updateEvento = async (req, res) => {
                 });
             }
         }
+
+        // Convertir las strings a Date para que la DB lo guarde sin problemas
+        if (data.fecha_inicio) data.fecha_inicio = new Date(data.fecha_inicio);
+        if (data.fecha_fin) data.fecha_fin = new Date(data.fecha_fin);
 
         const result = await eventoService.updateEvento(id, data);
 
