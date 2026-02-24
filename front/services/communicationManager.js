@@ -44,7 +44,7 @@ export const createPublicacion = (data) => post('/api/comunidad', data);
 // --- Eventos ---
 
 export const getEventos = () => get('/api/eventos');
-export const getNextEvento = () => get('/api/eventos/next');
+export const getNextEvento = () => get('/api/eventos/proximo');
 export const createEvento = (data) => post('/api/eventos', data);
 
 // --- Tiempo ---

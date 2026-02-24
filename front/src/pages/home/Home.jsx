@@ -1,16 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { getTiempo } from "../../../../services/communicationManager";
+import { getTiempo, getNextEvento } from "../../../services/communicationManager";
 import Navbar from "../../layouts/Navbar";
 
 const Home = () => {
   const { t } = useTranslation();
 
-  const calculateTimeLeft = () => {
-    const raceDate = new Date("2026-05-31T15:00:00");
+  const calculateTimeLeft = (raceDate) => {
+    if (!raceDate) return { days: null, hours: null, minutes: null };
     const now = new Date();
-    const difference = raceDate - now;
+    const difference = new Date(raceDate) - now;
     if (difference > 0) {
       return {
         days: Math.floor(difference / (1000 * 60 * 60 * 24)),
@@ -21,7 +21,9 @@ const Home = () => {
     return { days: 0, hours: 0, minutes: 0 };
   };
 
-  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+  const [raceDate, setRaceDate] = useState(null);
+  const [eventName, setEventName] = useState("");
+  const [timeLeft, setTimeLeft] = useState({ days: null, hours: null, minutes: null });
   const [weatherStats, setWeatherStats] = useState({
     air: "--",
     track: "--",
@@ -29,10 +31,25 @@ const Home = () => {
     wind: "--",
   });
 
+  // Actualiza la cuenta atras cada minuto usando la fecha del evento
   useEffect(() => {
-    const timer = setTimeout(() => setTimeLeft(calculateTimeLeft()), 60000);
-    return () => clearTimeout(timer);
-  });
+    if (!raceDate) return;
+    setTimeLeft(calculateTimeLeft(raceDate));
+    const timer = setInterval(() => setTimeLeft(calculateTimeLeft(raceDate)), 60000);
+    return () => clearInterval(timer);
+  }, [raceDate]);
+
+  // Obtiene el proximo evento de la API
+  useEffect(() => {
+    getNextEvento()
+      .then((res) => {
+        if (res && res.data) {
+          if (res.data.fecha_inicio) setRaceDate(res.data.fecha_inicio);
+          if (res.data.nombre) setEventName(res.data.nombre);
+        }
+      })
+      .catch((err) => console.error("Error al obtener el proximo evento:", err));
+  }, []);
 
   useEffect(() => {
     getTiempo()
@@ -124,8 +141,8 @@ const Home = () => {
               </div>
 
               <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                <p className="text-primary font-bold italic text-sm mb-1 uppercase tracking-wider">{t("home.spanishGP")}</p>
-                <h1 className="text-4xl font-black italic leading-[0.9] mb-4 drop-shadow-lg">{t("home.raceWeekend")}<br /></h1>
+                <p className="text-primary font-bold italic text-sm mb-1 uppercase tracking-wider">{t("home.raceWeekend")}</p>
+                <h1 className="text-4xl font-black italic leading-[0.9] mb-4 drop-shadow-lg">{eventName || t("home.spanishGP")}<br /></h1>
 
                 <div className="bg-white/10 dark:bg-black/60 backdrop-blur-md rounded-2xl p-4 flex items-center justify-between border border-white/20 dark:border-white/10 shadow-lg transition-colors">
                   <div className="flex gap-4 text-center">
@@ -137,7 +154,7 @@ const Home = () => {
                       <div key={i} className="flex items-start gap-1">
                         {i > 0 && <div className="text-white/40 font-light text-xl">:</div>}
                         <div className="text-center">
-                          <span className="text-2xl font-bold block leading-none filter drop-shadow-md">{String(item.val).padStart(2, "0")}</span>
+                          <span className="text-2xl font-bold block leading-none filter drop-shadow-md">{item.val === null ? "--" : String(item.val).padStart(2, "0")}</span>
                           <span className="text-[9px] uppercase text-white/70 font-bold tracking-wider">{item.label}</span>
                         </div>
                       </div>
