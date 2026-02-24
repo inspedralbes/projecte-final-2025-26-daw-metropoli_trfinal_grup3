@@ -23,6 +23,10 @@ Aquest projecte té com a **Objectiu** principal millorar l'experiència de l'es
 
 ## Projecte en Producció
 
+Aquí podeu veure el projecte en producció:
+
+https://catcircuit.daw.inspedralbes.cat/
+
 ## 🔗 Enllaços de Gestió del Projecte
 
 Aquí podeu trobar més informació sobre la nostra planificació i disseny del projecte:
