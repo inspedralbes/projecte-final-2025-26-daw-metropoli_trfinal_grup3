@@ -2,11 +2,15 @@ import eventoService from '../services/eventoService.js';
 
 const createEvento = async (req, res) => {
     try {
-        const { nombre, descripcion, foto, fecha_inicio, fecha_fin, estado } = req.body;
+        const { nombre, descripcion, fecha_inicio, fecha_fin, estado } = req.body;
+
+        // Si hay una imagen subida por multer, creamos su ruta pública, si no usamos req.body.foto si viene
+        const fotoPath = req.file ? `/images/eventos/${req.file.filename}` : req.body.foto;
+
         const nuevoEvento = await eventoService.createEvento({
             nombre,
             descripcion,
-            foto,
+            foto: fotoPath,
             fecha_inicio: new Date(fecha_inicio),
             fecha_fin: new Date(fecha_fin),
             estado
@@ -46,6 +50,11 @@ const updateEvento = async (req, res) => {
     try {
         const id = req.params.id;
         const data = req.body;
+
+        // Si hay una nueva imagen subida, pisamos la que viene en el data (si venía alguna str)
+        if (req.file) {
+            data.foto = `/images/eventos/${req.file.filename}`;
+        }
 
         // Validacion de fechas si ambas estan presentes
         if (data.fecha_inicio && data.fecha_fin) {

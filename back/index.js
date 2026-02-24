@@ -9,6 +9,7 @@ const port = 3000;
 
 app.use(cors()); // Habilitar CORS para peticiones del frontend
 app.use(express.json());
+app.use(express.static('public')); // Servir archivos estáticos (imágenes)
 
 app.use('/api', routes);
 
