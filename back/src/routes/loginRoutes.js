@@ -10,6 +10,9 @@ router.post('/register', loginController.register);
 // POST /api/auth/login
 router.post('/login', loginController.login);
 
+// POST /api/auth/google
+router.post('/google', loginController.googleLogin);
+
 // GET /api/auth/verify-email?token=...
 router.get('/verify-email', verifyController.verify);
 

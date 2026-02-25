@@ -7,6 +7,7 @@ const RECAPTCHA_SITE_KEY = "6LeIxAcTAAAAAJcZVRqyHh71UMIEGNQ_MXjiZKhI";
 const API_BASE = import.meta.env.VITE_API_URL || "http://localhost:3000/api";
 
 const SignUp = () => {
+  const navigate = useNavigate();
   const [showPassword, setShowPassword]   = useState(false);
   const [showConfirm, setShowConfirm]     = useState(false);
   const [captchaToken, setCaptchaToken]   = useState(null);
@@ -19,10 +20,69 @@ const SignUp = () => {
   const [verifyStatus, setVerifyStatus]   = useState("idle"); // "idle" | "loading" | "success" | "error"
   const captchaRef                        = useRef(null);
 
+  const [googleData, setGoogleData]       = useState(null); // { token, email, nombre }
+
   const loginWithGoogle = useGoogleLogin({
-    onSuccess: (tokenResponse) => console.log("Google token:", tokenResponse),
-    onError:   (error)         => console.error("Google login failed:", error),
+    onSuccess: async (tokenResponse) => {
+      handleGoogleAuth(tokenResponse.access_token);
+    },
+    onError: (error) => {
+      console.error("Google login failed:", error);
+      setError("El inicio de sesión con Google falló o fue cancelado.");
+    },
   });
+
+  const handleGoogleAuth = async (accessToken, password = null) => {
+    setLoading(true);
+    setError(null);
+    try {
+      const res = await fetch(`${API_BASE}/auth/google`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ google_access_token: accessToken, password }),
+      });
+      const data = await res.json();
+
+      if (!res.ok) {
+        setError(data.message || "Error al autenticar con Google.");
+        return;
+      }
+
+      if (data.data.needs_password) {
+        setGoogleData({ token: accessToken, email: data.data.email, nombre: data.data.nombre });
+        setStep("google-password");
+        return;
+      }
+
+      // Save token and redirect
+      localStorage.setItem("token", data.data.token);
+      localStorage.setItem("usuario", JSON.stringify(data.data.usuario));
+      navigate("/home");
+    } catch (err) {
+      console.error("Google login error:", err);
+      setError("No se pudo conectar con el servidor.");
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  const handleGooglePasswordSubmit = async (e) => {
+    e.preventDefault();
+    const password = e.target.password.value;
+    const confirm  = e.target.confirm.value;
+
+    if (password !== confirm) {
+      setError("Las contraseñas no coinciden.");
+      return;
+    }
+
+    if (password.length < 6) {
+      setError("La contraseña debe tener al menos 6 caracteres.");
+      return;
+    }
+
+    handleGoogleAuth(googleData.token, password);
+  };
 
   const loginWithApple = () => {
     const params = new URLSearchParams({
@@ -60,7 +120,7 @@ const SignUp = () => {
       const res  = await fetch(`${API_BASE}/auth/register`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ nombre, email, password }),
+        body:    JSON.stringify({ nombre, email, password, captchaToken }),
       });
       const data = await res.json();
 
@@ -105,6 +165,81 @@ const SignUp = () => {
       setVerifyLoading(false);
     }
   };
+
+  // ── Pantalla "Completar contraseña Google" ──────────────────────────────────
+  if (step === "google-password") {
+    return (
+      <div
+        className="relative flex min-h-screen w-full flex-col items-center justify-center p-6 overflow-hidden"
+        style={{ backgroundColor: "#121011" }}
+      >
+        <div className="w-full max-w-md z-10 space-y-6">
+          <div
+            className="p-8 rounded-2xl shadow-2xl space-y-6"
+            style={{
+              background:    "rgba(34,16,19,0.9)",
+              backdropFilter:"blur(12px)",
+              border:        "1px solid rgba(238,43,75,0.15)",
+            }}
+          >
+            <div className="text-center space-y-2">
+              <h2 className="text-2xl font-bold text-slate-100">Casi listo, {googleData?.nombre.split(' ')[0]}</h2>
+              <p className="text-slate-400 text-sm">Crea una contraseña para terminar de configurar tu cuenta.</p>
+            </div>
+
+            <form onSubmit={handleGooglePasswordSubmit} className="space-y-5">
+              {error && (
+                <div
+                  className="flex items-center gap-3 px-4 py-3 rounded-xl text-sm"
+                  style={{ background: "rgba(238,43,75,0.12)", border: "1px solid rgba(238,43,75,0.30)", color: "#fca5a5" }}
+                >
+                  <span className="material-symbols-outlined" style={{ fontSize: "18px" }}>error</span>
+                  {error}
+                </div>
+              )}
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 ml-1">Nueva Contraseña</label>
+                <div className="relative">
+                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">lock</span>
+                  <input
+                    name="password"
+                    type={showPassword ? "text" : "password"}
+                    className="w-full border border-slate-700/50 rounded-xl py-3.5 pl-12 pr-4 text-slate-100 bg-black/20 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+              </div>
+
+              <div className="space-y-2">
+                <label className="text-xs font-semibold uppercase tracking-wider text-slate-400 ml-1">Confirmar Contraseña</label>
+                <div className="relative">
+                  <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-500">shield_lock</span>
+                  <input
+                    name="confirm"
+                    type={showConfirm ? "text" : "password"}
+                    className="w-full border border-slate-700/50 rounded-xl py-3.5 pl-12 pr-4 text-slate-100 bg-black/20 focus:outline-none focus:ring-2 focus:ring-primary/50"
+                    placeholder="••••••••"
+                    required
+                  />
+                </div>
+              </div>
+
+              <button
+                type="submit"
+                disabled={loading}
+                className="w-full font-bold py-4 rounded-xl transition-all hover:opacity-90 flex items-center justify-center gap-2"
+                style={{ backgroundColor: "#ee2b4b", color: "#fff" }}
+              >
+                {loading ? <span className="material-symbols-outlined animate-spin">autorenew</span> : "COMPLETAR REGISTRO"}
+              </button>
+            </form>
+          </div>
+        </div>
+      </div>
+    );
+  }
 
   // ── Pantalla "Revisa tu correo" ──────────────────────────────────────────────
   if (step === "check-email") {

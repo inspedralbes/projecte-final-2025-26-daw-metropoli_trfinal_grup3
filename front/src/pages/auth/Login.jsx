@@ -15,8 +15,38 @@ const Login = () => {
   const navigate                        = useNavigate();
 
   const loginWithGoogle = useGoogleLogin({
-    onSuccess: (tokenResponse) => console.log("Google token:", tokenResponse),
-    onError:   (error)         => console.error("Google login failed:", error),
+    onSuccess: async (tokenResponse) => {
+      console.log("Google token response:", tokenResponse);
+      setLoading(true);
+      setError(null);
+      try {
+        const res = await fetch(`${API_BASE}/auth/google`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ google_access_token: tokenResponse.access_token }),
+        });
+        const data = await res.json();
+
+        if (!res.ok) {
+          setError(data.message || "Error al iniciar sesión con Google.");
+          return;
+        }
+
+        // Save token and redirect
+        localStorage.setItem("token", data.data.token);
+        localStorage.setItem("usuario", JSON.stringify(data.data.usuario));
+        navigate("/home");
+      } catch (err) {
+        console.error("Google login error:", err);
+        setError("No se pudo conectar con el servidor para el login de Google.");
+      } finally {
+        setLoading(false);
+      }
+    },
+    onError: (error) => {
+      console.error("Google login failed:", error);
+      setError("El inicio de sesión con Google falló o fue cancelado.");
+    },
   });
 
   const loginWithApple = () => {
@@ -48,7 +78,7 @@ const Login = () => {
       const res  = await fetch(`${API_BASE}/auth/login`, {
         method:  "POST",
         headers: { "Content-Type": "application/json" },
-        body:    JSON.stringify({ email, password }),
+        body:    JSON.stringify({ email, password, captchaToken }),
       });
       const data = await res.json();
 

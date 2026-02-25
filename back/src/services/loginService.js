@@ -89,4 +89,62 @@ const login = async ({ email, password }) => {
     };
 };
 
-export default { register, login };
+// ── Google Login ──────────────────────────────────────────────────────────────
+const googleLogin = async ({ email, nombre, password = null }) => {
+    // 1. Find user by email
+    let usuario = await usuarioModel.findByEmail(email);
+
+    if (!usuario) {
+        // 2. If user doesn't exist and no password provided, ask for it
+        if (!password) {
+            return { needs_password: true, email, nombre };
+        }
+
+        // 3. Create user with provided password (Google users are auto-verified)
+        const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
+        usuario = await usuarioModel.create({
+            nombre,
+            email,
+            password:           password_hash,
+            rol:                'visitante',
+            token_verificacion: null,
+        });
+        
+        // Since create returns the user with insertId, we need to make sure we have id_usuario
+        usuario.id_usuario = usuario.id_usuario || usuario.insertId;
+        
+        // Verify them immediately
+        await usuarioModel.verifyEmail(usuario.id_usuario);
+        
+        // Fetch full user data
+        usuario = await usuarioModel.findByEmail(email);
+    } else {
+        // 4. If user exists but wasn't verified, verify them now
+        if (!usuario.email_verificado) {
+            await usuarioModel.verifyEmail(usuario.id_usuario);
+            usuario.email_verificado = 1;
+        }
+    }
+
+    // 5. Sign JWT
+    const payload = {
+        id_usuario: usuario.id_usuario,
+        email:      usuario.email,
+        rol:        usuario.rol,
+    };
+    const token = jwt.sign(payload, JWT_SECRET, { expiresIn: JWT_EXPIRES_IN });
+
+    // 6. Return token + safe user data
+    return {
+        token,
+        usuario: {
+            id_usuario:     usuario.id_usuario,
+            nombre:         usuario.nombre,
+            email:          usuario.email,
+            rol:            usuario.rol,
+            fecha_registro: usuario.fecha_registro,
+        },
+    };
+};
+
+export default { register, login, googleLogin };

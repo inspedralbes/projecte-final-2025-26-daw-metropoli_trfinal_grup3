@@ -7,7 +7,7 @@ import "./i18n";
 import App from "./App.jsx";
 
 // ⚠️ Replace with your real Google OAuth Client ID from console.cloud.google.com
-const GOOGLE_CLIENT_ID = "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
+const GOOGLE_CLIENT_ID = import.meta.env.VITE_GOOGLE_CLIENT_ID || "YOUR_GOOGLE_CLIENT_ID.apps.googleusercontent.com";
 
 createRoot(document.getElementById("root")).render(
   <StrictMode>
