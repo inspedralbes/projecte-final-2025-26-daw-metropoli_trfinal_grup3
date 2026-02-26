@@ -229,9 +229,9 @@ const Profile = () => {
           </h1>
           <Link
             to="/settings"
-            className="bg-white dark:bg-slate-900 p-2 rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-900 rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
           >
-            <span className="material-symbols-outlined text-2xl block">
+            <span className="material-symbols-outlined text-[22px]">
               settings
             </span>
           </Link>
