@@ -13,8 +13,7 @@ CREATE TABLE IF NOT EXISTS usuario (
     bio VARCHAR(255) NULL,    
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
     email_verificado BOOLEAN DEFAULT FALSE,
-    token_verificacion VARCHAR(255) NULL,
-    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
+    token_verificacion VARCHAR(255) NULL
 );
 
 -- 2. CATEGORIAS (Independiente)

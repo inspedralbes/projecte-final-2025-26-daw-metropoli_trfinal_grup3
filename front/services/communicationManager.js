@@ -1,5 +1,5 @@
 const BASE_URL = import.meta.env.VITE_API_URL;
-
+console.log("API URL Configurada:", BASE_URL);
 // --- Métodos genéricos ---
 
 const get = async (endpoint) => {
