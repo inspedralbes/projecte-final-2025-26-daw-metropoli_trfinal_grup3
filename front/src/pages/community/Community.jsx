@@ -1,46 +1,100 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../../layouts/Navbar';
+import { getPublicaciones, createPublicacion } from '../../../services/communicationManager';
+import socket from '../../../services/socketManager'; // Importamos la antena de radio
 
 const Community = () => {
     const [activeTab, setActiveTab] = useState('Recent');
     const tabs = ['Recent', 'Official', 'Fan Zone', 'Popular'];
 
-    const posts = [
-        {
-            id: 1,
-            user: "Carlos F1 Fan",
-            verified: true,
-            initials: null,
-            avatar: "https://lh3.googleusercontent.com/aida-public/AB6AXuBpHfy92P93sOsF1AOFS82PxCdsfO562fPRgQMea4WG94L5IXgB1JG8oTEX_iy8oc8c4cPxAcPC80oEiIviZfNfNEoWYj7KuekAFY8bcjGD6pvAiCbmyH5MM9Nqnm5mIiAjdT4aC356h33EsRozBAyyhwLcyhJGxSspsKsaxzkGUeeu0GCcKyf1YZqRPcXhb7AtmNnXHUMVBeOrCDgeUgO9ufDXR53o86g-C292sKUxSSdHN_kLpyRAY1kmwr39zjrcPFT-EOuvBz4",
-            time: "12m ago",
-            content: "The atmosphere at Turn 1 is absolutely electric today! Can't wait for the qualifying session to start. Who's your pick for pole? 🏎️🇪🇸",
-            image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDbIBeRSCVUWAgc7mEU2oqAINelgyV1U__AbK91Zl7qZiT7bXM9SvXy9spdaU3R2CqJ75IrTKp1BeGHCToN-mcumxqQm4MJW518tn1BKEapmxghsXvqrl_7kBlIzSWLtvokRYbSDXqsEx0NhpAnX5YUdx9Wd1ObEhmXvmOfecPqyZB6B89KHhHKg7mhRTd5lPyzpiMyOld7XFJFaayil3RZK8rxlDF2Y4_z3j9b9z5zda9_wTO6wLQ5uJ1F40u5ODMjFsYSNDjYIHM",
-            likes: 128, comments: 14, isOfficial: false,
-        },
-        {
-            id: 2,
-            user: "Sergio Comms",
-            verified: false,
-            initials: "SC",
-            avatar: null,
-            time: "45m ago",
-            content: "Heads up fans! The shuttle service from Gate 3 is running with a 10-minute delay due to high traffic. Plan accordingly! #SpanishGP",
-            image: null,
-            likes: 42, comments: 3, isOfficial: false,
-        },
-        {
-            id: 3,
-            user: "Circuit Official",
-            verified: false,
-            initials: null,
-            avatar: null,
-            time: "1h ago",
-            content: "Join us at the Fan Zone in 15 minutes for a live interview with local legends! 🇪🇸✨",
-            image: "https://lh3.googleusercontent.com/aida-public/AB6AXuA1zV6RfldyNRodIhEf0CHzItpk5LgV0Le9fyXkpYaX6MuzhnF_Vd2lrXfwza5TKTR6QEHZY2d9xy8h6g8p824tUck3ZnRsodYOsk25x6MfZpcEeCJjlP69SQFVJTRBdjRfRf1IVFShAHpLPWzPQdm6j5GhoeYBrw7-d9RbbUwJRZgqoVhmT1I5Jwrq5DA8bb9L7mzt557v-KE7OMSvWOpS-N-HVFueMxBWC4pOHfh985l6nn3XeNwYqOJ6V2Z9NT9mo0rh4TFcogQ",
-            likes: 1200, comments: 89, isOfficial: true,
-        },
-    ];
+    // Estado para publicaciones de la API
+    const [publicaciones, setPublicaciones] = useState([]);
+    const [loading, setLoading] = useState(true);
+    const [error, setError] = useState(null);
+
+    // Estado para el modal de nueva publicación
+    const [showModal, setShowModal] = useState(false);
+    const [newPost, setNewPost] = useState({
+        texto: '',
+        foto: '',
+        tipo_publicacion: 'popular',
+        ubicacion: ''
+    });
+
+    // Extraemos la función de descarga para poder reusarla
+    const cargarPublicacionesDesdeBD = async () => {
+        try {
+            const data = await getPublicaciones();
+            setPublicaciones(data.data || []);
+        } catch (err) {
+            console.error('Error fetching publicaciones:', err);
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
+    // GET: Cargar publicaciones al montar el componente
+    useEffect(() => {
+        // 1. Bajamos al entrar a la pantalla
+        cargarPublicacionesDesdeBD();
+
+        // 2. Encendemos la radio: Si alguien publica algo nuevo, actualizamos el feed
+        socket.on('nueva_publicacion', (nuevaPub) => {
+            console.log("📡 Ha llegado un post nuevo desde el servidor!", nuevaPub);
+            cargarPublicacionesDesdeBD();
+        });
+
+        // 3. Escuchamos si alguien ha cambiado su foto o nombre de perfil
+        socket.on('perfil_actualizado', (usuarioActualizado) => {
+            console.log("📡 Un usuario ha cambiado su perfil:", usuarioActualizado);
+
+            // En vez de bajar todas las publicaciones de nuevo (costoso),
+            // recorremos las que ya tenemos en memoria y actualizamos solo las de ese usuario
+            setPublicaciones((listaActual) =>
+                listaActual.map((publicacion) => {
+                    // Si la publicación es del usuario que se ha editado, actualizamos sus datos
+                    if (String(publicacion.id_usuario) === String(usuarioActualizado.id_usuario)) {
+                        return {
+                            ...publicacion,
+                            nombre_usuario: usuarioActualizado.nuevo_nombre,
+                            foto_perfil_usuario: usuarioActualizado.nueva_foto
+                        };
+                    }
+                    // Si no, la dejamos exactamente igual
+                    return publicacion;
+                })
+            );
+        });
+
+        // 4. Cuando nos vayamos de la vista Comunidad, apagamos las dos radios
+        return () => {
+            socket.off('nueva_publicacion');
+            socket.off('perfil_actualizado');
+        };
+    }, []);
+
+    // POST: Crear nueva publicación
+    const handleCreate = async () => {
+        if (!newPost.texto && !newPost.foto) return;
+        try {
+            const data = await createPublicacion({
+                id_usuario: 1, // TODO: reemplazar con el id del usuario autenticado
+                texto: newPost.texto,
+                foto: newPost.foto,
+                tipo_publicacion: newPost.tipo_publicacion,
+                ubicacion: newPost.ubicacion
+            });
+            // setPublicaciones(prev => [data.data, ...prev]); -> Nos saltamos añadirlo manualmente
+            // Porque ahora la Radio (Socket) nos avisará un milisegundo despues y la app recarga el Post sola
+            setNewPost({ texto: '', foto: '', tipo_publicacion: 'popular', ubicacion: '' });
+            setShowModal(false);
+        } catch (err) {
+            console.error('Error creando publicación:', err);
+        }
+    };
+
 
     return (
         <div className="min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-white font-display select-none transition-colors duration-300 md:pl-16">
@@ -72,11 +126,10 @@ const Community = () => {
                                 <button
                                     key={tab}
                                     onClick={() => setActiveTab(tab)}
-                                    className={`text-[10px] font-bold px-5 py-2.5 rounded-full uppercase tracking-wider shrink-0 cursor-pointer transition-all duration-300 ${
-                                        activeTab === tab
-                                            ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-105'
-                                            : 'bg-white dark:bg-[#1e1e1e] text-slate-400 dark:text-white/40 border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none hover:bg-slate-50 dark:hover:bg-white/5'
-                                    }`}
+                                    className={`text-[10px] font-bold px-5 py-2.5 rounded-full uppercase tracking-wider shrink-0 cursor-pointer transition-all duration-300 ${activeTab === tab
+                                        ? 'bg-primary text-white shadow-lg shadow-primary/30 scale-105'
+                                        : 'bg-white dark:bg-[#1e1e1e] text-slate-400 dark:text-white/40 border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none hover:bg-slate-50 dark:hover:bg-white/5'
+                                        }`}
                                 >
                                     {tab}
                                 </button>
@@ -84,45 +137,36 @@ const Community = () => {
                         </div>
 
                         <div className="space-y-4">
-                            {posts.map((post) => (
-                                <article key={post.id} className={`rounded-[24px] shadow-sm dark:shadow-none border overflow-hidden transition-all ${post.isOfficial ? 'bg-primary/5 dark:bg-primary/10 border-primary/20' : 'bg-white dark:bg-[#1e1e1e] border-slate-100 dark:border-white/5'}`}>
+                            {loading && <p className="text-center text-slate-400 dark:text-white/40 text-sm py-8">Cargando publicaciones...</p>}
+                            {error && <p className="text-center text-red-400 text-sm py-8">Error: {error}</p>}
+                            {!loading && !error && publicaciones.length === 0 && (
+                                <p className="text-center text-slate-400 dark:text-white/40 text-sm py-8">No hay publicaciones todavía. ¡Sé el primero!</p>
+                            )}
+                            {!loading && !error && publicaciones.map((pub) => (
+                                <article key={pub.id_publicacion} className="bg-white dark:bg-[#1e1e1e] rounded-[24px] shadow-sm dark:shadow-none border border-slate-100 dark:border-white/5 overflow-hidden transition-all">
                                     <div className="p-5 flex items-start gap-3">
-                                        <div className={`w-10 h-10 rounded-full shrink-0 ${post.isOfficial ? 'bg-primary flex items-center justify-center shadow-lg shadow-primary/30' : 'border-2 border-primary p-0.5 overflow-hidden'}`}>
-                                            {post.isOfficial ? (
-                                                <span className="material-symbols-outlined text-white text-[20px]">campaign</span>
-                                            ) : post.avatar ? (
-                                                <img alt="User" className="w-full h-full object-cover rounded-full" src={post.avatar} />
-                                            ) : (
-                                                <div className="w-full h-full bg-slate-100 dark:bg-white/5 rounded-full flex items-center justify-center">
-                                                    <span className="text-[10px] font-black text-slate-500 dark:text-white/60">{post.initials}</span>
-                                                </div>
-                                            )}
+                                        <div className="w-10 h-10 rounded-full border-2 border-primary p-0.5 shrink-0 overflow-hidden">
+                                            <img alt="User" className="w-full h-full object-cover rounded-full" src={`https://i.pravatar.cc/150?u=${pub.id_usuario}`} />
                                         </div>
                                         <div className="flex-1">
                                             <div className="flex items-center justify-between mb-1">
-                                                <div className="flex items-center gap-1.5">
-                                                    <span className={`text-sm font-bold text-slate-800 dark:text-white ${post.isOfficial ? 'italic uppercase tracking-tighter font-black' : ''}`}>{post.user}</span>
-                                                    {post.verified && <span className="text-primary material-symbols-outlined text-[14px] fill-1">verified</span>}
-                                                    {post.isOfficial && <span className="bg-primary text-white text-[8px] px-1.5 py-0.5 rounded font-black">MOD</span>}
-                                                </div>
-                                                <span className="text-[10px] text-slate-400 dark:text-white/40 font-bold">{post.time}</span>
+                                                <span className="text-sm font-bold text-slate-800 dark:text-white">Usuario #{pub.id_usuario}</span>
+                                                <span className="text-[10px] text-slate-400 dark:text-white/40 font-bold">
+                                                    {pub.fecha_publicacion ? new Date(pub.fecha_publicacion).toLocaleDateString() : ''}
+                                                </span>
                                             </div>
-                                            <p className="text-sm text-slate-600 dark:text-white/70 leading-relaxed mb-3 font-medium">{post.content}</p>
+                                            {pub.texto && <p className="text-sm text-slate-600 dark:text-white/70 leading-relaxed mb-3 font-medium">{pub.texto}</p>}
                                         </div>
                                     </div>
-                                    {post.image && (
+                                    {pub.foto && (
                                         <div className="px-5 pb-2">
-                                            <img alt="Post" className="w-full h-56 object-cover rounded-[16px] shadow-md" src={post.image} />
+                                            <img alt="Publicación" className="w-full h-56 object-cover rounded-[16px] shadow-md" src={pub.foto} />
                                         </div>
                                     )}
-                                    <div className={`p-4 flex items-center gap-6 ${!post.isOfficial ? 'border-t border-slate-100 dark:border-white/5' : ''}`}>
-                                        <button className={`flex items-center gap-1.5 group cursor-pointer ${post.likes > 100 ? 'text-primary' : 'text-slate-400 dark:text-white/40 hover:text-primary transition-colors'}`}>
-                                            <span className="material-symbols-outlined text-[20px] group-active:scale-125 transition-transform fill-1">favorite</span>
-                                            <span className="text-xs font-bold">{post.likes > 999 ? `${(post.likes/1000).toFixed(1)}k` : post.likes}</span>
-                                        </button>
-                                        <button className="flex items-center gap-1.5 text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white cursor-pointer transition-colors">
-                                            <span className="material-symbols-outlined text-[20px]">chat_bubble</span>
-                                            <span className="text-xs font-bold">{post.comments}</span>
+                                    <div className="p-4 flex items-center gap-6 border-t border-slate-100 dark:border-white/5">
+                                        <button className="flex items-center gap-1.5 text-slate-400 dark:text-white/40 hover:text-primary transition-colors cursor-pointer group">
+                                            <span className="material-symbols-outlined text-[20px] group-active:scale-125 transition-transform">favorite</span>
+                                            <span className="text-xs font-bold">{pub.likes ?? 0}</span>
                                         </button>
                                         <button className="flex items-center gap-1.5 text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white ml-auto cursor-pointer transition-colors">
                                             <span className="material-symbols-outlined text-[20px]">share</span>
@@ -194,7 +238,10 @@ const Community = () => {
             </div>
 
             {/* FAB — new post */}
-            <button className="fixed bottom-24 right-5 md:bottom-8 w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg shadow-primary/40 z-[80] active:scale-90 transition-transform cursor-pointer hover:bg-[#ff1e3c]">
+            <button
+                onClick={() => setShowModal(true)}
+                className="fixed bottom-24 right-5 md:bottom-8 w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg shadow-primary/40 z-[80] active:scale-90 transition-transform cursor-pointer hover:bg-[#ff1e3c]"
+            >
                 <span className="material-symbols-outlined text-3xl font-bold">add</span>
             </button>
 
@@ -204,6 +251,77 @@ const Community = () => {
                     <span className="material-symbols-outlined text-white text-xl">qr_code_2</span>
                 </div>
             </div>
+
+            {/* Modal nueva publicación */}
+            {/* =====================================================================
+                IMPORTANTE PARA EL BACK — NO ELIMINAR ESTAS PARTES AL REDISEÑAR:
+
+                1. `showModal` controla si el modal está visible.
+                   - Abrir modal:  onClick={() => setShowModal(true)}
+                   - Cerrar modal: onClick={() => setShowModal(false)}
+
+                2. `newPost` es el objeto que se envía al back. Campos:
+                   - texto:            string  — OBLIGATORIO si no hay foto
+                   - foto:             string  — URL de imagen, OPCIONAL
+                   - tipo_publicacion: string  — OBLIGATORIO. Valores: 'popular' | 'oficial' | 'fanzone'
+                   - ubicacion:        string  — OPCIONAL
+
+                   Cada input/select debe actualizar newPost así:
+                   onChange={(e) => setNewPost({ ...newPost, NOMBRE_CAMPO: e.target.value })}
+
+                3. El botón de envío DEBE tener: onClick={handleCreate}
+                   handleCreate hace el POST a /api/comunidad via communicationManager.
+
+                4. id_usuario está hardcodeado como 1 en handleCreate.
+                   TODO: reemplazar con el id del usuario autenticado cuando haya login.
+                   Grasias :D
+            ===================================================================== */}
+            {showModal && (
+                <div className="fixed inset-0 z-[100] flex items-end justify-center bg-black/50 backdrop-blur-sm">
+                    <div className="w-full bg-white dark:bg-[#1e1e1e] rounded-t-[32px] p-6 space-y-4 shadow-2xl">
+                        <div className="flex justify-between items-center mb-2">
+                            <h2 className="text-lg font-black uppercase italic text-slate-800 dark:text-white">Nueva publicación</h2>
+                            {/* Cerrar modal — mantener onClick={() => setShowModal(false)} */}
+                            <button onClick={() => setShowModal(false)} className="text-slate-400 hover:text-slate-600 dark:hover:text-white transition-colors">
+                                <span className="material-symbols-outlined">close</span>
+                            </button>
+                        </div>
+                        {/* Campo texto — newPost.texto — OBLIGATORIO si no hay foto */}
+                        <textarea
+                            value={newPost.texto}
+                            onChange={(e) => setNewPost({ ...newPost, texto: e.target.value })}
+                            placeholder="¿Qué está pasando en el circuito? 🏎️"
+                            className="w-full bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl p-4 text-sm text-slate-700 dark:text-white placeholder-slate-400 outline-none resize-none h-24 font-medium"
+                        />
+                        {/* Campo foto — newPost.foto — OPCIONAL, URL de imagen */}
+                        <input
+                            type="text"
+                            value={newPost.foto}
+                            onChange={(e) => setNewPost({ ...newPost, foto: e.target.value })}
+                            placeholder="URL de la foto (opcional)"
+                            className="w-full bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl px-4 py-3 text-sm text-slate-700 dark:text-white placeholder-slate-400 outline-none font-medium"
+                        />
+                        {/* Campo tipo_publicacion — newPost.tipo_publicacion — OBLIGATORIO
+                            Valores exactos que acepta la BBDD: 'popular', 'oficial', 'fanzone' */}
+                        <select
+                            value={newPost.tipo_publicacion}
+                            onChange={(e) => setNewPost({ ...newPost, tipo_publicacion: e.target.value })}
+                            className="w-full bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/10 rounded-2xl px-4 py-3 text-sm text-slate-700 dark:text-white outline-none font-medium"
+                        >
+                            <option value="popular">Popular</option>
+                            <option value="oficial">Oficial</option>
+                            <option value="fanzone">Fan Zone</option>
+                        </select>
+                        {/* Botón enviar — DEBE mantener onClick={handleCreate} */}
+                        <button
+                            onClick={handleCreate}
+                            className="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/30 active:scale-95 transition-transform"
+                        >
+                            Publicar
+                        </button>
+                    </div>
+                </div>
+            )}
 
             <Navbar />
         </div>

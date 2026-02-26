@@ -1,15 +1,16 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { getTiempo, getNextEvento } from "../../../services/communicationManager";
 import Navbar from "../../layouts/Navbar";
 
 const Home = () => {
   const { t } = useTranslation();
 
-  const calculateTimeLeft = () => {
-    const raceDate = new Date("2026-05-31T15:00:00");
+  const calculateTimeLeft = (raceDate) => {
+    if (!raceDate) return { days: null, hours: null, minutes: null };
     const now = new Date();
-    const difference = raceDate - now;
+    const difference = new Date(raceDate) - now;
     if (difference > 0) {
       return {
         days: Math.floor(difference / (1000 * 60 * 60 * 24)),
@@ -20,12 +21,61 @@ const Home = () => {
     return { days: 0, hours: 0, minutes: 0 };
   };
 
-  const [timeLeft, setTimeLeft] = useState(calculateTimeLeft());
+  const [raceDate, setRaceDate] = useState(null);
+  const [eventName, setEventName] = useState("");
+  const [eventFoto, setEventFoto] = useState("");
+  const [timeLeft, setTimeLeft] = useState({ days: null, hours: null, minutes: null });
+  const [weatherStats, setWeatherStats] = useState({
+    air: "--",
+    track: "--",
+    rain: "--",
+    wind: "--",
+  });
+
+  // Actualiza la cuenta atras cada minuto usando la fecha del evento
+  useEffect(() => {
+    if (!raceDate) return;
+    setTimeLeft(calculateTimeLeft(raceDate));
+    const timer = setInterval(() => setTimeLeft(calculateTimeLeft(raceDate)), 60000);
+    return () => clearInterval(timer);
+  }, [raceDate]);
+
+  // Obtiene el proximo evento de la API
+  useEffect(() => {
+    getNextEvento()
+      .then((res) => {
+        if (res && res.data) {
+          if (res.data.fecha_inicio) setRaceDate(res.data.fecha_inicio);
+          if (res.data.nombre) setEventName(res.data.nombre);
+          if (res.data.foto) setEventFoto(res.data.foto);
+        }
+      })
+      .catch((err) => console.error("Error al obtener el proximo evento:", err));
+  }, []);
 
   useEffect(() => {
-    const timer = setTimeout(() => setTimeLeft(calculateTimeLeft()), 60000);
-    return () => clearTimeout(timer);
-  });
+    getTiempo()
+      .then((data) => {
+        if (!data || !data.hourly) return;
+        const times = data.hourly.time;
+        var now = new Date();
+        now.setMinutes(0, 0, 0);
+        var nowTime = now.getTime();
+        var currentIndex = 0;
+        var minDiff = Math.abs(new Date(times[0]).getTime() - nowTime);
+        for (var i = 1; i < times.length; i++) {
+          var diff = Math.abs(new Date(times[i]).getTime() - nowTime);
+          if (diff < minDiff) { minDiff = diff; currentIndex = i; }
+        }
+        setWeatherStats({
+          air: `${data.hourly.temperature_2m[currentIndex]}°C`,
+          track: `${data.hourly.soil_temperature_0cm[currentIndex]}°C`,
+          rain: `${data.hourly.precipitation_probability[currentIndex]}%`,
+          wind: `${data.hourly.wind_speed_10m ? data.hourly.wind_speed_10m[currentIndex] : 0} km/h`,
+        });
+      })
+      .catch((err) => console.error("Error al obtener el tiempo:", err));
+  }, []);
 
   const discoverItems = [
     {
@@ -80,7 +130,7 @@ const Home = () => {
             {/* Hero Card */}
             <div className="w-full h-[380px] md:h-[420px] rounded-[32px] overflow-hidden relative shadow-xl shadow-slate-200 dark:shadow-black/50 group transition-all">
               <img
-                src="https://media.formula1.com/image/upload/f_auto/q_auto/v1677245035/content/dam/fom-website/2018-redesign-assets/Racehub%20header%20images%2016x9/Spain.jpg.transform/9col/image.jpg"
+                src={eventFoto ? `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${eventFoto}` : "https://media.formula1.com/image/upload/f_auto/q_auto/v1677245035/content/dam/fom-website/2018-redesign-assets/Racehub%20header%20images%2016x9/Spain.jpg.transform/9col/image.jpg"}
                 alt="Race Weekend"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
@@ -93,8 +143,8 @@ const Home = () => {
               </div>
 
               <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                <p className="text-primary font-bold italic text-sm mb-1 uppercase tracking-wider">{t("home.spanishGP")}</p>
-                <h1 className="text-4xl font-black italic leading-[0.9] mb-4 drop-shadow-lg">{t("home.raceWeekend")}<br /></h1>
+                <p className="text-primary font-bold italic text-sm mb-1 uppercase tracking-wider">{t("home.raceWeekend")}</p>
+                <h1 className="text-4xl font-black italic leading-[0.9] mb-4 drop-shadow-lg">{eventName || t("home.spanishGP")}<br /></h1>
 
                 <div className="bg-white/10 dark:bg-black/60 backdrop-blur-md rounded-2xl p-4 flex items-center justify-between border border-white/20 dark:border-white/10 shadow-lg transition-colors">
                   <div className="flex gap-4 text-center">
@@ -106,7 +156,7 @@ const Home = () => {
                       <div key={i} className="flex items-start gap-1">
                         {i > 0 && <div className="text-white/40 font-light text-xl">:</div>}
                         <div className="text-center">
-                          <span className="text-2xl font-bold block leading-none filter drop-shadow-md">{String(item.val).padStart(2, "0")}</span>
+                          <span className="text-2xl font-bold block leading-none filter drop-shadow-md">{item.val === null ? "--" : String(item.val).padStart(2, "0")}</span>
                           <span className="text-[9px] uppercase text-white/70 font-bold tracking-wider">{item.label}</span>
                         </div>
                       </div>
@@ -213,10 +263,10 @@ const Home = () => {
               </div>
               <div className="grid grid-cols-2 gap-4">
                 {[
-                  { icon: "thermostat", value: "24°C", label: t("home.air") },
-                  { icon: "speed", value: "38°C", label: t("home.track") },
-                  { icon: "water_drop", value: "12%", label: t("home.rain") },
-                  { icon: "air", value: "5 km/h", label: t("home.wind") },
+                  { icon: "thermostat", value: weatherStats.air, label: t("home.air") },
+                  { icon: "speed", value: weatherStats.track, label: t("home.track") },
+                  { icon: "water_drop", value: weatherStats.rain, label: t("home.rain") },
+                  { icon: "air", value: weatherStats.wind, label: t("home.wind") },
                 ].map((stat, i) => (
                   <div key={i} className="flex flex-col items-center p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5">
                     <span className="material-symbols-outlined text-slate-300 dark:text-white/30 mb-1">{stat.icon}</span>
@@ -281,10 +331,10 @@ const Home = () => {
         {/* Weather Widget — mobile only */}
         <div className="lg:hidden w-full bg-white dark:bg-[#12080a] border border-slate-100 dark:border-white/5 rounded-[28px] p-6 mb-8 flex justify-between items-center shadow-lg shadow-slate-200/50 dark:shadow-none transition-all">
           {[
-            { icon: "thermostat", value: "24°C", label: t("home.air") },
-            { icon: "speed", value: "38°C", label: t("home.track") },
-            { icon: "water_drop", value: "12%", label: t("home.rain") },
-            { icon: "air", value: "5 km/h", label: t("home.wind") },
+            { icon: "thermostat", value: weatherStats.air, label: t("home.air") },
+            { icon: "speed", value: weatherStats.track, label: t("home.track") },
+            { icon: "water_drop", value: weatherStats.rain, label: t("home.rain") },
+            { icon: "air", value: weatherStats.wind, label: t("home.wind") },
           ].map((stat, i, arr) => (
             <div key={i} className="flex items-center gap-3">
               <div className="flex flex-col items-center">

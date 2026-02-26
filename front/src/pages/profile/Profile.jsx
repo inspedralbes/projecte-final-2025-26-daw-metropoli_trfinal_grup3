@@ -1,11 +1,34 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Navbar from "../../layouts/Navbar";
+import { getUsuario } from "../../../services/communicationManager";
 
 const Profile = () => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("posts");
+
+  // TODO: Reemplazar con el ID real del usuario autenticado cuando haya login
+  const ID_USUARIO_ACTUAL = 1;
+  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
+  // Estado con los datos del usuario cargados desde la BD
+  const [usuario, setUsuario] = useState({ nombre: "", bio: "", foto_perfil: null });
+
+  useEffect(() => {
+    getUsuario(ID_USUARIO_ACTUAL)
+      .then((res) => {
+        if (res.success && res.data) {
+          setUsuario(res.data);
+        }
+      })
+      .catch((err) => console.error("Error al cargar el perfil:", err));
+  }, []);
+
+  // Construimos la URL de la foto: si tiene foto en la BD la usamos, si no, una por defecto
+  const fotoDePerfilUrl = usuario.foto_perfil
+    ? `${API_URL}${usuario.foto_perfil}`
+    : "https://i.pravatar.cc/150?img=12";
 
   return (
     <div className="min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display select-none transition-colors duration-300 md:pl-16">
@@ -37,10 +60,10 @@ const Profile = () => {
             {/* Profile Card */}
             <div className="bg-white dark:bg-slate-900 rounded-[28px] border border-slate-100 dark:border-slate-800 shadow-sm p-6 flex flex-col items-center text-center">
               <div className="w-24 h-24 rounded-full bg-slate-200 dark:bg-slate-800 border-4 border-white dark:border-slate-700 shadow-lg overflow-hidden mb-3">
-                <img src="https://i.pravatar.cc/150?img=12" alt="User Profile" className="w-full h-full object-cover" />
+                <img src={fotoDePerfilUrl} alt="User Profile" className="w-full h-full object-cover" />
               </div>
-              <h2 className="text-2xl font-bold text-slate-800 dark:text-white">Alex Rodriguez</h2>
-              <p className="text-slate-500 dark:text-slate-400 text-sm mb-3">F1 Enthusiast & Gold Member</p>
+              <h2 className="text-2xl font-bold text-slate-800 dark:text-white">{usuario.nombre || "Cargando..."}</h2>
+              <p className="text-slate-500 dark:text-slate-400 text-sm mb-3">{usuario.bio || ""}</p>
               <Link to="/profile/edit" className="flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-primary text-primary text-xs font-bold hover:bg-primary/10 transition-colors">
                 <span className="material-symbols-outlined text-base">edit</span>
                 {t("profile.editProfile")}

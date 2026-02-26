@@ -1,3 +1,4 @@
+SET NAMES utf8mb4;
 
 
 
@@ -8,9 +9,12 @@ CREATE TABLE IF NOT EXISTS usuario (
     email VARCHAR(150) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     rol VARCHAR(20) DEFAULT 'visitante',
+     foto_perfil VARCHAR(255) NULL,       -- Ruta de la foto de perfil subida por el usuario
+    bio VARCHAR(255) NULL,    
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
     email_verificado BOOLEAN DEFAULT FALSE,
-    token_verificacion VARCHAR(255) NULL
+    token_verificacion VARCHAR(255) NULL,
+    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 
 -- 2. CATEGORIAS (Independiente)
@@ -128,7 +132,7 @@ CREATE TABLE IF NOT EXISTS traducciones (
 
 -- 12. COMUNIDAD (Publicaciones)
 CREATE TABLE IF NOT EXISTS comunidad (
-    id_publicacion INTEGER PRIMARY KEY AUTOINCREMENT,
+    id_publicacion INTEGER PRIMARY KEY AUTO_INCREMENT,
     id_usuario INTEGER NOT NULL,
     texto TEXT,
     foto VARCHAR(255),
