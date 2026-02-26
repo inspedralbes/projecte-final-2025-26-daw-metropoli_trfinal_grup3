@@ -1,104 +1,168 @@
-import { useState } from "react";
+import { useState, lazy, Suspense } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { QRCodeSVG } from "qrcode.react";
 import Navbar from "../../layouts/Navbar";
 import { useFriends } from "../../context/FriendsContext";
 
-// ─── Modal de búsqueda de amigos ───────────────────────────────────────────────
-const AddFriendModal = ({ onClose }) => {
-  const { suggestions, addFriend } = useFriends();
-  const [query, setQuery] = useState("");
-  const [added, setAdded] = useState([]);
+// Lazy load del escáner (pesa bastante, solo se carga cuando se necesita)
+const QrScanner = lazy(() => import("../../components/QrScanner"));
 
-  const results = suggestions.filter((u) =>
-    u.nombre.toLowerCase().includes(query.toLowerCase()),
-  );
-
-  const handleAdd = (user) => {
-    addFriend(user.id);
-    setAdded((prev) => [...prev, user.id]);
-  };
+// ─── Modal: Mi código QR ────────────────────────────────────────────────────
+const MyQrModal = ({ user, onClose }) => {
+  // El QR contiene un JSON con los datos del usuario
+  // TODO: cuando haya login, usar el ID real del usuario autenticado
+  const qrData = JSON.stringify({ userId: user.id, nombre: user.nombre });
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/50 backdrop-blur-sm px-4 pb-6 md:pb-0">
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-[28px] shadow-2xl overflow-hidden">
-        {/* Header */}
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm px-4 pb-6 md:pb-0">
+      <div className="w-full max-w-xs bg-white dark:bg-slate-900 rounded-[28px] shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100 dark:border-slate-800">
           <h2 className="font-bold text-slate-800 dark:text-white text-lg">
-            Añadir amigos
+            Mi código QR
           </h2>
           <button
             onClick={onClose}
             className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
           >
-            <span className="material-symbols-outlined text-slate-500 dark:text-slate-400 text-lg">
+            <span className="material-symbols-outlined text-slate-500 text-lg">
               close
             </span>
           </button>
         </div>
-
-        {/* Buscador */}
-        <div className="px-5 pt-4 pb-2">
-          <div className="flex items-center gap-2 bg-slate-100 dark:bg-slate-800 rounded-2xl px-4 py-2.5">
-            <span className="material-symbols-outlined text-slate-400 text-lg">
-              search
-            </span>
-            <input
-              type="text"
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Buscar por nombre..."
-              className="bg-transparent flex-1 text-sm text-slate-700 dark:text-slate-200 placeholder-slate-400 outline-none"
-              autoFocus
+        <div className="flex flex-col items-center gap-4 p-6">
+          <div className="bg-white p-4 rounded-2xl shadow-inner border border-slate-100">
+            <QRCodeSVG
+              value={qrData}
+              size={200}
+              level="H"
+              includeMargin={false}
             />
           </div>
+          <div className="text-center">
+            <p className="font-bold text-slate-800 dark:text-white">
+              {user.nombre}
+            </p>
+            <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
+              Deja que otro usuario escanee este QR para añadirte como amigo
+            </p>
+          </div>
         </div>
+      </div>
+    </div>
+  );
+};
 
-        {/* Resultados */}
-        <div className="overflow-y-auto max-h-72 px-5 pb-5 space-y-2 pt-2">
-          {results.length === 0 ? (
-            <div className="text-center py-8 text-slate-400 dark:text-slate-500 text-sm">
-              No se encontraron usuarios
+// ─── Modal: Escanear QR de amigo ─────────────────────────────────────────────
+const ScanQrModal = ({ allUsers, onAdd, onClose }) => {
+  const { addFriend, isFriend } = useFriends();
+  const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
+
+  const handleResult = (decoded) => {
+    try {
+      const data = JSON.parse(decoded);
+      const found = allUsers.find((u) => u.id === data.userId);
+      if (!found) {
+        setError("Usuario no encontrado");
+        return;
+      }
+      setResult(found);
+    } catch {
+      setError("QR no válido");
+    }
+  };
+
+  const handleAdd = () => {
+    if (result) {
+      addFriend(result.id);
+      onAdd(result);
+      onClose();
+    }
+  };
+
+  return (
+    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm px-4 pb-6 md:pb-0">
+      <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-[28px] shadow-2xl overflow-hidden">
+        <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100 dark:border-slate-800">
+          <h2 className="font-bold text-slate-800 dark:text-white text-lg">
+            Escanear QR
+          </h2>
+          <button
+            onClick={onClose}
+            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+          >
+            <span className="material-symbols-outlined text-slate-500 text-lg">
+              close
+            </span>
+          </button>
+        </div>
+        <div className="p-5">
+          {result ? (
+            // Confirmación tras escanear
+            <div className="flex flex-col items-center gap-4 py-4">
+              <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-primary/30">
+                <img
+                  src={result.avatar}
+                  alt={result.nombre}
+                  className="w-full h-full object-cover"
+                />
+              </div>
+              <div className="text-center">
+                <p className="font-bold text-slate-800 dark:text-white text-lg">
+                  {result.nombre}
+                </p>
+                <p className="text-xs text-slate-400">{result.badge}</p>
+              </div>
+              {isFriend(result.id) ? (
+                <div className="flex items-center gap-2 text-emerald-500 font-bold text-sm">
+                  <span className="material-symbols-outlined">
+                    check_circle
+                  </span>
+                  Ya sois amigos
+                </div>
+              ) : (
+                <button
+                  onClick={handleAdd}
+                  className="w-full py-3 rounded-2xl bg-primary text-white font-bold text-sm hover:bg-primary/90 transition-colors shadow-lg shadow-primary/30 flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-base">
+                    person_add
+                  </span>
+                  Añadir como amigo
+                </button>
+              )}
+            </div>
+          ) : error ? (
+            // Error de escaneo
+            <div className="flex flex-col items-center gap-3 py-6 text-center">
+              <span className="material-symbols-outlined text-4xl text-red-400">
+                qr_code_scanner
+              </span>
+              <p className="text-slate-500 dark:text-slate-400 text-sm">
+                {error}
+              </p>
+              <button
+                onClick={() => setError(null)}
+                className="text-primary text-sm font-bold hover:underline"
+              >
+                Intentar de nuevo
+              </button>
             </div>
           ) : (
-            results.map((user) => (
-              <div
-                key={user.id}
-                className="flex items-center gap-3 p-3 rounded-2xl hover:bg-slate-50 dark:hover:bg-slate-800 transition-colors"
-              >
-                <img
-                  src={user.avatar}
-                  alt={user.nombre}
-                  className="w-10 h-10 rounded-full object-cover border-2 border-slate-100 dark:border-slate-700"
-                />
-                <div className="flex-1 min-w-0">
-                  <p className="font-semibold text-sm text-slate-800 dark:text-white truncate">
-                    {user.nombre}
-                  </p>
-                  <p className="text-xs text-slate-400 dark:text-slate-500">
-                    {user.badge}
-                  </p>
+            // Escáner activo
+            <Suspense
+              fallback={
+                <div className="flex items-center justify-center py-12 text-slate-400 gap-2">
+                  <span className="material-symbols-outlined animate-spin">
+                    progress_activity
+                  </span>
+                  Cargando cámara...
                 </div>
-                {added.includes(user.id) ? (
-                  <div className="flex items-center gap-1 text-emerald-500 text-xs font-bold">
-                    <span className="material-symbols-outlined text-base">
-                      check_circle
-                    </span>
-                    Añadido
-                  </div>
-                ) : (
-                  <button
-                    onClick={() => handleAdd(user)}
-                    className="flex items-center gap-1 px-3 py-1.5 rounded-full bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-colors"
-                  >
-                    <span className="material-symbols-outlined text-base">
-                      person_add
-                    </span>
-                    Añadir
-                  </button>
-                )}
-              </div>
-            ))
+              }
+            >
+              <QrScanner onResult={handleResult} onError={setError} />
+            </Suspense>
           )}
         </div>
       </div>
@@ -106,18 +170,48 @@ const AddFriendModal = ({ onClose }) => {
   );
 };
 
-// ─── Página de perfil ──────────────────────────────────────────────────────────
+// ─── Página de Perfil ─────────────────────────────────────────────────────────
+// TODO: cuando haya login, reemplazar MOCK_CURRENT_USER por el usuario del AuthContext
+const MOCK_CURRENT_USER = { id: 1, nombre: "Alex Rodriguez" };
+
 const Profile = () => {
   const { t } = useTranslation();
   const [activeTab, setActiveTab] = useState("posts");
-  const [showAddFriend, setShowAddFriend] = useState(false);
-  const { friends, removeFriend } = useFriends();
+  const [showMyQr, setShowMyQr] = useState(false);
+  const [showScanQr, setShowScanQr] = useState(false);
+  const [lastAdded, setLastAdded] = useState(null);
+  const { friends, allUsers, removeFriend } = useFriends();
+
+  const handleFriendAdded = (user) => {
+    setLastAdded(user);
+    setTimeout(() => setLastAdded(null), 3000);
+  };
 
   return (
     <div className="min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display select-none transition-colors duration-300 md:pl-16">
-      {/* Modal añadir amigos */}
-      {showAddFriend && (
-        <AddFriendModal onClose={() => setShowAddFriend(false)} />
+      {/* Modales QR */}
+      {showMyQr && (
+        <MyQrModal
+          user={MOCK_CURRENT_USER}
+          onClose={() => setShowMyQr(false)}
+        />
+      )}
+      {showScanQr && (
+        <ScanQrModal
+          allUsers={allUsers}
+          onAdd={handleFriendAdded}
+          onClose={() => setShowScanQr(false)}
+        />
+      )}
+
+      {/* Toast de amigo añadido */}
+      {lastAdded && (
+        <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-emerald-500 text-white px-4 py-2.5 rounded-full shadow-lg flex items-center gap-2 text-sm font-bold animate-fade-in">
+          <span className="material-symbols-outlined text-base">
+            check_circle
+          </span>
+          {lastAdded.nombre} añadido como amigo
+        </div>
       )}
 
       {/* Top Bar */}
@@ -144,10 +238,10 @@ const Profile = () => {
         </div>
       </div>
 
-      {/* Scrollable Content */}
+      {/* Contenido */}
       <div className="overflow-y-auto no-scrollbar pb-24 md:pb-10 px-5 md:max-w-6xl md:mx-auto">
         <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-10 lg:items-start">
-          {/* Left column — sticky en desktop */}
+          {/* Columna izquierda — sticky en desktop */}
           <div className="flex flex-col gap-5 lg:sticky lg:top-6">
             {/* Profile Card */}
             <div className="bg-white dark:bg-slate-900 rounded-[28px] border border-slate-100 dark:border-slate-800 shadow-sm p-6 flex flex-col items-center text-center">
@@ -159,7 +253,7 @@ const Profile = () => {
                 />
               </div>
               <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
-                Alex Rodriguez
+                {MOCK_CURRENT_USER.nombre}
               </h2>
               <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
                 F1 Enthusiast & Gold Member
@@ -175,7 +269,7 @@ const Profile = () => {
               </Link>
             </div>
 
-            {/* Stats Grid */}
+            {/* Stats */}
             <div className="grid grid-cols-3 gap-3">
               {[
                 {
@@ -215,9 +309,9 @@ const Profile = () => {
             </button>
           </div>
 
-          {/* Right column — contenido dinámico */}
-          <div className="mt-5 lg:mt-0 min-h-[200px] transition-all duration-300">
-            {/* Tab header — solo desktop */}
+          {/* Columna derecha */}
+          <div className="mt-5 lg:mt-0 min-h-[200px]">
+            {/* Tab pills — solo desktop */}
             <div className="hidden lg:flex gap-2 mb-6">
               {[
                 { key: "posts", label: t("profile.posts"), icon: "grid_view" },
@@ -241,10 +335,10 @@ const Profile = () => {
               ))}
             </div>
 
-            {/* ── Friends Tab ── */}
+            {/* ── Tab Amigos ── */}
             {activeTab === "friends" && (
               <div className="animate-fade-in space-y-4">
-                {/* Cabecera con botón añadir */}
+                {/* Cabecera con botones QR */}
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-lg font-bold text-slate-800 dark:text-white">
                     {t("profile.friendsList")}
@@ -252,17 +346,29 @@ const Profile = () => {
                       ({friends.length})
                     </span>
                   </h3>
-                  <button
-                    onClick={() => setShowAddFriend(true)}
-                    className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/30"
-                  >
-                    <span className="material-symbols-outlined text-base">
-                      person_add
-                    </span>
-                    Añadir
-                  </button>
+                  <div className="flex gap-2">
+                    <button
+                      onClick={() => setShowMyQr(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:border-primary hover:text-primary transition-colors"
+                    >
+                      <span className="material-symbols-outlined text-base">
+                        qr_code_2
+                      </span>
+                      Mi QR
+                    </button>
+                    <button
+                      onClick={() => setShowScanQr(true)}
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/30"
+                    >
+                      <span className="material-symbols-outlined text-base">
+                        qr_code_scanner
+                      </span>
+                      Escanear
+                    </button>
+                  </div>
                 </div>
 
+                {/* Lista de amigos */}
                 {friends.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-slate-400 dark:text-slate-500 gap-3">
                     <span className="material-symbols-outlined text-5xl">
@@ -272,14 +378,17 @@ const Profile = () => {
                       Aún no tienes amigos añadidos
                     </p>
                     <button
-                      onClick={() => setShowAddFriend(true)}
-                      className="text-primary text-sm font-bold hover:underline"
+                      onClick={() => setShowScanQr(true)}
+                      className="flex items-center gap-1.5 text-primary text-sm font-bold hover:underline"
                     >
-                      Buscar personas
+                      <span className="material-symbols-outlined text-base">
+                        qr_code_scanner
+                      </span>
+                      Escanear el QR de alguien
                     </button>
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-2 gap-3">
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {friends.map((friend) => (
                       <div
                         key={friend.id}
@@ -312,18 +421,20 @@ const Profile = () => {
                   </div>
                 )}
 
-                {/* Botón añadir en mobile */}
+                {/* Botón escanear al fondo */}
                 <button
-                  onClick={() => setShowAddFriend(true)}
+                  onClick={() => setShowScanQr(true)}
                   className="w-full mt-2 py-3 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 text-sm font-semibold hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2"
                 >
-                  <span className="material-symbols-outlined text-lg">add</span>
-                  Buscar más personas
+                  <span className="material-symbols-outlined text-lg">
+                    qr_code_scanner
+                  </span>
+                  Escanear QR de un amigo
                 </button>
               </div>
             )}
 
-            {/* ── Posts Tab ── */}
+            {/* ── Tab Posts ── */}
             {activeTab === "posts" && (
               <div className="space-y-4 animate-fade-in">
                 <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 lg:hidden">
@@ -367,7 +478,7 @@ const Profile = () => {
               </div>
             )}
 
-            {/* ── Achievements Tab ── */}
+            {/* ── Tab Logros ── */}
             {activeTab === "achievements" && (
               <div className="space-y-4 animate-fade-in">
                 <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 lg:hidden">
