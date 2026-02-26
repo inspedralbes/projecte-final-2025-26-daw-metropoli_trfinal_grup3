@@ -12,8 +12,13 @@ const getNodoById = async (id) => {
     return await nodoModel.getById(id);
 };
 
+const getNodesWithPoi = async () => {
+    return await nodoModel.getNodesWithPoi();
+};
+
 export default {
     createNodo,
     getAllNodos,
-    getNodoById
+    getNodoById,
+    getNodesWithPoi
 };

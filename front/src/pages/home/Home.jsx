@@ -1,7 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import { getTiempo, getNextEvento } from "../../../services/communicationManager";
+import { getTiempo, getNextEvento } from "../../services/communicationManager";
 import Navbar from "../../layouts/Navbar";
 
 const Home = () => {

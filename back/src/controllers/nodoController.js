@@ -59,8 +59,26 @@ const getNodoById = async (req, res) => {
     }
 };
 
+const getPoiNodes = async (req, res) => {
+    try {
+        const nodos = await nodoService.getNodesWithPoi();
+        res.json({ 
+            success: true, 
+            message: 'Nodos con POI recuperados',
+            data: nodos 
+        });
+    } catch (error) {
+        res.status(500).json({ 
+            success: false, 
+            message: error.message,
+            error_code: 'ERROR_INTERNO'
+        });
+    }
+};
+
 export default {
     createNodo,
     getNodos,
-    getNodoById
+    getNodoById,
+    getPoiNodes
 };

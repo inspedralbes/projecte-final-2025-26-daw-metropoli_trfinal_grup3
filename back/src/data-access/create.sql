@@ -141,3 +141,14 @@ CREATE TABLE IF NOT EXISTS comunidad (
     ubicacion VARCHAR(255),
     FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
 );
+
+-- 13. CÓDIGOS QR (Depende de Nodos)
+CREATE TABLE IF NOT EXISTS qr_codes (
+    id_qr INTEGER PRIMARY KEY AUTO_INCREMENT,
+    slug VARCHAR(100) NOT NULL,    
+    id_nodo_inicio INTEGER NOT NULL,        
+    ruta_archivo_qr VARCHAR(255) NOT NULL,
+    activo BOOLEAN DEFAULT 1,
+    fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_nodo_inicio) REFERENCES nodos_navegacion(id_nodo)
+);
