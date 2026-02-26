@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getQrCodes, generateQrCode, getNodos } from "../../../services/communicationManager";
+import { getQrCodes, generateQrCode, getPoiNodes, recalculateCache } from "../../services/communicationManager";
 
 const AdminQRTab = () => {
     const [qrList, setQrList] = useState([]);
@@ -11,7 +11,7 @@ const AdminQRTab = () => {
     const fetchQRData = async () => {
         try {
             const [nodosRes, qrsRes] = await Promise.all([
-                getNodos(),
+                getPoiNodes(),
                 getQrCodes()
             ]);
 
@@ -47,6 +47,21 @@ const AdminQRTab = () => {
         } catch (err) {
             console.error("Failed to generate QR Code:", err);
             alert("Error al generar el QR. Comprueba que el backend esté conectado.");
+        } finally {
+            setIsGenerating(false);
+        }
+    };
+
+    const handleRecalculateCache = async () => {
+        setIsGenerating(true);
+        try {
+            const res = await recalculateCache();
+            if (res.success) {
+                alert("Caché mundial recalculada con éxito. Los usuarios ahora verán los POIs más cercanos actualizados.");
+            }
+        } catch (err) {
+            console.error("Failed to recalculate cache:", err);
+            alert("Error al recalcular la caché.");
         } finally {
             setIsGenerating(false);
         }
@@ -141,6 +156,16 @@ const AdminQRTab = () => {
                     Generador de QR Topográfico
                 </h3>
 
+                <button
+                    onClick={handleRecalculateCache}
+                    disabled={isGenerating}
+                    className="w-full mb-6 bg-amber-500 hover:bg-amber-600 text-white font-bold py-3 rounded-xl shadow-lg shadow-amber-900/10 active:scale-95 transition-transform flex items-center justify-center gap-2 disabled:opacity-40"
+                    title="Pre-calcula las rutas a los POIs más cercanos para cada QR"
+                >
+                    <span className="material-symbols-outlined">restart_alt</span>
+                    Recalcular Mapa (Caché Mundial)
+                </button>
+
                 <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-6 space-y-6">
 
                     {/* Selector de Nodo */}
@@ -161,7 +186,7 @@ const AdminQRTab = () => {
                                     <option value="" disabled>Selecciona un nodo del circuito...</option>
                                     {nodosList.map(nodo => (
                                         <option key={nodo.id_nodo} value={nodo.id_nodo}>
-                                            Nodo {nodo.id_nodo} {nodo.descripcion ? `(${nodo.descripcion})` : ''} - [{parseFloat(nodo.latitud).toFixed(4)}, {parseFloat(nodo.longitud).toFixed(4)}]
+                                            Nodo {nodo.id_nodo} {nodo.poi_nombre ? `(${nodo.poi_nombre})` : ''} - [{parseFloat(nodo.latitud).toFixed(4)}, {parseFloat(nodo.longitud).toFixed(4)}]
                                         </option>
                                     ))}
                                 </select>

@@ -1,92 +1,100 @@
-import QRCode from 'qrcode';
-import nodoModel from '../models/nodoModel.js';
-import qrModel from '../models/qrModel.js';
-import fs from 'fs';
-import path from 'path';
+import qrService from '../services/qrService.js';
+import cacheService from '../services/cacheService.js';
 
-export const generateQrCode = async (req, res) => {
+/**
+ * GET /api/qrs/slug/:slug
+ * Busca en la caché mundial (O(1)) los POIs más cercanos para ese QR.
+ */
+export const getQrBySlug = (req, res) => {
+  const { slug } = req.params;
+  const data = cacheService.getBySlug(slug);
+
+  if (!data) {
+    return res.status(404).json({
+      success: false,
+      message: `QR con slug '${slug}' no encontrado en la caché mundial. ¿Has ejecutado 'Recalcular Mapa'?`,
+      error_code: 'RECURSO_NO_ENCONTRADO'
+    });
+  }
+
+  res.status(200).json({ success: true, data });
+};
+
+/**
+ * POST /api/qrs/generar/:id_nodo?zona=...
+ * Genera el QR para ese nodo Y calcula los 3 POIs más cercanos (Dijkstra on-demand).
+ * Se usa cuando el admin selecciona un punto concreto del mapa.
+ */
+export const generateQrWithNearestPois = async (req, res) => {
   try {
     const { id_nodo } = req.params;
-    const { zona } = req.query; // Permite personalización mediante parámetros
+    const { zona }    = req.query;
 
-    // Validate the node ID exists in DB so we don't generate junk QRs
-    const node = await nodoModel.getById(id_nodo);
-    
-    if (!node) {
-      return res.status(404).json({
-        success: false,
-        message: `Node with ID ${id_nodo} not found.`
-      });
-    }
-
-    // Assemble Data based on zone inputs
-    const slugIndicador = zona || `zona-sin-definir`;
-    const fileName = `${slugIndicador}.png`;
-
-    // Define public directory path
-    const publicDir = path.join(process.cwd(), 'public', 'qrs');
-    if (!fs.existsSync(publicDir)) {
-      fs.mkdirSync(publicDir, { recursive: true });
-    }
-
-    const filePath = path.join(publicDir, fileName);
-    const dbUrlPath = `/public/qrs/${fileName}`; // Absolute path relative to server root
-    // The data payload the frontend QR Scanner is expecting
-    const qrData = JSON.stringify({ nodo_actual: parseInt(id_nodo, 10) });
-
-    // Generate and save to filesystem as a physical PNG file
-    await QRCode.toFile(filePath, qrData, {
-       errorCorrectionLevel: 'H',
-       type: 'png',
-       margin: 2,
-       color: {
-         dark: '#0f172a', 
-         light: '#ffffff'
-       }
-    });
-    
-    // Save to Database Model
-    await qrModel.create({
-        slug: slugIndicador,
-        id_nodo_inicio: parseInt(id_nodo, 10),
-        ruta_archivo_qr: dbUrlPath
-    });
+    const data = await qrService.generateQrWithNearestPois(id_nodo, zona);
 
     res.status(200).json({
       success: true,
-      message: 'QR Code generated, saved to server, and recorded in DB successfully',
-      data: {
-        id_nodo: parseInt(id_nodo, 10),
-        qr_url: dbUrlPath, // Relative path, e.g. "/public/qrs/zona-norte.png"
-        slug_zona: slugIndicador
-      }
+      message: `QR generado y ${data.pois_cercanos.length} POIs más cercanos calculados`,
+      data
     });
-
   } catch (error) {
-    console.error(`Error generating QR code for node ${req.params.id_nodo}:`, error);
-    res.status(500).json({
+    const status = error.status || 500;
+    console.error(`Error en generateQrWithNearestPois para nodo ${req.params.id_nodo}:`, error);
+    res.status(status).json({
       success: false,
-      message: 'Error generating QR code',
+      message: error.message || 'Error al generar QR con POIs cercanos',
       error: error.message
     });
   }
 };
 
-// Get all generated QR Codes
-export const getQrCodes = async (req, res) => {
-    try {
-        const qrs = await qrModel.getAll();
-        res.status(200).json({
-            success: true,
-            message: 'QR Codes retrieved successfully',
-            data: qrs
-        });
-    } catch (error) {
-        console.error('Error fetching QR codes:', error);
-        res.status(500).json({
-            success: false,
-            message: 'Error retrieving QR codes',
-            error: error.message
-        });
-    }
+/**
+ * GET /api/qrs/:id_nodo?zona=...
+ * Solo genera un QR para el nodo indicado (sin calcular rutas).
+ */
+export const generateQrCode = async (req, res) => {
+  try {
+    const { id_nodo } = req.params;
+    const { zona }    = req.query;
+
+    const data = await qrService.generateQrCode(id_nodo, zona);
+
+    res.status(200).json({
+      success: true,
+      message: 'QR Code generated successfully',
+      data
+    });
+  } catch (error) {
+    const status = error.status || 500;
+    console.error(`Error generating QR code for node ${req.params.id_nodo}:`, error);
+    res.status(status).json({
+      success: false,
+      message: error.message || 'Error generating QR code',
+      error: error.message
+    });
+  }
 };
+
+/**
+ * GET /api/qrs
+ * Devuelve todos los QR codes registrados.
+ */
+export const getQrCodes = async (req, res) => {
+  try {
+    const qrs = await qrService.getAllQrCodes();
+    res.status(200).json({
+      success: true,
+      message: 'QR Codes retrieved successfully',
+      data: qrs
+    });
+  } catch (error) {
+    console.error('Error fetching QR codes:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Error retrieving QR codes',
+      error: error.message
+    });
+  }
+};
+
+

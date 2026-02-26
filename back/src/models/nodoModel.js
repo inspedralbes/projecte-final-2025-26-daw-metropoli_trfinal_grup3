@@ -19,8 +19,18 @@ const getById = async (id) => {
     return rows[0];
 };
 
+const getNodesWithPoi = async () => {
+    const [rows] = await query(`
+        SELECT n.*, p.nombre as poi_nombre 
+        FROM nodos_navegacion n
+        INNER JOIN pois p ON n.id_nodo = p.id_nodo_acceso
+    `);
+    return rows;
+};
+
 export default {
     create,
     getAll,
-    getById
+    getById,
+    getNodesWithPoi
 };

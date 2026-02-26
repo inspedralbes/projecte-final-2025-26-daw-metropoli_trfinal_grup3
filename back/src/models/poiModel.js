@@ -20,8 +20,13 @@ const getNodoAccesoId = async (idPoi) => {
     return rows[0] ? rows[0].id_nodo_acceso : null;
 };
 
+const deleteById = async (id) => {
+    return await query('DELETE FROM pois WHERE id_poi = ?', [id]);
+};
+
 export default {
     create,
     getAll,
-    getNodoAccesoId
+    getNodoAccesoId,
+    deleteById
 };

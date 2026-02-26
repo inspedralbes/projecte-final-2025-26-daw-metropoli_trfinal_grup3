@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getEventos, createEvento, updateEvento } from "../../../services/communicationManager";
+import { getEventos, createEvento, updateEvento, getPois, createPoi, deletePoi, getCategorias } from "../../services/communicationManager";
 import {
   MapContainer,
   TileLayer,
@@ -65,8 +65,9 @@ const Admin = () => {
   // Map State
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [pointName, setPointName] = useState("");
-  const [pointType, setPointType] = useState("grandstand");
+  const [pointType, setPointType] = useState(""); // Ahora será un id_categoria
   const [savedPoints, setSavedPoints] = useState([]);
+  const [categories, setCategories] = useState([]);
 
   // Event State — camps que coincideixen amb el backend
   const [eventNombre, setEventNombre] = useState("");
@@ -91,8 +92,33 @@ const Admin = () => {
       .catch(err => console.error("Error fetching eventos:", err));
   };
 
+  // Cargar POIs del backend
+  const fetchPois = () => {
+    getPois()
+      .then(res => {
+        if (res.success && res.data) {
+          setSavedPoints(res.data);
+        }
+      })
+      .catch(err => console.error("Error fetching POIs:", err));
+  };
+
+  // Cargar categorías del backend
+  const fetchCategories = () => {
+    getCategorias()
+      .then(res => {
+        if (res.success && res.data) {
+          setCategories(res.data);
+          if (res.data.length > 0) setPointType(res.data[0].id_categoria);
+        }
+      })
+      .catch(err => console.error("Error fetching categories:", err));
+  };
+
   useEffect(() => {
     fetchEvents();
+    fetchPois();
+    fetchCategories();
   }, []);
 
   const handleEditEvent = (event) => {
@@ -116,17 +142,34 @@ const Admin = () => {
 
   // Funció per guardar un punt al mapa
   const handleSavePoint = () => {
-    if (!selectedPosition || !pointName) return;
-    const newPoint = {
-      id: Date.now(),
-      name: pointName,
-      type: pointType,
-      position: selectedPosition,
+    if (!selectedPosition || !pointName || !pointType) return;
+
+    const poiData = {
+      nombre: pointName,
+      descripcion: "", // Opcional por ahora
+      latitud: selectedPosition.lat,
+      longitud: selectedPosition.lng,
+      id_categoria: pointType,
+      es_accesible: 1,
+      es_fijo: 1,
+      imagen_url: ""
     };
-    // Juntem savedPoints amb newPoint amb el spread per crear un nou array amb aquestes 2 dades
-    setSavedPoints([...savedPoints, newPoint]);
-    setPointName("");
-    setSelectedPosition(null);
+
+    createPoi(poiData)
+      .then(() => {
+        fetchPois();
+        setPointName("");
+        setSelectedPosition(null);
+      })
+      .catch(err => console.error("Error saving POI:", err));
+  };
+
+  const handleDeletePoint = (id) => {
+    if (window.confirm("¿Seguro que quieres borrar este punto?")) {
+      deletePoi(id)
+        .then(() => fetchPois())
+        .catch(err => console.error("Error deleting POI:", err));
+    }
   };
 
   // Funció per guardar un esdeveniment
@@ -243,26 +286,44 @@ const Admin = () => {
                   />
 
                   {/* Render Saved Points */}
-                  {savedPoints.map((point) => (
-                    <Marker
-                      key={point.id}
-                      position={point.position}
-                      icon={createCustomIcon(
-                        point.type === "grandstand"
-                          ? "event_seat"
-                          : point.type === "food"
-                            ? "restaurant"
-                            : "wc",
-                        point.type === "grandstand"
-                          ? "bg-primary"
-                          : point.type === "food"
-                            ? "bg-orange-500"
-                            : "bg-slate-500",
-                      )}
-                    >
-                      <Popup>{point.name}</Popup>
-                    </Marker>
-                  ))}
+                  {savedPoints.map((point) => {
+                    const cat = categories.find(c => c.id_categoria === point.id_categoria);
+                    const iconName = cat?.nombre.toLowerCase().includes('seat') || cat?.nombre.toLowerCase().includes('tribuna') ? 'event_seat' :
+                      cat?.nombre.toLowerCase().includes('food') || cat?.nombre.toLowerCase().includes('comida') ? 'restaurant' :
+                        cat?.nombre.toLowerCase().includes('wc') || cat?.nombre.toLowerCase().includes('baño') ? 'wc' : 'location_on';
+                    const bgColor = cat?.color_hex || 'bg-slate-500';
+
+                    return (
+                      <Marker
+                        key={point.id_poi}
+                        position={[point.latitud, point.longitud]}
+                        icon={createCustomIcon(
+                          iconName,
+                          bgColor.startsWith('#') ? "" : bgColor // Si es una clase tailwind o un hex
+                        )}
+                        // Aplicamos el color hex si existe
+                        eventHandlers={{
+                          add: (e) => {
+                            if (bgColor.startsWith('#')) {
+                              e.target.getElement().querySelector('div').style.backgroundColor = bgColor;
+                            }
+                          }
+                        }}
+                      >
+                        <Popup>
+                          <div className="p-1">
+                            <h4 className="font-bold border-b mb-2">{point.nombre}</h4>
+                            <button
+                              onClick={() => handleDeletePoint(point.id_poi)}
+                              className="text-xs text-red-500 font-bold hover:underline"
+                            >
+                              Eliminar Punto
+                            </button>
+                          </div>
+                        </Popup>
+                      </Marker>
+                    );
+                  })}
                 </MapContainer>
               </div>
 
@@ -298,9 +359,11 @@ const Admin = () => {
                       onChange={(e) => setPointType(e.target.value)}
                       className="bg-transparent border-none outline-none w-full text-slate-700 dark:text-slate-200 text-sm font-medium appearance-none"
                     >
-                      <option value="grandstand">Grandstand</option>
-                      <option value="food">Food & Drink</option>
-                      <option value="wc">WC</option>
+                      {categories.map(cat => (
+                        <option key={cat.id_categoria} value={cat.id_categoria}>
+                          {cat.nombre}
+                        </option>
+                      ))}
                     </select>
                   </div>
                 </div>

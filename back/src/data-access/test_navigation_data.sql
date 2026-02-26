@@ -15,7 +15,13 @@ INSERT INTO nodos_navegacion (id_nodo, latitud, longitud, descripcion) VALUES
 (3, 41.5650, 2.2550, 'Nodo C'),
 (4, 41.5700, 2.2610, 'Nodo D - Plaza'),
 (5, 41.5720, 2.2630, 'Nodo E'),
-(6, 41.5750, 2.2650, 'Nodo F - Expo');
+(6, 41.5750, 2.2650, 'Nodo F - Expo'),
+-- Nodos QR físicos (tótems escaneables)
+(7, 41.5641, 2.2571, 'QR Tótem 1 - Puerta Norte'),
+(8, 41.5701, 2.2611, 'QR Tótem 2 - Plaza Central'),
+(9, 41.5721, 2.2631, 'QR Tótem 3 - Zona Paddock'),
+(10, 41.5751, 2.2651, 'QR Tótem 4 - Zona Expo');
+
 
 -- 2. Insertar Tramos (Aristas)
 INSERT INTO rutas_tramos (id_nodo_origen, id_nodo_destino, distancia_metros, es_accesible, tipo_terreno, es_bidireccional) VALUES
@@ -52,3 +58,15 @@ INSERT INTO comunidad (id_usuario, texto, tipo_publicacion, ubicacion) VALUES
 (1, 'COMUNICADO OFICIAL: La sesión de clasificación comenzará a las 15:00h. Por favor, ocupen sus asientos con antelación.', 'oficial', 'Tribuna Principal'),
 (1, 'La cafetería central tiene menú especial del día por solo 8€, muy recomendable 👌', 'fanzone', 'Cafetería Central'),
 (1, 'El equipo de logística está haciendo un trabajo increíble este año. Todo perfectamente organizado. ¡Chapó!', 'popular', NULL);
+
+-- 7. Tramos que conectan los tótems QR físicos al grafo de navegación
+-- Cada nodo QR está colocado junto a un nodo lógico existente y conectado a él
+INSERT INTO rutas_tramos (id_nodo_origen, id_nodo_destino, distancia_metros, es_accesible, tipo_terreno, es_bidireccional) VALUES
+(7,  1, 10.00, 1, 'asfalto', 1),  -- QR Tótem 1 (Puerta Norte) -> Nodo A (Entrada)
+(8,  4, 10.00, 1, 'asfalto', 1),  -- QR Tótem 2 (Plaza Central) -> Nodo D (Plaza)
+(9,  5, 10.00, 1, 'asfalto', 1),  -- QR Tótem 3 (Zona Paddock) -> Nodo E
+(10, 6, 10.00, 1, 'asfalto', 1);  -- QR Tótem 4 (Zona Expo)    -> Nodo F (Expo)
+
+-- 8. Códigos QR para los 4 tótems físicos
+-- slug_unico = se imprime en el QR físico y nunca cambia
+-- id_nodo_inicio = puede actualizarse en la DB si se mueve físicamente el tótem

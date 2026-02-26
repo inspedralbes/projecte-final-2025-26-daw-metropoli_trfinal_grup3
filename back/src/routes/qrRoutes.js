@@ -1,12 +1,19 @@
 import express from 'express';
-import { generateQrCode, getQrCodes } from '../controllers/qrController.js';
+import { generateQrCode, getQrCodes, getQrBySlug, generateQrWithNearestPois } from '../controllers/qrController.js';
 
 const router = express.Router();
 
-// Route to get all mapped QR Codes across the platform
+// GET /api/qrs — lista todos los QRs registrados
 router.get('/', getQrCodes);
 
-// Route to get a QR code for a specific Navigation Node
-router.get('/:id_nodo', generateQrCode);
+// GET /api/qrs/:id_nodo — genera solo el QR (solo si id es numérico)
+router.get('/:id_nodo(\\d+)', generateQrCode);
+
+// POST /api/qrs/generar/:id_nodo?zona=... — genera el QR + calcula los 3 POIs más cercanos
+router.post('/generar/:id_nodo(\\d+)', generateQrWithNearestPois);
+
+// GET /api/qrs/slug/:slug — lectura O(1) desde la caché global
+router.get('/slug/:slug', getQrBySlug);
 
 export default router;
+

@@ -53,8 +53,26 @@ const getPois = async (req, res) => {
     }
 };
 
+const deletePoi = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await poiService.deletePoi(id);
+        res.json({
+            success: true,
+            message: 'POI eliminado correctamente'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+            error_code: 'ERROR_INTERNO'
+        });
+    }
+};
+
 export default {
     createPoiSimple,
     createPoiCompleto,
-    getPois
+    getPois,
+    deletePoi
 };

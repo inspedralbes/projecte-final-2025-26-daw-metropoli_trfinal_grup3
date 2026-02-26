@@ -8,7 +8,7 @@ import {
 } from "react-leaflet";
 import { Link } from "react-router-dom";
 import Navbar from "../../layouts/Navbar"; // Import the new Navbar component
-import communicationManager from "../../services/communicationManager"; // API
+import { getPois, getRoute } from "../../services/communicationManager";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
@@ -65,7 +65,7 @@ const Map = () => {
     // Fetch POIs dynamically
     const fetchPois = async () => {
       try {
-        const data = await communicationManager.getPois();
+        const data = await getPois();
 
         if (data.success && data.data) {
           const fetchedMarkers = data.data.map(poi => {
@@ -96,7 +96,7 @@ const Map = () => {
   // Transformation of Dijkstra Output to Leaflet Polyline Coordinates
   const fetchRoute = async (origenId, destinoId) => {
     try {
-      const result = await communicationManager.getRoute(origenId, destinoId);
+      const result = await getRoute(origenId, destinoId);
 
       if (result.success && result.data && result.data.detalles) {
         // TRANSFORMAR RESULTADO: El endpoint devuelve detalles (detalles is array with objects having latitud, longitud)

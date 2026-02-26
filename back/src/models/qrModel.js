@@ -25,8 +25,29 @@ const getAll = async () => {
     return rows;
 };
 
+const getBySlug = async (slug) => {
+    const [rows] = await query('SELECT * FROM qr_codes WHERE slug = ?', [slug]);
+    return rows[0];
+};
+
+/**
+ * INSERT si el slug no existe, UPDATE si ya existe.
+ * Permite que el recálculo sea idempotente (sin duplicar filas).
+ */
+const upsertBySlug = async ({ slug, id_nodo_inicio, ruta_archivo_qr }) => {
+    await query(`
+        INSERT INTO qr_codes (slug, id_nodo_inicio, ruta_archivo_qr)
+        VALUES (?, ?, ?)
+        ON DUPLICATE KEY UPDATE
+            id_nodo_inicio  = VALUES(id_nodo_inicio),
+            ruta_archivo_qr = VALUES(ruta_archivo_qr)
+    `, [slug, id_nodo_inicio, ruta_archivo_qr]);
+};
+
 export default {
     create,
+    upsertBySlug,
     getByIdNodo,
-    getAll
+    getAll,
+    getBySlug
 };

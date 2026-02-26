@@ -46,8 +46,13 @@ const getAllPois = async () => {
     return await poiModel.getAll();
 };
 
+const deletePoi = async (id) => {
+    return await poiModel.deleteById(id);
+};
+
 export default {
     createPoiSimple,
     createPoiCompleto,
-    getAllPois
+    getAllPois,
+    deletePoi
 };
