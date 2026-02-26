@@ -9,6 +9,8 @@ CREATE TABLE IF NOT EXISTS usuario (
     email VARCHAR(150) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     rol VARCHAR(20) DEFAULT 'visitante',
+    foto_perfil VARCHAR(255) NULL,       -- Ruta de la foto de perfil subida por el usuario
+    bio VARCHAR(255) NULL,               -- Descripción personal del usuario
     fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
 );
 

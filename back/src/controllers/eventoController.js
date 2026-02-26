@@ -1,4 +1,5 @@
 import eventoService from '../services/eventoService.js';
+import { emitirMensaje } from '../config/socket.js'; // Traemos nuestra antena
 
 const createEvento = async (req, res) => {
     try {
@@ -15,6 +16,10 @@ const createEvento = async (req, res) => {
             fecha_fin: new Date(fecha_fin),
             estado
         });
+
+        // 📻 Anunciamos el cambio por el canal "actualizacion_eventos" a toda la gente conectada
+        emitirMensaje('actualizacion_eventos', 'Se ha creado un nuevo evento');
+
         res.status(201).json({
             success: true,
             message: 'Evento creado',
@@ -81,6 +86,9 @@ const updateEvento = async (req, res) => {
                 message: 'Evento no encontrado'
             });
         }
+
+        // 📻 Anunciamos a todo el mundo que alguien ha tocado/editado un evento
+        emitirMensaje('actualizacion_eventos', `Se ha actualizado el evento ${id}`);
 
         res.json({
             success: true,

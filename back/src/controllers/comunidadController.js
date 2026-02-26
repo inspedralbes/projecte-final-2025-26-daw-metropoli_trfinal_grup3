@@ -1,9 +1,14 @@
 import comunidadService from '../services/comunidadService.js';
+import { emitirMensaje } from '../config/socket.js'; // Traemos nuestra antena de radio
 
 const createPublicacion = async (req, res) => {
     try {
         const { id_usuario, texto, foto, likes, tipo_publicacion, ubicacion } = req.body;
         const nuevaPublicacion = await comunidadService.createPublicacion({ id_usuario, texto, foto, likes, tipo_publicacion, ubicacion });
+
+        // 📻 Anunciamos el cambio por el canal "nueva_publicacion" a toda la gente conectada
+        emitirMensaje('nueva_publicacion', nuevaPublicacion);
+
         res.status(201).json({
             success: true,
             message: 'Publicación creada',

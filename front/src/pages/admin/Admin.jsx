@@ -71,6 +71,8 @@ const Admin = () => {
   const [eventNombre, setEventNombre] = useState("");
   const [eventDescripcion, setEventDescripcion] = useState("");
   const [eventFoto, setEventFoto] = useState("");
+  const [eventFotoFile, setEventFotoFile] = useState(null);
+  const [eventFotoPreview, setEventFotoPreview] = useState("");
   const [eventFechaInicio, setEventFechaInicio] = useState(null);
   const [eventFechaFin, setEventFechaFin] = useState(null);
   const [eventEstado, setEventEstado] = useState("activo");
@@ -99,6 +101,8 @@ const Admin = () => {
     setEventNombre(event.nombre);
     setEventDescripcion(event.descripcion || "");
     setEventFoto(event.foto || "");
+    setEventFotoFile(null);
+    setEventFotoPreview(event.foto ? `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${event.foto}` : "");
     setEventFechaInicio(new Date(event.fecha_inicio));
     setEventFechaFin(new Date(event.fecha_fin));
     setEventEstado(event.estado || "activo");
@@ -132,24 +136,37 @@ const Admin = () => {
   const handleSaveEvent = () => {
     if (!eventNombre || !eventFechaInicio || !eventFechaFin) return;
 
-    const eventData = {
-      nombre: eventNombre,
-      descripcion: eventDescripcion,
-      foto: eventFoto,
-      fecha_inicio: eventFechaInicio.toISOString(),
-      fecha_fin: eventFechaFin.toISOString(),
-      estado: eventEstado,
-    };
+    let requestData;
+    if (eventFotoFile) {
+      // Usamos FormData para enviar el archivo
+      requestData = new FormData();
+      requestData.append("nombre", eventNombre);
+      requestData.append("descripcion", eventDescripcion);
+      requestData.append("fecha_inicio", eventFechaInicio.toISOString());
+      requestData.append("fecha_fin", eventFechaFin.toISOString());
+      requestData.append("estado", eventEstado);
+      requestData.append("imagen", eventFotoFile);
+    } else {
+      // Envío estándar en JSON si no se cambia la foto
+      requestData = {
+        nombre: eventNombre,
+        descripcion: eventDescripcion,
+        foto: eventFoto, // mandamos el path antiguo para no perderlo
+        fecha_inicio: eventFechaInicio.toISOString(),
+        fecha_fin: eventFechaFin.toISOString(),
+        estado: eventEstado,
+      };
+    }
 
     if (editingEventId) {
-      updateEvento(editingEventId, eventData)
+      updateEvento(editingEventId, requestData)
         .then(() => {
           fetchEvents();
           resetEventForm();
         })
         .catch(err => console.error("Error al actualizar: ", err));
     } else {
-      createEvento(eventData)
+      createEvento(requestData)
         .then(() => {
           fetchEvents();
           resetEventForm();
@@ -163,6 +180,8 @@ const Admin = () => {
     setEventNombre("");
     setEventDescripcion("");
     setEventFoto("");
+    setEventFotoFile(null);
+    setEventFotoPreview("");
     setEventFechaInicio(null);
     setEventFechaFin(null);
     setEventEstado("activo");
@@ -333,7 +352,7 @@ const Admin = () => {
                           <div className="flex items-center gap-4">
                             {event.foto ? (
                               <img
-                                src={event.foto}
+                                src={`${import.meta.env.VITE_API_URL || "http://localhost:3000"}${event.foto}`}
                                 alt={event.nombre}
                                 className="w-10 h-10 rounded-full object-cover"
                               />
@@ -445,29 +464,38 @@ const Admin = () => {
                     </div>
                   </div>
 
-                  {/* Foto (URL) */}
+                  {/* Foto (Archivo) */}
                   <div>
                     <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
-                      Foto (URL)
+                      Foto del Evento
                     </label>
                     <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
                       <span className="material-symbols-outlined text-slate-400">
                         image
                       </span>
                       <input
-                        type="text"
-                        value={eventFoto}
-                        onChange={(e) => setEventFoto(e.target.value)}
-                        className="bg-transparent border-none outline-none w-full text-slate-700 dark:text-slate-200 text-sm font-medium placeholder-slate-400"
-                        placeholder="https://..."
+                        type="file"
+                        accept="image/*"
+                        onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            setEventFotoFile(file);
+                            setEventFotoPreview(URL.createObjectURL(file));
+                          } else {
+                            // si el usuario cancela la selección
+                            setEventFotoFile(null);
+                            setEventFotoPreview(eventFoto ? `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${eventFoto}` : "");
+                          }
+                        }}
+                        className="bg-transparent border-none outline-none w-full text-slate-700 dark:text-slate-200 text-sm font-medium file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
                       />
                     </div>
-                    {/* Preview de la foto si hay URL */}
-                    {eventFoto && (
+                    {/* Preview de la foto */}
+                    {eventFotoPreview && (
                       <img
-                        src={eventFoto}
+                        src={eventFotoPreview}
                         alt="preview"
-                        className="mt-2 w-full h-32 object-cover rounded-xl border border-slate-100 dark:border-slate-700"
+                        className="mt-4 w-full h-32 object-cover rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm"
                         onError={(e) => (e.target.style.display = "none")}
                       />
                     )}

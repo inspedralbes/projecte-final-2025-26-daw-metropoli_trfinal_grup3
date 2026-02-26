@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../../layouts/Navbar';
 import { getPublicaciones, createPublicacion } from '../../../services/communicationManager';
+import socket from '../../../services/socketManager'; // Importamos la antena de radio
 
 const Community = () => {
     const [activeTab, setActiveTab] = useState('Recent');
@@ -21,21 +22,57 @@ const Community = () => {
         ubicacion: ''
     });
 
+    // Extraemos la función de descarga para poder reusarla
+    const cargarPublicacionesDesdeBD = async () => {
+        try {
+            const data = await getPublicaciones();
+            setPublicaciones(data.data || []);
+        } catch (err) {
+            console.error('Error fetching publicaciones:', err);
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // GET: Cargar publicaciones al montar el componente
     useEffect(() => {
-        const fetchPublicaciones = async () => {
-            try {
-                const data = await getPublicaciones();
-                setPublicaciones(data.data || []);
-            } catch (err) {
-                console.error('Error fetching publicaciones:', err);
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            }
-        };
+        // 1. Bajamos al entrar a la pantalla
+        cargarPublicacionesDesdeBD();
 
-        fetchPublicaciones();
+        // 2. Encendemos la radio: Si alguien publica algo nuevo, actualizamos el feed
+        socket.on('nueva_publicacion', (nuevaPub) => {
+            console.log("📡 Ha llegado un post nuevo desde el servidor!", nuevaPub);
+            cargarPublicacionesDesdeBD();
+        });
+
+        // 3. Escuchamos si alguien ha cambiado su foto o nombre de perfil
+        socket.on('perfil_actualizado', (usuarioActualizado) => {
+            console.log("📡 Un usuario ha cambiado su perfil:", usuarioActualizado);
+
+            // En vez de bajar todas las publicaciones de nuevo (costoso),
+            // recorremos las que ya tenemos en memoria y actualizamos solo las de ese usuario
+            setPublicaciones((listaActual) =>
+                listaActual.map((publicacion) => {
+                    // Si la publicación es del usuario que se ha editado, actualizamos sus datos
+                    if (String(publicacion.id_usuario) === String(usuarioActualizado.id_usuario)) {
+                        return {
+                            ...publicacion,
+                            nombre_usuario: usuarioActualizado.nuevo_nombre,
+                            foto_perfil_usuario: usuarioActualizado.nueva_foto
+                        };
+                    }
+                    // Si no, la dejamos exactamente igual
+                    return publicacion;
+                })
+            );
+        });
+
+        // 4. Cuando nos vayamos de la vista Comunidad, apagamos las dos radios
+        return () => {
+            socket.off('nueva_publicacion');
+            socket.off('perfil_actualizado');
+        };
     }, []);
 
     // POST: Crear nueva publicación
@@ -49,7 +86,8 @@ const Community = () => {
                 tipo_publicacion: newPost.tipo_publicacion,
                 ubicacion: newPost.ubicacion
             });
-            setPublicaciones(prev => [data.data, ...prev]);
+            // setPublicaciones(prev => [data.data, ...prev]); -> Nos saltamos añadirlo manualmente
+            // Porque ahora la Radio (Socket) nos avisará un milisegundo despues y la app recarga el Post sola
             setNewPost({ texto: '', foto: '', tipo_publicacion: 'popular', ubicacion: '' });
             setShowModal(false);
         } catch (err) {

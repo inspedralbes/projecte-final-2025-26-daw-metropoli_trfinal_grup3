@@ -9,21 +9,35 @@ const get = async (endpoint) => {
 };
 
 const post = async (endpoint, body) => {
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+    const isFormData = body instanceof FormData;
+    const options = {
         method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-    });
+        body: isFormData ? body : JSON.stringify(body)
+    };
+
+    // Solo añadimos el content-type si no es FormData (el navegador lo añade solo para FormData con su boundary)
+    if (!isFormData) {
+        options.headers = { 'Content-Type': 'application/json' };
+    }
+
+    const response = await fetch(`${BASE_URL}${endpoint}`, options);
     if (!response.ok) throw new Error(`Error POST ${endpoint}: ${response.status}`);
     return response.json();
 };
 
 const put = async (endpoint, body) => {
-    const response = await fetch(`${BASE_URL}${endpoint}`, {
+    const isFormData = body instanceof FormData;
+    const options = {
         method: 'PUT',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify(body)
-    });
+        body: isFormData ? body : JSON.stringify(body)
+    };
+
+    // Solo añadimos el content-type si no es FormData (el navegador lo añade solo para FormData con su boundary)
+    if (!isFormData) {
+        options.headers = { 'Content-Type': 'application/json' };
+    }
+
+    const response = await fetch(`${BASE_URL}${endpoint}`, options);
     if (!response.ok) throw new Error(`Error PUT ${endpoint}: ${response.status}`);
     return response.json();
 };
@@ -64,7 +78,9 @@ export const createIncidencia = (data) => post('/api/incidencias', data);
 
 // --- Usuarios ---
 
+export const getUsuario = (id) => get(`/api/usuarios/${id}`);
 export const getUsuarios = () => get('/api/usuarios');
 export const createUsuario = (data) => post('/api/usuarios', data);
+export const updatePerfil = (id, formData) => put(`/api/usuarios/${id}/perfil`, formData);
 
 export default { get, post, put, del };

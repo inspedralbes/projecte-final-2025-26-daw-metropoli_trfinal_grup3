@@ -23,6 +23,7 @@ const Home = () => {
 
   const [raceDate, setRaceDate] = useState(null);
   const [eventName, setEventName] = useState("");
+  const [eventFoto, setEventFoto] = useState("");
   const [timeLeft, setTimeLeft] = useState({ days: null, hours: null, minutes: null });
   const [weatherStats, setWeatherStats] = useState({
     air: "--",
@@ -46,6 +47,7 @@ const Home = () => {
         if (res && res.data) {
           if (res.data.fecha_inicio) setRaceDate(res.data.fecha_inicio);
           if (res.data.nombre) setEventName(res.data.nombre);
+          if (res.data.foto) setEventFoto(res.data.foto);
         }
       })
       .catch((err) => console.error("Error al obtener el proximo evento:", err));
@@ -128,7 +130,7 @@ const Home = () => {
             {/* Hero Card */}
             <div className="w-full h-[380px] md:h-[420px] rounded-[32px] overflow-hidden relative shadow-xl shadow-slate-200 dark:shadow-black/50 group transition-all">
               <img
-                src="https://media.formula1.com/image/upload/f_auto/q_auto/v1677245035/content/dam/fom-website/2018-redesign-assets/Racehub%20header%20images%2016x9/Spain.jpg.transform/9col/image.jpg"
+                src={eventFoto ? `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${eventFoto}` : "https://media.formula1.com/image/upload/f_auto/q_auto/v1677245035/content/dam/fom-website/2018-redesign-assets/Racehub%20header%20images%2016x9/Spain.jpg.transform/9col/image.jpg"}
                 alt="Race Weekend"
                 className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
               />
