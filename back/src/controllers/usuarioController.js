@@ -49,6 +49,10 @@ const editarPerfil = async (req, res) => {
     try {
         const idUsuario = req.params.id;
         const { nombre, bio } = req.body;
+        
+        console.log(`👤 Intentando editar perfil para usuario ID: ${idUsuario}`);
+        console.log(`📝 Datos recibidos: nombre=${nombre}, bio=${bio}`);
+        console.log(`🖼️ Archivo recibido:`, req.file ? req.file.filename : 'Ninguno');
 
         // 1. Buscamos al usuario actual para saber qué foto tiene ahora mismo
         const usuarioActual = await usuarioService.getUsuarioById(idUsuario);

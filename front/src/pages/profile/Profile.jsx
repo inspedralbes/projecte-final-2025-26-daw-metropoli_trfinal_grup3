@@ -1,5 +1,5 @@
 import { useState, lazy, Suspense } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { QRCodeSVG } from "qrcode.react";
 import Navbar from "../../layouts/Navbar";
@@ -8,11 +8,89 @@ import { useFriends } from "../../context/FriendsContext";
 // Lazy load del escáner (pesa bastante, solo se carga cuando se necesita)
 const QrScanner = lazy(() => import("../../components/QrScanner"));
 
+// ─── Vista Invitado ──────────────────────────────────────────────────────────
+const GuestProfileView = () => {
+  const { t } = useTranslation();
+  return (
+    <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 md:pl-16">
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-[32px] p-8 shadow-2xl flex flex-col items-center text-center border border-slate-100 dark:border-slate-800 relative overflow-hidden">
+        {/* Decorative Background */}
+        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-primary/10 to-transparent dark:from-primary/20 pointer-events-none"></div>
+
+        <div className="w-20 h-20 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center mb-6 relative z-10">
+          <span className="material-symbols-outlined text-4xl text-primary font-variation-settings-filled">
+            account_circle
+          </span>
+        </div>
+
+        <h1 className="text-2xl font-black italic tracking-tight text-slate-800 dark:text-white mb-2 relative z-10">
+          Unlock the Full <span className="text-primary">Experience</span>
+        </h1>
+        <p className="text-slate-500 dark:text-slate-400 text-sm mb-8 relative z-10">
+          Inicia sesión o regístrate para acceder a todas las funcionalidades exclusivas del circuito.
+        </p>
+
+        <div className="flex flex-col gap-4 w-full mb-8 relative z-10">
+          <div className="flex items-center gap-3 text-left">
+            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-slate-600 dark:text-slate-300 text-sm">
+                qr_code_scanner
+              </span>
+            </div>
+            <div>
+              <p className="font-bold text-sm text-slate-800 dark:text-white">Añade Amigos con QR</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Escanea códigos rápidamente en la pista.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 text-left">
+            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-slate-600 dark:text-slate-300 text-sm">
+                emoji_events
+              </span>
+            </div>
+            <div>
+              <p className="font-bold text-sm text-slate-800 dark:text-white">Consigue Logros</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Desbloquea medallas por tu asistencia.</p>
+            </div>
+          </div>
+          <div className="flex items-center gap-3 text-left">
+            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
+              <span className="material-symbols-outlined text-slate-600 dark:text-slate-300 text-sm">
+                chat_bubble
+              </span>
+            </div>
+            <div>
+              <p className="font-bold text-sm text-slate-800 dark:text-white">Feed de la Comunidad</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Comenta y reacciona a los eventos.</p>
+            </div>
+          </div>
+        </div>
+
+        <div className="flex flex-col gap-3 w-full relative z-10">
+          <Link
+            to="/login"
+            className="w-full py-3.5 rounded-full bg-primary text-white font-bold text-sm hover:bg-[#ff1e3c] transition-colors shadow-lg shadow-primary/30 flex justify-center items-center"
+          >
+            Iniciar Sesión
+          </Link>
+          <Link
+            to="/signup"
+            className="w-full py-3.5 rounded-full bg-white dark:bg-slate-800 text-slate-800 dark:text-white font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border-2 border-slate-200 dark:border-slate-700 flex justify-center items-center"
+          >
+            Registrarse
+          </Link>
+        </div>
+      </div>
+      <Navbar />
+    </div>
+  );
+};
+
 // ─── Modal: Mi código QR ────────────────────────────────────────────────────
 const MyQrModal = ({ user, onClose }) => {
   // El QR contiene un JSON con los datos del usuario
   // TODO: cuando haya login, usar el ID real del usuario autenticado
-  const qrData = JSON.stringify({ userId: user.id, nombre: user.nombre });
+  const qrData = JSON.stringify({ userId: user.id_usuario || user.id, nombre: user.nombre });
 
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm px-4 pb-6 md:pb-0">
@@ -171,11 +249,26 @@ const ScanQrModal = ({ allUsers, onAdd, onClose }) => {
 };
 
 // ─── Página de Perfil ─────────────────────────────────────────────────────────
-// TODO: cuando haya login, reemplazar MOCK_CURRENT_USER por el usuario del AuthContext
-const MOCK_CURRENT_USER = { id: 1, nombre: "Alex Rodriguez" };
 
 const Profile = () => {
   const { t } = useTranslation();
+  const navigate = useNavigate();
+  
+  const storedUser = localStorage.getItem("usuario");
+  const currentUser = storedUser ? JSON.parse(storedUser) : null;
+  
+  // Utilidad para construir la URL del avatar
+  const getAvatarUrl = (fotoUrl) => {
+    if (!fotoUrl) return "https://i.pravatar.cc/150?img=12";
+    if (fotoUrl.startsWith("http")) return fotoUrl;
+    return `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${fotoUrl}`;
+  };
+
+  // Si no hay usuario real (Invitado), pintar GuestProfileView
+  if (!currentUser) {
+    return <GuestProfileView />;
+  }
+
   const [activeTab, setActiveTab] = useState("posts");
   const [showMyQr, setShowMyQr] = useState(false);
   const [showScanQr, setShowScanQr] = useState(false);
@@ -192,7 +285,7 @@ const Profile = () => {
       {/* Modales QR */}
       {showMyQr && (
         <MyQrModal
-          user={MOCK_CURRENT_USER}
+          user={currentUser}
           onClose={() => setShowMyQr(false)}
         />
       )}
@@ -247,16 +340,16 @@ const Profile = () => {
             <div className="bg-white dark:bg-slate-900 rounded-[28px] border border-slate-100 dark:border-slate-800 shadow-sm p-6 flex flex-col items-center text-center">
               <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-full bg-slate-200 dark:bg-slate-800 border-4 border-white dark:border-slate-700 shadow-lg overflow-hidden mb-3">
                 <img
-                  src="https://i.pravatar.cc/150?img=12"
+                  src={getAvatarUrl(currentUser.foto)}
                   alt="User Profile"
                   className="w-full h-full object-cover"
                 />
               </div>
               <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
-                {MOCK_CURRENT_USER.nombre}
+                {currentUser.nombre}
               </h2>
               <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
-                F1 Enthusiast & Gold Member
+                {currentUser.bio || "F1 Enthusiast & Gold Member"}
               </p>
               <Link
                 to="/profile/edit"
@@ -304,7 +397,14 @@ const Profile = () => {
             </div>
 
             {/* Log Out */}
-            <button className="w-full py-4 text-red-500 font-semibold text-sm rounded-2xl hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors">
+            <button 
+              onClick={() => {
+                localStorage.removeItem("token");
+                localStorage.removeItem("usuario");
+                navigate("/login");
+              }}
+              className="w-full py-4 text-red-500 font-semibold text-sm rounded-2xl hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+            >
               Log Out
             </button>
           </div>

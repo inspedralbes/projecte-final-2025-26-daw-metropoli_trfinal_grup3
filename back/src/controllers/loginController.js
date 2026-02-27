@@ -118,8 +118,8 @@ const googleLogin = async (req, res) => {
         const googleUser = await googleAuthService.verifyGoogleToken(google_access_token);
 
         // 2. Check if user exists or create them
-        const { password } = req.body;
-        const result = await loginService.googleLogin({ ...googleUser, password });
+        const { password, is_login } = req.body;
+        const result = await loginService.googleLogin({ ...googleUser, password, is_login });
 
         return res.status(200).json({
             success: true,
@@ -128,6 +128,15 @@ const googleLogin = async (req, res) => {
         });
     } catch (error) {
         console.error('Google login error:', error);
+        
+        if (error.code === 'USER_NOT_FOUND') {
+            return res.status(404).json({
+                success:    false,
+                message:    error.message,
+                error_code: error.code,
+            });
+        }
+        
         return res.status(401).json({
             success:    false,
             message:    error.message || 'Error en la autenticación con Google',

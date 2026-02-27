@@ -23,7 +23,7 @@ const Login = () => {
         const res = await fetch(`${API_BASE}/auth/google`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ google_access_token: tokenResponse.access_token }),
+          body: JSON.stringify({ google_access_token: tokenResponse.access_token, is_login: true }),
         });
         const data = await res.json();
 

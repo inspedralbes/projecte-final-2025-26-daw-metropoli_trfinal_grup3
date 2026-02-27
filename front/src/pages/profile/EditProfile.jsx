@@ -8,8 +8,10 @@ const EditProfile = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
 
-  // TODO: Reemplazar con el ID real del usuario autenticado cuando haya login
-  const ID_USUARIO_ACTUAL = 1;
+  // Get current user from localStorage
+  const storedUser = localStorage.getItem("usuario");
+  const currentUser = storedUser ? JSON.parse(storedUser) : null;
+  const ID_USUARIO_ACTUAL = currentUser ? (currentUser.id_usuario || currentUser.id) : null;
 
   // Estado del formulario — se rellena desde la BD al cargar la pantalla
   const [nombre, setNombre] = useState("");
@@ -27,6 +29,11 @@ const EditProfile = () => {
 
   // Al entrar a la pantalla, pedimos los datos actuales del usuario a la BD
   useEffect(() => {
+    if (!ID_USUARIO_ACTUAL) {
+       setCargando(false);
+       return;
+    }
+    
     getUsuario(ID_USUARIO_ACTUAL)
       .then((res) => {
         if (res.success && res.data) {
@@ -40,13 +47,13 @@ const EditProfile = () => {
       })
       .catch((err) => console.error("Error al cargar el perfil:", err))
       .finally(() => setCargando(false));
-  }, []);
+  }, [ID_USUARIO_ACTUAL]);
 
   const validar = () => {
     const nuevosErrores = {};
-    if (!nombre.trim()) nuevosErrores.nombre = t("editProfile.errorName");
-    if (nombre.trim().length > 40) nuevosErrores.nombre = t("editProfile.errorNameLong");
-    if (bio.length > 100) nuevosErrores.bio = t("editProfile.errorBioLong");
+    if (!nombre.trim()) nuevosErrores.nombre = t("editProfile.errorName") || "El nombre es obligatorio";
+    if (nombre.trim().length > 40) nuevosErrores.nombre = t("editProfile.errorNameLong") || "El nombre es muy largo";
+    if (bio.length > 100) nuevosErrores.bio = t("editProfile.errorBioLong") || "La biografía es muy larga";
     return nuevosErrores;
   };
 
@@ -78,8 +85,26 @@ const EditProfile = () => {
     }
 
     try {
-      await updatePerfil(ID_USUARIO_ACTUAL, paqueteDeDatos);
+      if (!ID_USUARIO_ACTUAL) {
+          throw new Error("No hay un usuario activo para actualizar.");
+      }
+      
+      const resp = await updatePerfil(ID_USUARIO_ACTUAL, paqueteDeDatos);
       setGuardado(true);
+
+      if (resp.success && currentUser) {
+         // Construimos el nuevo objeto de usuario para localStorage
+         const newUserData = { 
+            ...currentUser, 
+            nombre, 
+            bio,
+            // Si el backend nos devolvió una nueva ruta de foto, la usamos
+            foto: resp.data?.foto_perfil || currentUser.foto,
+            foto_perfil: resp.data?.foto_perfil || currentUser.foto_perfil
+         };
+         
+         localStorage.setItem("usuario", JSON.stringify(newUserData));
+      }
 
       // Volvemos al perfil después de un breve momento para que el usuario vea la confirmación
       setTimeout(() => {
@@ -129,54 +154,30 @@ const EditProfile = () => {
             <div className="relative">
               <div className="w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-white dark:border-slate-800 shadow-lg overflow-hidden bg-slate-100 dark:bg-slate-800">
                 <img
-                  src={avatar}
+                  src={previsualizacionDeFoto || currentUser?.foto || "https://i.pravatar.cc/150?img=12"}
                   alt="Avatar"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <button
-                onClick={() => setShowAvatarPicker(!showAvatarPicker)}
-                className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 hover:bg-primary/90 transition-colors border-2 border-white dark:border-slate-900"
+              <label
+                htmlFor="avatar-upload"
+                className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 hover:bg-primary/90 transition-colors border-2 border-white dark:border-slate-900 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-xl">
                   photo_camera
                 </span>
-              </button>
+                <input 
+                  id="avatar-upload"
+                  type="file" 
+                  accept="image/*" 
+                  className="hidden" 
+                  onChange={handleCambioFoto}
+                />
+              </label>
             </div>
             <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-              {t("editProfile.changeAvatar")}
+              {t("editProfile.changeAvatar") || "Cambiar Foto de Perfil"}
             </p>
-
-            {/* Avatar Picker */}
-            {showAvatarPicker && (
-              <div className="w-full max-w-sm mt-2 bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 animate-fade-in">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 text-center">
-                  {t("editProfile.chooseAvatar")}
-                </p>
-                <div className="grid grid-cols-4 gap-3">
-                  {AVATAR_OPTIONS.map((url) => (
-                    <button
-                      key={url}
-                      onClick={() => {
-                        setAvatar(url);
-                        setShowAvatarPicker(false);
-                      }}
-                      className={`relative aspect-square rounded-full overflow-hidden transition-all duration-300 ${
-                        avatar === url
-                          ? "ring-4 ring-primary ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-800 scale-95"
-                          : "hover:scale-105 hover:shadow-md opacity-80 hover:opacity-100"
-                      }`}
-                    >
-                      <img
-                        src={url}
-                        alt="avatar option"
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="w-full h-px bg-slate-100 dark:bg-slate-800 mb-8"></div>
@@ -193,22 +194,22 @@ const EditProfile = () => {
               </label>
               <input
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
                 maxLength={40}
-                placeholder={t("editProfile.namePlaceholder")}
+                placeholder={t("editProfile.namePlaceholder") || "Tu nombre"}
                 className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-2xl px-4 py-3.5 text-base text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-                  errors.name
+                  errores.nombre
                     ? "border-red-400 focus:ring-red-400"
                     : "border-slate-200 dark:border-slate-800 focus:border-primary"
                 }`}
               />
               <div className="flex justify-between items-center mt-1.5 px-1">
                 <p className="text-red-500 text-xs font-medium">
-                  {errors.name}
+                  {errores.nombre}
                 </p>
                 <p className="text-[10px] font-bold text-slate-400 tracking-wider">
-                  {name.trim().length}/40
+                  {nombre.trim().length}/40
                 </p>
               </div>
             </div>
@@ -226,15 +227,15 @@ const EditProfile = () => {
                 onChange={(e) => setBio(e.target.value)}
                 maxLength={100}
                 rows={3}
-                placeholder={t("editProfile.bioPlaceholder")}
+                placeholder={t("editProfile.bioPlaceholder") || "Cuéntanos algo sobre ti..."}
                 className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-2xl px-4 py-3.5 text-base text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors resize-none ${
-                  errors.bio
+                  errores.bio
                     ? "border-red-400 focus:ring-red-400"
                     : "border-slate-200 dark:border-slate-800 focus:border-primary"
                 }`}
               />
               <div className="flex justify-between items-center mt-1.5 px-1">
-                <p className="text-red-500 text-xs font-medium">{errors.bio}</p>
+                <p className="text-red-500 text-xs font-medium">{errores.bio}</p>
                 <p className="text-[10px] font-bold text-slate-400 tracking-wider">
                   {bio.length}/100
                 </p>

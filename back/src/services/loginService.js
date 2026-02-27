@@ -80,21 +80,31 @@ const login = async ({ email, password }) => {
     return {
         token,
         usuario: {
+            id:             usuario.id_usuario,
             id_usuario:     usuario.id_usuario,
             nombre:         usuario.nombre,
             email:          usuario.email,
             rol:            usuario.rol,
+            foto:           usuario.foto_perfil,
+            foto_perfil:    usuario.foto_perfil,
+            bio:            usuario.bio,
             fecha_registro: usuario.fecha_registro,
         },
     };
 };
 
 // ── Google Login ──────────────────────────────────────────────────────────────
-const googleLogin = async ({ email, nombre, password = null }) => {
+const googleLogin = async ({ email, nombre, password = null, is_login = false }) => {
     // 1. Find user by email
     let usuario = await usuarioModel.findByEmail(email);
 
     if (!usuario) {
+        if (is_login) {
+            const err = new Error('Cuenta de Google no registrada. Por favor, regístrate primero.');
+            err.code  = 'USER_NOT_FOUND';
+            throw err;
+        }
+
         // 2. If user doesn't exist and no password provided, ask for it
         if (!password) {
             return { needs_password: true, email, nombre };
@@ -138,10 +148,14 @@ const googleLogin = async ({ email, nombre, password = null }) => {
     return {
         token,
         usuario: {
+            id:             usuario.id_usuario,
             id_usuario:     usuario.id_usuario,
             nombre:         usuario.nombre,
             email:          usuario.email,
             rol:            usuario.rol,
+            foto:           usuario.foto_perfil,
+            foto_perfil:    usuario.foto_perfil,
+            bio:            usuario.bio,
             fecha_registro: usuario.fecha_registro,
         },
     };

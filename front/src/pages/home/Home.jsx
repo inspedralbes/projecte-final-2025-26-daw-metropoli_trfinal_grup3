@@ -10,6 +10,16 @@ import Navbar from "../../layouts/Navbar";
 const Home = () => {
   const { t } = useTranslation();
 
+  const storedUser = localStorage.getItem("usuario");
+  const user = storedUser ? JSON.parse(storedUser) : null;
+
+  // Utilidad para construir la URL del avatar
+  const getAvatarUrl = (fotoUrl) => {
+    if (!fotoUrl) return "https://i.pravatar.cc/150?img=12";
+    if (fotoUrl.startsWith("http")) return fotoUrl;
+    return `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${fotoUrl}`;
+  };
+
   const calculateTimeLeft = (raceDate) => {
     if (!raceDate) return { days: null, hours: null, minutes: null };
     const now = new Date();
@@ -137,7 +147,7 @@ const Home = () => {
         </div>
         <div className="hidden md:flex items-center gap-3">
           <h1 className="text-2xl font-black italic uppercase tracking-tighter text-slate-800 dark:text-white">
-            Welcome Back, <span className="text-primary">Alex</span>
+            Welcome Back, <span className="text-primary">{user?.nombre || "Invitado"}</span>
           </h1>
         </div>
         <Link
@@ -145,7 +155,7 @@ const Home = () => {
           className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden shadow-sm"
         >
           <img
-            src="https://i.pravatar.cc/150?img=12"
+            src={getAvatarUrl(user?.foto)}
             alt="Profile"
             className="w-full h-full object-cover rounded-full"
           />
