@@ -8,7 +8,8 @@ import {
 } from "react-leaflet";
 import { Link } from "react-router-dom";
 import Navbar from "../../layouts/Navbar"; // Import the new Navbar component
-import { getPois, getRoute } from "../../services/communicationManager";
+import { getPois, getRoute, getCategorias } from "../../services/communicationManager";
+import socket from "../../../services/socketManager";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
@@ -18,22 +19,24 @@ import iconShadow from "leaflet/dist/images/marker-shadow.png";
 let DefaultIcon = L.icon({ iconUrl: icon, shadowUrl: iconShadow, iconSize: [25, 41], iconAnchor: [12, 41] });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// Custom Icons using Material Symbols for Light Mode
-const createCustomIcon = (iconName, bgColor) =>
-  L.divIcon({
+// Custom Icons — only FA icons are rendered, otherwise just a colored circle
+const createCustomIcon = (iconName, bgColor) => {
+  const isFA = iconName && iconName.startsWith('fa-');
+  const iconHtml = isFA
+    ? `<i class="${iconName}" style="font-size:14px;line-height:1;"></i>`
+    : ``;
+
+  const isHex = bgColor && bgColor.startsWith('#');
+  const bgClass = isHex ? "" : (bgColor || 'bg-slate-500');
+  const styleString = isHex ? `background-color: ${bgColor};` : "";
+
+  return L.divIcon({
     className: "custom-map-icon",
-    html: `<div class="${bgColor} text-white p-2 rounded-full shadow-md border border-white/20 flex items-center justify-center w-8 h-8">
-            <span class="material-symbols-outlined text-sm leading-none">${iconName}</span>
-         </div>`,
+    html: `<div class="${bgClass} text-white rounded-full shadow-lg border-2 border-white flex items-center justify-center" style="width:32px;height:32px;${styleString}">${iconHtml}</div>`,
     iconSize: [32, 32],
     iconAnchor: [16, 16],
   });
-
-// Icons available for future use
-const GrandstandIcon = createCustomIcon('event_seat', 'bg-primary');
-const FanZoneIcon = createCustomIcon('stars', 'bg-indigo-500');
-const WCIcon = createCustomIcon('wc', 'bg-slate-600');
-const FoodIcon = createCustomIcon('restaurant', 'bg-orange-400');
+};
 
 // User Location Icon
 const UserIcon = L.divIcon({
@@ -65,32 +68,44 @@ const Map = () => {
     // Fetch POIs dynamically
     const fetchPois = async () => {
       try {
+        const catRes = await getCategorias();
+        const categorias = catRes.success ? catRes.data : [];
         const data = await getPois();
 
         if (data.success && data.data) {
           const fetchedMarkers = data.data.map(poi => {
-            let icon = DefaultIcon;
-            if (poi.id_categoria === 1) icon = GrandstandIcon;
-            else if (poi.id_categoria === 2) icon = FanZoneIcon;
-            else if (poi.id_categoria === 3) icon = WCIcon;
-            else if (poi.id_categoria === 4) icon = FoodIcon;
+            const cat = categorias.find(c => c.id_categoria === poi.id_categoria);
+            const iconName = cat?.icono_url || 'location_on';
+            const bgColor = cat?.color_hex || 'bg-slate-500';
 
             return {
               id: poi.id_poi,
               position: [parseFloat(poi.latitud), parseFloat(poi.longitud)],
               name: poi.nombre,
               description: poi.descripcion,
-              icon: icon
+              // Le pasamos el string del HEX para poder pintarlo custom si se quiere
+              iconName: iconName,
+              bgColor: bgColor
             };
           });
           setMarkers(fetchedMarkers);
         }
       } catch (error) {
-        console.error("Error fetching POIs:", error);
+        console.error("Error fetching POIs or Categories:", error);
       }
     };
 
     fetchPois();
+
+    // Listen to real-time map updates from WebSockets
+    socket.on('mapa_actualizado', () => {
+      console.log("WebSocket Notice: Map updated! Refreshing POIs...");
+      fetchPois();
+    });
+
+    return () => {
+      socket.off('mapa_actualizado');
+    };
   }, []);
 
   // Transformation of Dijkstra Output to Leaflet Polyline Coordinates
@@ -184,11 +199,11 @@ const Map = () => {
           {/* Dynamic Markers rendering */}
           {markers.map((marker, index) => (
             <Marker
-              key={index}
+              key={marker.id || index}
               position={marker.position}
-              icon={marker.icon}
+              icon={createCustomIcon(marker.iconName, marker.bgColor)}
               eventHandlers={{
-                click: () => setSelectedFeature(marker),
+                click: () => setSelectedFeature(marker)
               }}
             >
               <Popup>

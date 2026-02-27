@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getEventos, createEvento, updateEvento, getPois, createPoi, deletePoi, getCategorias } from "../../services/communicationManager";
+import { getEventos, createEvento, updateEvento, getPois, createPoi, deletePoi, getCategorias, createCategoria } from "../../services/communicationManager";
 import {
   MapContainer,
   TileLayer,
@@ -14,6 +14,7 @@ import L from "leaflet";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import AdminQRTab from "../../components/admin/AdminQRTab";
+import socket from "../../../services/socketManager";
 import { registerLocale } from "react-datepicker";
 import es from "date-fns/locale/es";
 
@@ -32,16 +33,24 @@ let DefaultIcon = L.icon({
 
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// Es crea un icona personalitzada per al mapa segons el tipus de punt
-const createCustomIcon = (iconName, bgColor) =>
-  L.divIcon({
+// Custom Icons — only FA icons are rendered, otherwise just a colored circle
+const createCustomIcon = (iconName, bgColor) => {
+  const isFA = iconName && iconName.startsWith('fa-');
+  const iconHtml = isFA
+    ? `<i class="${iconName}" style="font-size:14px;line-height:1;"></i>`
+    : ``;
+
+  const isHex = bgColor && bgColor.startsWith('#');
+  const bgClass = isHex ? "" : (bgColor || 'bg-slate-500');
+  const styleString = isHex ? `background-color: ${bgColor};` : "";
+
+  return L.divIcon({
     className: "custom-map-icon",
-    html: `<div class="${bgColor} text-white p-2 rounded-full shadow-md border border-white/20 flex items-center justify-center w-8 h-8">
-            <span class="material-symbols-outlined text-sm leading-none">${iconName}</span>
-         </div>`,
+    html: `<div class="${bgClass} text-white rounded-full shadow-lg border-2 border-white flex items-center justify-center" style="width:32px;height:32px;${styleString}">${iconHtml}</div>`,
     iconSize: [32, 32],
     iconAnchor: [16, 16],
   });
+};
 
 // Es crea un marcador que es posiciona on l'usuari fa click
 // lat es l'eix vertical i lng es l'eix horitzontal
@@ -69,7 +78,10 @@ const Admin = () => {
   const [savedPoints, setSavedPoints] = useState([]);
   const [categories, setCategories] = useState([]);
 
-  // Event State — camps que coincideixen amb el backend
+  // Category Creation State
+  const [newCatName, setNewCatName] = useState("");
+  const [newCatIcon, setNewCatIcon] = useState("fa-solid fa-flag");
+  const [newCatColor, setNewCatColor] = useState("#3b82f6");
   const [eventNombre, setEventNombre] = useState("");
   const [eventDescripcion, setEventDescripcion] = useState("");
   const [eventFoto, setEventFoto] = useState("");
@@ -121,6 +133,15 @@ const Admin = () => {
     fetchEvents();
     fetchPois();
     fetchCategories();
+
+    // Auto-recargar POIs cuando el Backend nos avisa
+    socket.on('mapa_actualizado', () => {
+      fetchPois();
+    });
+
+    return () => {
+      socket.off('mapa_actualizado');
+    };
   }, []);
 
   const handleEditEvent = (event) => {
@@ -174,6 +195,20 @@ const Admin = () => {
         .then(() => fetchPois())
         .catch(err => console.error("Error deleting POI:", err));
     }
+  };
+
+  const handleCreateCategory = () => {
+    if (!newCatName || !newCatIcon || !newCatColor) return;
+    createCategoria({
+      nombre: newCatName,
+      icono_url: newCatIcon,
+      color_hex: newCatColor
+    }).then(() => {
+      fetchCategories();
+      setNewCatName("");
+      setNewCatIcon("fa-solid fa-flag");
+      setNewCatColor("#3b82f6");
+    }).catch(err => console.error("Error creating category:", err));
   };
 
   // Funció per guardar un esdeveniment
@@ -307,27 +342,14 @@ const Admin = () => {
                   {/* Render Saved Points */}
                   {savedPoints.map((point) => {
                     const cat = categories.find(c => c.id_categoria === point.id_categoria);
-                    const iconName = cat?.nombre.toLowerCase().includes('seat') || cat?.nombre.toLowerCase().includes('tribuna') ? 'event_seat' :
-                      cat?.nombre.toLowerCase().includes('food') || cat?.nombre.toLowerCase().includes('comida') ? 'restaurant' :
-                        cat?.nombre.toLowerCase().includes('wc') || cat?.nombre.toLowerCase().includes('baño') ? 'wc' : 'location_on';
+                    const iconName = cat?.icono_url || 'location_on';
                     const bgColor = cat?.color_hex || 'bg-slate-500';
 
                     return (
                       <Marker
                         key={point.id_poi}
                         position={[point.latitud, point.longitud]}
-                        icon={createCustomIcon(
-                          iconName,
-                          bgColor.startsWith('#') ? "" : bgColor // Si es una clase tailwind o un hex
-                        )}
-                        // Aplicamos el color hex si existe
-                        eventHandlers={{
-                          add: (e) => {
-                            if (bgColor.startsWith('#')) {
-                              e.target.getElement().querySelector('div').style.backgroundColor = bgColor;
-                            }
-                          }
-                        }}
+                        icon={createCustomIcon(iconName, bgColor)}
                       >
                         <Popup>
                           <div className="p-1">
@@ -397,6 +419,110 @@ const Admin = () => {
                       add_location_alt
                     </span>
                     {selectedPosition ? "Save Point" : "Select Location on Map"}
+                  </button>
+                </div>
+              </div>
+
+              {/* Create Category Panel */}
+              <div className="mt-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 space-y-4">
+                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
+                  Add New Point Type / Category
+                </h3>
+
+                <div>
+                  <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
+                    Category Name
+                  </label>
+                  <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                    <span className="material-symbols-outlined text-slate-400">new_label</span>
+                    <input
+                      type="text"
+                      value={newCatName}
+                      onChange={(e) => setNewCatName(e.target.value)}
+                      className="bg-transparent border-none outline-none w-full text-slate-700 dark:text-slate-200 text-sm font-medium placeholder-slate-400"
+                      placeholder="e.g. VIP Lounge"
+                    />
+                  </div>
+                </div>
+
+                <div className="grid grid-cols-2 gap-4">
+                  <div className="col-span-2 md:col-span-1">
+                    <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
+                      Choose Icon
+                    </label>
+                    <div className="flex flex-wrap gap-2">
+                      <button
+                        onClick={() => setNewCatIcon("fa-solid fa-flag")}
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${newCatIcon === "fa-solid fa-flag" ? "bg-primary text-white shadow-md" : "bg-slate-50 dark:bg-slate-800 text-slate-400 border border-slate-100 dark:border-slate-700 hover:bg-slate-100"}`}
+                      >
+                        <i className="fa-solid fa-flag text-lg"></i>
+                      </button>
+
+                      <button
+                        onClick={() => setNewCatIcon("fa-solid fa-burger")}
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${newCatIcon === "fa-solid fa-burger" ? "bg-primary text-white shadow-md" : "bg-slate-50 dark:bg-slate-800 text-slate-400 border border-slate-100 dark:border-slate-700 hover:bg-slate-100"}`}
+                      >
+                        <i className="fa-solid fa-burger text-lg"></i>
+                      </button>
+
+                      <button
+                        onClick={() => setNewCatIcon("fa-solid fa-restroom")}
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${newCatIcon === "fa-solid fa-restroom" ? "bg-primary text-white shadow-md" : "bg-slate-50 dark:bg-slate-800 text-slate-400 border border-slate-100 dark:border-slate-700 hover:bg-slate-100"}`}
+                      >
+                        <i className="fa-solid fa-restroom text-lg"></i>
+                      </button>
+
+                      <button
+                        onClick={() => setNewCatIcon("fa-solid fa-car")}
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${newCatIcon === "fa-solid fa-car" ? "bg-primary text-white shadow-md" : "bg-slate-50 dark:bg-slate-800 text-slate-400 border border-slate-100 dark:border-slate-700 hover:bg-slate-100"}`}
+                      >
+                        <i className="fa-solid fa-car text-lg"></i>
+                      </button>
+
+                      <button
+                        onClick={() => setNewCatIcon("fa-solid fa-star")}
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${newCatIcon === "fa-solid fa-star" ? "bg-primary text-white shadow-md" : "bg-slate-50 dark:bg-slate-800 text-slate-400 border border-slate-100 dark:border-slate-700 hover:bg-slate-100"}`}
+                      >
+                        <i className="fa-solid fa-star text-lg"></i>
+                      </button>
+
+                      <button
+                        onClick={() => setNewCatIcon("fa-solid fa-shop")}
+                        className={`w-10 h-10 rounded-xl flex items-center justify-center transition-all ${newCatIcon === "fa-solid fa-shop" ? "bg-primary text-white shadow-md" : "bg-slate-50 dark:bg-slate-800 text-slate-400 border border-slate-100 dark:border-slate-700 hover:bg-slate-100"}`}
+                      >
+                        <i className="fa-solid fa-shop text-lg"></i>
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
+                      Color Hex
+                    </label>
+                    <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-1.5 border border-slate-100 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
+                      <input
+                        type="color"
+                        value={newCatColor}
+                        onChange={(e) => setNewCatColor(e.target.value)}
+                        className="w-8 h-8 rounded border-none cursor-pointer bg-transparent"
+                      />
+                      <input
+                        type="text"
+                        value={newCatColor}
+                        onChange={(e) => setNewCatColor(e.target.value)}
+                        className="bg-transparent border-none outline-none w-full text-slate-700 dark:text-slate-200 text-sm font-medium uppercase"
+                        placeholder="#HEX"
+                      />
+                    </div>
+                  </div>
+                </div>
+
+                <div className="pt-2">
+                  <button
+                    onClick={handleCreateCategory}
+                    className="w-full bg-slate-800 dark:bg-slate-700 text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2"
+                  >
+                    <span className="material-symbols-outlined">add_circle</span>
+                    Create Category
                   </button>
                 </div>
               </div>

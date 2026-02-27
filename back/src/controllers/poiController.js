@@ -1,4 +1,5 @@
 import poiService from '../services/poiService.js';
+import { emitirMensaje } from '../config/socket.js';
 
 const createPoiSimple = async (req, res) => {
     try {
@@ -9,9 +10,12 @@ const createPoiSimple = async (req, res) => {
             message: 'POI creado',
             data: nuevoPoi
         });
+
+        // Avisar a todos los clientes de que el mapa ha cambiado usando el modulo oficial de la radio
+        emitirMensaje('mapa_actualizado', { type: 'create' });
     } catch (error) {
-        res.status(500).json({ 
-            success: false, 
+        res.status(500).json({
+            success: false,
             message: error.message,
             error_code: 'ERROR_INTERNO'
         });
@@ -28,8 +32,8 @@ const createPoiCompleto = async (req, res) => {
             data: result
         });
     } catch (error) {
-        res.status(500).json({ 
-            success: false, 
+        res.status(500).json({
+            success: false,
             message: error.message,
             error_code: 'ERROR_INTERNO'
         });
@@ -39,14 +43,14 @@ const createPoiCompleto = async (req, res) => {
 const getPois = async (req, res) => {
     try {
         const pois = await poiService.getAllPois();
-        res.json({ 
-            success: true, 
+        res.json({
+            success: true,
             message: 'Lista de POIs recuperada',
-            data: pois 
+            data: pois
         });
     } catch (error) {
-        res.status(500).json({ 
-            success: false, 
+        res.status(500).json({
+            success: false,
             message: error.message,
             error_code: 'ERROR_INTERNO'
         });
@@ -61,6 +65,9 @@ const deletePoi = async (req, res) => {
             success: true,
             message: 'POI eliminado correctamente'
         });
+
+        // Avisar a todos los clientes usando el modulo de radio
+        emitirMensaje('mapa_actualizado', { type: 'delete' });
     } catch (error) {
         res.status(500).json({
             success: false,

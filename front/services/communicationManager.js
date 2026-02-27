@@ -57,6 +57,9 @@ export const createPublicacion = (data) => post('/api/comunidad', data);
 
 // --- Eventos ---
 
+export const getCategorias = () => get('/api/categorias');
+export const createCategoria = (data) => post('/api/categorias', data);
+
 export const getEventos = () => get('/api/eventos');
 export const getNextEvento = () => get('/api/eventos/proximo');
 export const createEvento = (data) => post('/api/eventos', data);
