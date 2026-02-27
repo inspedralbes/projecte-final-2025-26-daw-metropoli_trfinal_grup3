@@ -2,7 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Navbar from "../../layouts/Navbar";
-import { getUsuario, updatePerfil } from "../../../services/communicationManager";
+import {
+  getUsuario,
+  updatePerfil,
+} from "../../../services/communicationManager";
 
 const EditProfile = () => {
   const { t } = useTranslation();
@@ -45,7 +48,8 @@ const EditProfile = () => {
   const validar = () => {
     const nuevosErrores = {};
     if (!nombre.trim()) nuevosErrores.nombre = t("editProfile.errorName");
-    if (nombre.trim().length > 40) nuevosErrores.nombre = t("editProfile.errorNameLong");
+    if (nombre.trim().length > 40)
+      nuevosErrores.nombre = t("editProfile.errorNameLong");
     if (bio.length > 100) nuevosErrores.bio = t("editProfile.errorBioLong");
     return nuevosErrores;
   };
@@ -90,6 +94,19 @@ const EditProfile = () => {
     }
   };
 
+  if (cargando) {
+    return (
+      <div className="min-h-screen w-full bg-gray-50 dark:bg-slate-950 flex flex-col items-center justify-center p-5">
+        <span className="material-symbols-outlined animate-spin text-primary text-4xl mb-3">
+          progress_activity
+        </span>
+        <p className="text-slate-500 font-medium animate-pulse">
+          {t("loading", "Cargando perfil...")}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display select-none transition-colors duration-300 md:pl-16">
       {/* Top Bar */}
@@ -99,19 +116,26 @@ const EditProfile = () => {
             onClick={() => navigate("/profile")}
             className="bg-white dark:bg-slate-900 p-2 rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
-            <span className="material-symbols-outlined text-2xl block">arrow_back</span>
+            <span className="material-symbols-outlined text-2xl block">
+              arrow_back
+            </span>
           </button>
           <h1 className="text-xl font-bold text-slate-800 dark:text-white">
             {t("editProfile.title")}
           </h1>
           <button
             onClick={handleGuardar}
-            className={`px-4 py-2 rounded-full text-sm font-bold transition-all duration-300 shadow-sm ${guardado ? "bg-emerald-500 text-white shadow-emerald-500/30" : "bg-primary text-white hover:bg-primary/90 shadow-primary/30"
-              }`}
+            className={`px-4 py-2 rounded-full text-sm font-bold transition-all duration-300 shadow-sm ${
+              guardado
+                ? "bg-emerald-500 text-white shadow-emerald-500/30"
+                : "bg-primary text-white hover:bg-primary/90 shadow-primary/30"
+            }`}
           >
             {guardado ? (
               <span className="flex items-center gap-1">
-                <span className="material-symbols-outlined text-base">check</span>
+                <span className="material-symbols-outlined text-base">
+                  check
+                </span>
                 {t("editProfile.saved")}
               </span>
             ) : (
@@ -129,54 +153,32 @@ const EditProfile = () => {
             <div className="relative">
               <div className="w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-white dark:border-slate-800 shadow-lg overflow-hidden bg-slate-100 dark:bg-slate-800">
                 <img
-                  src={avatar}
+                  src={
+                    previsualizacionDeFoto || "https://i.pravatar.cc/150?img=12"
+                  }
                   alt="Avatar"
                   className="w-full h-full object-cover"
                 />
               </div>
-              <button
-                onClick={() => setShowAvatarPicker(!showAvatarPicker)}
-                className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 hover:bg-primary/90 transition-colors border-2 border-white dark:border-slate-900"
+              <label
+                htmlFor="avatar-upload"
+                className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 hover:bg-primary/90 transition-colors border-2 border-white dark:border-slate-900 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-xl">
                   photo_camera
                 </span>
-              </button>
+                <input
+                  id="avatar-upload"
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
+                  onChange={handleCambioFoto}
+                />
+              </label>
             </div>
             <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
               {t("editProfile.changeAvatar")}
             </p>
-
-            {/* Avatar Picker */}
-            {showAvatarPicker && (
-              <div className="w-full max-w-sm mt-2 bg-slate-50 dark:bg-slate-800/50 rounded-2xl p-4 border border-slate-100 dark:border-slate-800 animate-fade-in">
-                <p className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 text-center">
-                  {t("editProfile.chooseAvatar")}
-                </p>
-                <div className="grid grid-cols-4 gap-3">
-                  {AVATAR_OPTIONS.map((url) => (
-                    <button
-                      key={url}
-                      onClick={() => {
-                        setAvatar(url);
-                        setShowAvatarPicker(false);
-                      }}
-                      className={`relative aspect-square rounded-full overflow-hidden transition-all duration-300 ${
-                        avatar === url
-                          ? "ring-4 ring-primary ring-offset-2 ring-offset-slate-50 dark:ring-offset-slate-800 scale-95"
-                          : "hover:scale-105 hover:shadow-md opacity-80 hover:opacity-100"
-                      }`}
-                    >
-                      <img
-                        src={url}
-                        alt="avatar option"
-                        className="w-full h-full object-cover"
-                      />
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
           <div className="w-full h-px bg-slate-100 dark:bg-slate-800 mb-8"></div>
@@ -193,22 +195,22 @@ const EditProfile = () => {
               </label>
               <input
                 type="text"
-                value={name}
-                onChange={(e) => setName(e.target.value)}
+                value={nombre}
+                onChange={(e) => setNombre(e.target.value)}
                 maxLength={40}
                 placeholder={t("editProfile.namePlaceholder")}
                 className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-2xl px-4 py-3.5 text-base text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-                  errors.name
+                  errores.nombre
                     ? "border-red-400 focus:ring-red-400"
                     : "border-slate-200 dark:border-slate-800 focus:border-primary"
                 }`}
               />
               <div className="flex justify-between items-center mt-1.5 px-1">
                 <p className="text-red-500 text-xs font-medium">
-                  {errors.name}
+                  {errores.nombre}
                 </p>
                 <p className="text-[10px] font-bold text-slate-400 tracking-wider">
-                  {name.trim().length}/40
+                  {nombre.trim().length}/40
                 </p>
               </div>
             </div>
@@ -228,13 +230,15 @@ const EditProfile = () => {
                 rows={3}
                 placeholder={t("editProfile.bioPlaceholder")}
                 className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-2xl px-4 py-3.5 text-base text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors resize-none ${
-                  errors.bio
+                  errores.bio
                     ? "border-red-400 focus:ring-red-400"
                     : "border-slate-200 dark:border-slate-800 focus:border-primary"
                 }`}
               />
               <div className="flex justify-between items-center mt-1.5 px-1">
-                <p className="text-red-500 text-xs font-medium">{errors.bio}</p>
+                <p className="text-red-500 text-xs font-medium">
+                  {errores.bio}
+                </p>
                 <p className="text-[10px] font-bold text-slate-400 tracking-wider">
                   {bio.length}/100
                 </p>
