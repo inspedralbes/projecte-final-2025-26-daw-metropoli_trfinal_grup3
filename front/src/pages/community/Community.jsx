@@ -4,20 +4,274 @@ import Navbar from "../../layouts/Navbar";
 import {
   getPublicaciones,
   createPublicacion,
+  createComentario,
+  createRespuesta,
 } from "../../../services/communicationManager";
-import socket from "../../../services/socketManager"; // Importamos la antena de radio
+import socket from "../../../services/socketManager";
 
+// ─── Helpers ─────────────────────────────────────────────────────────────────
+const formatDate = (date) =>
+  date
+    ? new Date(date).toLocaleDateString("es-ES", {
+        day: "2-digit",
+        month: "short",
+      })
+    : "";
+
+// ─── Sub-componente: Formulario de texto (comentario o respuesta) ──────────────
+const InputComentario = ({ placeholder, onSubmit, autoFocus = false }) => {
+  const [texto, setTexto] = useState("");
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    if (!texto.trim()) return;
+    await onSubmit(texto.trim());
+    setTexto("");
+  };
+
+  return (
+    <form onSubmit={handleSubmit} className="flex items-center gap-2 mt-2">
+      <input
+        autoFocus={autoFocus}
+        value={texto}
+        onChange={(e) => setTexto(e.target.value)}
+        placeholder={placeholder}
+        className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white text-xs rounded-full px-4 py-2 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
+      />
+      <button
+        type="submit"
+        className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white hover:bg-[#ff1e3c] transition-colors shrink-0"
+      >
+        <span className="material-symbols-outlined text-[16px]">send</span>
+      </button>
+    </form>
+  );
+};
+
+// ─── Sub-componente: Card de una publicación ─────────────────────────────────
+const PostCard = ({ pub, onComentarioCreado }) => {
+  const [showComments, setShowComments] = useState(false);
+  const [respondendoA, setRespondendoA] = useState(null);
+  const [moderationError, setModerationError] = useState("");
+
+  const clearError = () => setModerationError("");
+
+  const handleComentario = async (texto) => {
+    clearError();
+    try {
+      await createComentario(pub._id, {
+        id_usuario: 1,
+        nombre_usuario: "Tú",
+        foto_perfil: null,
+        texto,
+      });
+      onComentarioCreado(pub._id);
+    } catch (err) {
+      setModerationError(err.message);
+    }
+  };
+
+  const handleRespuesta = async (cid, texto) => {
+    clearError();
+    try {
+      await createRespuesta(pub._id, cid, {
+        id_usuario: 1,
+        nombre_usuario: "Tú",
+        foto_perfil: null,
+        texto,
+      });
+      onComentarioCreado(pub._id);
+      setRespondendoA(null);
+    } catch (err) {
+      setModerationError(err.message);
+    }
+  };
+
+  const comentarios = pub.comentarios || [];
+
+  return (
+    <article className="bg-white dark:bg-[#1e1e1e] rounded-[24px] shadow-sm dark:shadow-none border border-slate-100 dark:border-white/5 overflow-hidden transition-all">
+      {/* Cabecera del post */}
+      <div className="p-5 flex items-start gap-3">
+        <div className="w-10 h-10 rounded-full border-2 border-primary p-0.5 shrink-0 overflow-hidden">
+          <img
+            alt="User"
+            className="w-full h-full object-cover rounded-full"
+            src={
+              pub.foto_perfil || `https://i.pravatar.cc/150?u=${pub.id_usuario}`
+            }
+          />
+        </div>
+        <div className="flex-1">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-sm font-bold text-slate-800 dark:text-white">
+              {pub.nombre_usuario || `Usuario #${pub.id_usuario}`}
+            </span>
+            <span className="text-[10px] text-slate-400 dark:text-white/40 font-bold">
+              {formatDate(pub.createdAt)}
+            </span>
+          </div>
+          {pub.texto && (
+            <p className="text-sm text-slate-600 dark:text-white/70 leading-relaxed font-medium">
+              {pub.texto}
+            </p>
+          )}
+        </div>
+      </div>
+
+      {/* Foto del post */}
+      {pub.foto && (
+        <div className="px-5 pb-2">
+          <div className="w-full bg-slate-100 dark:bg-slate-800/50 rounded-[16px] overflow-hidden flex items-center justify-center max-h-[400px]">
+            <img
+              alt="Publicación"
+              className="w-full max-h-[400px] object-contain rounded-[16px]"
+              src={pub.foto}
+              onError={(e) => {
+                e.target.style.display = "none";
+                e.target.parentElement.innerHTML =
+                  '<div class="flex flex-col items-center justify-center py-8 text-slate-400 gap-2"><span class="material-symbols-outlined text-4xl">broken_image</span><p class="text-xs">No se pudo cargar la imagen</p></div>';
+              }}
+            />
+          </div>
+        </div>
+      )}
+
+      {/* Acciones: likes, comentarios, compartir */}
+      <div className="px-4 py-3 flex items-center gap-5 border-t border-slate-100 dark:border-white/5">
+        <button className="flex items-center gap-1.5 text-slate-400 dark:text-white/40 hover:text-primary transition-colors cursor-pointer group">
+          <span className="material-symbols-outlined text-[20px] group-active:scale-125 transition-transform">
+            favorite
+          </span>
+          <span className="text-xs font-bold">{pub.likes ?? 0}</span>
+        </button>
+
+        <button
+          onClick={() => setShowComments((v) => !v)}
+          className="flex items-center gap-1.5 text-slate-400 dark:text-white/40 hover:text-primary transition-colors cursor-pointer"
+        >
+          <span className="material-symbols-outlined text-[20px]">
+            chat_bubble
+          </span>
+          <span className="text-xs font-bold">{comentarios.length}</span>
+        </button>
+
+        <button className="flex items-center gap-1.5 text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white ml-auto cursor-pointer transition-colors">
+          <span className="material-symbols-outlined text-[20px]">share</span>
+        </button>
+      </div>
+
+      {/* Sección de comentarios (expandible) */}
+      {showComments && (
+        <div className="px-5 pb-5 border-t border-slate-100 dark:border-white/5 space-y-4 pt-4">
+          {/* Banner de error de moderación */}
+          {moderationError && (
+            <div className="flex items-start gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-2xl px-4 py-3">
+              <span className="material-symbols-outlined text-red-500 text-[18px] shrink-0 mt-0.5">
+                block
+              </span>
+              <p className="text-xs text-red-600 dark:text-red-400 font-medium">
+                {moderationError}
+              </p>
+            </div>
+          )}
+
+          {/* Input para nuevo comentario */}
+          <InputComentario
+            placeholder="Escribe un comentario..."
+            onSubmit={handleComentario}
+          />
+
+          {/* Lista de comentarios */}
+          {comentarios.length === 0 && (
+            <p className="text-xs text-slate-400 dark:text-white/30 text-center py-2">
+              Sin comentarios todavía. ¡Sé el primero!
+            </p>
+          )}
+
+          {comentarios.map((com) => (
+            <div key={com._id} className="space-y-2">
+              {/* Comentario raíz */}
+              <div className="flex items-start gap-2">
+                <img
+                  src={
+                    com.foto_perfil ||
+                    `https://i.pravatar.cc/40?u=${com.id_usuario}`
+                  }
+                  alt="User"
+                  className="w-7 h-7 rounded-full border border-primary/40 shrink-0"
+                />
+                <div className="flex-1 bg-slate-50 dark:bg-slate-800/60 rounded-2xl px-3 py-2">
+                  <p className="text-[11px] font-bold text-slate-700 dark:text-white mb-0.5">
+                    {com.nombre_usuario || `Usuario #${com.id_usuario}`}
+                  </p>
+                  <p className="text-[12px] text-slate-600 dark:text-white/70">
+                    {com.texto}
+                  </p>
+                </div>
+              </div>
+
+              {/* Botón responder */}
+              <button
+                onClick={() =>
+                  setRespondendoA(respondendoA === com._id ? null : com._id)
+                }
+                className="ml-9 text-[11px] font-bold text-primary hover:underline cursor-pointer"
+              >
+                {respondendoA === com._id ? "Cancelar" : "Responder"}
+              </button>
+
+              {/* Input respuesta inline */}
+              {respondendoA === com._id && (
+                <div className="ml-9">
+                  <InputComentario
+                    placeholder={`Responder a ${com.nombre_usuario || "Usuario"}...`}
+                    onSubmit={(texto) => handleRespuesta(com._id, texto)}
+                    autoFocus
+                  />
+                </div>
+              )}
+
+              {/* Respuestas anidadas */}
+              {(com.respuestas || []).map((rep) => (
+                <div key={rep._id} className="ml-9 flex items-start gap-2">
+                  <img
+                    src={
+                      rep.foto_perfil ||
+                      `https://i.pravatar.cc/40?u=${rep.id_usuario}`
+                    }
+                    alt="User"
+                    className="w-6 h-6 rounded-full border border-primary/30 shrink-0"
+                  />
+                  <div className="flex-1 bg-slate-100 dark:bg-slate-700/50 rounded-2xl px-3 py-2">
+                    <p className="text-[10px] font-bold text-slate-700 dark:text-white mb-0.5">
+                      {rep.nombre_usuario || `Usuario #${rep.id_usuario}`}
+                    </p>
+                    <p className="text-[11px] text-slate-600 dark:text-white/70">
+                      {rep.texto}
+                    </p>
+                  </div>
+                </div>
+              ))}
+            </div>
+          ))}
+        </div>
+      )}
+    </article>
+  );
+};
+
+// ─── Componente principal ─────────────────────────────────────────────────────
 const Community = () => {
   const [activeTab, setActiveTab] = useState("Recent");
   const tabs = ["Recent", "Official", "Fan Zone", "Popular"];
 
-  // Estado para publicaciones de la API
   const [publicaciones, setPublicaciones] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Estado para el modal de nueva publicación
   const [showModal, setShowModal] = useState(false);
+  const [modalError, setModalError] = useState("");
   const [newPost, setNewPost] = useState({
     texto: "",
     foto: "",
@@ -25,8 +279,7 @@ const Community = () => {
     ubicacion: "",
   });
 
-  // Extraemos la función de descarga para poder reusarla
-  const cargarPublicacionesDesdeBD = async () => {
+  const cargarPublicaciones = async () => {
     try {
       const data = await getPublicaciones();
       setPublicaciones(data.data || []);
@@ -38,71 +291,63 @@ const Community = () => {
     }
   };
 
-  // GET: Cargar publicaciones al montar el componente
+  // Recarga solo el post actualizado (comentario nuevo)
+  const actualizarPost = async () => {
+    const data = await getPublicaciones();
+    setPublicaciones(data.data || []);
+  };
+
   useEffect(() => {
-    // 1. Bajamos al entrar a la pantalla
-    cargarPublicacionesDesdeBD();
+    cargarPublicaciones();
 
-    // 2. Encendemos la radio: Si alguien publica algo nuevo, actualizamos el feed
-    socket.on("nueva_publicacion", (nuevaPub) => {
-      console.log("📡 Ha llegado un post nuevo desde el servidor!", nuevaPub);
-      cargarPublicacionesDesdeBD();
-    });
-
-    // 3. Escuchamos si alguien ha cambiado su foto o nombre de perfil
+    socket.on("nueva_publicacion", () => cargarPublicaciones());
     socket.on("perfil_actualizado", (usuarioActualizado) => {
-      console.log("📡 Un usuario ha cambiado su perfil:", usuarioActualizado);
-
-      // En vez de bajar todas las publicaciones de nuevo (costoso),
-      // recorremos las que ya tenemos en memoria y actualizamos solo las de ese usuario
-      setPublicaciones((listaActual) =>
-        listaActual.map((publicacion) => {
-          // Si la publicación es del usuario que se ha editado, actualizamos sus datos
-          if (
-            String(publicacion.id_usuario) ===
-            String(usuarioActualizado.id_usuario)
-          ) {
-            return {
-              ...publicacion,
-              nombre_usuario: usuarioActualizado.nuevo_nombre,
-              foto_perfil_usuario: usuarioActualizado.nueva_foto,
-            };
-          }
-          // Si no, la dejamos exactamente igual
-          return publicacion;
-        }),
+      setPublicaciones((lista) =>
+        lista.map((pub) =>
+          String(pub.id_usuario) === String(usuarioActualizado.id_usuario)
+            ? {
+                ...pub,
+                nombre_usuario: usuarioActualizado.nuevo_nombre,
+                foto_perfil: usuarioActualizado.nueva_foto,
+              }
+            : pub,
+        ),
       );
     });
+    socket.on("nuevo_comentario", () => actualizarPost());
+    socket.on("nueva_respuesta", () => actualizarPost());
 
-    // 4. Cuando nos vayamos de la vista Comunidad, apagamos las dos radios
     return () => {
       socket.off("nueva_publicacion");
       socket.off("perfil_actualizado");
+      socket.off("nuevo_comentario");
+      socket.off("nueva_respuesta");
     };
   }, []);
 
-  // POST: Crear nueva publicación
   const handleCreate = async () => {
     if (!newPost.texto && !newPost.foto) return;
+    setModalError("");
     try {
       await createPublicacion({
-        id_usuario: 1, // TODO: reemplazar con el id del usuario autenticado
+        id_usuario: 1, // TODO: usuario autenticado
+        nombre_usuario: "Tú",
+        foto_perfil: null,
         texto: newPost.texto,
         foto: newPost.foto,
         tipo_publicacion: newPost.tipo_publicacion,
         ubicacion: newPost.ubicacion,
       });
-      // setPublicaciones(prev => [data.data, ...prev]); -> Nos saltamos añadirlo manualmente
-      // Porque ahora la Radio (Socket) nos avisará un milisegundo despues y la app recarga el Post sola
       setNewPost({
         texto: "",
         foto: "",
         tipo_publicacion: "popular",
         ubicacion: "",
       });
+      setModalError("");
       setShowModal(false);
     } catch (err) {
-      console.error("Error creando publicación:", err);
+      setModalError(err.message);
     }
   };
 
@@ -180,63 +425,11 @@ const Community = () => {
               {!loading &&
                 !error &&
                 publicaciones.map((pub) => (
-                  <article
-                    key={pub.id_publicacion}
-                    className="bg-white dark:bg-[#1e1e1e] rounded-[24px] shadow-sm dark:shadow-none border border-slate-100 dark:border-white/5 overflow-hidden transition-all"
-                  >
-                    <div className="p-5 flex items-start gap-3">
-                      <div className="w-10 h-10 rounded-full border-2 border-primary p-0.5 shrink-0 overflow-hidden">
-                        <img
-                          alt="User"
-                          className="w-full h-full object-cover rounded-full"
-                          src={`https://i.pravatar.cc/150?u=${pub.id_usuario}`}
-                        />
-                      </div>
-                      <div className="flex-1">
-                        <div className="flex items-center justify-between mb-1">
-                          <span className="text-sm font-bold text-slate-800 dark:text-white">
-                            Usuario #{pub.id_usuario}
-                          </span>
-                          <span className="text-[10px] text-slate-400 dark:text-white/40 font-bold">
-                            {pub.fecha_publicacion
-                              ? new Date(
-                                  pub.fecha_publicacion,
-                                ).toLocaleDateString()
-                              : ""}
-                          </span>
-                        </div>
-                        {pub.texto && (
-                          <p className="text-sm text-slate-600 dark:text-white/70 leading-relaxed mb-3 font-medium">
-                            {pub.texto}
-                          </p>
-                        )}
-                      </div>
-                    </div>
-                    {pub.foto && (
-                      <div className="px-5 pb-2">
-                        <img
-                          alt="Publicación"
-                          className="w-full h-56 object-cover rounded-[16px] shadow-md"
-                          src={pub.foto}
-                        />
-                      </div>
-                    )}
-                    <div className="p-4 flex items-center gap-6 border-t border-slate-100 dark:border-white/5">
-                      <button className="flex items-center gap-1.5 text-slate-400 dark:text-white/40 hover:text-primary transition-colors cursor-pointer group">
-                        <span className="material-symbols-outlined text-[20px] group-active:scale-125 transition-transform">
-                          favorite
-                        </span>
-                        <span className="text-xs font-bold">
-                          {pub.likes ?? 0}
-                        </span>
-                      </button>
-                      <button className="flex items-center gap-1.5 text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white ml-auto cursor-pointer transition-colors">
-                        <span className="material-symbols-outlined text-[20px]">
-                          share
-                        </span>
-                      </button>
-                    </div>
-                  </article>
+                  <PostCard
+                    key={pub._id}
+                    pub={pub}
+                    onComentarioCreado={actualizarPost}
+                  />
                 ))}
             </div>
           </div>
@@ -299,7 +492,7 @@ const Community = () => {
               </div>
             </div>
 
-            {/* Active fans */}
+            {/* Online Now */}
             <div className="bg-white dark:bg-[#1e1e1e] rounded-[24px] border border-slate-100 dark:border-white/5 p-5 shadow-sm">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-4 h-1 bg-primary rounded-full"></div>
@@ -351,29 +544,6 @@ const Community = () => {
       </div>
 
       {/* Modal nueva publicación */}
-      {/* =====================================================================
-                IMPORTANTE PARA EL BACK — NO ELIMINAR ESTAS PARTES AL REDISEÑAR:
-
-                1. `showModal` controla si el modal está visible.
-                   - Abrir modal:  onClick={() => setShowModal(true)}
-                   - Cerrar modal: onClick={() => setShowModal(false)}
-
-                2. `newPost` es el objeto que se envía al back. Campos:
-                   - texto:            string  — OBLIGATORIO si no hay foto
-                   - foto:             string  — URL de imagen, OPCIONAL
-                   - tipo_publicacion: string  — OBLIGATORIO. Valores: 'popular' | 'oficial' | 'fanzone'
-                   - ubicacion:        string  — OPCIONAL
-
-                   Cada input/select debe actualizar newPost así:
-                   onChange={(e) => setNewPost({ ...newPost, NOMBRE_CAMPO: e.target.value })}
-
-                3. El botón de envío DEBE tener: onClick={handleCreate}
-                   handleCreate hace el POST a /api/comunidad via communicationManager.
-
-                4. id_usuario está hardcodeado como 1 en handleCreate.
-                   TODO: reemplazar con el id del usuario autenticado cuando haya login.
-                   Grasias :D
-            ===================================================================== */}
       {showModal && (
         <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm px-4 pb-6 md:pb-0">
           <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl overflow-hidden animate-fade-in">
@@ -391,20 +561,15 @@ const Community = () => {
               </button>
             </div>
             <div className="p-6 space-y-5">
-              {/* Campo texto — newPost.texto — OBLIGATORIO si no hay foto */}
-              <div>
-                <textarea
-                  value={newPost.texto}
-                  onChange={(e) =>
-                    setNewPost({ ...newPost, texto: e.target.value })
-                  }
-                  placeholder="¿Qué está pasando en el circuito? 🏎️"
-                  className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-primary rounded-2xl p-4 text-base text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors resize-none h-28"
-                />
-              </div>
-
+              <textarea
+                value={newPost.texto}
+                onChange={(e) =>
+                  setNewPost({ ...newPost, texto: e.target.value })
+                }
+                placeholder="¿Qué está pasando en el circuito? 🏎️"
+                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-primary rounded-2xl p-4 text-base text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors resize-none h-28"
+              />
               <div className="space-y-4">
-                {/* Campo foto — newPost.foto — OPCIONAL, URL de imagen */}
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <span className="material-symbols-outlined text-slate-400">
@@ -421,8 +586,6 @@ const Community = () => {
                     className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 transition-colors"
                   />
                 </div>
-
-                {/* Campo tipo_publicacion — newPost.tipo_publicacion — OBLIGATORIO */}
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <span className="material-symbols-outlined text-slate-400">
@@ -451,7 +614,18 @@ const Community = () => {
                 </div>
               </div>
 
-              {/* Botón enviar — DEBE mantener onClick={handleCreate} */}
+              {/* Banner de error de moderación */}
+              {modalError && (
+                <div className="flex items-start gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-2xl px-4 py-3">
+                  <span className="material-symbols-outlined text-red-500 text-[18px] shrink-0 mt-0.5">
+                    block
+                  </span>
+                  <p className="text-xs text-red-600 dark:text-red-400 font-medium">
+                    {modalError}
+                  </p>
+                </div>
+              )}
+
               <button
                 onClick={handleCreate}
                 className="w-full mt-2 bg-primary text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-primary/30 active:scale-95 transition-all hover:bg-primary/90 flex items-center justify-center gap-2"

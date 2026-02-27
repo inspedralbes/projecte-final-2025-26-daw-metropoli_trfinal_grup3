@@ -1,14 +1,28 @@
-import comunidadModel from '../models/comunidadModel.js';
-
-const createPublicacion = async (publicacionData) => {
-    return await comunidadModel.create(publicacionData);
-};
+import comunidadModel from "../models/comunidadModel.js";
 
 const getAllPublicaciones = async () => {
-    return await comunidadModel.getAll();
+  return await comunidadModel.getAll();
+};
+
+const createPublicacion = async (data) => {
+  return await comunidadModel.create(data);
+};
+
+const addComentario = async (id_publicacion, comentarioData) => {
+  return await comunidadModel.addComentario(id_publicacion, comentarioData);
+};
+
+const addRespuesta = async (id_publicacion, id_comentario, respuestaData) => {
+  return await comunidadModel.addRespuesta(
+    id_publicacion,
+    id_comentario,
+    respuestaData,
+  );
 };
 
 export default {
-    createPublicacion,
-    getAllPublicaciones
+  getAllPublicaciones,
+  createPublicacion,
+  addComentario,
+  addRespuesta,
 };

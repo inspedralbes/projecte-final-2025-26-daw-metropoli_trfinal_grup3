@@ -10,37 +10,44 @@ const get = async (endpoint) => {
 };
 
 const post = async (endpoint, body) => {
-    const isFormData = body instanceof FormData;
-    const options = {
-        method: 'POST',
-        body: isFormData ? body : JSON.stringify(body)
-    };
+  const isFormData = body instanceof FormData;
+  const options = {
+    method: "POST",
+    body: isFormData ? body : JSON.stringify(body),
+  };
 
-    // Solo añadimos el content-type si no es FormData (el navegador lo añade solo para FormData con su boundary)
-    if (!isFormData) {
-        options.headers = { 'Content-Type': 'application/json' };
-    }
+  // Solo añadimos el content-type si no es FormData (el navegador lo añade solo para FormData con su boundary)
+  if (!isFormData) {
+    options.headers = { "Content-Type": "application/json" };
+  }
 
-    const response = await fetch(`${BASE_URL}${endpoint}`, options);
-    if (!response.ok) throw new Error(`Error POST ${endpoint}: ${response.status}`);
-    return response.json();
+  const response = await fetch(`${BASE_URL}${endpoint}`, options);
+  if (!response.ok) {
+    // Intentamos leer el mensaje de error del cuerpo de la respuesta
+    const errorData = await response.json().catch(() => ({}));
+    throw new Error(
+      errorData.message || `Error POST ${endpoint}: ${response.status}`,
+    );
+  }
+  return response.json();
 };
 
 const put = async (endpoint, body) => {
-    const isFormData = body instanceof FormData;
-    const options = {
-        method: 'PUT',
-        body: isFormData ? body : JSON.stringify(body)
-    };
+  const isFormData = body instanceof FormData;
+  const options = {
+    method: "PUT",
+    body: isFormData ? body : JSON.stringify(body),
+  };
 
-    // Solo añadimos el content-type si no es FormData (el navegador lo añade solo para FormData con su boundary)
-    if (!isFormData) {
-        options.headers = { 'Content-Type': 'application/json' };
-    }
+  // Solo añadimos el content-type si no es FormData (el navegador lo añade solo para FormData con su boundary)
+  if (!isFormData) {
+    options.headers = { "Content-Type": "application/json" };
+  }
 
-    const response = await fetch(`${BASE_URL}${endpoint}`, options);
-    if (!response.ok) throw new Error(`Error PUT ${endpoint}: ${response.status}`);
-    return response.json();
+  const response = await fetch(`${BASE_URL}${endpoint}`, options);
+  if (!response.ok)
+    throw new Error(`Error PUT ${endpoint}: ${response.status}`);
+  return response.json();
 };
 
 const del = async (endpoint) => {
@@ -56,6 +63,10 @@ const del = async (endpoint) => {
 
 export const getPublicaciones = () => get("/api/comunidad");
 export const createPublicacion = (data) => post("/api/comunidad", data);
+export const createComentario = (id, data) =>
+  post(`/api/comunidad/${id}/comentarios`, data);
+export const createRespuesta = (id, cid, data) =>
+  post(`/api/comunidad/${id}/comentarios/${cid}/respuestas`, data);
 
 // --- Eventos ---
 
@@ -81,9 +92,10 @@ export const createIncidencia = (data) => post("/api/incidencias", data);
 // --- Usuarios ---
 
 export const getUsuario = (id) => get(`/api/usuarios/${id}`);
-export const getUsuarios = () => get('/api/usuarios');
-export const createUsuario = (data) => post('/api/usuarios', data);
-export const updatePerfil = (id, formData) => put(`/api/usuarios/${id}/perfil`, formData);
+export const getUsuarios = () => get("/api/usuarios");
+export const createUsuario = (data) => post("/api/usuarios", data);
+export const updatePerfil = (id, formData) =>
+  put(`/api/usuarios/${id}/perfil`, formData);
 
 // --- Amigos ---
 // TODO: cuando haya login, pasar el token JWT en los headers

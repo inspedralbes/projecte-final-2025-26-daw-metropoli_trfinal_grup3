@@ -1,20 +1,47 @@
-import { query } from '../config/mysql.js';
+import Publicacion from "./mongo/Publicacion.js";
 
-const create = async (publicacion) => {
-    const { id_usuario, texto, foto, likes, tipo_publicacion, ubicacion } = publicacion;
-    const [result] = await query(
-        'INSERT INTO comunidad (id_usuario, texto, foto, likes, tipo_publicacion, ubicacion) VALUES (?, ?, ?, ?, ?, ?)',
-        [id_usuario, texto, foto, likes ?? 0, tipo_publicacion ?? 'popular', ubicacion]
-    );
-    return { id_publicacion: result.insertId, ...publicacion };
-};
+// =============================================
+// PUBLICACIONES
+// =============================================
 
 const getAll = async () => {
-    const [rows] = await query('SELECT * FROM comunidad');
-    return rows;
+  return await Publicacion.find().sort({ createdAt: -1 }).lean();
+};
+
+const create = async (data) => {
+  const pub = new Publicacion(data);
+  return await pub.save();
+};
+
+// =============================================
+// COMENTARIOS
+// =============================================
+
+const addComentario = async (id_publicacion, comentarioData) => {
+  const pub = await Publicacion.findByIdAndUpdate(
+    id_publicacion,
+    { $push: { comentarios: { $each: [comentarioData], $position: 0 } } },
+    { new: true },
+  );
+  return pub;
+};
+
+// =============================================
+// RESPUESTAS
+// =============================================
+
+const addRespuesta = async (id_publicacion, id_comentario, respuestaData) => {
+  const pub = await Publicacion.findOneAndUpdate(
+    { _id: id_publicacion, "comentarios._id": id_comentario },
+    { $push: { "comentarios.$.respuestas": respuestaData } },
+    { new: true },
+  );
+  return pub;
 };
 
 export default {
-    create,
-    getAll
+  getAll,
+  create,
+  addComentario,
+  addRespuesta,
 };
