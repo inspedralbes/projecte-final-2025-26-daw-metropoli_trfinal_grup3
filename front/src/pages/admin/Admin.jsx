@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getEventos, createEvento, updateEvento, getPois, createPoi, deletePoi, getCategorias, getTramos, createTramosBulk, getNodos } from "../../services/communicationManager";
+import { getEventos, createEvento, updateEvento, getPois, createPoi, deletePoi, getCategorias, getTramos, createTramosBulk, getNodos, createPath, deleteNode, deleteTramo, getTramosByNode } from "../../services/communicationManager";
 import {
   MapContainer,
   TileLayer,
@@ -46,17 +46,21 @@ const createCustomIcon = (iconName, bgColor) =>
 
 // Es crea un marcador que es posiciona on l'usuari fa click
 // lat es l'eix vertical i lng es l'eix horitzontal
-const LocationMarker = ({ setPosition, position }) => {
+const LocationMarker = ({ setPosition, position, isPathMode, onMapClick }) => {
   useMapEvents({
     click(e) {
-      setPosition(e.latlng);
+      if (isPathMode) {
+        onMapClick(e.latlng);
+      } else {
+        setPosition(e.latlng);
+      }
     },
   });
 
   return position === null ? null : (
     <Marker position={position}>
       <Popup>
-        Selected Location: {position.lat.toFixed(5)}, {position.lng.toFixed(5)}
+        Selected Location: {Number(position.lat).toFixed(5)}, {Number(position.lng).toFixed(5)}
       </Popup>
     </Marker>
   );
@@ -69,6 +73,7 @@ const Admin = () => {
   const [pointType, setPointType] = useState(""); // Ahora será un id_categoria
   const [savedPoints, setSavedPoints] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [targetNodeIdForPoi, setTargetNodeIdForPoi] = useState(null); // Para convertir nodo en POI
 
   // Route Drawing State
   const [isDrawMode, setIsDrawMode] = useState(false);
@@ -76,6 +81,11 @@ const Admin = () => {
   const [pendingTramos, setPendingTramos] = useState([]);
   const [currentRouteNodes, setCurrentRouteNodes] = useState([]); // [id_nodo1, id_nodo2, ...]
   const [allNodes, setAllNodes] = useState([]); // Necesitamos nodos puros para pintar las conexiones
+  const [nodeTramos, setNodeTramos] = useState([]); // Tramos asociados al nodo seleccionado en un popup
+
+  // Custom Path Drawing State
+  const [isPathDrawMode, setIsPathDrawMode] = useState(false);
+  const [currentPathCoords, setCurrentPathCoords] = useState([]); // [{lat, lng}, ...]
 
   // Event State — camps que coincideixen amb el backend
   const [eventNombre, setEventNombre] = useState("");
@@ -127,8 +137,12 @@ const Admin = () => {
   const fetchNetworkData = async () => {
     try {
       const [tramosRes, nodosRes] = await Promise.all([getTramos(), getNodos()]);
-      if (tramosRes.success && tramosRes.data) setExistingTramos(tramosRes.data);
-      if (nodosRes.success && nodosRes.data) setAllNodes(nodosRes.data);
+      if (tramosRes.success && tramosRes.data) {
+        setExistingTramos(tramosRes.data);
+      }
+      if (nodosRes.success && nodosRes.data) {
+        setAllNodes(nodosRes.data);
+      }
     } catch (err) {
       console.error("Error fetching network data:", err);
     }
@@ -183,14 +197,17 @@ const Admin = () => {
       id_categoria: pointType,
       es_accesible: 1,
       es_fijo: 1,
-      imagen_url: ""
+      imagen_url: "",
+      id_nodo_acceso: targetNodeIdForPoi // Si venimos de un nodo existente
     };
 
     createPoi(poiData)
       .then(() => {
         fetchPois();
+        fetchNetworkData(); // Recargar nodos ya que ahora uno es POI
         setPointName("");
         setSelectedPosition(null);
+        setTargetNodeIdForPoi(null);
       })
       .catch(err => {
         console.error("Error saving POI:", err);
@@ -246,30 +263,92 @@ const Admin = () => {
     setEventEstado("activo");
   };
 
-  // --- Lógica de Modo Dibujo ---
-  const toggleDrawMode = () => {
-    setIsDrawMode(!isDrawMode);
-    if (isDrawMode) {
-      // Si estamos saliendo del modo dibujo, limpiamos los pendientes
+  // --- Lógica de Modo Red (Dibujo Unificado) ---
+  const toggleNetworkMode = () => {
+    const newMode = !isDrawMode;
+    setIsDrawMode(newMode);
+    setIsPathDrawMode(newMode); // Sincronizamos ambos para comportamiento unificado
+    if (!newMode) {
       setPendingTramos([]);
       setCurrentRouteNodes([]);
+      setCurrentPathCoords([]);
+      setTargetNodeIdForPoi(null);
     }
   };
 
-  const handleNodeClick = (nodeId) => {
+  const handleNodeInteraction = (nodeId, latlng) => {
     if (!isDrawMode) return;
 
-    setCurrentRouteNodes(prev => {
-      const newSequence = [...prev, nodeId];
+    // Modo Conexión: Obtenemos el último nodo antes de actualizar el estado
+    const lastNodeId = currentRouteNodes[currentRouteNodes.length - 1];
 
-      // Si tenemos al menos 2 nodos en la secuencia, creamos el tramo visual
-      if (newSequence.length >= 2) {
-        const origen = newSequence[newSequence.length - 2];
-        const destino = newSequence[newSequence.length - 1];
-        setPendingTramos(ts => [...ts, { id_nodo_origen: origen, id_nodo_destino: destino }]);
+    if (currentRouteNodes.length >= 1 && lastNodeId !== nodeId) {
+      // Preguntamos al usuario fuera del setter de estado
+      const isDobleVia = window.confirm("¿Tramo de DOBLE VÍA?");
+
+      setPendingTramos(ts => [...ts, {
+        id_nodo_origen: lastNodeId,
+        id_nodo_destino: nodeId,
+        es_doble_via: isDobleVia
+      }]);
+    }
+
+    // Actualizamos la secuencia de nodos actual
+    setCurrentRouteNodes(prev => [...prev, nodeId]);
+  };
+
+  const handleConvertNodeToPoi = (node) => {
+    setActiveTab("map");
+    setSelectedPosition({ lat: node.latitud, lng: node.longitud });
+    setPointName(node.descripcion === 'Punto de ruta dibujado' ? "" : node.descripcion);
+    setTargetNodeIdForPoi(node.id_nodo);
+
+    // Forzamos el scroll después de un pequeño delay para asegurar que el tab está renderizado/visible
+    setTimeout(() => {
+      const form = document.querySelector('.poi-form');
+      if (form) {
+        form.scrollIntoView({ behavior: 'smooth', block: 'start' });
       }
-      return newSequence;
-    });
+    }, 100);
+  };
+
+  const handleFetchNodeTramos = async (nodeId) => {
+    if (!nodeId) return;
+    setNodeTramos([]); // Limpiar para evitar mostrar datos del nodo anterior
+    try {
+      const res = await getTramosByNode(nodeId);
+      if (res.success) {
+        setNodeTramos(res.data);
+      }
+    } catch (err) {
+      console.error("Error fetching node tramos:", err);
+    }
+  };
+
+  const handleDeleteNode = async (nodeId) => {
+    if (!window.confirm("¿Estás seguro de que deseas eliminar este nodo? Se eliminarán todos los tramos conectados a él.")) return;
+    try {
+      const res = await deleteNode(nodeId);
+      if (res.success) {
+        alert("Nodo eliminado");
+        fetchNetworkData();
+      }
+    } catch (err) {
+      console.error("Error deleting node:", err);
+    }
+  };
+
+  const handleDeleteTramo = async (tramoId, nodeId) => {
+    if (!window.confirm("¿Eliminar este tramo?")) return;
+    try {
+      const res = await deleteTramo(tramoId);
+      if (res.success) {
+        handleFetchNodeTramos(nodeId); // Recargar la lista de tramos del nodo
+        fetchNetworkData(); // Recargar el mapa
+      }
+    } catch (err) {
+      console.error("Error deleting tramo:", err);
+    }
   };
 
   const handleSaveRoute = async () => {
@@ -283,11 +362,43 @@ const Admin = () => {
         setCurrentRouteNodes([]);
         fetchNetworkData(); // Recargar los tramos consolidados
         setIsDrawMode(false);
+        setIsPathDrawMode(false);
       }
     } catch (err) {
       console.error("Error saving route:", err);
       alert("Error al guardar la ruta.");
     }
+  };
+
+  const handleMapClickForPath = (latlng) => {
+    setCurrentPathCoords(prev => [...prev, latlng]);
+  };
+
+  const handleSavePath = async () => {
+    if (currentPathCoords.length < 2) {
+      alert("Debes dibujar al menos 2 puntos para crear un camino.");
+      return;
+    }
+
+    const isBidirectional = window.confirm("¿Este camino es de DOBLE VÍA?\n\nPulsa 'Aceptar' para doble vía (A<->B) o 'Cancelar' para UNA SOLA VÍA (A->B).");
+
+    try {
+      const res = await createPath(currentPathCoords, isBidirectional);
+      if (res.success) {
+        alert(`Camino guardado con ${res.count} segmentos.`);
+        setCurrentPathCoords([]);
+        setIsPathDrawMode(false);
+        fetchNetworkData();
+      }
+    } catch (err) {
+      console.error("Error saving path:", err);
+      alert("Error al guardar el camino.");
+    }
+  };
+
+  const clearCurrentPath = () => {
+    setCurrentPathCoords([]);
+    setCurrentRouteNodes([]);
   };
 
   return (
@@ -354,34 +465,45 @@ const Admin = () => {
                 {/* Botones de Modo Dibujo */}
                 <div className="flex gap-2">
                   <button
-                    onClick={toggleDrawMode}
+                    onClick={toggleNetworkMode}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 border ${isDrawMode
                       ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
-                      : 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100'
+                      : 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100'
                       }`}
                   >
                     <span className="material-symbols-outlined text-[16px]">
-                      {isDrawMode ? 'close' : 'draw'}
+                      {isDrawMode ? 'close' : 'polyline'}
                     </span>
-                    {isDrawMode ? 'Cancelar Dibujo' : 'Dibujar Ruta'}
+                    {isDrawMode ? 'Salir Modo Red' : 'Modo Red (Dibujar/Conectar)'}
                   </button>
 
-                  {isDrawMode && pendingTramos.length > 0 && (
-                    <button
-                      onClick={handleSaveRoute}
-                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary/90 transition-colors flex items-center gap-1 shadow-sm"
-                    >
-                      <span className="material-symbols-outlined text-[16px]">save</span>
-                      Guardar Ruta
-                    </button>
+                  {isDrawMode && (currentPathCoords.length > 0 || pendingTramos.length > 0) && (
+                    <>
+                      <button
+                        onClick={clearCurrentPath}
+                        className="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors flex items-center gap-1 border border-slate-200"
+                      >
+                        <span className="material-symbols-outlined text-[16px]">delete</span>
+                        Limpiar
+                      </button>
+                      {(currentPathCoords.length >= 2 || pendingTramos.length > 0) && (
+                        <button
+                          onClick={currentPathCoords.length >= 2 ? handleSavePath : handleSaveRoute}
+                          className="px-3 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary/90 transition-colors flex items-center gap-1 shadow-sm"
+                        >
+                          <span className="material-symbols-outlined text-[16px]">save</span>
+                          Guardar Red
+                        </button>
+                      )}
+                    </>
                   )}
                 </div>
               </div>
 
               {isDrawMode && (
-                <div className="bg-amber-50 border border-amber-200 text-amber-800 text-xs px-3 py-2 rounded-xl mb-3 flex items-start gap-2">
-                  <span className="material-symbols-outlined text-amber-500 text-sm mt-0.5">info</span>
-                  <p><strong>Modo Dibujo Activo:</strong> Haz clic en los iconos del mapa (POIs) en orden uno tras otro para crear un camino (tramo) entre ellos. Cuando termines la secuencia, pulsa 'Guardar Ruta'.</p>
+                <div className="bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs px-3 py-2 rounded-xl mb-3 flex items-start gap-2">
+                  <span className="material-symbols-outlined text-indigo-500 text-sm mt-0.5">info</span>
+                  <p><strong>Modo Red:</strong> Pincha en el asfalto para crear caminos nuevos o pulsa en los nodos/POIs para conectarlos entre sí.</p>
                 </div>
               )}
 
@@ -396,6 +518,8 @@ const Admin = () => {
                   <LocationMarker
                     position={selectedPosition}
                     setPosition={setSelectedPosition}
+                    isPathMode={isDrawMode}
+                    onMapClick={handleMapClickForPath}
                   />
 
                   {/* Render Existing Tramos (Saved) */}
@@ -407,9 +531,9 @@ const Admin = () => {
                         <Polyline
                           key={`tramo-${tramo.id_tramo}`}
                           positions={[[origen.latitud, origen.longitud], [destino.latitud, destino.longitud]]}
-                          color="#94a3b8" // Slate 400
+                          color="#64748b" // Slate 500
                           weight={3}
-                          dashArray="5, 10" // Línea punteada sutil para rutas guardadas
+                          opacity={0.6}
                         />
                       )
                     }
@@ -433,7 +557,30 @@ const Admin = () => {
                     return null;
                   })}
 
-                  {/* Render Saved Points */}
+                  {/* Render Current Path being drawn */}
+                  {currentPathCoords.length >= 2 && (
+                    <Polyline
+                      positions={currentPathCoords}
+                      color="#6366f1" // Indigo 500
+                      weight={5}
+                    />
+                  )}
+
+                  {/* Render points of current path */}
+                  {currentPathCoords.map((coord, idx) => (
+                    <Marker
+                      key={`path-point-${idx}`}
+                      position={coord}
+                      icon={L.divIcon({
+                        className: "path-dot",
+                        html: `<div class="w-3 h-3 bg-indigo-600 rounded-full border-2 border-white shadow-sm"></div>`,
+                        iconSize: [12, 12],
+                        iconAnchor: [6, 6]
+                      })}
+                    />
+                  ))}
+
+                  {/* Render Saved Points (POIs) */}
                   {savedPoints.map((point) => {
                     const cat = categories.find(c => c.id_categoria === point.id_categoria);
                     const iconName = cat?.nombre.toLowerCase().includes('seat') || cat?.nombre.toLowerCase().includes('tribuna') ? 'event_seat' :
@@ -443,39 +590,60 @@ const Admin = () => {
 
                     return (
                       <Marker
-                        key={point.id_poi}
+                        key={`poi-${point.id_poi}`}
                         position={[point.latitud, point.longitud]}
                         icon={createCustomIcon(
                           iconName,
-                          bgColor.startsWith('#') ? "" : bgColor // Si es una clase tailwind o un hex
+                          bgColor.startsWith('#') ? "" : bgColor
                         )}
-                        // Aplicamos el color hex si existe
                         eventHandlers={{
-                          click: () => {
+                          click: (e) => {
                             if (isDrawMode) {
-                              handleNodeClick(point.id_nodo_acceso);
+                              handleNodeInteraction(point.id_nodo_acceso, e.latlng);
                             }
                           },
                           add: (e) => {
                             if (bgColor.startsWith('#')) {
-                              const el = e.target.getElement(); if (el && el.querySelector('div')) el.querySelector('div').style.backgroundColor = bgColor;
+                              const el = e.target.getElement();
+                              if (el && el.querySelector('div')) el.querySelector('div').style.backgroundColor = bgColor;
                             }
-
-                            // Si el nodo es parte de la ruta actual dibujándose, aplicamos un estilo visual (rojo)
+                            // Estilo visual si está seleccionado en modo dibujo
                             if (isDrawMode && currentRouteNodes.includes(point.id_nodo_acceso)) {
-                              const el2 = e.target.getElement();
-                              if (el2 && el2.querySelector('div')) {
-                                el2.querySelector('div').style.border = '2px solid #ef4444'; // Red 500 border
-                                el2.querySelector('div').style.transform = 'scale(1.1)';
+                              const el = e.target.getElement();
+                              if (el && el.querySelector('div')) {
+                                el.querySelector('div').style.border = '2px solid #ef4444';
+                                el.querySelector('div').style.transform = 'scale(1.1)';
                               }
                             }
                           }
                         }}
                       >
                         {!isDrawMode && (
-                          <Popup>
-                            <div className="p-1">
+                          <Popup eventHandlers={{ add: () => handleFetchNodeTramos(point.id_nodo_acceso) }}>
+                            <div className="p-1 w-48">
                               <h4 className="font-bold border-b mb-2">{point.nombre}</h4>
+
+                              <div className="mb-3">
+                                <p className="text-[10px] font-bold uppercase text-slate-400 mb-1">Tramos Conectados</p>
+                                {nodeTramos.length > 0 ? (
+                                  <ul className="space-y-1 max-h-24 overflow-y-auto">
+                                    {nodeTramos.map(t => (
+                                      <li key={t.id_tramo} className="text-[10px] flex justify-between items-center bg-slate-50 p-1 rounded">
+                                        <span>#{t.id_tramo} (Dist: {t.distancia_metros}m)</span>
+                                        <button
+                                          onClick={() => handleDeleteTramo(t.id_tramo, point.id_nodo_acceso)}
+                                          className="text-red-500 hover:text-red-700 font-bold"
+                                        >
+                                          ×
+                                        </button>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <p className="text-[10px] italic text-slate-400">Sin tramos</p>
+                                )}
+                              </div>
+
                               <button
                                 onClick={() => handleDeletePoint(point.id_poi)}
                                 className="text-xs text-red-500 font-bold hover:underline"
@@ -488,10 +656,81 @@ const Admin = () => {
                       </Marker>
                     );
                   })}
+
+                  {/* Render All Navigation Nodes (Tiny circles) */}
+                  {allNodes.map(node => {
+                    const isPoiNode = savedPoints.some(p => p.id_nodo_acceso === node.id_nodo);
+                    if (isPoiNode) return null; // Ya se pinta el POI
+
+                    return (
+                      <Marker
+                        key={`node-${node.id_nodo}`}
+                        position={[node.latitud, node.longitud]}
+                        icon={L.divIcon({
+                          className: "node-dot",
+                          html: `<div class="w-2.5 h-2.5 bg-slate-400 rounded-full border border-white shadow-sm hover:scale-125 transition-transform ${currentRouteNodes.includes(node.id_nodo) ? 'bg-red-500 ring-4 ring-red-500/20' : ''}"></div>`,
+                          iconSize: [10, 10],
+                          iconAnchor: [5, 5]
+                        })}
+                        eventHandlers={{
+                          click: (e) => {
+                            if (isDrawMode) {
+                              handleNodeInteraction(node.id_nodo, e.latlng);
+                            }
+                          }
+                        }}
+                      >
+                        {!isDrawMode && (
+                          <Popup eventHandlers={{ add: () => handleFetchNodeTramos(node.id_nodo) }}>
+                            <div className="p-1 w-48 space-y-2">
+                              <h4 className="font-bold text-xs text-slate-400 italic">Nodo #{node.id_nodo}</h4>
+                              <p className="text-xs">{node.descripcion || 'Sin descripción'}</p>
+
+                              <div className="border-t pt-2">
+                                <p className="text-[10px] font-bold uppercase text-slate-400 mb-1">Tramos Conectados</p>
+                                {nodeTramos.length > 0 ? (
+                                  <ul className="space-y-1 max-h-24 overflow-y-auto">
+                                    {nodeTramos.map(t => (
+                                      <li key={t.id_tramo} className="text-[10px] flex justify-between items-center bg-slate-50 p-1 rounded">
+                                        <span>#{t.id_tramo} ({t.id_nodo_origen} \u2192 {t.id_nodo_destino})</span>
+                                        <button
+                                          onClick={() => handleDeleteTramo(t.id_tramo, node.id_nodo)}
+                                          className="text-red-500 hover:text-red-700 font-bold"
+                                        >
+                                          ×
+                                        </button>
+                                      </li>
+                                    ))}
+                                  </ul>
+                                ) : (
+                                  <p className="text-[10px] italic text-slate-400">Sin tramos</p>
+                                )}
+                              </div>
+
+                              <div className="grid grid-cols-2 gap-2 pt-2 border-t">
+                                <button
+                                  onClick={() => handleConvertNodeToPoi(node)}
+                                  className="bg-primary text-white text-[9px] font-bold py-1 px-2 rounded hover:bg-primary/90 transition-colors"
+                                >
+                                  Pasar a POI
+                                </button>
+                                <button
+                                  onClick={() => handleDeleteNode(node.id_nodo)}
+                                  className="bg-red-500 text-white text-[9px] font-bold py-1 px-2 rounded hover:bg-red-600 transition-colors"
+                                >
+                                  Borrar Nodo
+                                </button>
+                              </div>
+                            </div>
+                          </Popup>
+                        )}
+                      </Marker>
+                    );
+                  })}
                 </MapContainer>
               </div>
 
-              <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 space-y-4">
+              <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 space-y-4 poi-form">
                 <div>
                   <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
                     Point Name

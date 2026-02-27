@@ -14,7 +14,23 @@ const getAll = async () => {
     return rows;
 };
 
+const deleteById = async (id) => {
+    return await query('DELETE FROM rutas_tramos WHERE id_tramo = ?', [id]);
+};
+
+const deleteByNodeId = async (nodeId) => {
+    return await query('DELETE FROM rutas_tramos WHERE id_nodo_origen = ? OR id_nodo_destino = ?', [nodeId, nodeId]);
+};
+
+const getByNodeId = async (nodeId) => {
+    const [rows] = await query('SELECT * FROM rutas_tramos WHERE id_nodo_origen = ? OR id_nodo_destino = ?', [nodeId, nodeId]);
+    return rows;
+};
+
 export default {
     create,
-    getAll
+    getAll,
+    deleteById,
+    deleteByNodeId,
+    getByNodeId
 };

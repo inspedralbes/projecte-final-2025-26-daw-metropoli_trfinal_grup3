@@ -76,9 +76,20 @@ const getPoiNodes = async (req, res) => {
     }
 };
 
+const deleteNodo = async (req, res) => {
+    try {
+        const { id } = req.params;
+        await nodoService.deleteNode(id);
+        res.json({ success: true, message: 'Nodo y sus tramos relacionados eliminados correctamente' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 export default {
     createNodo,
     getNodos,
     getNodoById,
-    getPoiNodes
+    getPoiNodes,
+    deleteNodo
 };

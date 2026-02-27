@@ -29,9 +29,14 @@ const getNodesWithPoi = async () => {
     return rows;
 };
 
+const deleteById = async (id) => {
+    return await query('DELETE FROM nodos_navegacion WHERE id_nodo = ?', [id]);
+};
+
 export default {
     create,
     getAll,
     getById,
-    getNodesWithPoi
+    getNodesWithPoi,
+    deleteById
 };

@@ -108,6 +108,21 @@ export const createTramosBulk = async (tramosArray) => {
     }
 };
 
+export const createPath = async (coords, isBidirectional) => {
+    try {
+        const response = await fetch(`${API_URL}/api/tramos/path`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ coords, isBidirectional }),
+        });
+        if (!response.ok) throw new Error("Failed to create path");
+        return await response.json();
+    } catch (error) {
+        console.error("Error in createPath:", error);
+        throw error;
+    }
+};
+
 // ── Nodos de navegación ──
 export const getNodos = async () => {
   try {
@@ -231,6 +246,42 @@ export const getCategorias = async () => {
     return await response.json();
   } catch (error) {
     console.error("Error in getCategorias:", error);
+    throw error;
+  }
+};
+export const deleteNode = async (id) => {
+  try {
+    const response = await fetch(`${API_URL}/api/nodos/${id}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) throw new Error("Failed to delete Nodo");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in deleteNode:", error);
+    throw error;
+  }
+};
+
+export const deleteTramo = async (id) => {
+  try {
+    const response = await fetch(`${API_URL}/api/tramos/${id}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) throw new Error("Failed to delete Tramo");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in deleteTramo:", error);
+    throw error;
+  }
+};
+
+export const getTramosByNode = async (nodeId) => {
+  try {
+    const response = await fetch(`${API_URL}/api/tramos/node/${nodeId}`);
+    if (!response.ok) throw new Error("Failed to fetch Tramos for Node");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getTramosByNode:", error);
     throw error;
   }
 };
