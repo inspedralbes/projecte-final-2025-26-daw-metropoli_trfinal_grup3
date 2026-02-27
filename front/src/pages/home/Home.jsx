@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import {
   getTiempo,
   getNextEvento,
-} from "../../../services/communicationManager";
+} from "../../services/communicationManager";
 import Navbar from "../../layouts/Navbar";
 
 const Home = () => {
