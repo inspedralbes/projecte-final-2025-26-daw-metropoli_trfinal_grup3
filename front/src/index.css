@@ -134,3 +134,16 @@ html.dark body {
 #root .react-datepicker__time-list-item--selected {
   @apply bg-primary text-white;
 }
+
+@keyframes scan-move {
+  0% { top: 15%; }
+  50% { top: 85%; }
+  100% { top: 15%; }
+}
+
+.animate-scan-move {
+  position: absolute;
+  left: 50%;
+  transform: translateX(-50%);
+  animation: scan-move 2.5s infinite ease-in-out;
+}

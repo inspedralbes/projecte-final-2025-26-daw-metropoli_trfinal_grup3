@@ -136,112 +136,162 @@ const ScanQrModal = ({ allUsers, onAdd, onClose }) => {
   const { addFriend, isFriend } = useFriends();
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
+  const [scanning, setScanning] = useState(true);
+
+  // Utilidad para construir la URL del avatar
+  const getAvatarUrl = (fotoUrl) => {
+    if (!fotoUrl) return "https://i.pravatar.cc/150?img=12";
+    if (fotoUrl.startsWith("http")) return fotoUrl;
+    return `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${fotoUrl}`;
+  };
 
   const handleResult = (decoded) => {
     try {
+      console.log("QR Decoded:", decoded);
       const data = JSON.parse(decoded);
-      const found = allUsers.find((u) => u.id === data.userId);
+      // El QR puede contener userId o id_usuario
+      const targetId = data.userId || data.id_usuario || data.id;
+      
+      if (!targetId) {
+        throw new Error("Invalid QR data");
+      }
+
+      const found = allUsers.find((u) => (u.id_usuario || u.id) == targetId);
+      
       if (!found) {
-        setError("Usuario no encontrado");
+        setError("Usuario no encontrado en la comunidad");
+        setScanning(false);
         return;
       }
+
+      if (isFriend(targetId)) {
+        setError("Este usuario ya es tu amigo");
+        setScanning(false);
+        return;
+      }
+
       setResult(found);
-    } catch {
-      setError("QR no válido");
+      setScanning(false);
+    } catch (err) {
+      console.error("Scan error:", err);
+      setError("Código QR no válido para Metrópoli");
+      setScanning(false);
     }
   };
 
-  const handleAdd = () => {
+  const handleAdd = async () => {
     if (result) {
-      addFriend(result.id);
-      onAdd(result);
-      onClose();
+      const res = await addFriend(result.id_usuario || result.id);
+      if (res.success) {
+        onAdd(result);
+        onClose();
+      } else {
+        setError(res.message || "No se pudo añadir al amigo");
+      }
     }
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm px-4 pb-6 md:pb-0">
-      <div className="w-full max-w-sm bg-white dark:bg-slate-900 rounded-[28px] shadow-2xl overflow-hidden">
-        <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100 dark:border-slate-800">
-          <h2 className="font-bold text-slate-800 dark:text-white text-lg">
-            Escanear QR
-          </h2>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md px-4">
+      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl overflow-hidden relative">
+        {/* Header con diseño premium */}
+        <div className="absolute top-0 left-0 w-full h-2 bg-primary"></div>
+        <div className="flex items-center justify-between px-6 pt-8 pb-4">
+          <div>
+            <h2 className="text-xl font-bold text-slate-800 dark:text-white leading-tight">
+              {result ? "Usuario Encontrado" : "Escanear Amigo"}
+            </h2>
+            <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
+              {result ? "Confirma que quieres añadir a esta persona" : "Apunta con la cámara al código QR"}
+            </p>
+          </div>
           <button
             onClick={onClose}
-            className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+            className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-all transform hover:rotate-90"
           >
-            <span className="material-symbols-outlined text-slate-500 text-lg">
-              close
-            </span>
+            <span className="material-symbols-outlined text-slate-500">close</span>
           </button>
         </div>
-        <div className="p-5">
-          {result ? (
-            // Confirmación tras escanear
-            <div className="flex flex-col items-center gap-4 py-4">
-              <div className="w-16 h-16 rounded-full overflow-hidden border-4 border-primary/30">
-                <img
-                  src={result.avatar}
-                  alt={result.nombre}
-                  className="w-full h-full object-cover"
-                />
+
+        <div className="p-6">
+          {scanning ? (
+            <div className="relative group">
+              <Suspense
+                fallback={
+                  <div className="flex flex-col items-center justify-center py-20 text-slate-400 gap-3">
+                    <span className="material-symbols-outlined animate-spin text-3xl">progress_activity</span>
+                    <p className="text-sm font-medium">Iniciando cámara...</p>
+                  </div>
+                }
+              >
+                <QrScanner onResult={handleResult} onError={(err) => {setError(err); setScanning(false);}} />
+              </Suspense>
+              
+              {/* Indicador de "Buscando..." */}
+              <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
+                <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
+                <span className="text-[10px] font-bold text-white uppercase tracking-wider">Buscando QR...</span>
               </div>
-              <div className="text-center">
-                <p className="font-bold text-slate-800 dark:text-white text-lg">
-                  {result.nombre}
-                </p>
-                <p className="text-xs text-slate-400">{result.badge}</p>
-              </div>
-              {isFriend(result.id) ? (
-                <div className="flex items-center gap-2 text-emerald-500 font-bold text-sm">
-                  <span className="material-symbols-outlined">
-                    check_circle
-                  </span>
-                  Ya sois amigos
-                </div>
-              ) : (
-                <button
-                  onClick={handleAdd}
-                  className="w-full py-3 rounded-2xl bg-primary text-white font-bold text-sm hover:bg-primary/90 transition-colors shadow-lg shadow-primary/30 flex items-center justify-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-base">
-                    person_add
-                  </span>
-                  Añadir como amigo
-                </button>
-              )}
             </div>
-          ) : error ? (
-            // Error de escaneo
-            <div className="flex flex-col items-center gap-3 py-6 text-center">
-              <span className="material-symbols-outlined text-4xl text-red-400">
-                qr_code_scanner
-              </span>
-              <p className="text-slate-500 dark:text-slate-400 text-sm">
-                {error}
+          ) : result ? (
+            /* Vista de Éxito / Confirmación */
+            <div className="flex flex-col items-center py-4 animate-in fade-in zoom-in duration-300">
+               <div className="w-24 h-24 rounded-full border-4 border-primary/20 p-1 mb-4 relative">
+                  <img 
+                    src={getAvatarUrl(result.foto_perfil || result.foto)} 
+                    alt={result.nombre}
+                    className="w-full h-full object-cover rounded-full shadow-lg"
+                  />
+                  <div className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-900">
+                    <span className="material-symbols-outlined text-white text-sm font-bold">person_add</span>
+                  </div>
+               </div>
+               <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1">{result.nombre}</h3>
+               <p className="text-sm text-slate-500 dark:text-slate-400 text-center px-6 mb-8">
+                  {result.bio || "F1 Enthusiast"}
+               </p>
+               
+               <div className="flex gap-3 w-full">
+                  <button
+                    onClick={() => {setScanning(true); setResult(null); setError(null);}}
+                    className="flex-1 py-3 px-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                  >
+                    Reintentar
+                  </button>
+                  <button
+                    onClick={handleAdd}
+                    className="flex-[2] py-3 px-4 rounded-2xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/30 hover:bg-primary-dark transition-all transform active:scale-95"
+                  >
+                    Añadir Amigo
+                  </button>
+               </div>
+            </div>
+          ) : (
+            /* Vista de Error */
+            <div className="flex flex-col items-center py-8 text-center animate-in fade-in slide-in-from-bottom-4">
+              <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
+                <span className="material-symbols-outlined text-red-500 text-3xl">error</span>
+              </div>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 underline decoration-red-500 decoration-2 underline-offset-4">Error al escanear</h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 max-w-[200px]">
+                {error || "No se ha podido detectar un código válido."}
               </p>
               <button
-                onClick={() => setError(null)}
-                className="text-primary text-sm font-bold hover:underline"
+                onClick={() => {setScanning(true); setError(null);}}
+                className="w-full py-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
               >
+                <span className="material-symbols-outlined text-lg">refresh</span>
                 Intentar de nuevo
               </button>
             </div>
-          ) : (
-            // Escáner activo
-            <Suspense
-              fallback={
-                <div className="flex items-center justify-center py-12 text-slate-400 gap-2">
-                  <span className="material-symbols-outlined animate-spin">
-                    progress_activity
-                  </span>
-                  Cargando cámara...
-                </div>
-              }
-            >
-              <QrScanner onResult={handleResult} onError={setError} />
-            </Suspense>
           )}
+        </div>
+        
+        {/* Footer tip */}
+        <div className="bg-slate-50 dark:bg-slate-800/50 p-4 text-center">
+            <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest font-medium">
+               Metrópoli Connectivity • F1 Circuit System
+            </p>
         </div>
       </div>
     </div>

@@ -141,3 +141,13 @@ CREATE TABLE IF NOT EXISTS comunidad (
     ubicacion VARCHAR(255),
     FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
 );
+
+-- 13. AMIGOS (Relación muchos a muchos entre usuarios)
+CREATE TABLE IF NOT EXISTS amigos (
+    id_usuario INTEGER NOT NULL,
+    id_amigo INTEGER NOT NULL,
+    fecha_amistad DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_usuario, id_amigo),
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario),
+    FOREIGN KEY (id_amigo) REFERENCES usuario(id_usuario)
+);

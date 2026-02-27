@@ -10,47 +10,60 @@ const QrScanner = ({ onResult, onError }) => {
 
   useEffect(() => {
     // 1. Creem l'instància de l'escàner lligada al div amb id="qr-scanner-region"
-    const scanner = new Html5Qrcode(QR_SCANNER_REGION_ID);
+    // Use verbose: false to reduce console noise
+    const scanner = new Html5Qrcode(QR_SCANNER_REGION_ID, { verbose: false });
     scannerRef.current = scanner;
 
-    // 2. Iniciem la càmera i l'escaneig
-    scanner
-      .start(
-        { facingMode: "environment" }, // càmera posterior en mòbil, frontal en PC
-        {
-          fps: 10, // intenta detectar QR 10 vegades per segon
-          qrbox: { width: 220, height: 220 }, // mida del requadre de detecció
-        },
-        // Callback d'èxit: s'executa quan es detecta un QR correctament
-        (decodedText) => {
-          scanner.stop().catch(() => {}); // aturem la càmera
-          onResult(decodedText); // passem el text al component pare
-        },
-        // Callback de frame sense detecció: l'ignorarem per no generar soroll
-        () => {},
-      )
-      .catch((err) => {
-        // Error al iniciar la càmera (p.ex. l'usuari no ha donat permís)
-        if (onError)
-          onError(err?.message || "No s'ha pogut accedir a la càmera");
-      });
-
-    // 3. Funció de neteja: s'executa quan es tanca el modal i el component es desmunta
-    return () => {
-      scanner.stop().catch(() => {});
+    const startScanner = async () => {
+        try {
+            await scanner.start(
+                { facingMode: "environment" }, // càmera posterior en mòbil
+                {
+                  fps: 10,
+                  qrbox: { width: 250, height: 250 },
+                },
+                (decodedText) => {
+                  // Aturem l'escaneig ràpidament
+                  scanner.stop().catch(() => {});
+                  onResult(decodedText);
+                },
+                () => {} // Ignorar frames sense detecció
+            );
+        } catch (err) {
+            console.error("QR Scanner error:", err);
+            if (onError) onError(err?.message || "Error al acceder a la cámara");
+        }
     };
-  }, []); // [] → el useEffect s'executa només una vegada, quan el component es munta
+
+    startScanner();
+
+    // 3. Funció de neteja
+    return () => {
+      if (scanner.isScanning) {
+        scanner.stop().catch(e => console.error("Error stopping scanner:", e));
+      }
+    };
+  }, []);
 
   return (
-    <div className="flex flex-col items-center gap-3">
+    <div className="relative w-full aspect-square max-w-[300px] mx-auto overflow-hidden rounded-3xl bg-black border-4 border-slate-200 dark:border-slate-800 shadow-2xl">
       <div
         id={QR_SCANNER_REGION_ID}
-        className="w-full rounded-2xl overflow-hidden bg-black"
-        style={{ minHeight: 260 }}
+        className="w-full h-full object-cover"
       />
-      <p className="text-xs text-slate-400 dark:text-slate-500 text-center">
-        Apunta al QR del perfil del teu amic
-      </p>
+      
+      {/* Overlay de Enfoque */}
+      <div className="absolute inset-0 pointer-events-none flex items-center justify-center">
+        <div className="w-[180px] h-[180px] border-2 border-primary/50 rounded-2xl relative">
+            <div className="absolute top-0 left-0 w-6 h-6 border-t-4 border-l-4 border-primary rounded-tl-lg"></div>
+            <div className="absolute top-0 right-0 w-6 h-6 border-t-4 border-r-4 border-primary rounded-tr-lg"></div>
+            <div className="absolute bottom-0 left-0 w-6 h-6 border-b-4 border-l-4 border-primary rounded-bl-lg"></div>
+            <div className="absolute bottom-0 right-0 w-6 h-6 border-b-4 border-r-4 border-primary rounded-br-lg"></div>
+        </div>
+        
+        {/* Antena / Línea de escaneo animada */}
+        <div className="absolute w-[200px] h-1 bg-primary/40 shadow-[0_0_15px_rgba(255,46,78,0.8)] animate-scan-move"></div>
+      </div>
     </div>
   );
 };
