@@ -61,33 +61,55 @@ const Map = () => {
 
   // State for future logic
   const [selectedFeature, setSelectedFeature] = useState(null); // To store clicking on a marker
-  const [markers, setMarkers] = useState([]); // Empty for now, to be populated by API/logic
-  const [route, setRoute] = useState(null); // Array of [lat, lng] para Dijkstra Polyline
+  const [markers, setMarkers] = useState([]);
+  const [categories, setCategories] = useState([]); // Categorias de la BD para la leyenda
+  const [activeFilter, setActiveFilter] = useState(null); // null = mostrar todos, id_categoria = filtrar
+  const [route, setRoute] = useState(null); // Array de [lat, lng] para Dijkstra Polyline
 
   useEffect(() => {
-    // Fetch POIs dynamically
     const fetchPois = async () => {
       try {
+        // 1. Obtenemos las categorias de la base de datos
         const catRes = await getCategorias();
         const categorias = catRes.success ? catRes.data : [];
+
+        // 2. Guardamos las categorias en el estado para usarlas en la leyenda
+        setCategories(categorias);
+
+        // 3. Obtenemos los POIs
         const data = await getPois();
 
         if (data.success && data.data) {
-          const fetchedMarkers = data.data.map(poi => {
-            const cat = categorias.find(c => c.id_categoria === poi.id_categoria);
-            const iconName = cat?.icono_url || 'location_on';
-            const bgColor = cat?.color_hex || 'bg-slate-500';
+          const fetchedMarkers = [];
 
-            return {
+          // 4. Construimos cada marker manualmente para que sea facil de leer
+          for (let i = 0; i < data.data.length; i++) {
+            const poi = data.data[i];
+
+            // Buscamos la categoria de este POI
+            let iconName = null;
+            let bgColor = '#64748b'; // color gris por defecto
+            for (let j = 0; j < categorias.length; j++) {
+              if (categorias[j].id_categoria === poi.id_categoria) {
+                iconName = categorias[j].icono_url;
+                bgColor = categorias[j].color_hex || '#64748b';
+                break;
+              }
+            }
+
+            const marker = {
               id: poi.id_poi,
+              id_categoria: poi.id_categoria,
               position: [parseFloat(poi.latitud), parseFloat(poi.longitud)],
               name: poi.nombre,
               description: poi.descripcion,
-              // Le pasamos el string del HEX para poder pintarlo custom si se quiere
               iconName: iconName,
               bgColor: bgColor
             };
-          });
+
+            fetchedMarkers.push(marker);
+          }
+
           setMarkers(fetchedMarkers);
         }
       } catch (error) {
@@ -196,33 +218,39 @@ const Map = () => {
           {/* Dijkstra Route rendering */}
           {route && <Polyline positions={route} color="#3b82f6" weight={5} opacity={0.8} dashArray="10, 10" />}
 
-          {/* Dynamic Markers rendering */}
-          {markers.map((marker, index) => (
-            <Marker
-              key={marker.id || index}
-              position={marker.position}
-              icon={createCustomIcon(marker.iconName, marker.bgColor)}
-              eventHandlers={{
-                click: () => setSelectedFeature(marker)
-              }}
-            >
-              <Popup>
-                <div className="text-center font-display">
-                  <h3 className="font-bold text-slate-800">{marker.name}</h3>
-                  <p className="text-xs text-slate-500 mb-2">{marker.description}</p>
-                  <button
-                    onClick={() => {
-                      // Ejemplo de ruta desde el POI id 1 (entrada) hasta este POI
-                      // fetchRoute(1, marker.id); 
-                    }}
-                    className="mt-1 text-xs bg-primary text-white px-3 py-1.5 rounded shadow hover:bg-red-600 transition-colors"
-                  >
-                    Navegar hasta aquí
-                  </button>
-                </div>
-              </Popup>
-            </Marker>
-          ))}
+          {/* Dynamic Markers rendering — si hay filtro activo, solo mostramos los de esa categoria */}
+          {markers.map((marker, index) => {
+            // Si hay un filtro activo y este marker no es de esa categoria, lo saltamos
+            if (activeFilter !== null && marker.id_categoria !== activeFilter) {
+              return null;
+            }
+
+            return (
+              <Marker
+                key={marker.id || index}
+                position={marker.position}
+                icon={createCustomIcon(marker.iconName, marker.bgColor)}
+                eventHandlers={{
+                  click: () => setSelectedFeature(marker)
+                }}
+              >
+                <Popup>
+                  <div className="text-center font-display">
+                    <h3 className="font-bold text-slate-800">{marker.name}</h3>
+                    <p className="text-xs text-slate-500 mb-2">{marker.description}</p>
+                    <button
+                      onClick={() => {
+                        // fetchRoute(1, marker.id);
+                      }}
+                      className="mt-1 text-xs bg-primary text-white px-3 py-1.5 rounded shadow hover:bg-red-600 transition-colors"
+                    >
+                      Navegar hasta aquí
+                    </button>
+                  </div>
+                </Popup>
+              </Marker>
+            );
+          })}
           {userPosition && (
             <Marker position={userPosition} icon={UserIcon}>
               <Popup>You are here</Popup>
@@ -289,37 +317,62 @@ const Map = () => {
           className={`absolute left-0 top-0 bottom-0 w-64 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200 dark:border-slate-800 shadow-2xl transition-transform duration-300 z-40 pointer-events-auto flex flex-col justify-center px-6 ${isLegendOpen ? 'translate-x-0' : '-translate-x-full'}`}
         >
           <div className="mb-6">
-            <span className="text-xs uppercase tracking-widest font-bold text-slate-400 block mb-6 border-b border-slate-100 dark:border-slate-800 pb-2">
+            <span className="text-xs uppercase tracking-widest font-bold text-slate-400 block mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
               Map Legend
             </span>
 
-            <div className="space-y-6">
-              <div className="flex items-center gap-4 group">
-                <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center group-hover:bg-primary/20 transition-colors">
-                  <div className="w-3 h-3 rounded-full bg-primary shadow-sm"></div>
+            <div className="space-y-3">
+              {/* Boton para quitar el filtro y ver todos */}
+              <button
+                onClick={() => setActiveFilter(null)}
+                className={`w-full flex items-center gap-4 group rounded-xl px-2 py-1 transition-colors ${activeFilter === null ? 'bg-slate-100 dark:bg-slate-800' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                  }`}
+              >
+                <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
+                  <span className="text-xs font-bold text-slate-500">All</span>
                 </div>
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Grandstands</span>
-              </div>
-              <div className="flex items-center gap-4 group">
-                <div className="w-8 h-8 rounded-full bg-indigo-500/10 flex items-center justify-center group-hover:bg-indigo-500/20 transition-colors">
-                  <div className="w-3 h-3 rounded-full bg-indigo-500 shadow-sm"></div>
-                </div>
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Fan Zone</span>
-              </div>
-              <div className="flex items-center gap-4 group">
-                <div className="w-8 h-8 rounded-full bg-slate-500/10 flex items-center justify-center group-hover:bg-slate-500/20 transition-colors">
-                  <div className="w-3 h-3 rounded-full bg-slate-500 shadow-sm"></div>
-                </div>
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">WC</span>
-              </div>
-              <div className="flex items-center gap-4 group">
-                <div className="w-8 h-8 rounded-full bg-orange-400/10 flex items-center justify-center group-hover:bg-orange-400/20 transition-colors">
-                  <div className="w-3 h-3 rounded-full bg-orange-400 shadow-sm"></div>
-                </div>
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Food</span>
-              </div>
-              <div className="flex items-center gap-4 group">
-                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center group-hover:bg-blue-500/20 transition-colors">
+                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Show All</span>
+              </button>
+
+              {/* Una fila por cada categoria de la base de datos */}
+              {categories.map((cat) => {
+                const isActive = activeFilter === cat.id_categoria;
+                const colorStyle = cat.color_hex ? { backgroundColor: cat.color_hex } : {};
+
+                return (
+                  <button
+                    key={cat.id_categoria}
+                    onClick={() => {
+                      // Si ya esta activo este filtro, lo quitamos; si no, lo ponemos
+                      if (activeFilter === cat.id_categoria) {
+                        setActiveFilter(null);
+                      } else {
+                        setActiveFilter(cat.id_categoria);
+                      }
+                    }}
+                    className={`w-full flex items-center gap-4 group rounded-xl px-2 py-1 transition-colors ${isActive ? 'bg-slate-100 dark:bg-slate-800' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
+                      }`}
+                  >
+                    {/* Circulo de color con icono si existe */}
+                    <div
+                      className="w-8 h-8 rounded-full flex items-center justify-center text-white flex-shrink-0 border-2 border-white shadow"
+                      style={colorStyle}
+                    >
+                      {cat.icono_url && cat.icono_url.startsWith('fa-') && (
+                        <i className={cat.icono_url} style={{ fontSize: '13px' }}></i>
+                      )}
+                    </div>
+                    <span className="text-sm font-medium text-slate-600 dark:text-slate-300 text-left">{cat.nombre}</span>
+                    {isActive && (
+                      <span className="ml-auto text-xs text-primary font-bold">●</span>
+                    )}
+                  </button>
+                );
+              })}
+
+              {/* Tu posicion siempre visible */}
+              <div className="flex items-center gap-4 group rounded-xl px-2 py-1">
+                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
                   <div className="w-3 h-3 bg-blue-500 rounded-full border-2 border-white shadow-sm"></div>
                 </div>
                 <span className="text-sm font-medium text-slate-600 dark:text-slate-300">You</span>
