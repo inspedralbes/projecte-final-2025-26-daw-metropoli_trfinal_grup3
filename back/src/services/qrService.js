@@ -57,39 +57,6 @@ const generateQrCode = async (id_nodo, zona) => {
 };
 
 /**
- * Regenera los PNGs de TODOS los QRs registrados en la base de datos.
- */
-const generateAllQrCodes = async () => {
-    const qrs = await qrModel.getAll();
-
-    const publicDir = path.join(process.cwd(), 'public', 'qrs');
-    if (!fs.existsSync(publicDir)) {
-        fs.mkdirSync(publicDir, { recursive: true });
-    }
-
-    const resultados = [];
-
-    for (const qr of qrs) {
-        const fileName = `${qr.slug}.png`;
-        const filePath = path.join(publicDir, fileName);
-        const qrData   = JSON.stringify({ slug: qr.slug });
-
-        await QRCode.toFile(filePath, qrData, {
-            errorCorrectionLevel: 'H',
-            type: 'png',
-            margin: 2,
-            color: { dark: '#0f172a', light: '#ffffff' }
-        });
-
-        console.log(`📲 QR generado: ${fileName} (nodo ${qr.id_nodo_inicio})`);
-        resultados.push({ slug: qr.slug, archivo: fileName });
-    }
-
-    console.log(`✅ ${resultados.length} QRs generados/actualizados.`);
-    return resultados;
-};
-
-/**
  * Genera el PNG del QR para un nodo específico Y calcula los 3 POIs más cercanos.
  * Se llama al seleccionar un punto/nodo concreto en el panel de admin.
  *
@@ -106,11 +73,7 @@ const generateQrWithNearestPois = async (id_nodo, zona) => {
     const graph  = {};
     tramos.forEach(t => {
         if (!graph[t.id_nodo_origen])  graph[t.id_nodo_origen]  = [];
-        if (!graph[t.id_nodo_destino]) graph[t.id_nodo_destino] = [];
         graph[t.id_nodo_origen].push({ node: String(t.id_nodo_destino), weight: parseFloat(t.distancia_metros) });
-        if (t.es_bidireccional) {
-            graph[t.id_nodo_destino].push({ node: String(t.id_nodo_origen), weight: parseFloat(t.distancia_metros) });
-        }
     });
 
     // Paso 3: POIs activos como destinos del algoritmo
@@ -135,9 +98,59 @@ const generateQrWithNearestPois = async (id_nodo, zona) => {
     return { qr: qrInfo, pois_cercanos };
 };
 
+/**
+ * Calcula on-demand los POIs más cercanos para un QR específico (por slug).
+ * Reemplaza a la antigua lógica de caché.
+ */
+const getNearestPoisForQr = async (slug) => {
+    const qr = await qrModel.getBySlug(slug);
+    if (!qr) return null;
+
+    const startNode = qr.id_nodo_inicio;
+    
+    // Construir el grafo
+    const tramos = await tramoModel.getAll();
+    const graph = {};
+    tramos.forEach(t => {
+        if (!graph[t.id_nodo_origen]) graph[t.id_nodo_origen] = [];
+        graph[t.id_nodo_origen].push({ node: String(t.id_nodo_destino), weight: parseFloat(t.distancia_metros) });
+    });
+
+    const pois = await poiModel.getAll();
+    const poisPorCategoria = {};
+    pois.forEach(p => {
+        if (p.activo !== 0 && p.activo !== false) {
+            if (!poisPorCategoria[p.id_categoria]) poisPorCategoria[p.id_categoria] = [];
+            poisPorCategoria[p.id_categoria].push(p);
+        }
+    });
+
+    const infoCercana = {
+        id_nodo: startNode,
+        slug: qr.slug,
+        categorias: {}
+    };
+
+    for (const idCat in poisPorCategoria) {
+        const targetNodes = poisPorCategoria[idCat].map(p => String(p.id_nodo_acceso));
+        const nearest = dijkstraUtils.calculateNearestTargets(graph, String(startNode), targetNodes, 2);
+        
+        infoCercana.categorias[idCat] = nearest.map(n => {
+            const poi = pois.find(p => String(p.id_nodo_acceso) === n.node && String(p.id_categoria) === idCat);
+            return {
+                id_poi: poi?.id_poi,
+                nombre: poi?.nombre,
+                distancia: n.distance
+            };
+        });
+    }
+
+    return infoCercana;
+};
+
 export default {
     getAllQrCodes,
     generateQrCode,
-    generateAllQrCodes,
-    generateQrWithNearestPois
+    generateQrWithNearestPois,
+    getNearestPoisForQr
 };

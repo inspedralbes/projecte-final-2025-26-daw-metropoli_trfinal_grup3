@@ -3,8 +3,37 @@ import horarioModel from '../models/horarioModel.js';
 import multimediaModel from '../models/multimediaModel.js';
 import pool from '../config/mysql.js';
 
+import nodoModel from '../models/nodoModel.js';
+
 const createPoiSimple = async (poiData) => {
-    return await poiModel.create(poiData);
+    const connection = await pool.getConnection();
+    try {
+        await connection.beginTransaction();
+
+        // 1. Crear un nodo coincidente
+        const nodoResult = await nodoModel.create({
+            latitud: poiData.latitud,
+            longitud: poiData.longitud,
+            descripcion: `Punto de acceso para ${poiData.nombre}`
+        }, connection);
+
+        // 2. Asociar el ID del nodo al POI
+        const poiConNodo = {
+            ...poiData,
+            id_nodo_acceso: nodoResult.id_nodo
+        };
+
+        // 3. Crear el POI
+        const nuevoPoi = await poiModel.create(poiConNodo, connection);
+
+        await connection.commit();
+        return nuevoPoi;
+    } catch (error) {
+        await connection.rollback();
+        throw error;
+    } finally {
+        connection.release();
+    }
 };
 
 const createPoiCompleto = async (fullData) => {

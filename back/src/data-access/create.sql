@@ -47,7 +47,6 @@ CREATE TABLE IF NOT EXISTS rutas_tramos (
     distancia_metros DECIMAL(10, 2),
     es_accesible BOOLEAN DEFAULT 1,
     tipo_terreno VARCHAR(50) DEFAULT 'asfalto',
-    es_bidireccional BOOLEAN DEFAULT 1, -- Coma añadida
     FOREIGN KEY (id_nodo_origen) REFERENCES nodos_navegacion(id_nodo),
     FOREIGN KEY (id_nodo_destino) REFERENCES nodos_navegacion(id_nodo)
 );

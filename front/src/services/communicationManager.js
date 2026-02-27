@@ -80,17 +80,32 @@ export const generateQrCode = async (id_nodo, zona) => {
   }
 };
 
-export const recalculateCache = async () => {
-  try {
-    const response = await fetch(`${API_URL}/api/admin/recalcular`, {
-      method: "POST",
-    });
-    if (!response.ok) throw new Error("Failed to recalculate cache");
-    return await response.json();
-  } catch (error) {
-    console.error("Error in recalculateCache:", error);
-    throw error;
-  }
+
+// ── Tramos (Rutas) ──
+export const getTramos = async () => {
+    try {
+        const response = await fetch(`${API_URL}/api/tramos`);
+        if (!response.ok) throw new Error("Failed to search tramos");
+        return await response.json();
+    } catch (error) {
+        console.error("Error in getTramos:", error);
+        throw error;
+    }
+};
+
+export const createTramosBulk = async (tramosArray) => {
+    try {
+        const response = await fetch(`${API_URL}/api/tramos/bulk`, {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ tramos: tramosArray }),
+        });
+        if (!response.ok) throw new Error("Failed to create tramos in bulk");
+        return await response.json();
+    } catch (error) {
+        console.error("Error in createTramosBulk:", error);
+        throw error;
+    }
 };
 
 // ── Nodos de navegación ──

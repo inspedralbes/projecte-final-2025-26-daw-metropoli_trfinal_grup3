@@ -13,7 +13,6 @@ import calculoRutaRoutes from './calculoRutaRoutes.js';
 import weatherRoutes from './weatherRoutes.js';
 import comunidadRoutes from './comunidadRoutes.js';
 import qrRoutes from './qrRoutes.js';
-import adminRoutes from './adminRoutes.js';
 
 const router = express.Router();
 
@@ -31,6 +30,5 @@ router.use('/rutas', calculoRutaRoutes);
 router.use('/tiempo', weatherRoutes);
 router.use('/comunidad', comunidadRoutes);
 router.use('/qrs', qrRoutes);
-router.use('/admin', adminRoutes);
 
 export default router;

@@ -1,23 +1,31 @@
 import qrService from '../services/qrService.js';
-import cacheService from '../services/cacheService.js';
 
 /**
  * GET /api/qrs/slug/:slug
  * Busca en la caché mundial (O(1)) los POIs más cercanos para ese QR.
  */
-export const getQrBySlug = (req, res) => {
-  const { slug } = req.params;
-  const data = cacheService.getBySlug(slug);
+export const getQrBySlug = async (req, res) => {
+  try {
+    const { slug } = req.params;
+    const data = await qrService.getNearestPoisForQr(slug);
 
-  if (!data) {
-    return res.status(404).json({
+    if (!data) {
+      return res.status(404).json({
+        success: false,
+        message: `QR con slug '${slug}' no encontrado.`,
+        error_code: 'RECURSO_NO_ENCONTRADO'
+      });
+    }
+
+    res.status(200).json({ success: true, data });
+  } catch (error) {
+    console.error('Error fetching QR data:', error);
+    res.status(500).json({
       success: false,
-      message: `QR con slug '${slug}' no encontrado en la caché mundial. ¿Has ejecutado 'Recalcular Mapa'?`,
-      error_code: 'RECURSO_NO_ENCONTRADO'
+      message: 'Error al calcular rutas para el QR',
+      error: error.message
     });
   }
-
-  res.status(200).json({ success: true, data });
 };
 
 /**

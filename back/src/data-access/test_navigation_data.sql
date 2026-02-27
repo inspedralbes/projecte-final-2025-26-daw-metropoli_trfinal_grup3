@@ -24,15 +24,15 @@ INSERT INTO nodos_navegacion (id_nodo, latitud, longitud, descripcion) VALUES
 
 
 -- 2. Insertar Tramos (Aristas)
-INSERT INTO rutas_tramos (id_nodo_origen, id_nodo_destino, distancia_metros, es_accesible, tipo_terreno, es_bidireccional) VALUES
-(1, 2, 100.00, 1, 'asfalto', 1),
-(1, 3, 150.00, 1, 'asfalto', 1),
-(2, 4, 200.00, 1, 'tierra', 1),
-(3, 4, 100.00, 1, 'asfalto', 1),
-(2, 5, 120.00, 1, 'pavimento', 1),
-(4, 5, 80.00, 1, 'asfalto', 1),
-(4, 6, 300.00, 1, 'tierra', 1),
-(5, 6, 100.00, 1, 'asfalto', 1);
+INSERT INTO rutas_tramos (id_nodo_origen, id_nodo_destino, distancia_metros, es_accesible, tipo_terreno) VALUES
+(1, 2, 100.00, 1, 'asfalto'),
+(1, 3, 150.00, 1, 'asfalto'),
+(2, 4, 200.00, 1, 'tierra'),
+(3, 4, 100.00, 1, 'asfalto'),
+(2, 5, 120.00, 1, 'pavimento'),
+(4, 5, 80.00, 1, 'asfalto'),
+(4, 6, 300.00, 1, 'tierra'),
+(5, 6, 100.00, 1, 'asfalto');
 
 -- 3. Insertar Categorias (Requisito para POIs)
 INSERT INTO categoria (id_categoria, nombre, icono_url, color_hex) VALUES
@@ -61,11 +61,11 @@ INSERT INTO comunidad (id_usuario, texto, tipo_publicacion, ubicacion) VALUES
 
 -- 7. Tramos que conectan los tótems QR físicos al grafo de navegación
 -- Cada nodo QR está colocado junto a un nodo lógico existente y conectado a él
-INSERT INTO rutas_tramos (id_nodo_origen, id_nodo_destino, distancia_metros, es_accesible, tipo_terreno, es_bidireccional) VALUES
-(7,  1, 10.00, 1, 'asfalto', 1),  -- QR Tótem 1 (Puerta Norte) -> Nodo A (Entrada)
-(8,  4, 10.00, 1, 'asfalto', 1),  -- QR Tótem 2 (Plaza Central) -> Nodo D (Plaza)
-(9,  5, 10.00, 1, 'asfalto', 1),  -- QR Tótem 3 (Zona Paddock) -> Nodo E
-(10, 6, 10.00, 1, 'asfalto', 1);  -- QR Tótem 4 (Zona Expo)    -> Nodo F (Expo)
+INSERT INTO rutas_tramos (id_nodo_origen, id_nodo_destino, distancia_metros, es_accesible, tipo_terreno) VALUES
+(7,  1, 10.00, 1, 'asfalto'),  -- QR Tótem 1 (Puerta Norte) -> Nodo A (Entrada)
+(8,  4, 10.00, 1, 'asfalto'),  -- QR Tótem 2 (Plaza Central) -> Nodo D (Plaza)
+(9,  5, 10.00, 1, 'asfalto'),  -- QR Tótem 3 (Zona Paddock) -> Nodo E
+(10, 6, 10.00, 1, 'asfalto');  -- QR Tótem 4 (Zona Expo)    -> Nodo F (Expo)
 
 -- 8. Códigos QR para los 4 tótems físicos
 -- slug_unico = se imprime en el QR físico y nunca cambia

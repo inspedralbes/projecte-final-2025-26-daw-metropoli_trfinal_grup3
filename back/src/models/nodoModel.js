@@ -1,8 +1,9 @@
 import { query } from '../config/mysql.js';
 
-const create = async (nodo) => {
+const create = async (nodo, connection = null) => {
+    const runQuery = connection ? connection.query.bind(connection) : query;
     const { latitud, longitud, descripcion } = nodo;
-    const [result] = await query(
+    const [result] = await runQuery(
         'INSERT INTO nodos_navegacion (latitud, longitud, descripcion) VALUES (?, ?, ?)',
         [latitud, longitud, descripcion]
     );

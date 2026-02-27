@@ -1,10 +1,11 @@
 import { useState, useEffect } from "react";
-import { getEventos, createEvento, updateEvento, getPois, createPoi, deletePoi, getCategorias } from "../../services/communicationManager";
+import { getEventos, createEvento, updateEvento, getPois, createPoi, deletePoi, getCategorias, getTramos, createTramosBulk, getNodos } from "../../services/communicationManager";
 import {
   MapContainer,
   TileLayer,
   Marker,
   Popup,
+  Polyline,
   useMapEvents,
 } from "react-leaflet";
 import Navbar from "../../layouts/Navbar";
@@ -69,6 +70,13 @@ const Admin = () => {
   const [savedPoints, setSavedPoints] = useState([]);
   const [categories, setCategories] = useState([]);
 
+  // Route Drawing State
+  const [isDrawMode, setIsDrawMode] = useState(false);
+  const [existingTramos, setExistingTramos] = useState([]);
+  const [pendingTramos, setPendingTramos] = useState([]);
+  const [currentRouteNodes, setCurrentRouteNodes] = useState([]); // [id_nodo1, id_nodo2, ...]
+  const [allNodes, setAllNodes] = useState([]); // Necesitamos nodos puros para pintar las conexiones
+
   // Event State — camps que coincideixen amb el backend
   const [eventNombre, setEventNombre] = useState("");
   const [eventDescripcion, setEventDescripcion] = useState("");
@@ -115,10 +123,22 @@ const Admin = () => {
       .catch(err => console.error("Error fetching categories:", err));
   };
 
+  // Cargar Tramos y Nodos para renderizar la red
+  const fetchNetworkData = async () => {
+    try {
+      const [tramosRes, nodosRes] = await Promise.all([getTramos(), getNodos()]);
+      if (tramosRes.success && tramosRes.data) setExistingTramos(tramosRes.data);
+      if (nodosRes.success && nodosRes.data) setAllNodes(nodosRes.data);
+    } catch (err) {
+      console.error("Error fetching network data:", err);
+    }
+  };
+
   useEffect(() => {
     fetchEvents();
     fetchPois();
     fetchCategories();
+    fetchNetworkData();
   }, []);
 
   const handleEditEvent = (event) => {
@@ -142,7 +162,18 @@ const Admin = () => {
 
   // Funció per guardar un punt al mapa
   const handleSavePoint = () => {
-    if (!selectedPosition || !pointName || !pointType) return;
+    if (!selectedPosition) {
+      alert("Haz clic en el mapa para seleccionar una ubicación.");
+      return;
+    }
+    if (!pointName) {
+      alert("Por favor, introduce un nombre para el punto.");
+      return;
+    }
+    if (!pointType) {
+      alert("Por favor, selecciona una categoría.");
+      return;
+    }
 
     const poiData = {
       nombre: pointName,
@@ -161,7 +192,10 @@ const Admin = () => {
         setPointName("");
         setSelectedPosition(null);
       })
-      .catch(err => console.error("Error saving POI:", err));
+      .catch(err => {
+        console.error("Error saving POI:", err);
+        alert("Error al guardar el punto. Comprueba la conexión o consola.");
+      });
   };
 
   const handleDeletePoint = (id) => {
@@ -210,6 +244,50 @@ const Admin = () => {
     setEventFechaInicio(null);
     setEventFechaFin(null);
     setEventEstado("activo");
+  };
+
+  // --- Lógica de Modo Dibujo ---
+  const toggleDrawMode = () => {
+    setIsDrawMode(!isDrawMode);
+    if (isDrawMode) {
+      // Si estamos saliendo del modo dibujo, limpiamos los pendientes
+      setPendingTramos([]);
+      setCurrentRouteNodes([]);
+    }
+  };
+
+  const handleNodeClick = (nodeId) => {
+    if (!isDrawMode) return;
+
+    setCurrentRouteNodes(prev => {
+      const newSequence = [...prev, nodeId];
+
+      // Si tenemos al menos 2 nodos en la secuencia, creamos el tramo visual
+      if (newSequence.length >= 2) {
+        const origen = newSequence[newSequence.length - 2];
+        const destino = newSequence[newSequence.length - 1];
+        setPendingTramos(ts => [...ts, { id_nodo_origen: origen, id_nodo_destino: destino }]);
+      }
+      return newSequence;
+    });
+  };
+
+  const handleSaveRoute = async () => {
+    if (pendingTramos.length === 0) return;
+
+    try {
+      const res = await createTramosBulk(pendingTramos);
+      if (res.success) {
+        alert(`Se han guardado ${res.count} tramos.`);
+        setPendingTramos([]);
+        setCurrentRouteNodes([]);
+        fetchNetworkData(); // Recargar los tramos consolidados
+        setIsDrawMode(false);
+      }
+    } catch (err) {
+      console.error("Error saving route:", err);
+      alert("Error al guardar la ruta.");
+    }
   };
 
   return (
@@ -268,9 +346,44 @@ const Admin = () => {
           {/* Section 1: Map Management */}
           {activeTab === 'map' && (
             <div className="animate-fade-in max-w-2xl mx-auto">
-              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                Map Management
-              </h3>
+              <div className="flex justify-between items-center mb-3">
+                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                  Map Management
+                </h3>
+
+                {/* Botones de Modo Dibujo */}
+                <div className="flex gap-2">
+                  <button
+                    onClick={toggleDrawMode}
+                    className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 border ${isDrawMode
+                      ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
+                      : 'bg-emerald-50 text-emerald-600 border-emerald-200 hover:bg-emerald-100'
+                      }`}
+                  >
+                    <span className="material-symbols-outlined text-[16px]">
+                      {isDrawMode ? 'close' : 'draw'}
+                    </span>
+                    {isDrawMode ? 'Cancelar Dibujo' : 'Dibujar Ruta'}
+                  </button>
+
+                  {isDrawMode && pendingTramos.length > 0 && (
+                    <button
+                      onClick={handleSaveRoute}
+                      className="px-3 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary/90 transition-colors flex items-center gap-1 shadow-sm"
+                    >
+                      <span className="material-symbols-outlined text-[16px]">save</span>
+                      Guardar Ruta
+                    </button>
+                  )}
+                </div>
+              </div>
+
+              {isDrawMode && (
+                <div className="bg-amber-50 border border-amber-200 text-amber-800 text-xs px-3 py-2 rounded-xl mb-3 flex items-start gap-2">
+                  <span className="material-symbols-outlined text-amber-500 text-sm mt-0.5">info</span>
+                  <p><strong>Modo Dibujo Activo:</strong> Haz clic en los iconos del mapa (POIs) en orden uno tras otro para crear un camino (tramo) entre ellos. Cuando termines la secuencia, pulsa 'Guardar Ruta'.</p>
+                </div>
+              )}
 
               <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden mb-5 h-64 relative z-0">
                 <MapContainer
@@ -284,6 +397,41 @@ const Admin = () => {
                     position={selectedPosition}
                     setPosition={setSelectedPosition}
                   />
+
+                  {/* Render Existing Tramos (Saved) */}
+                  {existingTramos.map(tramo => {
+                    const origen = allNodes.find(n => n.id_nodo === tramo.id_nodo_origen);
+                    const destino = allNodes.find(n => n.id_nodo === tramo.id_nodo_destino);
+                    if (origen && destino) {
+                      return (
+                        <Polyline
+                          key={`tramo-${tramo.id_tramo}`}
+                          positions={[[origen.latitud, origen.longitud], [destino.latitud, destino.longitud]]}
+                          color="#94a3b8" // Slate 400
+                          weight={3}
+                          dashArray="5, 10" // Línea punteada sutil para rutas guardadas
+                        />
+                      )
+                    }
+                    return null;
+                  })}
+
+                  {/* Render Pending Tramos (Drawing Mode) */}
+                  {pendingTramos.map((tramo, idx) => {
+                    const origen = allNodes.find(n => n.id_nodo === tramo.id_nodo_origen);
+                    const destino = allNodes.find(n => n.id_nodo === tramo.id_nodo_destino);
+                    if (origen && destino) {
+                      return (
+                        <Polyline
+                          key={`pending-${idx}`}
+                          positions={[[origen.latitud, origen.longitud], [destino.latitud, destino.longitud]]}
+                          color="#f59e0b" // Amber 500
+                          weight={4}
+                        />
+                      )
+                    }
+                    return null;
+                  })}
 
                   {/* Render Saved Points */}
                   {savedPoints.map((point) => {
@@ -303,24 +451,40 @@ const Admin = () => {
                         )}
                         // Aplicamos el color hex si existe
                         eventHandlers={{
+                          click: () => {
+                            if (isDrawMode) {
+                              handleNodeClick(point.id_nodo_acceso);
+                            }
+                          },
                           add: (e) => {
                             if (bgColor.startsWith('#')) {
-                              e.target.getElement().querySelector('div').style.backgroundColor = bgColor;
+                              const el = e.target.getElement(); if (el && el.querySelector('div')) el.querySelector('div').style.backgroundColor = bgColor;
+                            }
+
+                            // Si el nodo es parte de la ruta actual dibujándose, aplicamos un estilo visual (rojo)
+                            if (isDrawMode && currentRouteNodes.includes(point.id_nodo_acceso)) {
+                              const el2 = e.target.getElement();
+                              if (el2 && el2.querySelector('div')) {
+                                el2.querySelector('div').style.border = '2px solid #ef4444'; // Red 500 border
+                                el2.querySelector('div').style.transform = 'scale(1.1)';
+                              }
                             }
                           }
                         }}
                       >
-                        <Popup>
-                          <div className="p-1">
-                            <h4 className="font-bold border-b mb-2">{point.nombre}</h4>
-                            <button
-                              onClick={() => handleDeletePoint(point.id_poi)}
-                              className="text-xs text-red-500 font-bold hover:underline"
-                            >
-                              Eliminar Punto
-                            </button>
-                          </div>
-                        </Popup>
+                        {!isDrawMode && (
+                          <Popup>
+                            <div className="p-1">
+                              <h4 className="font-bold border-b mb-2">{point.nombre}</h4>
+                              <button
+                                onClick={() => handleDeletePoint(point.id_poi)}
+                                className="text-xs text-red-500 font-bold hover:underline"
+                              >
+                                Eliminar Punto
+                              </button>
+                            </div>
+                          </Popup>
+                        )}
                       </Marker>
                     );
                   })}
