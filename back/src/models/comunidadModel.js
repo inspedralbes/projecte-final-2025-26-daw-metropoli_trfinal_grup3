@@ -39,9 +39,40 @@ const addRespuesta = async (id_publicacion, id_comentario, respuestaData) => {
   return pub;
 };
 
+// =============================================
+// LIKES
+// =============================================
+
+const toggleLike = async (id_publicacion, userId) => {
+  // Comprobamos si el usuario ya dio like
+  const pub = await Publicacion.findById(id_publicacion).select(
+    "likes_usuarios likes",
+  );
+  if (!pub) return null;
+
+  const yaLikeo = pub.likes_usuarios?.includes(String(userId));
+
+  if (yaLikeo) {
+    // Quitar like
+    return await Publicacion.findByIdAndUpdate(
+      id_publicacion,
+      { $inc: { likes: -1 }, $pull: { likes_usuarios: String(userId) } },
+      { new: true },
+    );
+  } else {
+    // Dar like
+    return await Publicacion.findByIdAndUpdate(
+      id_publicacion,
+      { $inc: { likes: 1 }, $addToSet: { likes_usuarios: String(userId) } },
+      { new: true },
+    );
+  }
+};
+
 export default {
   getAll,
   create,
   addComentario,
   addRespuesta,
+  toggleLike,
 };

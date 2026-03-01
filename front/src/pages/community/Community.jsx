@@ -6,6 +6,7 @@ import {
   createPublicacion,
   createComentario,
   createRespuesta,
+  toggleLike,
 } from "../../../services/communicationManager";
 import socket from "../../../services/socketManager";
 
@@ -55,6 +56,31 @@ const PostCard = ({ pub, onComentarioCreado }) => {
   const [moderationError, setModerationError] = useState("");
 
   const clearError = () => setModerationError("");
+
+  // Likes
+  const [liked, setLiked] = useState(false);
+  const [likesCount, setLikesCount] = useState(pub.likes ?? 0);
+  const [isLikeLoading, setIsLikeLoading] = useState(false);
+
+  const handleLike = async () => {
+    if (isLikeLoading) return; // evita spam: espera a que termine la llamada anterior
+    const prevLiked = liked;
+    const prevCount = likesCount;
+    setIsLikeLoading(true);
+    setLiked(!prevLiked);
+    setLikesCount(prevLiked ? prevCount - 1 : prevCount + 1);
+    try {
+      const res = await toggleLike(pub._id, { id_usuario: 1 });
+      // Sincronizamos con el valor real del servidor
+      setLikesCount(res.likes);
+      setLiked(res.likes_usuarios?.includes("1") ?? !prevLiked);
+    } catch {
+      setLiked(prevLiked);
+      setLikesCount(prevCount);
+    } finally {
+      setIsLikeLoading(false);
+    }
+  };
 
   const handleComentario = async (texto) => {
     clearError();
@@ -139,11 +165,21 @@ const PostCard = ({ pub, onComentarioCreado }) => {
 
       {/* Acciones: likes, comentarios, compartir */}
       <div className="px-4 py-3 flex items-center gap-5 border-t border-slate-100 dark:border-white/5">
-        <button className="flex items-center gap-1.5 text-slate-400 dark:text-white/40 hover:text-primary transition-colors cursor-pointer group">
-          <span className="material-symbols-outlined text-[20px] group-active:scale-125 transition-transform">
+        <button
+          onClick={handleLike}
+          className={`flex items-center gap-1.5 transition-colors cursor-pointer group ${
+            liked
+              ? "text-primary"
+              : "text-slate-400 dark:text-white/40 hover:text-primary"
+          }`}
+        >
+          <span
+            className="material-symbols-outlined text-[20px] group-active:scale-125 transition-transform"
+            style={{ fontVariationSettings: liked ? "'FILL' 1" : "'FILL' 0" }}
+          >
             favorite
           </span>
-          <span className="text-xs font-bold">{pub.likes ?? 0}</span>
+          <span className="text-xs font-bold">{likesCount}</span>
         </button>
 
         <button

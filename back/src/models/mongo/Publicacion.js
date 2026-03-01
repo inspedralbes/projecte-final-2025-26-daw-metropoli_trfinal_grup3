@@ -38,6 +38,7 @@ const PublicacionSchema = new mongoose.Schema(
     },
     ubicacion: { type: String, default: null },
     likes: { type: Number, default: 0 },
+    likes_usuarios: { type: [String], default: [] },
     comentarios: { type: [ComentarioSchema], default: [] },
   },
   { timestamps: true },

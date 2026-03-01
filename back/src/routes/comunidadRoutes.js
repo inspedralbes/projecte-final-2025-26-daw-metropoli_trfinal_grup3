@@ -14,4 +14,7 @@ router.post(
   comunidadController.addRespuesta,
 );
 
+// Likes
+router.post("/:id/like", comunidadController.toggleLike);
+
 export default router;

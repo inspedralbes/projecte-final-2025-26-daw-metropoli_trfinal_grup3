@@ -67,6 +67,7 @@ export const createComentario = (id, data) =>
   post(`/api/comunidad/${id}/comentarios`, data);
 export const createRespuesta = (id, cid, data) =>
   post(`/api/comunidad/${id}/comentarios/${cid}/respuestas`, data);
+export const toggleLike = (id, data) => post(`/api/comunidad/${id}/like`, data);
 
 // --- Eventos ---
 

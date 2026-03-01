@@ -200,9 +200,45 @@ const addRespuesta = async (req, res) => {
   }
 };
 
+// POST /api/comunidad/:id/like
+const toggleLike = async (req, res) => {
+  try {
+    const { id } = req.params;
+    const id_usuario = req.body.id_usuario ?? 1;
+
+    const publicacionActualizada = await comunidadService.toggleLike(
+      id,
+      id_usuario,
+    );
+    if (!publicacionActualizada) {
+      return res
+        .status(404)
+        .json({ success: false, message: "Publicación no encontrada." });
+    }
+
+    emitirMensaje("like_actualizado", {
+      id_publicacion: id,
+      likes: publicacionActualizada.likes,
+    });
+
+    res.json({
+      success: true,
+      likes: publicacionActualizada.likes,
+      likes_usuarios: publicacionActualizada.likes_usuarios,
+    });
+  } catch (error) {
+    res.status(500).json({
+      success: false,
+      message: error.message,
+      error_code: "ERROR_INTERNO",
+    });
+  }
+};
+
 export default {
   getPublicaciones,
   createPublicacion,
   addComentario,
   addRespuesta,
+  toggleLike,
 };

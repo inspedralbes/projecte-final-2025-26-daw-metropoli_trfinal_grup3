@@ -20,9 +20,14 @@ const addRespuesta = async (id_publicacion, id_comentario, respuestaData) => {
   );
 };
 
+const toggleLike = async (id_publicacion, userId) => {
+  return await comunidadModel.toggleLike(id_publicacion, userId);
+};
+
 export default {
   getAllPublicaciones,
   createPublicacion,
   addComentario,
   addRespuesta,
+  toggleLike,
 };
