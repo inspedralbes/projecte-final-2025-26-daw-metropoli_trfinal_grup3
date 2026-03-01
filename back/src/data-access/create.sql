@@ -9,7 +9,11 @@ CREATE TABLE IF NOT EXISTS usuario (
     email VARCHAR(150) UNIQUE NOT NULL,
     password_hash VARCHAR(255) NOT NULL,
     rol VARCHAR(20) DEFAULT 'visitante',
-    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP
+     foto_perfil VARCHAR(255) NULL,       -- Ruta de la foto de perfil subida por el usuario
+    bio VARCHAR(255) NULL,    
+    fecha_registro DATETIME DEFAULT CURRENT_TIMESTAMP,
+    email_verificado BOOLEAN DEFAULT FALSE,
+    token_verificacion VARCHAR(255) NULL
 );
 
 -- 2. CATEGORIAS (Independiente)
@@ -135,6 +139,16 @@ CREATE TABLE IF NOT EXISTS comunidad (
     tipo_publicacion VARCHAR(20) DEFAULT 'popular', -- Valores: 'oficial', 'fanzone', 'popular'
     ubicacion VARCHAR(255),
     FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
+);
+
+-- 13. AMIGOS (Relación muchos a muchos entre usuarios)
+CREATE TABLE IF NOT EXISTS amigos (
+    id_usuario INTEGER NOT NULL,
+    id_amigo INTEGER NOT NULL,
+    fecha_amistad DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_usuario, id_amigo),
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario),
+    FOREIGN KEY (id_amigo) REFERENCES usuario(id_usuario)
 );
 
 -- 13. CÓDIGOS QR (Depende de Nodos)
