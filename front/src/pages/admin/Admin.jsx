@@ -15,7 +15,7 @@ import L from "leaflet";
 import DatePicker from "react-datepicker";
 import "react-datepicker/dist/react-datepicker.css";
 import AdminQRTab from "../../components/admin/AdminQRTab";
-import socket from "../../../services/socketManager";
+import socket from "../../services/socketManager";
 import { registerLocale } from "react-datepicker";
 import es from "date-fns/locale/es";
 
