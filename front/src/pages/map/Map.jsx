@@ -9,7 +9,7 @@ import {
 import { Link } from "react-router-dom";
 import Navbar from "../../layouts/Navbar"; // Import the new Navbar component
 import { getPois, getRoute, getCategorias } from "../../services/communicationManager";
-import socket from "../../../services/socketManager";
+import socket from "../../services/socketManager";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 

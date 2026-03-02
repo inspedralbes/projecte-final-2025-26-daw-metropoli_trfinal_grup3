@@ -5,7 +5,7 @@
  */
 
 import { createContext, useContext, useState, useCallback, useEffect } from "react";
-import { getAmigos, addAmigo, removeAmigo as removeAmigoAPI, getUsuarios } from "../../services/communicationManager";
+import { getAmigos, addAmigo, removeAmigo as removeAmigoAPI, getUsuarios } from "../services/communicationManager";
 
 const FriendsContext = createContext(null);
 

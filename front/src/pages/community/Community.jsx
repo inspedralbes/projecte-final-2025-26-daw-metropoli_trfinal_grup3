@@ -2,7 +2,7 @@ import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../../layouts/Navbar';
 import { getPublicaciones, createPublicacion } from '../../services/communicationManager';
-import socket from '../../../services/socketManager'; // Importamos la antena de radio
+import socket from '../../services/socketManager'; // Importamos la antena de radio
 
 const Community = () => {
     const [activeTab, setActiveTab] = useState('Recent');
