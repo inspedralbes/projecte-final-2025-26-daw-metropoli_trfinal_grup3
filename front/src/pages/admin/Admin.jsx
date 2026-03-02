@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getEventos, createEvento, updateEvento, getPois, createPoi, deletePoi, getCategorias, createCategoria, getTramos, createTramosBulk, getNodos, createPath, deleteNode, deleteTramo, getTramosByNode } from "../../services/communicationManager";
+import { getEventos, createEvento, updateEvento, getPois, createPoi, deletePoi, getCategorias, createCategoria, getTramos, createTramosBulk, getNodos, createPath, deleteNode, deleteTramo, getTramosByNode, uploadPoiImage } from "../../services/communicationManager";
 import {
   MapContainer,
   TileLayer,
@@ -83,6 +83,13 @@ const Admin = () => {
   const [savedPoints, setSavedPoints] = useState([]);
   const [categories, setCategories] = useState([]);
   const [targetNodeIdForPoi, setTargetNodeIdForPoi] = useState(null); // Para convertir nodo en POI
+
+  // Estado para la imagen del POI que se quiere crear
+  const [poiImageFile, setPoiImageFile] = useState(null);       // El archivo File seleccionado
+  const [poiImagePreview, setPoiImagePreview] = useState('');   // URL temporal para hacer preview
+
+  // Toggle de accesibilidad del POI (por defecto sí es accesible)
+  const [poiEsAccesible, setPoiEsAccesible] = useState(true);
 
   // Route Drawing State
   const [isDrawMode, setIsDrawMode] = useState(false);
@@ -200,7 +207,7 @@ const Admin = () => {
   };
 
   // Funció per guardar un punt al mapa
-  const handleSavePoint = () => {
+  const handleSavePoint = async () => {
     if (!selectedPosition) {
       alert("Haz clic en el mapa para seleccionar una ubicación.");
       return;
@@ -216,28 +223,45 @@ const Admin = () => {
 
     const poiData = {
       nombre: pointName,
-      descripcion: "", // Opcional por ahora
+      descripcion: "",
       latitud: selectedPosition.lat,
       longitud: selectedPosition.lng,
       id_categoria: pointType,
-      es_accesible: 1,
+      es_accesible: poiEsAccesible ? 1 : 0,
       es_fijo: 1,
-      imagen_url: "",
-      id_nodo_acceso: targetNodeIdForPoi // Si venimos de un nodo existente
+      imagen_url: null, // La imagen se sube por separado en la siguiente petición
+      id_nodo_acceso: targetNodeIdForPoi
     };
 
-    createPoi(poiData)
-      .then(() => {
-        fetchPois();
-        fetchNetworkData(); // Recargar nodos ya que ahora uno es POI
-        setPointName("");
-        setSelectedPosition(null);
-        setTargetNodeIdForPoi(null);
-      })
-      .catch(err => {
-        console.error("Error saving POI:", err);
-        alert("Error al guardar el punto. Comprueba la conexión o consola.");
-      });
+    try {
+      // 1. Creamos el POI y obtenemos su ID
+      const respuestaPoi = await createPoi(poiData);
+
+      // 2. Si el usuario seleccionó una imagen, la subimos ahora que ya tenemos el ID
+      if (poiImageFile && respuestaPoi.data && respuestaPoi.data.id_poi) {
+        const idPoiNuevo = respuestaPoi.data.id_poi;
+        try {
+          await uploadPoiImage(idPoiNuevo, poiImageFile);
+        } catch (errImagen) {
+          console.error('El POI se creó pero la imagen no se pudo subir:', errImagen);
+          // No bloqueamos el flujo, el POI quedó guardado aunque sin imagen
+        }
+      }
+
+      // 3. Actualizamos el estado y limpiamos el formulario
+      fetchPois();
+      fetchNetworkData();
+      setPointName('');
+      setSelectedPosition(null);
+      setTargetNodeIdForPoi(null);
+      setPoiImageFile(null);
+      setPoiImagePreview('');
+      setPoiEsAccesible(true);
+
+    } catch (err) {
+      console.error('Error saving POI:', err);
+      alert('Error al guardar el punto. Comprueba la conexión o consola.');
+    }
   };
 
   const handleDeletePoint = (id) => {
@@ -797,6 +821,79 @@ const Admin = () => {
                       ))}
                     </select>
                   </div>
+                </div>
+
+                {/* Toggle de accesibilidad */}
+                <div className="flex items-center justify-between bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700">
+                  <div className="flex items-center gap-3">
+                    <span className="material-symbols-outlined text-slate-400">accessible</span>
+                    <div>
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Zona accesible</p>
+                      <p className="text-xs text-slate-400">
+                        {poiEsAccesible ? 'Se mostrará el icono ♿ en la app' : 'Sin indicador de accesibilidad'}
+                      </p>
+                    </div>
+                  </div>
+
+                  {/* Pill toggle */}
+                  <button
+                    type="button"
+                    onClick={() => setPoiEsAccesible(!poiEsAccesible)}
+                    className={`relative w-12 h-6 rounded-full transition-colors duration-300 focus:outline-none ${poiEsAccesible ? 'bg-green-500' : 'bg-slate-300 dark:bg-slate-600'}`}
+                  >
+                    <span
+                      className={`absolute top-0.5 left-0.5 w-5 h-5 bg-white rounded-full shadow-sm transition-transform duration-300 ${poiEsAccesible ? 'translate-x-6' : 'translate-x-0'}`}
+                    ></span>
+                  </button>
+                </div>
+
+                {/* Campo para seleccionar la imagen del POI */}
+                <div>
+                  <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
+                    Imagen del punto (opcional)
+                  </label>
+
+                  {/* Preview de la imagen si ya se seleccionó una */}
+                  {poiImagePreview && (
+                    <div className="mb-3 relative w-full h-32 rounded-xl overflow-hidden">
+                      <img
+                        src={poiImagePreview}
+                        alt="Preview"
+                        className="w-full h-full object-cover"
+                      />
+                      {/* Botón para quitar la imagen seleccionada */}
+                      <button
+                        onClick={() => {
+                          setPoiImageFile(null);
+                          setPoiImagePreview('');
+                        }}
+                        className="absolute top-2 right-2 bg-black/50 text-white rounded-full w-7 h-7 flex items-center justify-center hover:bg-black/80 transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-sm">close</span>
+                      </button>
+                    </div>
+                  )}
+
+                  <label className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
+                    <span className="material-symbols-outlined text-slate-400">add_photo_alternate</span>
+                    <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
+                      {poiImageFile ? poiImageFile.name : 'Seleccionar imagen...'}
+                    </span>
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      onChange={(e) => {
+                        const archivo = e.target.files[0];
+                        if (archivo) {
+                          setPoiImageFile(archivo);
+                          // Generamos una URL temporal para el preview usando el navegador
+                          const urlTemporal = URL.createObjectURL(archivo);
+                          setPoiImagePreview(urlTemporal);
+                        }
+                      }}
+                    />
+                  </label>
                 </div>
 
                 <div className="pt-2">

@@ -7,6 +7,7 @@ const pool = mysql.createPool({
     user: process.env.DB_USER || 'root',      // Usuario de la BD
     password: process.env.DB_PASSWORD || 'password', // Contraseña
     database: process.env.DB_NAME || 'metropoli',    // Nombre de la BD
+    charset: 'utf8mb4',                              // Fuerza utf8mb4 en cada conexión (acentos, emojis, etc.)
     waitForConnections: true,
     connectionLimit: 10,
     queueLimit: 0

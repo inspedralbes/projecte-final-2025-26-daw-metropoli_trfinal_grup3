@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import {
   getTiempo,
   getNextEvento,
+  getPoisCercanos
 } from "../../services/communicationManager";
 import Navbar from "../../layouts/Navbar";
 
@@ -48,6 +49,14 @@ const Home = () => {
     rain: "--",
     wind: "--",
   });
+
+  // Estado para los POIs cercanos al usuario
+  const [poisCercanos, setPoisCercanos] = useState([]);
+  // 'cargando' => esperando geoloc o respuesta API
+  // 'ok'       => tenemos datos
+  // 'denegado' => el usuario rechazó el permiso
+  // 'error'    => algo fue mal
+  const [estadoGeolocalizacion, setEstadoGeolocalizacion] = useState('cargando');
 
   // Actualiza la cuenta atras cada minuto usando la fecha del evento
   useEffect(() => {
@@ -102,32 +111,50 @@ const Home = () => {
       .catch((err) => console.error("Error al obtener el tiempo:", err));
   }, []);
 
-  const discoverItems = [
-    {
-      id: 1,
-      title: "Fan Zone Main Stage",
-      subtitle: "Live DJ & Driver Interviews scheduled...",
-      distance: "200m",
-      image:
-        "https://images.unsplash.com/photo-1470225620780-dba8ba36b745?auto=format&fit=crop&q=80&w=800",
-    },
-    {
-      id: 2,
-      title: "F1 Official Store",
-      subtitle: "New 2026 Merchandise Available",
-      distance: "450m",
-      image:
-        "https://images.unsplash.com/photo-1441986300917-64674bd600d8?auto=format&fit=crop&q=80&w=800",
-    },
-    {
-      id: 3,
-      title: "Paddock Club",
-      subtitle: "VIP access & driver meet & greet",
-      distance: "800m",
-      image:
-        "https://images.unsplash.com/photo-1568605117036-5fe5e7bab0b7?auto=format&fit=crop&q=80&w=800",
-    },
-  ];
+  const discoverItems = [];
+
+  // Solicita la ubicación del usuario y carga los POIs cercanos
+  useEffect(() => {
+    // Comprobamos si el navegador soporta geolocalización
+    if (!navigator.geolocation) {
+      setEstadoGeolocalizacion('error');
+      return;
+    }
+
+    // Pedimos la posición al navegador.
+    // Si el usuario ya aceptó antes, el navegador la devuelve directamente sin modal.
+    // Si no ha decidido aún, muestra el modal de permiso.
+    navigator.geolocation.getCurrentPosition(
+      // Callback de éxito
+      async (posicion) => {
+        const lat = posicion.coords.latitude;
+        const lng = posicion.coords.longitude;
+
+        try {
+          const respuesta = await getPoisCercanos(lat, lng);
+          if (respuesta.success && respuesta.data) {
+            setPoisCercanos(respuesta.data);
+            setEstadoGeolocalizacion('ok');
+          } else {
+            setEstadoGeolocalizacion('error');
+          }
+        } catch (err) {
+          console.error('Error al obtener POIs cercanos:', err);
+          setEstadoGeolocalizacion('error');
+        }
+      },
+      // Callback de error (el usuario denegó el permiso o hubo un timeout)
+      (errorGeo) => {
+        if (errorGeo.code === errorGeo.PERMISSION_DENIED) {
+          setEstadoGeolocalizacion('denegado');
+        } else {
+          setEstadoGeolocalizacion('error');
+        }
+      },
+      // Opciones
+      { enableHighAccuracy: false, timeout: 10000 }
+    );
+  }, []);
 
   return (
     <div className="relative min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-white font-display select-none transition-colors duration-300 md:pl-16">
@@ -336,39 +363,118 @@ const Home = () => {
                   {t("home.seeAll")}
                 </button>
               </div>
-              <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 md:grid md:grid-cols-3 md:overflow-visible">
-                {discoverItems.map((item) => (
-                  <div
-                    key={item.id}
-                    className="min-w-[280px] md:min-w-0 h-[200px] bg-white dark:bg-[#1e1e1e] rounded-[24px] border border-slate-100 dark:border-white/5 relative overflow-hidden snap-start shadow-sm dark:shadow-none transition-colors group"
-                  >
-                    <div className="absolute inset-0">
-                      <img
-                        src={item.image}
-                        alt={item.title}
-                        className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                      />
-                      <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
-                    </div>
-                    <div className="absolute top-4 left-4 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-white/20 shadow-sm z-10">
-                      <span className="material-symbols-outlined text-white text-xs transform -rotate-45">
-                        navigation
-                      </span>
-                      <span className="text-[10px] font-bold text-white tracking-wide">
-                        {item.distance}
-                      </span>
-                    </div>
-                    <div className="p-5 absolute bottom-0 w-full z-10">
-                      <h4 className="text-xl font-bold italic text-white leading-tight drop-shadow-lg">
-                        {item.title}
-                      </h4>
-                      <p className="text-xs text-white/70 mt-1 truncate drop-shadow-md font-medium">
-                        {item.subtitle}
+
+              {/* Estado: cargando */}
+              {estadoGeolocalizacion === 'cargando' && (
+                <div className="flex items-center justify-center gap-3 py-10 text-slate-400 dark:text-white/40">
+                  <div className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
+                  <span className="text-sm font-medium">Buscando puntos cercanos...</span>
+                </div>
+              )}
+
+              {/* Estado: el usuario denegó el permiso de ubicación */}
+              {estadoGeolocalizacion === 'denegado' && (
+                <div className="flex flex-col items-center justify-center gap-3 py-10 px-4 text-center">
+                  <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-slate-400 dark:text-white/40 text-2xl">location_off</span>
+                  </div>
+                  <p className="text-sm font-medium text-slate-500 dark:text-white/50 max-w-[240px]">
+                    Activa la ubicación para ver puntos de interés cerca de ti
+                  </p>
+                </div>
+              )}
+
+              {/* Estado: error genérico */}
+              {estadoGeolocalizacion === 'error' && (
+                <div className="flex flex-col items-center justify-center gap-3 py-10 px-4 text-center">
+                  <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-slate-400 dark:text-white/40 text-2xl">signal_disconnected</span>
+                  </div>
+                  <p className="text-sm font-medium text-slate-500 dark:text-white/50">
+                    No se han podido cargar los puntos cercanos
+                  </p>
+                </div>
+              )}
+
+              {/* Estado: OK — mostramos las cards de POIs */}
+              {estadoGeolocalizacion === 'ok' && (
+                <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 md:grid md:grid-cols-3 md:overflow-visible">
+
+                  {/* Si no hay POIs cercanos */}
+                  {poisCercanos.length === 0 && (
+                    <div className="flex flex-col items-center justify-center gap-3 py-10 px-4 text-center w-full col-span-3">
+                      <span className="material-symbols-outlined text-slate-300 dark:text-white/20 text-4xl">explore</span>
+                      <p className="text-sm font-medium text-slate-400 dark:text-white/40">
+                        No hay puntos de interés cerca de tu ubicación
                       </p>
                     </div>
-                  </div>
-                ))}
-              </div>
+                  )}
+
+                  {/* Cards de cada POI */}
+                  {poisCercanos.map((poi) => {
+                    // Construimos la URL de la imagen del POI
+                    // Si no tiene imagen, mostramos un fondo de gradiente con icono
+                    let imagenSrc = null;
+                    if (poi.imagen_url) {
+                      imagenSrc = `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${poi.imagen_url}`;
+                    }
+
+                    return (
+                      <div
+                        key={poi.id_poi}
+                        className="min-w-[280px] md:min-w-0 h-[200px] bg-white dark:bg-[#1e1e1e] rounded-[24px] border border-slate-100 dark:border-white/5 relative overflow-hidden snap-start shadow-sm dark:shadow-none transition-colors group"
+                      >
+                        {/* Imagen del POI o fondo de gradiente si no tiene */}
+                        <div className="absolute inset-0">
+                          {imagenSrc ? (
+                            <img
+                              src={imagenSrc}
+                              alt={poi.nombre}
+                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+                            />
+                          ) : (
+                            <div className="w-full h-full bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 flex items-center justify-center">
+                              <span className="material-symbols-outlined text-white/20 text-6xl">location_on</span>
+                            </div>
+                          )}
+                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
+                        </div>
+
+                        {/* Badge de distancia */}
+                        <div className="absolute top-4 left-4 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-white/20 shadow-sm z-10">
+                          <span className="material-symbols-outlined text-white text-xs transform -rotate-45">
+                            navigation
+                          </span>
+                          <span className="text-[10px] font-bold text-white tracking-wide">
+                            {poi.distancia_formateada}
+                          </span>
+                        </div>
+
+                        {/* Badge de accesibilidad (solo si es accesible) */}
+                        {poi.es_accesible === 1 && (
+                          <div className="absolute top-4 right-4 bg-green-500/80 backdrop-blur-md px-2 py-1 rounded-full flex items-center gap-1 z-10">
+                            <span className="material-symbols-outlined text-white text-xs">accessible</span>
+                          </div>
+                        )}
+
+                        {/* Nombre y descripción */}
+                        <div className="p-5 absolute bottom-0 w-full z-10">
+                          <h4 className="text-xl font-bold italic text-white leading-tight drop-shadow-lg">
+                            {poi.nombre}
+                          </h4>
+                          {poi.descripcion && (
+                            <p className="text-xs text-white/70 mt-1 truncate drop-shadow-md font-medium">
+                              {poi.descripcion}
+                            </p>
+                          )}
+                        </div>
+                      </div>
+                    );
+                  })}
+
+                </div>
+              )}
+
             </div>
           </div>
 
