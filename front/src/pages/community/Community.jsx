@@ -374,7 +374,8 @@ const Community = () => {
       // Si hay un archivo seleccionado, subirlo primero
       if (selectedFile) {
         const uploadRes = await uploadFotoComunidad(selectedFile);
-        fotoUrl = `http://localhost:3000${uploadRes.url}`;
+        const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000";
+        fotoUrl = `${apiBase}${uploadRes.url}`;
       }
 
       await createPublicacion({
