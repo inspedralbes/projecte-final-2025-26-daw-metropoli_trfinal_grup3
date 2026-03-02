@@ -1,5 +1,6 @@
 import express from 'express';
 import eventoController from '../controllers/eventoController.js';
+import upload from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
@@ -29,7 +30,7 @@ const router = express.Router();
  */
 router.get('/proximo', eventoController.getNextEvento);
 
-router.post('/', eventoController.createEvento);
+router.post('/', upload.single('imagen'), eventoController.createEvento);
 router.get('/', eventoController.getEventos);
 
 /**
@@ -38,6 +39,6 @@ router.get('/', eventoController.getEventos);
  * Este endpoint es para el ADMIN (Modificar hora/retrasar carrera).
  * Podeis enviar solo el campo que cambia (Edicion Parcial).
  */
-router.put('/:id', eventoController.updateEvento);
+router.put('/:id', upload.single('imagen'), eventoController.updateEvento);
 
 export default router;

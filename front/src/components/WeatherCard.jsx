@@ -14,7 +14,7 @@ const WeatherCard = () => {
         const fetchWeather = async () => {
             try {
                 //usad la variable para la url de la api porfis
-                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/weather`);
+                const response = await fetch(`${import.meta.env.VITE_API_URL}/api/tiempo`);
                 if (!response.ok) {
                     throw new Error('No se pudo obtener la información del tiempo');
                 }
@@ -42,21 +42,21 @@ const WeatherCard = () => {
     // 3. Busca en el array esa hora exacta o la más cercana.
 
     // Buscar la hora más cercana a la actual
-var now = new Date();
-now.setMinutes(0, 0, 0);
-var nowTime = now.getTime();
+    var now = new Date();
+    now.setMinutes(0, 0, 0);
+    var nowTime = now.getTime();
 
-var times = weatherData.hourly.time;
-var currentIndex = 0;
-var minDiff = Math.abs(new Date(times[0]).getTime() - nowTime);
+    var times = weatherData.hourly.time;
+    var currentIndex = 0;
+    var minDiff = Math.abs(new Date(times[0]).getTime() - nowTime);
 
-for (var i = 1; i < times.length; i++) {
-    var diff = Math.abs(new Date(times[i]).getTime() - nowTime);
-    if (diff < minDiff) {
-        minDiff = diff;
-        currentIndex = i;
+    for (var i = 1; i < times.length; i++) {
+        var diff = Math.abs(new Date(times[i]).getTime() - nowTime);
+        if (diff < minDiff) {
+            minDiff = diff;
+            currentIndex = i;
+        }
     }
-}
     //VARIABLES IMPORTANTES: usad esto para vuestro componente :D
     const currentTemp = weatherData.hourly.temperature_2m[currentIndex];
     const precipProb = weatherData.hourly.precipitation_probability[currentIndex];
