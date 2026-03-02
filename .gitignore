@@ -2,8 +2,3 @@
 # Imágenes subidas por usuarios — no subir a git
 back/public/uploads/
 
-# Variables de entorno para docker-compose
-GEMINI_API_KEY=AIzaSyCKQ2MzbED-LldAL_D_PaLG61XXmsRRDFU
-
-# URI de MongoDB Atlas — pega aquí tu cadena de conexión de cloud.mongodb.com
-MONGO_URI=mongodb+srv://alvarofabri1357_db_user:ivxcHecbeUT8571t@cluster0.uugdks8.mongodb.net/
