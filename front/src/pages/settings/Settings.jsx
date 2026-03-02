@@ -10,11 +10,16 @@ const Settings = () => {
   const [location, setLocation] = useState(true);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== "undefined") {
-      return (
-        localStorage.getItem("theme") === "dark" ||
-        (!("theme" in localStorage) &&
-          window.matchMedia("(prefers-color-scheme: dark)").matches)
-      );
+      // Prioritize the actual current state of the DOM to avoid "jumps"
+      if (document.documentElement.classList.contains("dark")) return true;
+      if (document.documentElement.classList.contains("light")) return false;
+      
+      // Fallback to localStorage
+      const saved = localStorage.getItem("theme");
+      if (saved) return saved === "dark";
+      
+      // Fallback to system preference
+      return window.matchMedia("(prefers-color-scheme: dark)").matches;
     }
     return false;
   });

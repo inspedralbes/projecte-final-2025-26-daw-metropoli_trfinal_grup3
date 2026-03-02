@@ -51,7 +51,7 @@ const Map = () => {
   const initialCenter = [41.57, 2.2611];
   const [userPosition, setUserPosition] = useState(null);
   const [isLegendOpen, setIsLegendOpen] = useState(false); // State for collapsible legend
-  const [isSatelliteView, setIsSatelliteView] = useState(false); // State for satellite view toggle
+  const [isSatelliteView, setIsSatelliteView] = useState(true); // State for satellite view toggle
 
   // eslint-disable-next-line no-unused-vars
   const [imageBounds, setImageBounds] = useState([
@@ -387,7 +387,7 @@ const Map = () => {
         <div className="absolute right-5 bottom-32 flex flex-col gap-4 pointer-events-auto z-40">
           <Link
             to="/escaneo"
-            className="bg-indigo-600 text-white p-3.5 rounded-xl shadow-lg shadow-indigo-600/30 active:scale-95 transition-transform flex items-center justify-center animate-bounce"
+            className="bg-indigo-600 text-white p-3.5 rounded-xl shadow-lg shadow-indigo-600/30 active:scale-95 transition-transform flex items-center justify-center"
           >
             <span className="material-symbols-outlined text-2xl">
               qr_code_scanner

@@ -360,11 +360,17 @@ const Profile = () => {
       {/* Top Bar */}
       <div className="w-full pt-6 px-5 pb-4 bg-gray-50 dark:bg-slate-950 z-20 transition-colors duration-300 touch-none md:max-w-6xl md:mx-auto">
         <div className="flex justify-between items-center mb-2">
-          <div className="md:hidden flex items-center gap-2">
+          {/* Logo container matching Home/Map */}
+          <div className="flex items-center gap-2 md:hidden">
+            <img
+              src="/logo/logo1.png"
+              alt="Circuit Logo"
+              className="h-12 w-auto object-contain block dark:hidden"
+            />
             <img
               src="/logo/logo.png"
               alt="Circuit Logo"
-              className="h-12 w-auto object-contain"
+              className="h-12 w-auto object-contain hidden dark:block"
             />
           </div>
           <h1 className="hidden md:block text-2xl font-black italic uppercase tracking-tighter text-slate-800 dark:text-white">
