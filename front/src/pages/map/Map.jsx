@@ -275,7 +275,7 @@ const Map = () => {
             </div>
             <Link
               to="/profile"
-              className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden shadow-sm bg-white dark:bg-slate-900"
+              className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden shadow-sm bg-white dark:bg-[#12080a]"
             >
               <img
                 src={(() => {
@@ -293,7 +293,7 @@ const Map = () => {
 
           {/* Search Bar */}
           <div className="w-full md:max-w-sm">
-            <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl flex items-center px-4 py-3.5 gap-3 pointer-events-auto border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
+            <div className="bg-white/90 dark:bg-[#12080a]/90 backdrop-blur-md rounded-2xl flex items-center px-4 py-3.5 gap-3 pointer-events-auto border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
               <span className="material-symbols-outlined text-primary text-xl">search</span>
               <input
                 className="bg-transparent border-none outline-none text-slate-700 dark:text-slate-200 placeholder-slate-400 w-full text-sm font-medium focus:ring-0 p-0"

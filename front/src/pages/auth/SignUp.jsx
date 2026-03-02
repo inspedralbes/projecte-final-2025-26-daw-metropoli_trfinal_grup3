@@ -172,7 +172,7 @@ const SignUp = () => {
 
         <div className="w-full max-w-md z-10 space-y-6">
           <div
-            className="p-8 rounded-2xl shadow-2xl space-y-6 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-primary/15"
+            className="p-8 rounded-2xl shadow-2xl space-y-6 bg-white/90 dark:bg-[#12080a]/90 backdrop-blur-md border border-slate-200 dark:border-primary/15"
           >
             <div className="text-center space-y-2">
               <h2 className="text-2xl font-bold text-slate-800 dark:text-slate-100">Casi listo, {googleData?.nombre.split(' ')[0]}</h2>

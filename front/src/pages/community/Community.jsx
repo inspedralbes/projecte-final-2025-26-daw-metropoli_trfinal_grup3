@@ -117,7 +117,7 @@ const PostCard = ({ pub, onComentarioCreado }) => {
   const comentarios = pub.comentarios || [];
 
   return (
-    <article className="bg-white dark:bg-[#1e1e1e] rounded-[24px] shadow-sm dark:shadow-none border border-slate-100 dark:border-white/5 overflow-hidden transition-all">
+    <article className="bg-white dark:bg-[#12080a] rounded-[24px] shadow-sm dark:shadow-none border border-slate-100 dark:border-white/5 overflow-hidden transition-all">
       {/* Cabecera del post */}
       <div className="p-5 flex items-start gap-3">
         <div className="w-10 h-10 rounded-full border-2 border-primary p-0.5 shrink-0 overflow-hidden">
@@ -448,7 +448,7 @@ const Community = () => {
                   className={`text-[10px] font-bold px-5 py-2.5 rounded-full uppercase tracking-wider shrink-0 cursor-pointer transition-all duration-300 ${
                     activeTab === tab
                       ? "bg-primary text-white shadow-lg shadow-primary/30 scale-105"
-                      : "bg-white dark:bg-[#1e1e1e] text-slate-400 dark:text-white/40 border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none hover:bg-slate-50 dark:hover:bg-white/5"
+                      : "bg-white dark:bg-[#12080a] text-slate-400 dark:text-white/40 border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none hover:bg-slate-50 dark:hover:bg-white/5"
                   }`}
                 >
                   {tab}
@@ -487,7 +487,7 @@ const Community = () => {
           {/* Right Sidebar — desktop only */}
           <div className="hidden lg:flex flex-col gap-5 sticky top-6">
             {/* Group QR Invite */}
-            <div className="bg-white dark:bg-[#1e1e1e] rounded-[24px] border border-slate-100 dark:border-white/5 p-5 shadow-sm">
+            <div className="bg-white dark:bg-[#12080a] rounded-[24px] border border-slate-100 dark:border-white/5 p-5 shadow-sm">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-4 h-1 bg-primary rounded-full"></div>
                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-white/60">
@@ -515,7 +515,7 @@ const Community = () => {
             </div>
 
             {/* Trending Topics */}
-            <div className="bg-white dark:bg-[#1e1e1e] rounded-[24px] border border-slate-100 dark:border-white/5 p-5 shadow-sm">
+            <div className="bg-white dark:bg-[#12080a] rounded-[24px] border border-slate-100 dark:border-white/5 p-5 shadow-sm">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-4 h-1 bg-primary rounded-full"></div>
                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-white/60">
@@ -543,7 +543,7 @@ const Community = () => {
             </div>
 
             {/* Online Now */}
-            <div className="bg-white dark:bg-[#1e1e1e] rounded-[24px] border border-slate-100 dark:border-white/5 p-5 shadow-sm">
+            <div className="bg-white dark:bg-[#12080a] rounded-[24px] border border-slate-100 dark:border-white/5 p-5 shadow-sm">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-4 h-1 bg-primary rounded-full"></div>
                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-white/60">

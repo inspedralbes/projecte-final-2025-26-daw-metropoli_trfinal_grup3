@@ -139,7 +139,7 @@ const EditProfile = () => {
         <div className="flex justify-between items-center">
           <button
             onClick={() => navigate("/profile")}
-            className="bg-white dark:bg-slate-900 p-2 rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="bg-white dark:bg-[#12080a] p-2 rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <span className="material-symbols-outlined text-2xl block">
               arrow_back
@@ -186,21 +186,10 @@ const EditProfile = () => {
               <label
                 htmlFor="avatar-upload"
                 className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 hover:bg-primary/90 transition-colors border-2 border-white dark:border-slate-900 cursor-pointer"
-              <label
-                htmlFor="avatar-upload"
-                className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 hover:bg-primary/90 transition-colors border-2 border-white dark:border-slate-900 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-xl">
                   photo_camera
                 </span>
-                <input
-                  id="avatar-upload"
-                  type="file"
-                  accept="image/*"
-                  className="hidden"
-                  onChange={handleCambioFoto}
-                />
-              </label>
                 <input
                   id="avatar-upload"
                   type="file"
@@ -231,8 +220,6 @@ const EditProfile = () => {
                 type="text"
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
-                value={nombre}
-                onChange={(e) => setNombre(e.target.value)}
                 maxLength={40}
                 placeholder={t("editProfile.namePlaceholder") || "Tu nombre"}
                 className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-2xl px-4 py-3.5 text-base text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${errores.nombre
@@ -243,10 +230,8 @@ const EditProfile = () => {
               <div className="flex justify-between items-center mt-1.5 px-1">
                 <p className="text-red-500 text-xs font-medium">
                   {errores.nombre}
-                  {errores.nombre}
                 </p>
                 <p className="text-[10px] font-bold text-slate-400 tracking-wider">
-                  {nombre.trim().length}/40
                   {nombre.trim().length}/40
                 </p>
               </div>

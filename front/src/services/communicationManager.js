@@ -238,6 +238,69 @@ export const createPublicacion = async (publicacionData) => {
   }
 };
 
+export const createComentario = async (id, comentarioData) => {
+  try {
+    const response = await fetch(`${API_URL}/api/comunidad/${id}/comentarios`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(comentarioData),
+    });
+    if (!response.ok) throw new Error("Failed to create Comentario");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in createComentario:", error);
+    throw error;
+  }
+};
+
+export const createRespuesta = async (id, cid, respuestaData) => {
+  try {
+    const response = await fetch(
+      `${API_URL}/api/comunidad/${id}/comentarios/${cid}/respuestas`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(respuestaData),
+      }
+    );
+    if (!response.ok) throw new Error("Failed to create Respuesta");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in createRespuesta:", error);
+    throw error;
+  }
+};
+
+export const toggleLike = async (id) => {
+  try {
+    const response = await fetch(`${API_URL}/api/comunidad/${id}/like`, {
+      method: "POST",
+    });
+    if (!response.ok) throw new Error("Failed to toggle Like");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in toggleLike:", error);
+    throw error;
+  }
+};
+
+export const uploadFotoComunidad = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append("foto", file);
+    const response = await fetch(`${API_URL}/api/upload/comunidad`, {
+      method: "POST",
+      // Omitimos Content-Type para que el navegador ponga el boundary correcto
+      body: formData,
+    });
+    if (!response.ok) throw new Error("Failed to upload Community photo");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in uploadFotoComunidad:", error);
+    throw error;
+  }
+};
+
 // ── Categorías ──
 export const getCategorias = async () => {
   try {
