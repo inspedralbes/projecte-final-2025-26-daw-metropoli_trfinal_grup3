@@ -12,8 +12,32 @@ const QrScanner = lazy(() => import("../../components/QrScanner"));
 const GuestProfileView = () => {
   const { t } = useTranslation();
   return (
-    <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 md:pl-16">
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-[32px] p-8 shadow-2xl flex flex-col items-center text-center border border-slate-100 dark:border-slate-800 relative overflow-hidden">
+    <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 flex flex-col items-center p-6 md:pl-16 transition-colors duration-300">
+      {/* Top Bar for Guest View */}
+      <div className="w-full pt-0 pb-10 flex justify-between items-center md:max-w-md">
+        <div className="flex items-center gap-2">
+          <Link to="/">
+            <img
+              src="/logo/logo1.png"
+              alt="Circuit Logo"
+              className="h-12 w-auto object-contain block dark:hidden"
+            />
+            <img
+              src="/logo/logo.png"
+              alt="Circuit Logo"
+              className="h-12 w-auto object-contain hidden dark:block"
+            />
+          </Link>
+        </div>
+        <Link
+          to="/settings"
+          className="w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-900 rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+        >
+          <span className="material-symbols-outlined text-[22px]">settings</span>
+        </Link>
+      </div>
+
+      <div className="w-full max-w-md bg-white dark:bg-[#12080a] rounded-[32px] p-8 shadow-2xl flex flex-col items-center text-center border border-slate-100 dark:border-slate-800 relative overflow-hidden">
         {/* Decorative Background */}
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-primary/10 to-transparent dark:from-primary/20 pointer-events-none"></div>
 
@@ -309,7 +333,7 @@ const Profile = () => {
   
   // Utilidad para construir la URL del avatar
   const getAvatarUrl = (fotoUrl) => {
-    if (!fotoUrl) return "https://i.pravatar.cc/150?img=12";
+    if (!fotoUrl) return "https://cdn-icons-png.flaticon.com/512/149/149071.png";
     if (fotoUrl.startsWith("http")) return fotoUrl;
     return `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${fotoUrl}`;
   };
@@ -360,26 +384,28 @@ const Profile = () => {
       {/* Top Bar */}
       <div className="w-full pt-6 px-5 pb-4 bg-gray-50 dark:bg-slate-950 z-20 transition-colors duration-300 touch-none md:max-w-6xl md:mx-auto">
         <div className="flex justify-between items-center mb-2">
-          {/* Logo container matching Home/Map */}
-          <div className="flex items-center gap-2 md:hidden">
-            <img
-              src="/logo/logo1.png"
-              alt="Circuit Logo"
-              className="h-12 w-auto object-contain block dark:hidden"
-            />
-            <img
-              src="/logo/logo.png"
-              alt="Circuit Logo"
-              className="h-12 w-auto object-contain hidden dark:block"
-            />
+          {/* Logo container visible on all screens */}
+          <div className="flex items-center gap-2">
+            <Link to="/">
+              <img
+                src="/logo/logo1.png"
+                alt="Circuit Logo"
+                className="h-12 w-auto object-contain block dark:hidden"
+              />
+              <img
+                src="/logo/logo.png"
+                alt="Circuit Logo"
+                className="h-12 w-auto object-contain hidden dark:block"
+              />
+            </Link>
           </div>
           <h1 className="hidden md:block text-2xl font-black italic uppercase tracking-tighter text-slate-800 dark:text-white">
             My <span className="text-primary">Profile</span>
           </h1>
-          <Link
-            to="/settings"
-            className="w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-900 rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
-          >
+            <Link
+              to="/settings"
+              className="w-10 h-10 flex items-center justify-center bg-white dark:bg-[#12080a] rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+            >
             <span className="material-symbols-outlined text-[22px]">
               settings
             </span>
@@ -393,7 +419,7 @@ const Profile = () => {
           {/* Columna izquierda — sticky en desktop */}
           <div className="flex flex-col gap-5 lg:sticky lg:top-6">
             {/* Profile Card */}
-            <div className="bg-white dark:bg-slate-900 rounded-[28px] border border-slate-100 dark:border-slate-800 shadow-sm p-6 flex flex-col items-center text-center">
+            <div className="bg-white dark:bg-[#12080a] rounded-[28px] border border-slate-100 dark:border-slate-800 shadow-sm p-6 flex flex-col items-center text-center">
               <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-full bg-slate-200 dark:bg-slate-800 border-4 border-white dark:border-slate-700 shadow-lg overflow-hidden mb-3">
                 <img
                   src={getAvatarUrl(currentUser.foto)}

@@ -15,7 +15,7 @@ const Home = () => {
 
   // Utilidad para construir la URL del avatar
   const getAvatarUrl = (fotoUrl) => {
-    if (!fotoUrl) return "https://i.pravatar.cc/150?img=12";
+    if (!fotoUrl) return "https://cdn-icons-png.flaticon.com/512/149/149071.png";
     if (fotoUrl.startsWith("http")) return fotoUrl;
     return `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${fotoUrl}`;
   };
@@ -234,7 +234,7 @@ const Home = () => {
             <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
               <Link
                 to="/"
-                className="relative h-40 rounded-[24px] overflow-hidden group shadow-md hover:shadow-lg transition-all dark:shadow-none bg-white dark:bg-[#1e1e1e]"
+                className="relative h-40 rounded-[24px] overflow-hidden group shadow-md hover:shadow-lg transition-all dark:shadow-none bg-white dark:bg-[#12080a]"
               >
                 <div className="absolute inset-0">
                   <img
@@ -261,7 +261,7 @@ const Home = () => {
 
               <Link
                 to="/community"
-                className="relative h-40 rounded-[24px] overflow-hidden group shadow-md hover:shadow-lg transition-all dark:shadow-none text-left bg-white dark:bg-[#1e1e1e]"
+                className="relative h-40 rounded-[24px] overflow-hidden group shadow-md hover:shadow-lg transition-all dark:shadow-none text-left bg-white dark:bg-[#12080a]"
               >
                 <div className="absolute inset-0">
                   <img
@@ -288,7 +288,7 @@ const Home = () => {
             {/* Fan Zone Banner */}
             <Link
               to="/community"
-              className="block w-full relative h-[88px] rounded-[24px] overflow-hidden active:scale-[0.98] shadow-lg shadow-slate-200/50 dark:shadow-none transition-all group bg-white dark:bg-[#1e1e1e]"
+              className="block w-full relative h-[88px] rounded-[24px] overflow-hidden active:scale-[0.98] shadow-lg shadow-slate-200/50 dark:shadow-none transition-all group bg-white dark:bg-[#12080a]"
             >
               <div className="absolute inset-0">
                 <img
@@ -424,7 +424,7 @@ const Home = () => {
             </div>
 
             {/* Quick Links */}
-            <div className="w-full bg-white dark:bg-[#1e1e1e] border border-slate-100 dark:border-white/5 rounded-[28px] p-6 shadow-lg shadow-slate-200/50 dark:shadow-none transition-all">
+            <div className="w-full bg-white dark:bg-[#12080a] border border-slate-100 dark:border-white/5 rounded-[28px] p-6 shadow-lg shadow-slate-200/50 dark:shadow-none transition-all">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-4 h-1 bg-primary rounded-full"></div>
                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-white/60">

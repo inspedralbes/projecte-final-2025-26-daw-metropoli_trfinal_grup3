@@ -161,6 +161,15 @@ const SignUp = () => {
       <div
         className="relative flex min-h-screen w-full flex-col items-center justify-center p-6 overflow-hidden bg-gray-50 dark:bg-[#121011] transition-colors duration-300"
       >
+        {/* ── Back button ── */}
+        <Link
+          to="/"
+          className="absolute top-6 left-6 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-white/40 dark:bg-white/5 backdrop-blur-md border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-white/60 dark:hover:bg-white/10 transition-colors shadow-sm"
+          aria-label="Back to App"
+        >
+          <span className="material-symbols-outlined text-[24px]">close</span>
+        </Link>
+
         <div className="w-full max-w-md z-10 space-y-6">
           <div
             className="p-8 rounded-2xl shadow-2xl space-y-6 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-primary/15"
@@ -229,9 +238,18 @@ const SignUp = () => {
       <div
         className="relative flex min-h-screen w-full flex-col items-center justify-center p-6 overflow-hidden bg-gray-50 dark:bg-[#121011] transition-colors duration-300"
       >
+        {/* ── Back button ── */}
+        <Link
+          to="/"
+          className="absolute top-6 left-6 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-white/40 dark:bg-white/5 backdrop-blur-md border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-white/60 dark:hover:bg-white/10 transition-colors shadow-sm"
+          aria-label="Back to App"
+        >
+          <span className="material-symbols-outlined text-[24px]">close</span>
+        </Link>
+
         <div className="w-full max-w-md z-10 text-center space-y-6">
           <div
-            className="p-8 rounded-2xl shadow-2xl space-y-6 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md border border-slate-200 dark:border-primary/15"
+            className="p-8 rounded-2xl shadow-2xl space-y-6 bg-white/90 dark:bg-[#12080a] backdrop-blur-md border border-slate-200 dark:border-primary/15"
           >
             {verifyStatus === "success" ? (
               <div className="space-y-6">
@@ -337,6 +355,15 @@ const SignUp = () => {
         className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] pointer-events-none bg-primary/5 dark:bg-primary/5"
       />
 
+      {/* ── Back button ── */}
+      <Link
+        to="/"
+        className="absolute top-6 left-6 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-white/40 dark:bg-white/5 backdrop-blur-md border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-white/60 dark:hover:bg-white/10 transition-colors shadow-sm"
+        aria-label="Back to App"
+      >
+        <span className="material-symbols-outlined text-[24px]">close</span>
+      </Link>
+
       <div className="w-full max-w-md z-10 space-y-8">
 
         {/* ── Logo & Title ── */}
@@ -359,7 +386,7 @@ const SignUp = () => {
 
         {/* ── Glass Panel ── */}
         <div
-          className="p-6 rounded-2xl shadow-2xl bg-white/80 dark:bg-slate-900/80 backdrop-blur-md border border-slate-200 dark:border-primary/10"
+          className="p-6 rounded-2xl shadow-2xl bg-white/80 dark:bg-[#12080a] backdrop-blur-md border border-slate-200 dark:border-primary/10"
         >
           <form onSubmit={handleSubmit} className="space-y-5">
 
