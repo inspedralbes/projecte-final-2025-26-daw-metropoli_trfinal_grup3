@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import Navbar from "../../layouts/Navbar";
 import {
@@ -7,6 +7,7 @@ import {
   createComentario,
   createRespuesta,
   toggleLike,
+  uploadFotoComunidad,
 } from "../../../services/communicationManager";
 import socket from "../../../services/socketManager";
 
@@ -308,6 +309,9 @@ const Community = () => {
 
   const [showModal, setShowModal] = useState(false);
   const [modalError, setModalError] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const [previewUrl, setPreviewUrl] = useState("");
+  const fileInputRef = useRef(null);
   const [newPost, setNewPost] = useState({
     texto: "",
     foto: "",
@@ -362,15 +366,23 @@ const Community = () => {
   }, []);
 
   const handleCreate = async () => {
-    if (!newPost.texto && !newPost.foto) return;
+    if (!newPost.texto && !newPost.foto && !selectedFile) return;
     setModalError("");
     try {
+      let fotoUrl = newPost.foto;
+
+      // Si hay un archivo seleccionado, subirlo primero
+      if (selectedFile) {
+        const uploadRes = await uploadFotoComunidad(selectedFile);
+        fotoUrl = `http://localhost:3000${uploadRes.url}`;
+      }
+
       await createPublicacion({
-        id_usuario: 1, // TODO: usuario autenticado
+        id_usuario: 1,
         nombre_usuario: "Tú",
         foto_perfil: null,
         texto: newPost.texto,
-        foto: newPost.foto,
+        foto: fotoUrl,
         tipo_publicacion: newPost.tipo_publicacion,
         ubicacion: newPost.ubicacion,
       });
@@ -380,6 +392,8 @@ const Community = () => {
         tipo_publicacion: "popular",
         ubicacion: "",
       });
+      setSelectedFile(null);
+      setPreviewUrl("");
       setModalError("");
       setShowModal(false);
     } catch (err) {
@@ -606,6 +620,7 @@ const Community = () => {
                 className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-primary rounded-2xl p-4 text-base text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors resize-none h-28"
               />
               <div className="space-y-4">
+                {/* Input de URL */}
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <span className="material-symbols-outlined text-slate-400">
@@ -615,13 +630,78 @@ const Community = () => {
                   <input
                     type="text"
                     value={newPost.foto}
-                    onChange={(e) =>
-                      setNewPost({ ...newPost, foto: e.target.value })
-                    }
+                    onChange={(e) => {
+                      setNewPost({ ...newPost, foto: e.target.value });
+                      if (e.target.value) {
+                        setSelectedFile(null);
+                        setPreviewUrl("");
+                      }
+                    }}
                     placeholder="URL de la foto (opcional)"
                     className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 transition-colors"
                   />
                 </div>
+
+                {/* Separador */}
+                <div className="flex items-center gap-3">
+                  <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
+                  <span className="text-xs text-slate-400 font-medium">o</span>
+                  <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
+                </div>
+
+                {/* Botón subir archivo */}
+                <input
+                  ref={fileInputRef}
+                  type="file"
+                  accept="image/jpeg,image/png,image/webp,image/gif"
+                  className="hidden"
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (file) {
+                      setSelectedFile(file);
+                      setPreviewUrl(URL.createObjectURL(file));
+                      setNewPost({ ...newPost, foto: "" }); // limpiar URL si hay archivo
+                    }
+                  }}
+                />
+                <button
+                  type="button"
+                  onClick={() => fileInputRef.current?.click()}
+                  className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl text-sm text-slate-500 dark:text-slate-400 hover:border-primary hover:text-primary transition-colors"
+                >
+                  <span className="material-symbols-outlined text-[20px]">
+                    upload
+                  </span>
+                  {selectedFile
+                    ? selectedFile.name
+                    : "Subir imagen desde tu ordenador"}
+                </button>
+
+                {/* Preview de la imagen seleccionada */}
+                {previewUrl && (
+                  <div className="relative rounded-2xl overflow-hidden">
+                    <img
+                      src={previewUrl}
+                      alt="Preview"
+                      className="w-full max-h-48 object-contain bg-slate-100 dark:bg-slate-800"
+                    />
+                    <button
+                      type="button"
+                      onClick={() => {
+                        setSelectedFile(null);
+                        setPreviewUrl("");
+                        if (fileInputRef.current)
+                          fileInputRef.current.value = "";
+                      }}
+                      className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70"
+                    >
+                      <span className="material-symbols-outlined text-sm">
+                        close
+                      </span>
+                    </button>
+                  </div>
+                )}
+
                 <div className="relative">
                   <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
                     <span className="material-symbols-outlined text-slate-400">

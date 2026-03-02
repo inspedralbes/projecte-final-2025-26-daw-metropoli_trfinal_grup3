@@ -68,6 +68,11 @@ export const createComentario = (id, data) =>
 export const createRespuesta = (id, cid, data) =>
   post(`/api/comunidad/${id}/comentarios/${cid}/respuestas`, data);
 export const toggleLike = (id, data) => post(`/api/comunidad/${id}/like`, data);
+export const uploadFotoComunidad = async (file) => {
+  const formData = new FormData();
+  formData.append("foto", file);
+  return post("/api/upload/comunidad", formData);
+};
 
 // --- Eventos ---
 
