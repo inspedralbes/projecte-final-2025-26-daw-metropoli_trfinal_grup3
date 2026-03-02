@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../../layouts/Navbar';
-import { getEventos } from '../../../services/communicationManager';
+import { getEventos } from '../../services/communicationManager';
 import socket from '../../../services/socketManager'; // Importamos la radio del frontend
 
 const Events = () => {

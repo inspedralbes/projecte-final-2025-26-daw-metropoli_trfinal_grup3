@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Navbar from "../../layouts/Navbar";
-import { getUsuario, updatePerfil } from "../../../services/communicationManager";
+import { getUsuario, updatePerfil } from '../../services/communicationManager';
 
 const EditProfile = () => {
   const { t } = useTranslation();
@@ -30,10 +30,10 @@ const EditProfile = () => {
   // Al entrar a la pantalla, pedimos los datos actuales del usuario a la BD
   useEffect(() => {
     if (!ID_USUARIO_ACTUAL) {
-       setCargando(false);
-       return;
+      setCargando(false);
+      return;
     }
-    
+
     getUsuario(ID_USUARIO_ACTUAL)
       .then((res) => {
         if (res.success && res.data) {
@@ -86,24 +86,24 @@ const EditProfile = () => {
 
     try {
       if (!ID_USUARIO_ACTUAL) {
-          throw new Error("No hay un usuario activo para actualizar.");
+        throw new Error("No hay un usuario activo para actualizar.");
       }
-      
+
       const resp = await updatePerfil(ID_USUARIO_ACTUAL, paqueteDeDatos);
       setGuardado(true);
 
       if (resp.success && currentUser) {
-         // Construimos el nuevo objeto de usuario para localStorage
-         const newUserData = { 
-            ...currentUser, 
-            nombre, 
-            bio,
-            // Si el backend nos devolvió una nueva ruta de foto, la usamos
-            foto: resp.data?.foto_perfil || currentUser.foto,
-            foto_perfil: resp.data?.foto_perfil || currentUser.foto_perfil
-         };
-         
-         localStorage.setItem("usuario", JSON.stringify(newUserData));
+        // Construimos el nuevo objeto de usuario para localStorage
+        const newUserData = {
+          ...currentUser,
+          nombre,
+          bio,
+          // Si el backend nos devolvió una nueva ruta de foto, la usamos
+          foto: resp.data?.foto_perfil || currentUser.foto,
+          foto_perfil: resp.data?.foto_perfil || currentUser.foto_perfil
+        };
+
+        localStorage.setItem("usuario", JSON.stringify(newUserData));
       }
 
       // Volvemos al perfil después de un breve momento para que el usuario vea la confirmación
@@ -166,11 +166,11 @@ const EditProfile = () => {
                 <span className="material-symbols-outlined text-xl">
                   photo_camera
                 </span>
-                <input 
+                <input
                   id="avatar-upload"
-                  type="file" 
-                  accept="image/*" 
-                  className="hidden" 
+                  type="file"
+                  accept="image/*"
+                  className="hidden"
                   onChange={handleCambioFoto}
                 />
               </label>
@@ -198,11 +198,10 @@ const EditProfile = () => {
                 onChange={(e) => setNombre(e.target.value)}
                 maxLength={40}
                 placeholder={t("editProfile.namePlaceholder") || "Tu nombre"}
-                className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-2xl px-4 py-3.5 text-base text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
-                  errores.nombre
+                className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-2xl px-4 py-3.5 text-base text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${errores.nombre
                     ? "border-red-400 focus:ring-red-400"
                     : "border-slate-200 dark:border-slate-800 focus:border-primary"
-                }`}
+                  }`}
               />
               <div className="flex justify-between items-center mt-1.5 px-1">
                 <p className="text-red-500 text-xs font-medium">
@@ -228,11 +227,10 @@ const EditProfile = () => {
                 maxLength={100}
                 rows={3}
                 placeholder={t("editProfile.bioPlaceholder") || "Cuéntanos algo sobre ti..."}
-                className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-2xl px-4 py-3.5 text-base text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors resize-none ${
-                  errores.bio
+                className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-2xl px-4 py-3.5 text-base text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors resize-none ${errores.bio
                     ? "border-red-400 focus:ring-red-400"
                     : "border-slate-200 dark:border-slate-800 focus:border-primary"
-                }`}
+                  }`}
               />
               <div className="flex justify-between items-center mt-1.5 px-1">
                 <p className="text-red-500 text-xs font-medium">{errores.bio}</p>
