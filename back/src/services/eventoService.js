@@ -16,9 +16,14 @@ const getNextEvento = async () => {
     return await eventoModel.getNext();
 };
 
+const deleteEvento = async (id) => {
+    return await eventoModel.deleteById(id);
+};
+
 export default {
     createEvento,
     getAllEventos,
     updateEvento,
-    getNextEvento
+    getNextEvento,
+    deleteEvento
 };
