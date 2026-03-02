@@ -593,40 +593,148 @@ const Community = () => {
         </div>
       </div>
 
-      {/* Modal nueva publicación */}
+      {/* Modal nueva publicación — bottom sheet en móvil, centrado en desktop */}
       {showModal && (
-        <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm px-4 pb-6 md:pb-0">
-          <div className="w-full max-w-lg bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl overflow-hidden animate-fade-in">
-            <div className="flex items-center justify-between px-6 pt-6 pb-4 border-b border-slate-100 dark:border-slate-800">
-              <h2 className="font-bold text-slate-800 dark:text-white text-lg">
+        <div
+          className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm"
+          onClick={(e) => {
+            if (e.target === e.currentTarget) setShowModal(false);
+          }}
+        >
+          <div className="w-full md:max-w-lg bg-white dark:bg-[#111] rounded-t-[32px] md:rounded-[32px] shadow-2xl flex flex-col max-h-[92dvh] md:max-h-[90vh]">
+            {/* Handle pill — solo móvil */}
+            <div className="md:hidden flex justify-center pt-3 pb-1 shrink-0">
+              <div className="w-10 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
+            </div>
+
+            {/* Header */}
+            <div className="flex items-center justify-between px-5 pt-3 pb-4 border-b border-slate-100 dark:border-white/5 shrink-0">
+              <h2 className="font-bold text-slate-800 dark:text-white text-[17px]">
                 Nueva publicación
               </h2>
               <button
                 onClick={() => setShowModal(false)}
-                className="w-8 h-8 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center active:scale-90 transition-transform"
               >
-                <span className="material-symbols-outlined text-slate-500 text-lg">
+                <span className="material-symbols-outlined text-slate-500 text-[20px]">
                   close
                 </span>
               </button>
             </div>
-            <div className="p-6 space-y-5">
+
+            {/* Contenido scrollable */}
+            <div className="overflow-y-auto flex-1 p-5 space-y-4">
+              {/* Textarea */}
               <textarea
                 value={newPost.texto}
                 onChange={(e) =>
                   setNewPost({ ...newPost, texto: e.target.value })
                 }
                 placeholder="¿Qué está pasando en el circuito? 🏎️"
-                className="w-full bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 focus:border-primary rounded-2xl p-4 text-base text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors resize-none h-28"
+                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 focus:border-primary rounded-2xl p-4 text-[15px] text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none h-28 transition-colors"
+                autoFocus
               />
-              <div className="space-y-4">
-                {/* Input de URL */}
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <span className="material-symbols-outlined text-slate-400">
+
+              {/* Inputs hidden (archivo) */}
+              <input
+                ref={fileInputRef}
+                type="file"
+                accept="image/*"
+                className="hidden"
+                onChange={(e) => {
+                  const file = e.target.files?.[0];
+                  if (file) {
+                    setSelectedFile(file);
+                    setPreviewUrl(URL.createObjectURL(file));
+                    setNewPost({ ...newPost, foto: "" });
+                  }
+                }}
+              />
+
+              {/* Botones rápidos de imagen */}
+              {!previewUrl && (
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (fileInputRef.current) {
+                        fileInputRef.current.removeAttribute("capture");
+                        fileInputRef.current.click();
+                      }
+                    }}
+                    className="flex flex-col items-center justify-center gap-2 py-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-white/10 hover:border-primary hover:bg-primary/5 active:scale-95 transition-all"
+                  >
+                    <span className="material-symbols-outlined text-3xl text-slate-400">
+                      photo_library
+                    </span>
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                      Galería
+                    </span>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      if (fileInputRef.current) {
+                        fileInputRef.current.setAttribute(
+                          "capture",
+                          "environment",
+                        );
+                        fileInputRef.current.click();
+                      }
+                    }}
+                    className="flex flex-col items-center justify-center gap-2 py-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-white/10 hover:border-primary hover:bg-primary/5 active:scale-95 transition-all"
+                  >
+                    <span className="material-symbols-outlined text-3xl text-slate-400">
+                      photo_camera
+                    </span>
+                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
+                      Cámara
+                    </span>
+                  </button>
+                </div>
+              )}
+
+              {/* Preview imagen seleccionada */}
+              {previewUrl && (
+                <div className="relative rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-900">
+                  <img
+                    src={previewUrl}
+                    alt="Preview"
+                    className="w-full max-h-64 object-contain"
+                  />
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setSelectedFile(null);
+                      setPreviewUrl("");
+                      if (fileInputRef.current) fileInputRef.current.value = "";
+                    }}
+                    className="absolute top-2 right-2 w-8 h-8 bg-black/60 text-white rounded-full flex items-center justify-center active:scale-90 transition-transform"
+                  >
+                    <span className="material-symbols-outlined text-[18px]">
+                      close
+                    </span>
+                  </button>
+                  <div className="px-3 py-2 bg-black/40 absolute bottom-0 left-0 right-0">
+                    <p className="text-white text-xs truncate">
+                      {selectedFile?.name}
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {/* URL de foto (colapsada, opcional) */}
+              {!previewUrl && (
+                <details className="group">
+                  <summary className="text-xs text-slate-400 font-medium cursor-pointer list-none flex items-center gap-1 select-none">
+                    <span className="material-symbols-outlined text-[14px]">
                       link
                     </span>
-                  </div>
+                    O pega una URL de imagen
+                    <span className="material-symbols-outlined text-[14px] ml-auto group-open:rotate-180 transition-transform">
+                      expand_more
+                    </span>
+                  </summary>
                   <input
                     type="text"
                     value={newPost.foto}
@@ -637,100 +745,38 @@ const Community = () => {
                         setPreviewUrl("");
                       }
                     }}
-                    placeholder="URL de la foto (opcional)"
-                    className="w-full pl-11 pr-4 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 transition-colors"
+                    placeholder="https://..."
+                    className="mt-2 w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:border-primary transition-colors"
                   />
-                </div>
+                </details>
+              )}
 
-                {/* Separador */}
-                <div className="flex items-center gap-3">
-                  <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
-                  <span className="text-xs text-slate-400 font-medium">o</span>
-                  <div className="flex-1 h-px bg-slate-200 dark:bg-slate-700" />
-                </div>
-
-                {/* Botón subir archivo */}
-                <input
-                  ref={fileInputRef}
-                  type="file"
-                  accept="image/jpeg,image/png,image/webp,image/gif"
-                  className="hidden"
-                  onChange={(e) => {
-                    const file = e.target.files?.[0];
-                    if (file) {
-                      setSelectedFile(file);
-                      setPreviewUrl(URL.createObjectURL(file));
-                      setNewPost({ ...newPost, foto: "" }); // limpiar URL si hay archivo
-                    }
-                  }}
-                />
-                <button
-                  type="button"
-                  onClick={() => fileInputRef.current?.click()}
-                  className="w-full flex items-center justify-center gap-2 py-3 border-2 border-dashed border-slate-300 dark:border-slate-700 rounded-2xl text-sm text-slate-500 dark:text-slate-400 hover:border-primary hover:text-primary transition-colors"
-                >
-                  <span className="material-symbols-outlined text-[20px]">
-                    upload
+              {/* Selector de categoría */}
+              <div className="relative">
+                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                  <span className="material-symbols-outlined text-slate-400">
+                    category
                   </span>
-                  {selectedFile
-                    ? selectedFile.name
-                    : "Subir imagen desde tu ordenador"}
-                </button>
-
-                {/* Preview de la imagen seleccionada */}
-                {previewUrl && (
-                  <div className="relative rounded-2xl overflow-hidden">
-                    <img
-                      src={previewUrl}
-                      alt="Preview"
-                      className="w-full max-h-48 object-contain bg-slate-100 dark:bg-slate-800"
-                    />
-                    <button
-                      type="button"
-                      onClick={() => {
-                        setSelectedFile(null);
-                        setPreviewUrl("");
-                        if (fileInputRef.current)
-                          fileInputRef.current.value = "";
-                      }}
-                      className="absolute top-2 right-2 bg-black/50 text-white rounded-full p-1 hover:bg-black/70"
-                    >
-                      <span className="material-symbols-outlined text-sm">
-                        close
-                      </span>
-                    </button>
-                  </div>
-                )}
-
-                <div className="relative">
-                  <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                    <span className="material-symbols-outlined text-slate-400">
-                      category
-                    </span>
-                  </div>
-                  <select
-                    value={newPost.tipo_publicacion}
-                    onChange={(e) =>
-                      setNewPost({
-                        ...newPost,
-                        tipo_publicacion: e.target.value,
-                      })
-                    }
-                    className="w-full pl-11 pr-10 py-3.5 bg-slate-50 dark:bg-slate-950 border border-slate-200 dark:border-slate-800 rounded-2xl text-sm text-slate-800 dark:text-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/50 transition-colors appearance-none"
-                  >
-                    <option value="popular">Popular</option>
-                    <option value="oficial">Oficial</option>
-                    <option value="fanzone">Fan Zone</option>
-                  </select>
-                  <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                    <span className="material-symbols-outlined text-slate-400">
-                      expand_more
-                    </span>
-                  </div>
+                </div>
+                <select
+                  value={newPost.tipo_publicacion}
+                  onChange={(e) =>
+                    setNewPost({ ...newPost, tipo_publicacion: e.target.value })
+                  }
+                  className="w-full pl-11 pr-10 py-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl text-sm text-slate-800 dark:text-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/40 appearance-none transition-colors"
+                >
+                  <option value="popular">🔥 Popular</option>
+                  <option value="oficial">📢 Oficial</option>
+                  <option value="fanzone">🏁 Fan Zone</option>
+                </select>
+                <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
+                  <span className="material-symbols-outlined text-slate-400">
+                    expand_more
+                  </span>
                 </div>
               </div>
 
-              {/* Banner de error de moderación */}
+              {/* Error de moderación */}
               {modalError && (
                 <div className="flex items-start gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-2xl px-4 py-3">
                   <span className="material-symbols-outlined text-red-500 text-[18px] shrink-0 mt-0.5">
@@ -741,10 +787,13 @@ const Community = () => {
                   </p>
                 </div>
               )}
+            </div>
 
+            {/* Botón publicar — sticky al fondo */}
+            <div className="px-5 pb-6 pt-3 border-t border-slate-100 dark:border-white/5 shrink-0">
               <button
                 onClick={handleCreate}
-                className="w-full mt-2 bg-primary text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-primary/30 active:scale-95 transition-all hover:bg-primary/90 flex items-center justify-center gap-2"
+                className="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/30 active:scale-95 transition-all hover:bg-primary/90 flex items-center justify-center gap-2 text-base"
               >
                 <span className="material-symbols-outlined">send</span>
                 Publicar
