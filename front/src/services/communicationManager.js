@@ -46,7 +46,7 @@ export const deletePoi = async (id) => {
 export const getRoute = async (origenId, destinoId) => {
   try {
     const response = await fetch(
-      `${API_URL}/api/calculo-ruta?origen=${origenId}&destino=${destinoId}`
+      `${API_URL}/api/calculo-ruta?origen=${origenId}&destino=${destinoId}`,
     );
     if (!response.ok) throw new Error("Failed to fetch Route");
     return await response.json();
@@ -80,47 +80,46 @@ export const generateQrCode = async (id_nodo, zona) => {
   }
 };
 
-
 // ── Tramos (Rutas) ──
 export const getTramos = async () => {
-    try {
-        const response = await fetch(`${API_URL}/api/tramos`);
-        if (!response.ok) throw new Error("Failed to search tramos");
-        return await response.json();
-    } catch (error) {
-        console.error("Error in getTramos:", error);
-        throw error;
-    }
+  try {
+    const response = await fetch(`${API_URL}/api/tramos`);
+    if (!response.ok) throw new Error("Failed to search tramos");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getTramos:", error);
+    throw error;
+  }
 };
 
 export const createTramosBulk = async (tramosArray) => {
-    try {
-        const response = await fetch(`${API_URL}/api/tramos/bulk`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ tramos: tramosArray }),
-        });
-        if (!response.ok) throw new Error("Failed to create tramos in bulk");
-        return await response.json();
-    } catch (error) {
-        console.error("Error in createTramosBulk:", error);
-        throw error;
-    }
+  try {
+    const response = await fetch(`${API_URL}/api/tramos/bulk`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ tramos: tramosArray }),
+    });
+    if (!response.ok) throw new Error("Failed to create tramos in bulk");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in createTramosBulk:", error);
+    throw error;
+  }
 };
 
 export const createPath = async (coords, isBidirectional) => {
-    try {
-        const response = await fetch(`${API_URL}/api/tramos/path`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ coords, isBidirectional }),
-        });
-        if (!response.ok) throw new Error("Failed to create path");
-        return await response.json();
-    } catch (error) {
-        console.error("Error in createPath:", error);
-        throw error;
-    }
+  try {
+    const response = await fetch(`${API_URL}/api/tramos/path`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ coords, isBidirectional }),
+    });
+    if (!response.ok) throw new Error("Failed to create path");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in createPath:", error);
+    throw error;
+  }
 };
 
 // ── Nodos de navegación ──
@@ -230,10 +229,77 @@ export const createPublicacion = async (publicacionData) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(publicacionData),
     });
-    if (!response.ok) throw new Error("Failed to create Publicacion");
+    if (!response.ok) {
+      // Leemos el JSON del servidor para obtener el mensaje real
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to create Publicacion");
+    }
     return await response.json();
   } catch (error) {
     console.error("Error in createPublicacion:", error);
+    throw error;
+  }
+};
+
+export const createComentario = async (id, comentarioData) => {
+  try {
+    const response = await fetch(`${API_URL}/api/comunidad/${id}/comentarios`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(comentarioData),
+    });
+    if (!response.ok) throw new Error("Failed to create Comentario");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in createComentario:", error);
+    throw error;
+  }
+};
+
+export const createRespuesta = async (id, cid, respuestaData) => {
+  try {
+    const response = await fetch(
+      `${API_URL}/api/comunidad/${id}/comentarios/${cid}/respuestas`,
+      {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(respuestaData),
+      },
+    );
+    if (!response.ok) throw new Error("Failed to create Respuesta");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in createRespuesta:", error);
+    throw error;
+  }
+};
+
+export const toggleLike = async (id) => {
+  try {
+    const response = await fetch(`${API_URL}/api/comunidad/${id}/like`, {
+      method: "POST",
+    });
+    if (!response.ok) throw new Error("Failed to toggle Like");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in toggleLike:", error);
+    throw error;
+  }
+};
+
+export const uploadFotoComunidad = async (file) => {
+  try {
+    const formData = new FormData();
+    formData.append("foto", file);
+    const response = await fetch(`${API_URL}/api/upload/comunidad`, {
+      method: "POST",
+      // Omitimos Content-Type para que el navegador ponga el boundary correcto
+      body: formData,
+    });
+    if (!response.ok) throw new Error("Failed to upload Community photo");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in uploadFotoComunidad:", error);
     throw error;
   }
 };
@@ -304,123 +370,126 @@ export const getTramosByNode = async (nodeId) => {
 // ── Incidencias ──
 
 export const getIncidencias = async () => {
-    try {
-        const response = await fetch(`${API_URL}/api/incidencias`);
-        if (!response.ok) throw new Error("Failed to fetch Incidencias");
-        return await response.json();
-    } catch (error) {
-        console.error("Error in getIncidencias:", error);
-        throw error;
-    }
+  try {
+    const response = await fetch(`${API_URL}/api/incidencias`);
+    if (!response.ok) throw new Error("Failed to fetch Incidencias");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getIncidencias:", error);
+    throw error;
+  }
 };
 
 export const createIncidencia = async (incidenciaData) => {
-    try {
-        const response = await fetch(`${API_URL}/api/incidencias`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(incidenciaData),
-        });
-        if (!response.ok) throw new Error("Failed to create Incidencia");
-        return await response.json();
-    } catch (error) {
-        console.error("Error in createIncidencia:", error);
-        throw error;
-    }
+  try {
+    const response = await fetch(`${API_URL}/api/incidencias`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(incidenciaData),
+    });
+    if (!response.ok) throw new Error("Failed to create Incidencia");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in createIncidencia:", error);
+    throw error;
+  }
 };
 
 // ── Usuarios ──
 
 export const getUsuario = async (id) => {
-    try {
-        const response = await fetch(`${API_URL}/api/usuarios/${id}`);
-        if (!response.ok) throw new Error("Failed to fetch Usuario");
-        return await response.json();
-    } catch (error) {
-        console.error("Error in getUsuario:", error);
-        throw error;
-    }
+  try {
+    const response = await fetch(`${API_URL}/api/usuarios/${id}`);
+    if (!response.ok) throw new Error("Failed to fetch Usuario");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getUsuario:", error);
+    throw error;
+  }
 };
 
 export const getUsuarios = async () => {
-    try {
-        const response = await fetch(`${API_URL}/api/usuarios`);
-        if (!response.ok) throw new Error("Failed to fetch Usuarios");
-        return await response.json();
-    } catch (error) {
-        console.error("Error in getUsuarios:", error);
-        throw error;
-    }
+  try {
+    const response = await fetch(`${API_URL}/api/usuarios`);
+    if (!response.ok) throw new Error("Failed to fetch Usuarios");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getUsuarios:", error);
+    throw error;
+  }
 };
 
 export const createUsuario = async (usuarioData) => {
-    try {
-        const response = await fetch(`${API_URL}/api/usuarios`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify(usuarioData),
-        });
-        if (!response.ok) throw new Error("Failed to create Usuario");
-        return await response.json();
-    } catch (error) {
-        console.error("Error in createUsuario:", error);
-        throw error;
-    }
+  try {
+    const response = await fetch(`${API_URL}/api/usuarios`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(usuarioData),
+    });
+    if (!response.ok) throw new Error("Failed to create Usuario");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in createUsuario:", error);
+    throw error;
+  }
 };
 
 export const updatePerfil = async (id, formData) => {
-    try {
-        const response = await fetch(`${API_URL}/api/usuarios/${id}/perfil`, {
-            method: "PUT",
-            // Note: When uploading files with fetch, omit Content-Type header
-            // so the browser automatically sets it to multipart/form-data with boundary
-            body: formData,
-        });
-        if (!response.ok) throw new Error("Failed to update Perfil");
-        return await response.json();
-    } catch (error) {
-        console.error("Error in updatePerfil:", error);
-        throw error;
-    }
+  try {
+    const response = await fetch(`${API_URL}/api/usuarios/${id}/perfil`, {
+      method: "PUT",
+      // Note: When uploading files with fetch, omit Content-Type header
+      // so the browser automatically sets it to multipart/form-data with boundary
+      body: formData,
+    });
+    if (!response.ok) throw new Error("Failed to update Perfil");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in updatePerfil:", error);
+    throw error;
+  }
 };
 
 // ── Amigos ──
 
 export const getAmigos = async (userId) => {
-    try {
-        const response = await fetch(`${API_URL}/api/amigos/${userId}`);
-        if (!response.ok) throw new Error("Failed to fetch Amigos");
-        return await response.json();
-    } catch (error) {
-        console.error("Error in getAmigos:", error);
-        throw error;
-    }
+  try {
+    const response = await fetch(`${API_URL}/api/amigos/${userId}`);
+    if (!response.ok) throw new Error("Failed to fetch Amigos");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getAmigos:", error);
+    throw error;
+  }
 };
 
 export const addAmigo = async (userId, friendId) => {
-    try {
-        const response = await fetch(`${API_URL}/api/amigos`, {
-            method: "POST",
-            headers: { "Content-Type": "application/json" },
-            body: JSON.stringify({ id_usuario: userId, id_amigo: friendId }),
-        });
-        if (!response.ok) throw new Error("Failed to add Amigo");
-        return await response.json();
-    } catch (error) {
-        console.error("Error in addAmigo:", error);
-        throw error;
-    }
+  try {
+    const response = await fetch(`${API_URL}/api/amigos`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_usuario: userId, id_amigo: friendId }),
+    });
+    if (!response.ok) throw new Error("Failed to add Amigo");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in addAmigo:", error);
+    throw error;
+  }
 };
 
 export const removeAmigo = async (userId, friendId) => {
-    try {
-        const response = await fetch(`${API_URL}/api/amigos/${userId}/${friendId}`, {
-            method: "DELETE",
-        });
-        if (!response.ok) throw new Error("Failed to remove Amigo");
-        return await response.json();
-    } catch (error) {
-        console.error("Error in removeAmigo:", error);
-        throw error;
-    }
+  try {
+    const response = await fetch(
+      `${API_URL}/api/amigos/${userId}/${friendId}`,
+      {
+        method: "DELETE",
+      },
+    );
+    if (!response.ok) throw new Error("Failed to remove Amigo");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in removeAmigo:", error);
+    throw error;
+  }
 };

@@ -31,7 +31,7 @@ const GuestProfileView = () => {
         </div>
         <Link
           to="/settings"
-          className="w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-900 rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+          className="w-10 h-10 flex items-center justify-center bg-white dark:bg-[#12080a] rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
         >
           <span className="material-symbols-outlined text-[22px]">settings</span>
         </Link>
@@ -118,7 +118,7 @@ const MyQrModal = ({ user, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm px-4 pb-6 md:pb-0">
-      <div className="w-full max-w-xs bg-white dark:bg-slate-900 rounded-[28px] shadow-2xl overflow-hidden">
+      <div className="w-full max-w-xs bg-white dark:bg-[#12080a] rounded-[28px] shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100 dark:border-slate-800">
           <h2 className="font-bold text-slate-800 dark:text-white text-lg">
             Mi código QR
@@ -217,7 +217,7 @@ const ScanQrModal = ({ allUsers, onAdd, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md px-4">
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl overflow-hidden relative">
+      <div className="w-full max-w-md bg-white dark:bg-[#12080a] rounded-[32px] shadow-2xl overflow-hidden relative">
         {/* Header con diseño premium */}
         <div className="absolute top-0 left-0 w-full h-2 bg-primary"></div>
         <div className="flex items-center justify-between px-6 pt-8 pb-4">
@@ -462,7 +462,7 @@ const Profile = () => {
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
-                  className={`p-3 rounded-2xl border shadow-sm flex flex-col items-center justify-center text-center transition-all duration-300 ${activeTab === key ? "bg-primary border-primary text-white scale-105" : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800"}`}
+                  className={`p-3 rounded-2xl border shadow-sm flex flex-col items-center justify-center text-center transition-all duration-300 ${activeTab === key ? "bg-primary border-primary text-white scale-105" : "bg-white dark:bg-[#12080a] border-slate-100 dark:border-slate-800"}`}
                 >
                   <span
                     className={`text-lg font-bold ${activeTab === key ? "text-white" : "text-primary"}`}
@@ -507,7 +507,7 @@ const Profile = () => {
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${activeTab === key ? "bg-primary text-white shadow-lg shadow-primary/30" : "bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800 hover:border-primary/40"}`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${activeTab === key ? "bg-primary text-white shadow-lg shadow-primary/30" : "bg-white dark:bg-[#12080a] text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800 hover:border-primary/40"}`}
                 >
                   <span className="material-symbols-outlined text-base">
                     {icon}
@@ -531,7 +531,7 @@ const Profile = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setShowMyQr(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:border-primary hover:text-primary transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-[#12080a] border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:border-primary hover:text-primary transition-colors"
                     >
                       <span className="material-symbols-outlined text-base">
                         qr_code_2
@@ -574,7 +574,7 @@ const Profile = () => {
                     {friends.map((friend) => (
                       <div
                         key={friend.id}
-                        className="flex items-center gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm group"
+                        className="flex items-center gap-3 bg-white dark:bg-[#12080a] p-3 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm group"
                       >
                         <img
                           src={friend.avatar}
@@ -626,7 +626,7 @@ const Profile = () => {
                   {[1, 2].map((post) => (
                     <div
                       key={post}
-                      className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden"
+                      className="bg-white dark:bg-[#12080a] rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden"
                     >
                       <img
                         src={`https://images.unsplash.com/photo-${post === 1 ? "1568605117036-5fe5e7bab0b7" : "1492684223066-81342ee5ff30"}?auto=format&fit=crop&q=80&w=800`}
@@ -699,7 +699,7 @@ const Profile = () => {
                   ].map((badge, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800"
+                      className="flex items-center gap-4 bg-white dark:bg-[#12080a] p-4 rounded-2xl border border-slate-100 dark:border-slate-800"
                     >
                       <div
                         className={`w-12 h-12 rounded-full ${badge.bg} ${badge.color} flex items-center justify-center shrink-0`}

@@ -68,7 +68,7 @@ const AdminQRTab = () => {
                             {qrList.map((qr) => (
                                 <div
                                     key={qr.id_qr}
-                                    className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-start sm:items-center gap-4 group"
+                                    className="bg-white dark:bg-[#12080a] p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-start sm:items-center gap-4 group"
                                 >
                                     <a
                                         href={import.meta.env.VITE_API_URL + qr.ruta_archivo_qr}
@@ -126,7 +126,7 @@ const AdminQRTab = () => {
                             ))}
                         </div>
                     ) : (
-                        <div className="bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-8 text-center flex flex-col items-center justify-center shadow-inner">
+                        <div className="bg-slate-50 dark:bg-[#12080a] text-slate-400 dark:text-slate-500 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-8 text-center flex flex-col items-center justify-center shadow-inner">
                             <span className="material-symbols-outlined text-4xl mb-2 opacity-30 animate-pulse">qr_code_scanner</span>
                             <p className="font-medium text-sm">No se han generado Códigos QR.</p>
                             <p className="text-xs mt-1 text-slate-400">Genera uno en el panel de la derecha.</p>
@@ -143,7 +143,7 @@ const AdminQRTab = () => {
                 </h3>
 
 
-                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-6 space-y-6">
+                <div className="bg-white dark:bg-[#12080a] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-6 space-y-6">
 
                     {/* Selector de Nodo */}
                     <div>

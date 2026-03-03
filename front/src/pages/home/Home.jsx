@@ -340,7 +340,7 @@ const Home = () => {
                 {discoverItems.map((item) => (
                   <div
                     key={item.id}
-                    className="min-w-[280px] md:min-w-0 h-[200px] bg-white dark:bg-[#1e1e1e] rounded-[24px] border border-slate-100 dark:border-white/5 relative overflow-hidden snap-start shadow-sm dark:shadow-none transition-colors group"
+                    className="min-w-[280px] md:min-w-0 h-[200px] bg-white dark:bg-[#12080a] rounded-[24px] border border-slate-100 dark:border-white/5 relative overflow-hidden snap-start shadow-sm dark:shadow-none transition-colors group"
                   >
                     <div className="absolute inset-0">
                       <img

@@ -2,7 +2,10 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Navbar from "../../layouts/Navbar";
-import { getUsuario, updatePerfil } from '../../services/communicationManager';
+import {
+  getUsuario,
+  updatePerfil,
+} from '../../services/communicationManager';
 
 const EditProfile = () => {
   const { t } = useTranslation();
@@ -52,7 +55,8 @@ const EditProfile = () => {
   const validar = () => {
     const nuevosErrores = {};
     if (!nombre.trim()) nuevosErrores.nombre = t("editProfile.errorName") || "El nombre es obligatorio";
-    if (nombre.trim().length > 40) nuevosErrores.nombre = t("editProfile.errorNameLong") || "El nombre es muy largo";
+    if (nombre.trim().length > 40)
+      nuevosErrores.nombre = t("editProfile.errorNameLong") || "El nombre es muy largo";
     if (bio.length > 100) nuevosErrores.bio = t("editProfile.errorBioLong") || "La biografía es muy larga";
     return nuevosErrores;
   };
@@ -115,6 +119,19 @@ const EditProfile = () => {
     }
   };
 
+  if (cargando) {
+    return (
+      <div className="min-h-screen w-full bg-gray-50 dark:bg-slate-950 flex flex-col items-center justify-center p-5">
+        <span className="material-symbols-outlined animate-spin text-primary text-4xl mb-3">
+          progress_activity
+        </span>
+        <p className="text-slate-500 font-medium animate-pulse">
+          {t("loading", "Cargando perfil...")}
+        </p>
+      </div>
+    );
+  }
+
   return (
     <div className="min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display select-none transition-colors duration-300 md:pl-16">
       {/* Top Bar */}
@@ -122,21 +139,28 @@ const EditProfile = () => {
         <div className="flex justify-between items-center">
           <button
             onClick={() => navigate("/profile")}
-            className="bg-white dark:bg-slate-900 p-2 rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="bg-white dark:bg-[#12080a] p-2 rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
-            <span className="material-symbols-outlined text-2xl block">arrow_back</span>
+            <span className="material-symbols-outlined text-2xl block">
+              arrow_back
+            </span>
           </button>
           <h1 className="text-xl font-bold text-slate-800 dark:text-white">
             {t("editProfile.title")}
           </h1>
           <button
             onClick={handleGuardar}
-            className={`px-4 py-2 rounded-full text-sm font-bold transition-all duration-300 shadow-sm ${guardado ? "bg-emerald-500 text-white shadow-emerald-500/30" : "bg-primary text-white hover:bg-primary/90 shadow-primary/30"
-              }`}
+            className={`px-4 py-2 rounded-full text-sm font-bold transition-all duration-300 shadow-sm ${
+              guardado
+                ? "bg-emerald-500 text-white shadow-emerald-500/30"
+                : "bg-primary text-white hover:bg-primary/90 shadow-primary/30"
+            }`}
           >
             {guardado ? (
               <span className="flex items-center gap-1">
-                <span className="material-symbols-outlined text-base">check</span>
+                <span className="material-symbols-outlined text-base">
+                  check
+                </span>
                 {t("editProfile.saved")}
               </span>
             ) : (
