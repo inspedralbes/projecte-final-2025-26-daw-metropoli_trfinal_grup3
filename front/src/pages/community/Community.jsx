@@ -143,7 +143,8 @@ const PostCard = ({ pub, onComentarioCreado }) => {
             alt="User"
             className="w-full h-full object-cover rounded-full"
             src={
-              pub.foto_perfil || `https://i.pravatar.cc/150?u=${pub.id_usuario}`
+              pub.foto_perfil ||
+              "https://cdn-icons-png.flaticon.com/512/149/149071.png"
             }
           />
         </div>
@@ -251,7 +252,7 @@ const PostCard = ({ pub, onComentarioCreado }) => {
                 <img
                   src={
                     com.foto_perfil ||
-                    `https://i.pravatar.cc/40?u=${com.id_usuario}`
+                    "https://cdn-icons-png.flaticon.com/512/149/149071.png"
                   }
                   alt="User"
                   className="w-7 h-7 rounded-full border border-primary/40 shrink-0"
@@ -293,7 +294,7 @@ const PostCard = ({ pub, onComentarioCreado }) => {
                   <img
                     src={
                       rep.foto_perfil ||
-                      `https://i.pravatar.cc/40?u=${rep.id_usuario}`
+                      "https://cdn-icons-png.flaticon.com/512/149/149071.png"
                     }
                     alt="User"
                     className="w-6 h-6 rounded-full border border-primary/30 shrink-0"
