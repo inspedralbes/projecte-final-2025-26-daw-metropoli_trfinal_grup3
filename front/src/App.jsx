@@ -10,7 +10,7 @@ import EditProfile from "./pages/profile/EditProfile";
 import Login from "./pages/auth/Login";
 import SignUp from "./pages/auth/SignUp";
 import { FriendsProvider } from "./context/FriendsContext";
-import QRScanner from "./components/QRScanner";
+import QRScanner from "./components/QrScanner";
 import "./App.css";
 
 function App() {
@@ -18,8 +18,8 @@ function App() {
     <FriendsProvider>
       <div className="map-page-wrapper">
         <Routes>
-        <Route path="/login" element={<Login />} />
-        <Route path="/signup" element={<SignUp />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/signup" element={<SignUp />} />
           <Route path="/home" element={<Home />} />
           <Route path="/events" element={<Events />} />
           <Route path="/" element={<Map />} />
@@ -29,7 +29,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/edit" element={<EditProfile />} />
           <Route path="/escaneo" element={<QRScanner />} />
-      </Routes>
+        </Routes>
       </div>
     </FriendsProvider>
   );
