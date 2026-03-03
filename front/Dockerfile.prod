@@ -10,7 +10,7 @@ COPY . .
 
 # Variable de entorno para la URL del backend (se pasa como build arg)
 ARG VITE_API_URL
-ENV VITE_API_URL=https://catcircuit.daw.inspedralbes.cat/
+ENV VITE_API_URL=https://catcircuit.daw.inspedralbes.cat
 
 RUN npm run build
 
