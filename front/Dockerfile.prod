@@ -12,6 +12,9 @@ COPY . .
 ARG VITE_API_URL
 ENV VITE_API_URL=https://catcircuit.daw.inspedralbes.cat
 
+ARG VITE_GOOGLE_CLIENT_ID
+ENV VITE_GOOGLE_CLIENT_ID=137408945310-p3ra11719ps7mqspbsj3d3oknu4q9b9t.apps.googleusercontent.com
+
 RUN npm run build
 
 # --- Etapa 2: Servir con Nginx ---
