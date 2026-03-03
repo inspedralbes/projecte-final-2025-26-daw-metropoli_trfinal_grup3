@@ -605,7 +605,7 @@ const Community = () => {
           <div className="w-full md:max-w-lg bg-white dark:bg-[#111] rounded-t-[32px] md:rounded-[32px] shadow-2xl flex flex-col max-h-[92dvh] md:max-h-[90vh]">
             {/* Handle pill — solo móvil */}
             <div className="md:hidden flex justify-center pt-3 pb-1 shrink-0">
-              <div className="w-10 h-1.5 rounded-full bg-slate-300 dark:bg-slate-600" />
+              <div className="w-10 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
             </div>
 
             {/* Header */}
@@ -624,7 +624,7 @@ const Community = () => {
             </div>
 
             {/* Contenido scrollable */}
-            <div className="overflow-y-auto flex-1 p-5 space-y-4">
+            <div className="overflow-y-auto flex-1 p-5 space-y-4 pb-24 md:pb-5">
               {/* Textarea */}
               <textarea
                 value={newPost.texto}
