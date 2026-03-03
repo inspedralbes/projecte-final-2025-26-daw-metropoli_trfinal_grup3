@@ -1,1 +1,4 @@
 .env
+# Imágenes subidas por usuarios — no subir a git
+back/public/uploads/
+
