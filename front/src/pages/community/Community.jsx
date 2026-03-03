@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../../layouts/Navbar';
-import { getPublicaciones, createPublicacion } from '../../../services/communicationManager';
+import { getPublicaciones, createPublicacion } from '../../services/communicationManager';
+import socket from '../../services/socketManager'; // Importamos la antena de radio
 
 const Community = () => {
     const [activeTab, setActiveTab] = useState('Recent');
@@ -21,21 +22,57 @@ const Community = () => {
         ubicacion: ''
     });
 
+    // Extraemos la función de descarga para poder reusarla
+    const cargarPublicacionesDesdeBD = async () => {
+        try {
+            const data = await getPublicaciones();
+            setPublicaciones(data.data || []);
+        } catch (err) {
+            console.error('Error fetching publicaciones:', err);
+            setError(err.message);
+        } finally {
+            setLoading(false);
+        }
+    };
+
     // GET: Cargar publicaciones al montar el componente
     useEffect(() => {
-        const fetchPublicaciones = async () => {
-            try {
-                const data = await getPublicaciones();
-                setPublicaciones(data.data || []);
-            } catch (err) {
-                console.error('Error fetching publicaciones:', err);
-                setError(err.message);
-            } finally {
-                setLoading(false);
-            }
-        };
+        // 1. Bajamos al entrar a la pantalla
+        cargarPublicacionesDesdeBD();
 
-        fetchPublicaciones();
+        // 2. Encendemos la radio: Si alguien publica algo nuevo, actualizamos el feed
+        socket.on('nueva_publicacion', (nuevaPub) => {
+            console.log("📡 Ha llegado un post nuevo desde el servidor!", nuevaPub);
+            cargarPublicacionesDesdeBD();
+        });
+
+        // 3. Escuchamos si alguien ha cambiado su foto o nombre de perfil
+        socket.on('perfil_actualizado', (usuarioActualizado) => {
+            console.log("📡 Un usuario ha cambiado su perfil:", usuarioActualizado);
+
+            // En vez de bajar todas las publicaciones de nuevo (costoso),
+            // recorremos las que ya tenemos en memoria y actualizamos solo las de ese usuario
+            setPublicaciones((listaActual) =>
+                listaActual.map((publicacion) => {
+                    // Si la publicación es del usuario que se ha editado, actualizamos sus datos
+                    if (String(publicacion.id_usuario) === String(usuarioActualizado.id_usuario)) {
+                        return {
+                            ...publicacion,
+                            nombre_usuario: usuarioActualizado.nuevo_nombre,
+                            foto_perfil_usuario: usuarioActualizado.nueva_foto
+                        };
+                    }
+                    // Si no, la dejamos exactamente igual
+                    return publicacion;
+                })
+            );
+        });
+
+        // 4. Cuando nos vayamos de la vista Comunidad, apagamos las dos radios
+        return () => {
+            socket.off('nueva_publicacion');
+            socket.off('perfil_actualizado');
+        };
     }, []);
 
     // POST: Crear nueva publicación
@@ -49,7 +86,8 @@ const Community = () => {
                 tipo_publicacion: newPost.tipo_publicacion,
                 ubicacion: newPost.ubicacion
             });
-            setPublicaciones(prev => [data.data, ...prev]);
+            // setPublicaciones(prev => [data.data, ...prev]); -> Nos saltamos añadirlo manualmente
+            // Porque ahora la Radio (Socket) nos avisará un milisegundo despues y la app recarga el Post sola
             setNewPost({ texto: '', foto: '', tipo_publicacion: 'popular', ubicacion: '' });
             setShowModal(false);
         } catch (err) {
@@ -72,7 +110,7 @@ const Community = () => {
                     Community <span className="text-primary">Feed</span>
                 </h1>
                 <Link to="/profile" className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden shadow-sm">
-                    <img src="https://i.pravatar.cc/150?img=12" alt="Profile" className="w-full h-full object-cover rounded-full" />
+                    <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile" className="w-full h-full object-cover rounded-full" />
                 </Link>
             </div>
 
@@ -105,10 +143,10 @@ const Community = () => {
                                 <p className="text-center text-slate-400 dark:text-white/40 text-sm py-8">No hay publicaciones todavía. ¡Sé el primero!</p>
                             )}
                             {!loading && !error && publicaciones.map((pub) => (
-                                <article key={pub.id_publicacion} className="bg-white dark:bg-[#1e1e1e] rounded-[24px] shadow-sm dark:shadow-none border border-slate-100 dark:border-white/5 overflow-hidden transition-all">
+                                <article key={pub.id_publicacion} className="bg-white dark:bg-[#12080a] rounded-[24px] shadow-sm dark:shadow-none border border-slate-100 dark:border-white/5 overflow-hidden transition-all">
                                     <div className="p-5 flex items-start gap-3">
                                         <div className="w-10 h-10 rounded-full border-2 border-primary p-0.5 shrink-0 overflow-hidden">
-                                            <img alt="User" className="w-full h-full object-cover rounded-full" src={`https://i.pravatar.cc/150?u=${pub.id_usuario}`} />
+                                            <img alt="User" className="w-full h-full object-cover rounded-full" src="https://cdn-icons-png.flaticon.com/512/149/149071.png" />
                                         </div>
                                         <div className="flex-1">
                                             <div className="flex items-center justify-between mb-1">
@@ -142,7 +180,7 @@ const Community = () => {
                     {/* Right Sidebar — desktop only */}
                     <div className="hidden lg:flex flex-col gap-5 sticky top-6">
                         {/* Group QR Invite */}
-                        <div className="bg-white dark:bg-[#1e1e1e] rounded-[24px] border border-slate-100 dark:border-white/5 p-5 shadow-sm">
+                        <div className="bg-white dark:bg-[#12080a] rounded-[24px] border border-slate-100 dark:border-white/5 p-5 shadow-sm">
                             <div className="flex items-center gap-2 mb-4">
                                 <div className="w-4 h-1 bg-primary rounded-full"></div>
                                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-white/60">Your Group</h3>
@@ -162,7 +200,7 @@ const Community = () => {
                         </div>
 
                         {/* Trending Topics */}
-                        <div className="bg-white dark:bg-[#1e1e1e] rounded-[24px] border border-slate-100 dark:border-white/5 p-5 shadow-sm">
+                        <div className="bg-white dark:bg-[#12080a] rounded-[24px] border border-slate-100 dark:border-white/5 p-5 shadow-sm">
                             <div className="flex items-center gap-2 mb-4">
                                 <div className="w-4 h-1 bg-primary rounded-full"></div>
                                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-white/60">Trending</h3>
@@ -178,14 +216,16 @@ const Community = () => {
                         </div>
 
                         {/* Active fans */}
-                        <div className="bg-white dark:bg-[#1e1e1e] rounded-[24px] border border-slate-100 dark:border-white/5 p-5 shadow-sm">
+                        <div className="bg-white dark:bg-[#12080a] rounded-[24px] border border-slate-100 dark:border-white/5 p-5 shadow-sm">
                             <div className="flex items-center gap-2 mb-4">
                                 <div className="w-4 h-1 bg-primary rounded-full"></div>
                                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-white/60">Online Now</h3>
                             </div>
                             <div className="flex -space-x-2 mb-3">
-                                {[12, 15, 20, 25, 30].map((img) => (
-                                    <img key={img} src={`https://i.pravatar.cc/40?img=${img}`} className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900" alt="User" />
+                                {['#ff5f6d', '#ffc371', '#4b6cb7', '#182848', '#00b09b'].map((color, i) => (
+                                    <div key={i} className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 bg-slate-200 flex items-center justify-center overflow-hidden">
+                                        <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" className="w-full h-full object-cover" alt="User" />
+                                    </div>
                                 ))}
                                 <div className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 bg-primary flex items-center justify-center">
                                     <span className="text-[8px] font-black text-white">+48</span>

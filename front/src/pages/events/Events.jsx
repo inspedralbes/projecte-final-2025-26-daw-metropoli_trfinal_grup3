@@ -1,31 +1,71 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import Navbar from '../../layouts/Navbar';
+import { getEventos } from '../../services/communicationManager';
+import socket from '../../services/socketManager'; // Importamos la radio del frontend
 
 const Events = () => {
     const [activeTab, setActiveTab] = useState('sat');
+    const [eventsData, setEventsData] = useState({ fri: [], sat: [], sun: [] });
 
-    const scheduleData = {
-        fri: [
-            { id: 1, time: "09:00 - 09:45", title: "Formula 3 Practice", category: "Practice", status: "completed", isLive: false },
-            { id: 2, time: "11:30 - 12:30", title: "F1 Free Practice 1", category: "Main Track - Sector 1 Green", status: "upcoming", isLive: false },
-            { id: 3, time: "15:00 - 16:00", title: "F1 Free Practice 2", category: "Fan Zone Open", status: "upcoming", isLive: false }
-        ],
-        sat: [
-            { id: 4, time: "09:00 - 09:45", title: "Formula 3 Sprint Race", category: "Race", status: "completed", isLive: false },
-            { id: 5, time: "11:30 - 12:30", title: "F1 Free Practice 3", category: "Main Track - Sector 1 Green", status: "live", isLive: true },
-            { id: 6, time: "13:10 - 14:00", title: "Porsche Supercup", category: "Qualifying Session", status: "upcoming", isLive: false },
-            { id: 7, time: "15:00 - 16:00", title: "F1 Qualifying", category: "Pole Position Battle", status: "main", isMain: true, image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDbIBeRSCVUWAgc7mEU2oqAINelgyV1U__AbK91Zl7qZiT7bXM9SvXy9spdaU3R2CqJ75IrTKp1BeGHCToN-mcumxqQm4MJW518tn1BKEapmxghsXvqrl_7kBlIzSWLtvokRYbSDXqsEx0NhpAnX5YUdx9Wd1ObEhmXvmOfecPqyZB6B89KHhHKg7mhRTd5lPyzpiMyOld7XFJFaayil3RZK8rxlDF2Y4_z3j9b9z5zda9_wTO6wLQ5uJ1F40u5ODMjFsYSNDjYIHM" },
-            { id: 8, time: "17:30 - 18:30", title: "Drivers Press Conference", category: "Media", status: "upcoming", isLive: false }
-        ],
-        sun: [
-            { id: 9, time: "10:00 - 11:00", title: "Porsche Supercup Race", category: "Race", status: "upcoming", isLive: false },
-            { id: 10, time: "12:00 - 13:00", title: "Drivers Parade", category: "Fan Zone", status: "upcoming", isLive: false },
-            { id: 11, time: "15:00 - 17:00", title: "F1 Grand Prix", category: "The Main Race", status: "main", isMain: true, image: "https://lh3.googleusercontent.com/aida-public/AB6AXuDbIBeRSCVUWAgc7mEU2oqAINelgyV1U__AbK91Zl7qZiT7bXM9SvXy9spdaU3R2CqJ75IrTKp1BeGHCToN-mcumxqQm4MJW518tn1BKEapmxghsXvqrl_7kBlIzSWLtvokRYbSDXqsEx0NhpAnX5YUdx9Wd1ObEhmXvmOfecPqyZB6B89KHhHKg7mhRTd5lPyzpiMyOld7XFJFaayil3RZK8rxlDF2Y4_z3j9b9z5zda9_wTO6wLQ5uJ1F40u5ODMjFsYSNDjYIHM" }
-        ]
+    // Extraemos la función de pedir eventos para poder llamarla al inicio Y cuando la radio nos avise
+    const cargarEventosDesdeBD = () => {
+        getEventos().then((res) => {
+            if (res.success && res.data) {
+                const eventosAgrupados = { fri: [], sat: [], sun: [] };
+
+                res.data.forEach((evento) => {
+                    if (evento.estado === 'cancelado') return;
+
+                    const fechaInicio = new Date(evento.fecha_inicio);
+                    const diaDeLaSemana = fechaInicio.getDay(); // 0 es Domingo, 5 es Viernes, 6 es Sábado
+
+                    let diaDestino = '';
+                    if (diaDeLaSemana === 5) diaDestino = 'fri';
+                    else if (diaDeLaSemana === 6) diaDestino = 'sat';
+                    else if (diaDeLaSemana === 0) diaDestino = 'sun';
+
+                    // Solo si el evento cae en fin de semana lo añadimos
+                    if (diaDestino) {
+                        const fechaFin = new Date(evento.fecha_fin);
+                        const formatearHora = (fecha) => fecha.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+                        eventosAgrupados[diaDestino].push({
+                            id: evento.id_evento,
+                            time: `${formatearHora(fechaInicio)} - ${formatearHora(fechaFin)}`,
+                            title: evento.nombre,
+                            category: evento.descripcion || "General",
+                            // Simplificamos calculando cosas según tu data anterior:
+                            status: 'upcoming',
+                            isLive: false,
+                            isMain: evento.foto ? true : false, // Si tiene foto, lo marcamos como evento principal
+                            image: evento.foto ? `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${evento.foto}` : null
+                        });
+                    }
+                });
+
+                setEventsData(eventosAgrupados);
+            }
+        }).catch((err) => console.error("Error al obtener eventos:", err));
     };
 
-    const currentEvents = scheduleData[activeTab] || [];
+    // 1. Cargar al abrir la pantalla por primera vez
+    useEffect(() => {
+        cargarEventosDesdeBD();
+
+        // 2. Encender la radio: si escuchamos 'actualizacion_eventos', volvemos a descargar todo
+        socket.on('actualizacion_eventos', (mensaje) => {
+            console.log("📡 Ha llegado un cambio desde el servidor: ", mensaje);
+            cargarEventosDesdeBD(); // Recargamos!
+        });
+
+        // 3. Cuando el usuario se va de la página, apagamos esta frecuencia para no duplicar escuchas
+        return () => {
+            socket.off('actualizacion_eventos');
+        };
+    }, []); // Todo esto se configura una sola vez al entrar
+
+    const currentEvents = eventsData[activeTab] || [];
 
     const dayInfo = {
         fri: { label: 'Fri', date: '29', desc: 'Practice Sessions' },
@@ -47,7 +87,7 @@ const Events = () => {
                     Race <span className="text-primary">Weekend</span>
                 </h1>
                 <Link to="/profile" className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden shadow-sm">
-                    <img src="https://i.pravatar.cc/150?img=12" alt="Profile" className="w-full h-full object-cover rounded-full" />
+                    <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile" className="w-full h-full object-cover rounded-full" />
                 </Link>
             </div>
 
@@ -63,7 +103,7 @@ const Events = () => {
                         </h1>
 
                         {/* Date Tabs — column on desktop, row on mobile */}
-                        <div className="flex gap-2 p-1 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none lg:flex-col">
+                        <div className="flex gap-2 p-1 bg-white dark:bg-[#12080a] rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none lg:flex-col">
                             {['fri', 'sat', 'sun'].map((day) => (
                                 <button
                                     key={day}
@@ -82,7 +122,7 @@ const Events = () => {
                         </div>
 
                         {/* Desktop session summary */}
-                        <div className="hidden lg:block mt-4 p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm">
+                        <div className="hidden lg:block mt-4 p-4 bg-white dark:bg-[#12080a] rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm">
                             <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Sessions today</div>
                             <div className="text-2xl font-black text-slate-800 dark:text-white">{currentEvents.length}</div>
                             <div className="mt-2 flex gap-2 flex-wrap">
@@ -116,7 +156,7 @@ const Events = () => {
                                 )}
 
                                 {event.isMain ? (
-                                    <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl overflow-hidden shadow-md dark:shadow-none transition-all hover:scale-[1.01] active:scale-[0.99]">
+                                    <div className="relative bg-white dark:bg-[#12080a] border border-slate-200 dark:border-white/5 rounded-2xl overflow-hidden shadow-md dark:shadow-none transition-all hover:scale-[1.01] active:scale-[0.99]">
                                         <div className="absolute right-0 top-0 bottom-0 w-1 bg-primary"></div>
                                         <div className="p-4 relative z-10">
                                             <div className="flex items-center justify-between mb-2">
@@ -139,7 +179,7 @@ const Events = () => {
                                         </div>
                                     </div>
                                 ) : event.isLive ? (
-                                    <div className="bg-white dark:bg-slate-900 border-2 border-primary/30 rounded-2xl p-4 shadow-xl shadow-primary/5 dark:shadow-none transition-all hover:scale-[1.01] active:scale-[0.99]">
+                                    <div className="bg-white dark:bg-[#12080a] border-2 border-primary/30 rounded-2xl p-4 shadow-xl shadow-primary/5 dark:shadow-none transition-all hover:scale-[1.01] active:scale-[0.99]">
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="bg-primary/10 dark:bg-primary/20 text-primary text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-tighter flex items-center gap-1">
                                                 <span className="w-1 h-1 rounded-full bg-primary animate-pulse"></span>
@@ -158,7 +198,7 @@ const Events = () => {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex items-center justify-between shadow-sm dark:shadow-none transition-all hover:scale-[1.01] active:scale-[0.99] ${event.status === 'completed' ? 'opacity-60 border-dashed' : ''}`}>
+                                    <div className={`bg-white dark:bg-[#12080a] border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex items-center justify-between shadow-sm dark:shadow-none transition-all hover:scale-[1.01] active:scale-[0.99] ${event.status === 'completed' ? 'opacity-60 border-dashed' : ''}`}>
                                         <div>
                                             <span className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-widest">{event.time}</span>
                                             <h3 className="text-slate-800 dark:text-white font-extrabold italic uppercase">{event.title}</h3>
