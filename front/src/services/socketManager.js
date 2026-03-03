@@ -1,5 +1,4 @@
 import { io } from "socket.io-client";
-
 // Creamos la antena receptora para el frontend.
 // Se conecta automáticamente a la dirección de tu backend (o a localhost de base).
 const URL_DEL_SERVIDOR =
