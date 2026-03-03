@@ -38,7 +38,9 @@ services:
       MYSQL_DATABASE: metropoli
     volumes:
       - db_data:/var/lib/mysql
-      - ./back/src/data-access/create.sql:/docker-entrypoint-initdb.d/init.sql
+      - ./back/src/data-access/create.sql:/docker-entrypoint-initdb.d/a_create.sql
+      - ./back/src/data-access/migrate_email_verification.sql:/docker-entrypoint-initdb.d/b_migrate.sql
+      - ./back/src/data-access/init.sql:/docker-entrypoint-initdb.d/c_init.sql
     networks:
       - app-network
 
