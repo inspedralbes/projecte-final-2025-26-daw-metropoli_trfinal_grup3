@@ -1,5 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../../layouts/Navbar";
 import {
   getPublicaciones,
@@ -63,7 +63,15 @@ const PostCard = ({ pub, onComentarioCreado }) => {
   const [likesCount, setLikesCount] = useState(pub.likes ?? 0);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
 
+  const navigate = useNavigate();
+  const usuarioInfo = localStorage.getItem("usuario");
+  const usuarioLogged = usuarioInfo ? JSON.parse(usuarioInfo) : null;
+
   const handleLike = async () => {
+    if (!usuarioLogged) {
+      navigate("/login");
+      return;
+    }
     if (isLikeLoading) return; // evita spam: espera a que termine la llamada anterior
     const prevLiked = liked;
     const prevCount = likesCount;
@@ -71,7 +79,9 @@ const PostCard = ({ pub, onComentarioCreado }) => {
     setLiked(!prevLiked);
     setLikesCount(prevLiked ? prevCount - 1 : prevCount + 1);
     try {
-      const res = await toggleLike(pub._id, { id_usuario: 1 });
+      const res = await toggleLike(pub._id, {
+        id_usuario: usuarioLogged.id_usuario,
+      });
       // Sincronizamos con el valor real del servidor
       setLikesCount(res.likes);
       setLiked(res.likes_usuarios?.includes("1") ?? !prevLiked);
@@ -84,12 +94,16 @@ const PostCard = ({ pub, onComentarioCreado }) => {
   };
 
   const handleComentario = async (texto) => {
+    if (!usuarioLogged) {
+      navigate("/login");
+      return;
+    }
     clearError();
     try {
       await createComentario(pub._id, {
-        id_usuario: 1,
-        nombre_usuario: "Tú",
-        foto_perfil: null,
+        id_usuario: usuarioLogged.id_usuario,
+        nombre_usuario: usuarioLogged.nombre,
+        foto_perfil: usuarioLogged.foto_perfil || null,
         texto,
       });
       onComentarioCreado(pub._id);
@@ -99,12 +113,16 @@ const PostCard = ({ pub, onComentarioCreado }) => {
   };
 
   const handleRespuesta = async (cid, texto) => {
+    if (!usuarioLogged) {
+      navigate("/login");
+      return;
+    }
     clearError();
     try {
       await createRespuesta(pub._id, cid, {
-        id_usuario: 1,
-        nombre_usuario: "Tú",
-        foto_perfil: null,
+        id_usuario: usuarioLogged.id_usuario,
+        nombre_usuario: usuarioLogged.nombre,
+        foto_perfil: usuarioLogged.foto_perfil || null,
         texto,
       });
       onComentarioCreado(pub._id);
@@ -300,6 +318,10 @@ const PostCard = ({ pub, onComentarioCreado }) => {
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 const Community = () => {
+  const navigate = useNavigate();
+  const usuarioInfo = localStorage.getItem("usuario");
+  const usuarioLogged = usuarioInfo ? JSON.parse(usuarioInfo) : null;
+
   const [activeTab, setActiveTab] = useState("Recent");
   const tabs = ["Recent", "Official", "Fan Zone", "Popular"];
 
@@ -308,6 +330,7 @@ const Community = () => {
   const [error, setError] = useState(null);
 
   const [showModal, setShowModal] = useState(false);
+  const [showLoginAlert, setShowLoginAlert] = useState(false);
   const [modalError, setModalError] = useState("");
   const [selectedFile, setSelectedFile] = useState(null);
   const [previewUrl, setPreviewUrl] = useState("");
@@ -379,9 +402,9 @@ const Community = () => {
       }
 
       await createPublicacion({
-        id_usuario: 1,
-        nombre_usuario: "Tú",
-        foto_perfil: null,
+        id_usuario: usuarioLogged.id_usuario,
+        nombre_usuario: usuarioLogged.nombre,
+        foto_perfil: usuarioLogged.foto_perfil || null,
         texto: newPost.texto,
         foto: fotoUrl,
         tipo_publicacion: newPost.tipo_publicacion,
@@ -577,7 +600,13 @@ const Community = () => {
 
       {/* FAB — new post */}
       <button
-        onClick={() => setShowModal(true)}
+        onClick={() => {
+          if (!usuarioLogged) {
+            setShowLoginAlert(true);
+          } else {
+            setShowModal(true);
+          }
+        }}
         className="fixed bottom-24 right-5 md:bottom-8 w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg shadow-primary/40 z-[80] active:scale-90 transition-transform cursor-pointer hover:bg-[#ff1e3c]"
       >
         <span className="material-symbols-outlined text-3xl font-bold">
@@ -798,6 +827,49 @@ const Community = () => {
               >
                 <span className="material-symbols-outlined">send</span>
                 Publicar
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Modal de Alerta de Inicio de Sesión */}
+      {showLoginAlert && (
+        <div
+          className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-5 transition-opacity"
+          onClick={() => setShowLoginAlert(false)}
+        >
+          <div
+            className="bg-white dark:bg-[#12080a] rounded-[32px] shadow-2xl max-w-sm w-full p-6 text-center border border-slate-100 dark:border-white/5 animate-in fade-in zoom-in duration-200"
+            onClick={(e) => e.stopPropagation()}
+          >
+            <div className="w-16 h-16 bg-red-50 dark:bg-red-500/10 rounded-full flex items-center justify-center mx-auto mb-4">
+              <span className="material-symbols-outlined text-red-500 text-3xl">
+                lock
+              </span>
+            </div>
+            <h3 className="text-xl font-black text-slate-800 dark:text-white mb-2 tracking-tight">
+              Inicia sesión
+            </h3>
+            <p className="text-sm text-slate-500 dark:text-white/60 mb-6 font-medium leading-relaxed">
+              Necesitas iniciar sesión para compartir publicaciones y unirte a
+              la conversación.
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowLoginAlert(false)}
+                className="flex-1 bg-slate-100 dark:bg-slate-800/50 text-slate-700 dark:text-white font-bold py-3.5 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
+              >
+                Cancelar
+              </button>
+              <button
+                onClick={() => {
+                  setShowLoginAlert(false);
+                  navigate("/login");
+                }}
+                className="flex-1 bg-primary text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-primary/30 hover:bg-primary/90 active:scale-95 transition-all"
+              >
+                Ir al login
               </button>
             </div>
           </div>
