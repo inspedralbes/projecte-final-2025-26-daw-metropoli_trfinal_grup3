@@ -19,6 +19,8 @@ jobs:
           script_stop: true
           script: |
             cd ${{ secrets.SERVER_PATH }}
-            git pull origin main
+            git fetch origin main
+            git reset --hard origin/main
+            git clean -fd
             docker compose -f docker-compose.prod.yml up --build -d
             docker image prune -f
