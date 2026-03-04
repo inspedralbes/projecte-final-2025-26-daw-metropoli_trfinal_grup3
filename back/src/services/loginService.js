@@ -68,7 +68,6 @@ const login = async ({ email, password }) => {
   }
 
   // 3. Verify password
-
   const passwordMatch = await bcrypt.compare(password, usuario.password_hash);
   if (!passwordMatch) {
     const err = new Error("Credenciales incorrectas");
