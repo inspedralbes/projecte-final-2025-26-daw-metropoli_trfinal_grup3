@@ -12,6 +12,8 @@ services:
       - DB_USER=root
       - DB_PASSWORD=password
       - DB_NAME=metropoli
+    volumes:
+      - uploads_data:/app/public/uploads
     depends_on:
       - db
     networks:
@@ -59,3 +61,4 @@ networks:
 volumes:
   db_data:
   mongo_data:
+  uploads_data:
