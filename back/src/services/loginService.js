@@ -111,11 +111,21 @@ const googleLogin = async ({
   let usuario = await usuarioModel.findByEmail(email);
 
   if (!usuario) {
-    // Auto-crear cuenta Google (Google ya verificó el email — no necesita contraseña manual)
-    const password_hash = await bcrypt.hash(
-      crypto.randomBytes(32).toString("hex"),
-      SALT_ROUNDS,
-    );
+    if (is_login) {
+      const err = new Error(
+        "Cuenta de Google no registrada. Por favor, regístrate primero.",
+      );
+      err.code = "USER_NOT_FOUND";
+      throw err;
+    }
+
+    // 2. If user doesn't exist and no password provided, ask for it
+    if (!password) {
+      return { needs_password: true, email, nombre };
+    }
+
+    // 3. Create user with provided password (Google users are auto-verified)
+    const password_hash = await bcrypt.hash(password, SALT_ROUNDS);
     usuario = await usuarioModel.create({
       nombre,
       email,
@@ -123,11 +133,17 @@ const googleLogin = async ({
       rol: "visitante",
       token_verificacion: null,
     });
+
+    // Since create returns the user with insertId, we need to make sure we have id_usuario
     usuario.id_usuario = usuario.id_usuario || usuario.insertId;
+
+    // Verify them immediately
     await usuarioModel.verifyEmail(usuario.id_usuario);
+
+    // Fetch full user data
     usuario = await usuarioModel.findByEmail(email);
   } else {
-    // Si existe pero no verificado, verificarlo ahora
+    // 4. If user exists but wasn't verified, verify them now
     if (!usuario.email_verificado) {
       await usuarioModel.verifyEmail(usuario.id_usuario);
       usuario.email_verificado = 1;
