@@ -446,7 +446,9 @@ const Community = () => {
           `[Upload] Comprimido: ${(fileToUpload.size / 1024).toFixed(0)} KB`,
         );
         const uploadRes = await uploadFotoComunidad(fileToUpload);
-        const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000";
+        // Usamos window.location.origin como fallback para que funcione
+        // tanto en produccion (catcircuit.daw.inspedralbes.cat) como en local
+        const apiBase = import.meta.env.VITE_API_URL || window.location.origin;
         fotoUrl = `${apiBase}${uploadRes.url}`;
       }
 
