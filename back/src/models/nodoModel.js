@@ -33,10 +33,22 @@ const deleteById = async (id) => {
     return await query('DELETE FROM nodos_navegacion WHERE id_nodo = ?', [id]);
 };
 
+const findNearestNode = async (lat, lng) => {
+    const [rows] = await query(`
+        SELECT *, 
+        (6371 * acos(cos(radians(?)) * cos(radians(latitud)) * cos(radians(longitud) - radians(?)) + sin(radians(?)) * sin(radians(latitud)))) AS distance 
+        FROM nodos_navegacion 
+        ORDER BY distance ASC 
+        LIMIT 1
+    `, [lat, lng, lat]);
+    return rows[0];
+};
+
 export default {
     create,
     getAll,
     getById,
     getNodesWithPoi,
-    deleteById
+    deleteById,
+    findNearestNode
 };

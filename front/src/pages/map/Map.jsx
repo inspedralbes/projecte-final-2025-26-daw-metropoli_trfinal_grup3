@@ -131,12 +131,12 @@ const Map = () => {
   }, []);
 
   // Transformation of Dijkstra Output to Leaflet Polyline Coordinates
-  const fetchRoute = async (origenId, destinoId) => {
+  const fetchRoute = async (origenId, destinoId, coords = null) => {
     try {
-      const result = await getRoute(origenId, destinoId);
+      const result = await getRoute(origenId, destinoId, coords);
 
       if (result.success && result.data && result.data.detalles) {
-        // TRANSFORMAR RESULTADO: El endpoint devuelve detalles (detalles is array with objects having latitud, longitud)
+        // El endpoint devuelve detalles (arreglo de objetos con latitud, longitud)
         const polylineCoords = result.data.detalles.map(nodo => [
           parseFloat(nodo.latitud),
           parseFloat(nodo.longitud)
@@ -148,26 +148,64 @@ const Map = () => {
     }
   };
 
-  const handleLocate = () => {
-    if (!navigator.geolocation) { alert("Geolocation not supported"); return; }
-    navigator.geolocation.getCurrentPosition(
+  const watchIdRef = useRef(null);
+
+  const startWatchingLocation = () => {
+    if (!navigator.geolocation) {
+      alert("La geolocalización no es compatible con este navegador.");
+      return;
+    }
+
+    // Limpiar si ya hay un observador activo
+    if (watchIdRef.current !== null) {
+      navigator.geolocation.clearWatch(watchIdRef.current);
+    }
+
+    watchIdRef.current = navigator.geolocation.watchPosition(
       (position) => {
         const { latitude, longitude } = position.coords;
         const newPos = [latitude, longitude];
         setUserPosition(newPos);
-
-        // Fly to user location using the map instance
-        if (mapRef.current) {
-          mapRef.current.flyTo(newPos, 16, {
-            animate: true,
-            duration: 1.5
-          });
+        console.log("Posición actualizada:", newPos);
+      },
+      (error) => {
+        console.error("Error de geolocalización:", error);
+        if (error.code === 1) {
+          alert("Permiso de ubicación denegado. Por favor, habilita la ubicación en tu navegador para usar el seguimiento en tiempo real y la navegación.");
         }
       },
-      (error) => { console.error(error); alert("Unable to retrieve your location."); },
-      { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 }
+      {
+        enableHighAccuracy: true,
+        timeout: 10000,
+        maximumAge: 0
+      }
     );
   };
+
+  const handleLocate = () => {
+    startWatchingLocation();
+
+    // Si tenemos posición, volamos hacia ella
+    if (userPosition && mapRef.current) {
+      mapRef.current.flyTo(userPosition, 16, { animate: true, duration: 1.5 });
+    } else {
+      // Si no, forzamos un getCurrentPosition rápido solo para el flyTo inicial
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const p = [pos.coords.latitude, pos.coords.longitude];
+        setUserPosition(p);
+        if (mapRef.current) mapRef.current.flyTo(p, 16, { animate: true, duration: 1.5 });
+      });
+    }
+  };
+
+  // Cleanup al desmontar
+  useEffect(() => {
+    return () => {
+      if (watchIdRef.current !== null) {
+        navigator.geolocation.clearWatch(watchIdRef.current);
+      }
+    };
+  }, []);
 
   useEffect(() => { }, []);
 
@@ -240,7 +278,12 @@ const Map = () => {
                     <p className="text-xs text-slate-500 mb-2">{marker.description}</p>
                     <button
                       onClick={() => {
-                        // fetchRoute(1, marker.id);
+                        if (userPosition) {
+                          fetchRoute(null, marker.id, { lat: userPosition[0], lng: userPosition[1] });
+                        } else {
+                          handleLocate();
+                          alert("Localizando tu posición... Vuelve a intentarlo en un momento.");
+                        }
                       }}
                       className="mt-1 text-xs bg-primary text-white px-3 py-1.5 rounded shadow hover:bg-red-600 transition-colors"
                     >
@@ -420,7 +463,17 @@ const Map = () => {
                   <span className="material-icons">close</span>
                 </button>
               </div>
-              <button className="w-full bg-primary text-white font-semibold py-3 px-4 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2">
+              <button
+                onClick={() => {
+                  if (userPosition) {
+                    fetchRoute(null, selectedFeature.id, { lat: userPosition[0], lng: userPosition[1] });
+                  } else {
+                    handleLocate();
+                    alert("Localizando tu posición... Vuelve a intentarlo en un momento.");
+                  }
+                }}
+                className="w-full bg-primary text-white font-semibold py-3 px-4 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
+              >
                 <span className="material-icons text-sm">navigation</span>
                 Navigate
               </button>

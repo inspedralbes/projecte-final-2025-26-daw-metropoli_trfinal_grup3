@@ -43,11 +43,16 @@ export const deletePoi = async (id) => {
 };
 
 // ── Ruta Dijkstra ──
-export const getRoute = async (origenId, destinoId) => {
+export const getRoute = async (origenId, destinoId, coords = null) => {
   try {
-    const response = await fetch(
-      `${API_URL}/api/calculo-ruta?origen=${origenId}&destino=${destinoId}`
-    );
+    let url = `${API_URL}/api/rutas/calcular?destino=${destinoId}`;
+    if (coords && coords.lat && coords.lng) {
+      url += `&lat=${coords.lat}&lng=${coords.lng}`;
+    } else {
+      url += `&origen=${origenId}`;
+    }
+    
+    const response = await fetch(url);
     if (!response.ok) throw new Error("Failed to fetch Route");
     return await response.json();
   } catch (error) {

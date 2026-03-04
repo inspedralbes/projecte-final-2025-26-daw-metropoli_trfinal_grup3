@@ -170,14 +170,15 @@ const Admin = () => {
     // Auto-recargar POIs cuando el Backend nos avisa
     socket.on('mapa_actualizado', () => {
       fetchPois();
+      fetchNetworkData(); // También recargar la red
     });
+
+    fetchNetworkData(); // Cargar la red al inicio
 
     return () => {
       socket.off('mapa_actualizado');
     };
   }, []);
-
-  fetchNetworkData();
   const handleEditEvent = (event) => {
     setEditingEventId(event.id_evento);
     setEventNombre(event.nombre);
@@ -693,20 +694,18 @@ const Admin = () => {
                     return (
                       <Marker
                         key={`node-${node.id_nodo}`}
-                        position={[node.latitud, node.longitud]}
+                        position={[parseFloat(node.latitud), parseFloat(node.longitud)]}
                         icon={L.divIcon({
                           className: "node-dot",
                           html: `<div class="w-2.5 h-2.5 bg-slate-400 rounded-full border border-white shadow-sm hover:scale-125 transition-transform ${currentRouteNodes.includes(node.id_nodo) ? 'bg-red-500 ring-4 ring-red-500/20' : ''}"></div>`,
                           iconSize: [10, 10],
                           iconAnchor: [5, 5]
                         })}
-                        eventHandlers={{
+                        eventHandlers={isDrawMode ? {
                           click: (e) => {
-                            if (isDrawMode) {
-                              handleNodeInteraction(node.id_nodo, e.latlng);
-                            }
+                            handleNodeInteraction(node.id_nodo, e.latlng);
                           }
-                        }}
+                        } : {}}
                       >
                         {!isDrawMode && (
                           <Popup eventHandlers={{ add: () => handleFetchNodeTramos(node.id_nodo) }}>

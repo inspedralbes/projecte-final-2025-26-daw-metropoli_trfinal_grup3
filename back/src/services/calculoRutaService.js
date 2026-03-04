@@ -1,66 +1,121 @@
 import tramoModel from '../models/tramoModel.js';
 import nodoModel from '../models/nodoModel.js';
 import poiModel from '../models/poiModel.js';
-import calculateShortestPath from '../utils/dijkstra.js';
+import dijkstraUtils from '../utils/dijkstra.js';
 
 const calcularRuta = async (idPoiOrigen, idPoiDestino) => {
     // 1. Obtener Nodos de Acceso
-    const nodoOrigen = await poiModel.getNodoAccesoId(idPoiOrigen);
-    const nodoDestino = await poiModel.getNodoAccesoId(idPoiDestino);
+    const idNodoOrigen = await poiModel.getNodoAccesoId(idPoiOrigen);
+    const idNodoDestino = await poiModel.getNodoAccesoId(idPoiDestino);
 
-    if (!nodoOrigen || !nodoDestino) {
-        throw new Error('Uno de los POIs no tiene un punto de acceso válido o no existe.');
+    if (!idNodoOrigen || !idNodoDestino) {
+        throw new Error('Uno de los POIs no tiene un punto de acceso (nodo) configurado o no existe.');
     }
 
-    if (nodoOrigen === nodoDestino) {
+    if (String(idNodoOrigen) === String(idNodoDestino)) {
+        const nodo = await nodoModel.getById(idNodoOrigen);
         return { 
             distancia_total: 0, 
-            nodos: [await nodoModel.getById(nodoOrigen)] 
+            path: [idNodoOrigen],
+            detalles: [nodo] 
         };
     }
 
-    // 2. Obtener todos los tramos para construir el grafo
+    // 2. Obtener todos los tramos
     const tramos = await tramoModel.getAll();
+    if (!tramos || tramos.length === 0) {
+        throw new Error('No hay tramos de navegación definidos en el sistema.');
+    }
 
     // 3. Construir Grafo
     const graph = {};
-    
-    // Inicializar grafo con todos los nodos posibles (extraídos de los tramos)
     tramos.forEach(t => {
-        if (!graph[t.id_nodo_origen]) graph[t.id_nodo_origen] = [];
-        if (!graph[t.id_nodo_destino]) graph[t.id_nodo_destino] = [];
+        const u = String(t.id_nodo_origen);
+        const v = String(t.id_nodo_destino);
+        const weight = parseFloat(t.distancia_metros) || 1;
 
-        // Añadir arista origen -> destino
-        graph[t.id_nodo_origen].push({ node: String(t.id_nodo_destino), weight: parseFloat(t.distancia_metros) });
+        if (!graph[u]) graph[u] = [];
+        if (!graph[v]) graph[v] = [];
 
-        // Si es bidireccional, añadir arista destino -> origen
-        if (t.es_bidireccional) {
-            graph[t.id_nodo_destino].push({ node: String(t.id_nodo_origen), weight: parseFloat(t.distancia_metros) });
-        }
+        // Añadimos arista en ambos sentidos por defecto para asegurar conectividad
+        // A menos que explícitamente se añada soporte para sentido único en el futuro
+        graph[u].push({ node: v, weight });
+        graph[v].push({ node: u, weight });
     });
 
-    // 4. Calcular Ruta (Dijkstra)
-    // Nota: calculateShortestPath se exporta como default en utils/dijkstra.js (según edit del usuario)
-    // Ojo: el usuario editó dijkstra.js para usar export default { calculateShortestPath }.
-    // Entonces import calculateShortestPath from ... traerá el objeto { calculateShortestPath: fn }
-    // Debería ser: import dijkstraUtils from ... y usar dijkstraUtils.calculateShortestPath
-    // O cambiar dijkstra.js a export default fn.
-    // Revisando el edit del usuario en dijkstra.js:
-    // export default { calculateShortestPath };
-    // Entonces:
-    const rutaNodosIds = calculateShortestPath.calculateShortestPath(graph, nodoOrigen, nodoDestino);
+    // 4. Calcular Ruta
+    const rutaNodosIds = dijkstraUtils.calculateShortestPath(graph, idNodoOrigen, idNodoDestino);
 
     if (!rutaNodosIds) {
-        throw new Error('No se ha encontrado una ruta entre estos puntos.');
+        throw new Error('No se ha encontrado un camino a través de los tramos hacia el destino.');
     }
 
-    // 5. Enriquecer Ruta (obtener coordenadas de los nodos)
+    // 5. Enriquecer Ruta
     const rutaEnriquecida = [];
-    // eslint-disable-next-line no-unused-vars
-    let distanciaTotal = 0;
+    for (const idNodo of rutaNodosIds) {
+        const nodoInfo = await nodoModel.getById(idNodo);
+        rutaEnriquecida.push(nodoInfo);
+    }
 
-    for (let i = 0; i < rutaNodosIds.length; i++) {
-        const idNodo = rutaNodosIds[i];
+    return {
+        path: rutaNodosIds,
+        detalles: rutaEnriquecida
+    };
+};
+
+const calcularRutaDesdeCoords = async (lat, lng, idPoiDestino) => {
+    // 1. Encontrar el nodo más cercano
+    const nodoOrigenInfo = await nodoModel.findNearestNode(lat, lng);
+    const idNodoDestino = await poiModel.getNodoAccesoId(idPoiDestino);
+
+    if (!nodoOrigenInfo) {
+        throw new Error('No se encontraron nodos de navegación cercanos a tu posición.');
+    }
+    if (!idNodoDestino) {
+        throw new Error('El destino seleccionado no tiene un punto de acceso configurado.');
+    }
+
+    const idNodoOrigen = nodoOrigenInfo.id_nodo;
+
+    if (String(idNodoOrigen) === String(idNodoDestino)) {
+        return { 
+            distancia_total: 0, 
+            path: [idNodoOrigen],
+            detalles: [nodoOrigenInfo]
+        };
+    }
+
+    // 2. Obtener tramos
+    const tramos = await tramoModel.getAll();
+    if (!tramos || tramos.length === 0) {
+        throw new Error('No hay una red de tramos disponible para navegar en el sistema.');
+    }
+
+    // 3. Construir Grafo
+    const graph = {};
+    tramos.forEach(t => {
+        const u = String(t.id_nodo_origen);
+        const v = String(t.id_nodo_destino);
+        const weight = parseFloat(t.distancia_metros) || 1;
+
+        if (!graph[u]) graph[u] = [];
+        if (!graph[v]) graph[v] = [];
+
+        // Bidireccional por defecto para máxima conectividad
+        graph[u].push({ node: v, weight });
+        graph[v].push({ node: u, weight });
+    });
+
+    // 4. Calcular Ruta
+    const rutaNodosIds = dijkstraUtils.calculateShortestPath(graph, idNodoOrigen, idNodoDestino);
+
+    if (!rutaNodosIds) {
+        throw new Error('No existe una conexión de tramos que llegue hasta ese destino (Gráfico desconectado).');
+    }
+
+    // 5. Enriquecer Ruta
+    const rutaEnriquecida = [];
+    for (const idNodo of rutaNodosIds) {
         const nodoInfo = await nodoModel.getById(idNodo);
         rutaEnriquecida.push(nodoInfo);
     }
@@ -72,5 +127,6 @@ const calcularRuta = async (idPoiOrigen, idPoiDestino) => {
 };
 
 export default {
-    calcularRuta
+    calcularRuta,
+    calcularRutaDesdeCoords
 };
