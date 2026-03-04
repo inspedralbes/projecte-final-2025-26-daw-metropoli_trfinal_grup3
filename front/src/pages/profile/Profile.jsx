@@ -12,8 +12,32 @@ const QrScanner = lazy(() => import("../../components/QrScanner"));
 const GuestProfileView = () => {
   const { t } = useTranslation();
   return (
-    <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 flex flex-col items-center justify-center p-6 md:pl-16">
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-[32px] p-8 shadow-2xl flex flex-col items-center text-center border border-slate-100 dark:border-slate-800 relative overflow-hidden">
+    <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 flex flex-col items-center p-6 md:pl-16 transition-colors duration-300">
+      {/* Top Bar for Guest View */}
+      <div className="w-full pt-0 pb-10 flex justify-between items-center md:max-w-md">
+        <div className="flex items-center gap-2">
+          <Link to="/">
+            <img
+              src="/logo/logo1.png"
+              alt="Circuit Logo"
+              className="h-12 w-auto object-contain block dark:hidden"
+            />
+            <img
+              src="/logo/logo.png"
+              alt="Circuit Logo"
+              className="h-12 w-auto object-contain hidden dark:block"
+            />
+          </Link>
+        </div>
+        <Link
+          to="/settings"
+          className="w-10 h-10 flex items-center justify-center bg-white dark:bg-[#12080a] rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+        >
+          <span className="material-symbols-outlined text-[22px]">settings</span>
+        </Link>
+      </div>
+
+      <div className="w-full max-w-md bg-white dark:bg-[#12080a] rounded-[32px] p-8 shadow-2xl flex flex-col items-center text-center border border-slate-100 dark:border-slate-800 relative overflow-hidden">
         {/* Decorative Background */}
         <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-primary/10 to-transparent dark:from-primary/20 pointer-events-none"></div>
 
@@ -94,7 +118,7 @@ const MyQrModal = ({ user, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm px-4 pb-6 md:pb-0">
-      <div className="w-full max-w-xs bg-white dark:bg-slate-900 rounded-[28px] shadow-2xl overflow-hidden">
+      <div className="w-full max-w-xs bg-white dark:bg-[#12080a] rounded-[28px] shadow-2xl overflow-hidden">
         <div className="flex items-center justify-between px-5 pt-5 pb-3 border-b border-slate-100 dark:border-slate-800">
           <h2 className="font-bold text-slate-800 dark:text-white text-lg">
             Mi código QR
@@ -193,7 +217,7 @@ const ScanQrModal = ({ allUsers, onAdd, onClose }) => {
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md px-4">
-      <div className="w-full max-w-md bg-white dark:bg-slate-900 rounded-[32px] shadow-2xl overflow-hidden relative">
+      <div className="w-full max-w-md bg-white dark:bg-[#12080a] rounded-[32px] shadow-2xl overflow-hidden relative">
         {/* Header con diseño premium */}
         <div className="absolute top-0 left-0 w-full h-2 bg-primary"></div>
         <div className="flex items-center justify-between px-6 pt-8 pb-4">
@@ -309,7 +333,7 @@ const Profile = () => {
   
   // Utilidad para construir la URL del avatar
   const getAvatarUrl = (fotoUrl) => {
-    if (!fotoUrl) return "https://i.pravatar.cc/150?img=12";
+    if (!fotoUrl) return "https://cdn-icons-png.flaticon.com/512/149/149071.png";
     if (fotoUrl.startsWith("http")) return fotoUrl;
     return `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${fotoUrl}`;
   };
@@ -360,26 +384,28 @@ const Profile = () => {
       {/* Top Bar */}
       <div className="w-full pt-6 px-5 pb-4 bg-gray-50 dark:bg-slate-950 z-20 transition-colors duration-300 touch-none md:max-w-6xl md:mx-auto">
         <div className="flex justify-between items-center mb-2">
-          {/* Logo container matching Home/Map */}
-          <div className="flex items-center gap-2 md:hidden">
-            <img
-              src="/logo/logo1.png"
-              alt="Circuit Logo"
-              className="h-12 w-auto object-contain block dark:hidden"
-            />
-            <img
-              src="/logo/logo.png"
-              alt="Circuit Logo"
-              className="h-12 w-auto object-contain hidden dark:block"
-            />
+          {/* Logo container visible on all screens */}
+          <div className="flex items-center gap-2">
+            <Link to="/">
+              <img
+                src="/logo/logo1.png"
+                alt="Circuit Logo"
+                className="h-12 w-auto object-contain block dark:hidden"
+              />
+              <img
+                src="/logo/logo.png"
+                alt="Circuit Logo"
+                className="h-12 w-auto object-contain hidden dark:block"
+              />
+            </Link>
           </div>
           <h1 className="hidden md:block text-2xl font-black italic uppercase tracking-tighter text-slate-800 dark:text-white">
             My <span className="text-primary">Profile</span>
           </h1>
-          <Link
-            to="/settings"
-            className="w-10 h-10 flex items-center justify-center bg-white dark:bg-slate-900 rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
-          >
+            <Link
+              to="/settings"
+              className="w-10 h-10 flex items-center justify-center bg-white dark:bg-[#12080a] rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+            >
             <span className="material-symbols-outlined text-[22px]">
               settings
             </span>
@@ -393,7 +419,7 @@ const Profile = () => {
           {/* Columna izquierda — sticky en desktop */}
           <div className="flex flex-col gap-5 lg:sticky lg:top-6">
             {/* Profile Card */}
-            <div className="bg-white dark:bg-slate-900 rounded-[28px] border border-slate-100 dark:border-slate-800 shadow-sm p-6 flex flex-col items-center text-center">
+            <div className="bg-white dark:bg-[#12080a] rounded-[28px] border border-slate-100 dark:border-slate-800 shadow-sm p-6 flex flex-col items-center text-center">
               <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-full bg-slate-200 dark:bg-slate-800 border-4 border-white dark:border-slate-700 shadow-lg overflow-hidden mb-3">
                 <img
                   src={getAvatarUrl(currentUser.foto)}
@@ -436,7 +462,7 @@ const Profile = () => {
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
-                  className={`p-3 rounded-2xl border shadow-sm flex flex-col items-center justify-center text-center transition-all duration-300 ${activeTab === key ? "bg-primary border-primary text-white scale-105" : "bg-white dark:bg-slate-900 border-slate-100 dark:border-slate-800"}`}
+                  className={`p-3 rounded-2xl border shadow-sm flex flex-col items-center justify-center text-center transition-all duration-300 ${activeTab === key ? "bg-primary border-primary text-white scale-105" : "bg-white dark:bg-[#12080a] border-slate-100 dark:border-slate-800"}`}
                 >
                   <span
                     className={`text-lg font-bold ${activeTab === key ? "text-white" : "text-primary"}`}
@@ -481,7 +507,7 @@ const Profile = () => {
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${activeTab === key ? "bg-primary text-white shadow-lg shadow-primary/30" : "bg-white dark:bg-slate-900 text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800 hover:border-primary/40"}`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${activeTab === key ? "bg-primary text-white shadow-lg shadow-primary/30" : "bg-white dark:bg-[#12080a] text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800 hover:border-primary/40"}`}
                 >
                   <span className="material-symbols-outlined text-base">
                     {icon}
@@ -505,7 +531,7 @@ const Profile = () => {
                   <div className="flex gap-2">
                     <button
                       onClick={() => setShowMyQr(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-slate-900 border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:border-primary hover:text-primary transition-colors"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-[#12080a] border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:border-primary hover:text-primary transition-colors"
                     >
                       <span className="material-symbols-outlined text-base">
                         qr_code_2
@@ -548,7 +574,7 @@ const Profile = () => {
                     {friends.map((friend) => (
                       <div
                         key={friend.id}
-                        className="flex items-center gap-3 bg-white dark:bg-slate-900 p-3 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm group"
+                        className="flex items-center gap-3 bg-white dark:bg-[#12080a] p-3 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm group"
                       >
                         <img
                           src={friend.avatar}
@@ -600,7 +626,7 @@ const Profile = () => {
                   {[1, 2].map((post) => (
                     <div
                       key={post}
-                      className="bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden"
+                      className="bg-white dark:bg-[#12080a] rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden"
                     >
                       <img
                         src={`https://images.unsplash.com/photo-${post === 1 ? "1568605117036-5fe5e7bab0b7" : "1492684223066-81342ee5ff30"}?auto=format&fit=crop&q=80&w=800`}
@@ -673,7 +699,7 @@ const Profile = () => {
                   ].map((badge, idx) => (
                     <div
                       key={idx}
-                      className="flex items-center gap-4 bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800"
+                      className="flex items-center gap-4 bg-white dark:bg-[#12080a] p-4 rounded-2xl border border-slate-100 dark:border-slate-800"
                     >
                       <div
                         className={`w-12 h-12 rounded-full ${badge.bg} ${badge.color} flex items-center justify-center shrink-0`}

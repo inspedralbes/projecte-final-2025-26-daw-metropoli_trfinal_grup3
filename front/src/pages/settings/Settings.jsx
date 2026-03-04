@@ -10,18 +10,13 @@ const Settings = () => {
   const [location, setLocation] = useState(true);
   const [darkMode, setDarkMode] = useState(() => {
     if (typeof window !== "undefined") {
-      // Prioritize the actual current state of the DOM to avoid "jumps"
-      if (document.documentElement.classList.contains("dark")) return true;
-      if (document.documentElement.classList.contains("light")) return false;
-      
-      // Fallback to localStorage
       const saved = localStorage.getItem("theme");
       if (saved) return saved === "dark";
       
-      // Fallback to system preference
-      return window.matchMedia("(prefers-color-scheme: dark)").matches;
+      // Default to true (Dark Mode) if nothing is saved
+      return true;
     }
-    return false;
+    return true;
   });
 
   useEffect(() => {
@@ -71,7 +66,7 @@ const Settings = () => {
           className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden shadow-sm"
         >
           <img
-            src="https://i.pravatar.cc/150?img=12"
+            src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
             alt="Profile"
             className="w-full h-full object-cover rounded-full"
           />
@@ -91,7 +86,7 @@ const Settings = () => {
               <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">
                 {t("settings.language")}
               </h3>
-              <div className="bg-white dark:bg-[#1e1e1e] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden p-4 flex justify-between items-center">
+              <div className="bg-white dark:bg-[#12080a] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden p-4 flex justify-between items-center">
                 <div className="flex items-center gap-3">
                   <div className="w-8 h-8 rounded-full bg-orange-50 dark:bg-orange-900/30 text-orange-500 flex items-center justify-center">
                     <span className="material-symbols-outlined text-lg">
@@ -111,7 +106,7 @@ const Settings = () => {
               <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">
                 {t("settings.appPreferences")}
               </h3>
-              <div className="bg-white dark:bg-[#1e1e1e] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
+              <div className="bg-white dark:bg-[#12080a] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
                 {[
                   {
                     icon: "notifications",
@@ -160,7 +155,7 @@ const Settings = () => {
 
           <div className="space-y-8">
             {/* App Info */}
-            <div className="bg-white dark:bg-[#1e1e1e] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5">
+            <div className="bg-white dark:bg-[#12080a] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5">
               <div className="flex items-center gap-3 mb-4">
                 <img
                   src="/logo/logo1.png"

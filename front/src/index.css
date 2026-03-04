@@ -88,7 +88,7 @@ html.dark body {
 
 /* Custom DatePicker Styles */
 #root .react-datepicker {
-  @apply font-display border-slate-200 dark:border-slate-700 bg-white dark:bg-slate-900;
+  @apply font-display border-slate-200 dark:border-slate-700 bg-white dark:bg-[#12080a];
 }
 
 #root .react-datepicker__header {

@@ -5,6 +5,8 @@ services:
       dockerfile: Dockerfile.prod
     ports:
       - "3000:3000"
+    env_file:
+      - .env
     environment:
       - DB_HOST=db
       - DB_USER=root
@@ -14,17 +16,19 @@ services:
       - db
     networks:
       - app-network
+    restart: always
 
   frontend:
     build:
       context: ./front
       dockerfile: Dockerfile.prod
     ports:
-      - "80:80"
+      - "8080:80"
     depends_on:
       - backend
     networks:
       - app-network
+    restart: always
 
   db:
     image: mysql:8.0
@@ -34,6 +38,9 @@ services:
       MYSQL_DATABASE: metropoli
     volumes:
       - db_data:/var/lib/mysql
+      - ./back/src/data-access/create.sql:/docker-entrypoint-initdb.d/a_create.sql
+      - ./back/src/data-access/migrate_email_verification.sql:/docker-entrypoint-initdb.d/b_migrate.sql
+      - ./back/src/data-access/init.sql:/docker-entrypoint-initdb.d/c_init.sql
     networks:
       - app-network
 

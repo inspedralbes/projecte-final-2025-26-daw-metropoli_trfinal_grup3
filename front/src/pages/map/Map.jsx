@@ -267,23 +267,24 @@ const Map = () => {
             <div className="flex items-center gap-2">
               <Link to="/">
                 <img
-                  src="/logo/logo1.png"
+                  src={isSatelliteView ? "/logo/logo.png" : "/logo/logo1.png"}
                   alt="Circuit Logo"
-                  className="h-12 w-auto object-contain block dark:hidden"
-                />
-                <img
-                  src="/logo/logo.png"
-                  alt="Circuit Logo"
-                  className="h-12 w-auto object-contain hidden dark:block"
+                  className="h-12 w-auto object-contain"
                 />
               </Link>
             </div>
             <Link
               to="/profile"
-              className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden shadow-sm bg-white dark:bg-slate-900"
+              className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden shadow-sm bg-white dark:bg-[#12080a]"
             >
               <img
-                src="https://i.pravatar.cc/150?img=12"
+                src={(() => {
+                  const storedUser = localStorage.getItem("usuario");
+                  const user = storedUser ? JSON.parse(storedUser) : null;
+                  if (!user?.foto) return "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+                  if (user.foto.startsWith("http")) return user.foto;
+                  return `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${user.foto}`;
+                })()}
                 alt="Profile"
                 className="w-full h-full object-cover rounded-full"
               />
@@ -292,7 +293,7 @@ const Map = () => {
 
           {/* Search Bar */}
           <div className="w-full md:max-w-sm">
-            <div className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md rounded-2xl flex items-center px-4 py-3.5 gap-3 pointer-events-auto border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
+            <div className="bg-white/90 dark:bg-[#12080a]/90 backdrop-blur-md rounded-2xl flex items-center px-4 py-3.5 gap-3 pointer-events-auto border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
               <span className="material-symbols-outlined text-primary text-xl">search</span>
               <input
                 className="bg-transparent border-none outline-none text-slate-700 dark:text-slate-200 placeholder-slate-400 w-full text-sm font-medium focus:ring-0 p-0"
@@ -306,7 +307,7 @@ const Map = () => {
         {/* Legend Toggle Tab (Left Side) */}
         <button
           onClick={() => setIsLegendOpen(!isLegendOpen)}
-          className={`absolute top-1/2 -translate-y-1/2 z-50 bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-slate-700 dark:text-slate-200 py-6 px-1.5 rounded-r-2xl border-y border-r border-slate-200 dark:border-slate-800 shadow-xl active:scale-95 transition-all duration-300 flex items-center justify-center pointer-events-auto ${isLegendOpen ? 'translate-x-[16rem]' : 'translate-x-0'} left-0`}
+          className={`absolute top-1/2 -translate-y-1/2 z-50 bg-white/90 dark:bg-[#12080a] backdrop-blur-md text-slate-700 dark:text-slate-200 py-6 px-1.5 rounded-r-2xl border-y border-r border-slate-200 dark:border-slate-800 shadow-xl active:scale-95 transition-all duration-300 flex items-center justify-center pointer-events-auto ${isLegendOpen ? 'translate-x-[16rem]' : 'translate-x-0'} left-0`}
           aria-label="Toggle Legend"
         >
           <span className="material-symbols-outlined text-xl">{isLegendOpen ? "chevron_left" : "chevron_right"}</span>
@@ -314,7 +315,7 @@ const Map = () => {
 
         {/* Collapsible Sidebar Legend */}
         <div
-          className={`absolute left-0 top-0 bottom-0 w-64 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-r border-slate-200 dark:border-slate-800 shadow-2xl transition-transform duration-300 z-40 pointer-events-auto flex flex-col justify-center px-6 ${isLegendOpen ? 'translate-x-0' : '-translate-x-full'}`}
+          className={`absolute left-0 top-0 bottom-0 w-64 bg-white/95 dark:bg-[#12080a] backdrop-blur-xl border-r border-slate-200 dark:border-slate-800 shadow-2xl transition-transform duration-300 z-40 pointer-events-auto flex flex-col justify-center px-6 ${isLegendOpen ? 'translate-x-0' : '-translate-x-full'}`}
         >
           <div className="mb-6">
             <span className="text-xs uppercase tracking-widest font-bold text-slate-400 block mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
@@ -401,7 +402,7 @@ const Map = () => {
           </button>
           <button
             onClick={() => setIsSatelliteView(!isSatelliteView)}
-            className="bg-white/90 dark:bg-slate-900/90 backdrop-blur-md text-slate-700 dark:text-slate-200 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-lg active:scale-95 transition-transform flex items-center justify-center"
+            className="bg-white/90 dark:bg-[#12080a] backdrop-blur-md text-slate-700 dark:text-slate-200 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-lg active:scale-95 transition-transform flex items-center justify-center"
           >
             <span className="material-symbols-outlined text-2xl">{isSatelliteView ? "map" : "satellite_alt"}</span>
           </button>
@@ -410,7 +411,7 @@ const Map = () => {
         {/* Info Card */}
         {selectedFeature && (
           <div className="px-4 mb-24 pointer-events-auto">
-            <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-2xl">
+            <div className="bg-white/95 dark:bg-[#12080a] backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-2xl">
               <div className="flex justify-between items-start mb-3">
                 <div>
                   <h3 className="text-lg font-bold text-slate-800 dark:text-white">{selectedFeature.name || "Selected Item"}</h3>
