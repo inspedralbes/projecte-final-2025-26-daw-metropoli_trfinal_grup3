@@ -328,7 +328,17 @@ export const uploadFotoComunidad = async (file) => {
       // Omitimos Content-Type para que el navegador ponga el boundary correcto
       body: formData,
     });
-    if (!response.ok) throw new Error("Failed to upload Community photo");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      console.error(
+        `[Upload] Backend respondió con ${response.status}:`,
+        errorData.message || "(sin mensaje)",
+      );
+      throw new Error(
+        errorData.message ||
+          `Failed to upload Community photo (${response.status})`,
+      );
+    }
     return await response.json();
   } catch (error) {
     console.error("Error in uploadFotoComunidad:", error);

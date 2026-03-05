@@ -21,6 +21,50 @@ const formatDate = (date) =>
     })
     : "";
 
+/**
+ * Comprime una imagen usando Canvas API para que no supere ~800KB.
+ * Redimensiona a máx 1024px y exporta como JPEG al 80% de calidad.
+ */
+const compressImage = (file, maxPx = 1024, quality = 0.8) =>
+  new Promise((resolve, reject) => {
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      URL.revokeObjectURL(url);
+      let { width, height } = img;
+      if (width > maxPx || height > maxPx) {
+        if (width >= height) {
+          height = Math.round((height * maxPx) / width);
+          width = maxPx;
+        } else {
+          width = Math.round((width * maxPx) / height);
+          height = maxPx;
+        }
+      }
+      const canvas = document.createElement("canvas");
+      canvas.width = width;
+      canvas.height = height;
+      canvas.getContext("2d").drawImage(img, 0, 0, width, height);
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) return reject(new Error("No se pudo comprimir la imagen"));
+          resolve(
+            new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), {
+              type: "image/jpeg",
+            }),
+          );
+        },
+        "image/jpeg",
+        quality,
+      );
+    };
+    img.onerror = () => {
+      URL.revokeObjectURL(url);
+      reject(new Error("No se pudo cargar la imagen"));
+    };
+    img.src = url;
+  });
+
 // ─── Sub-componente: Formulario de texto (comentario o respuesta) ──────────────
 const InputComentario = ({ placeholder, onSubmit, autoFocus = false }) => {
   const [texto, setTexto] = useState("");
@@ -405,10 +449,16 @@ const Community = () => {
     try {
       let fotoUrl = newPost.foto;
 
-      // Si hay un archivo seleccionado, subirlo primero
+      // Si hay un archivo seleccionado, comprimirlo y subirlo
       if (selectedFile) {
-        const uploadRes = await uploadFotoComunidad(selectedFile);
-        const apiBase = import.meta.env.VITE_API_URL || "http://localhost:3000";
+        const fileToUpload = await compressImage(selectedFile);
+        console.log(
+          `[Upload] Comprimido: ${(fileToUpload.size / 1024).toFixed(0)} KB`,
+        );
+        const uploadRes = await uploadFotoComunidad(fileToUpload);
+        // Usamos window.location.origin como fallback para que funcione
+        // tanto en produccion (catcircuit.daw.inspedralbes.cat) como en local
+        const apiBase = import.meta.env.VITE_API_URL || window.location.origin;
         fotoUrl = `${apiBase}${uploadRes.url}`;
       }
 
