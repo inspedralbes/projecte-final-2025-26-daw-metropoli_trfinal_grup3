@@ -29,7 +29,21 @@
     "events": "Esdeveniments",
     "map": "Mapa",
     "community": "Comunitat",
-    "settings": "Configuració"
+    "profile": "Perfil",
+    "settings": "Configuraci\u00f3",
+    "lightMode": "Mode Clar",
+    "darkMode": "Mode Fosc"
+  },
+  "events": {
+    "raceWeekend": "Cap de Setmana de Cursa",
+    "noEvents": "No hi ha esdeveniments programats",
+    "sessionsToday": "Sessions avui",
+    "live": "En Directe",
+    "upcoming": "Propers",
+    "done": "Finalitzat",
+    "noEventsForDay": "No hi ha esdeveniments per aquest dia",
+    "mainEvent": "Esdeveniment Principal",
+    "liveNow": "En Directe"
   },
   "settings": {
     "title": "Configuració",

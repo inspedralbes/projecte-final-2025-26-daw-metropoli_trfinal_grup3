@@ -29,7 +29,21 @@
     "events": "Eventos",
     "map": "Mapa",
     "community": "Comunidad",
-    "settings": "Ajustes"
+    "profile": "Perfil",
+    "settings": "Ajustes",
+    "lightMode": "Modo Claro",
+    "darkMode": "Modo Oscuro"
+  },
+  "events": {
+    "raceWeekend": "Fin de Semana de Carrera",
+    "noEvents": "No hay eventos programados",
+    "sessionsToday": "Sesiones hoy",
+    "live": "En Vivo",
+    "upcoming": "Próximos",
+    "done": "Finalizado",
+    "noEventsForDay": "No hay eventos para este día",
+    "mainEvent": "Evento Principal",
+    "liveNow": "En Vivo"
   },
   "settings": {
     "title": "Ajustes",

@@ -1,16 +1,18 @@
 import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 
 const navItems = [
-  { to: "/home", icon: "home", label: "Home" },
-  { to: "/events", icon: "calendar_month", label: "Events" },
-  { to: "/", icon: "map", label: "Map" },
-  { to: "/community", icon: "groups", label: "Community" },
-  { to: "/profile", icon: "person", label: "Profile" },
+  { to: "/home", icon: "home", labelKey: "home" },
+  { to: "/events", icon: "calendar_month", labelKey: "events" },
+  { to: "/", icon: "map", labelKey: "map" },
+  { to: "/community", icon: "groups", labelKey: "community" },
+  { to: "/profile", icon: "person", labelKey: "profile" },
 ];
 
 const Navbar = () => {
   const { pathname } = useLocation();
+  const { t } = useTranslation();
 
   const [darkMode, setDarkMode] = useState(() => {
     const saved = localStorage.getItem("theme");
@@ -48,22 +50,20 @@ const Navbar = () => {
             <Link
               key={item.to}
               to={item.to}
-              className={`flex flex-col items-center justify-center gap-0.5 w-14 h-full transition-all duration-200 relative ${
-                active ? "text-primary" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
-              }`}
+              className={`flex flex-col items-center justify-center gap-0.5 w-14 h-full transition-all duration-200 relative ${active ? "text-primary" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
+                }`}
             >
               {active && (
                 <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-primary rounded-full" />
               )}
               <span
-                className={`material-symbols-outlined text-[26px] leading-none transition-all duration-200 ${
-                  active ? "font-variation-settings-filled scale-110" : ""
-                }`}
+                className={`material-symbols-outlined text-[26px] leading-none transition-all duration-200 ${active ? "font-variation-settings-filled scale-110" : ""
+                  }`}
               >
                 {item.icon}
               </span>
               <span className={`text-[9px] font-bold uppercase tracking-wider transition-all duration-200 ${active ? "opacity-100" : "opacity-0"}`}>
-                {item.label}
+                {t(`nav.${item.labelKey}`)}
               </span>
             </Link>
           );
@@ -93,19 +93,18 @@ const Navbar = () => {
             <Link
               key={item.to}
               to={item.to}
-              title={item.label}
-              className={`relative flex flex-col items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 group ${
-                active
+              title={t(`nav.${item.labelKey}`)}
+              className={`relative flex flex-col items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 group ${active
                   ? "bg-primary text-white shadow-lg shadow-primary/30"
                   : "text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-700 dark:hover:text-white"
-              }`}
+                }`}
             >
               <span className={`material-symbols-outlined text-[22px] leading-none ${active ? "font-variation-settings-filled" : ""}`}>
                 {item.icon}
               </span>
               {/* Tooltip on hover */}
               <span className="absolute left-full ml-3 px-2 py-1 bg-slate-800 dark:bg-white text-white dark:text-slate-800 text-xs font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-lg">
-                {item.label}
+                {t(`nav.${item.labelKey}`)}
               </span>
             </Link>
           );
@@ -115,14 +114,14 @@ const Navbar = () => {
         <div className="mt-auto">
           <button
             onClick={toggleDark}
-            title={darkMode ? "Light Mode" : "Dark Mode"}
+            title={darkMode ? t("nav.lightMode") : t("nav.darkMode")}
             className="relative flex flex-col items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 group text-slate-400 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-yellow-500 dark:hover:text-yellow-300"
           >
             <span className="material-symbols-outlined text-[22px] leading-none transition-all duration-300">
               {darkMode ? "light_mode" : "dark_mode"}
             </span>
             <span className="absolute left-full ml-3 px-2 py-1 bg-slate-800 dark:bg-white text-white dark:text-slate-800 text-xs font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-lg">
-              {darkMode ? "Light Mode" : "Dark Mode"}
+              {darkMode ? t("nav.lightMode") : t("nav.darkMode")}
             </span>
           </button>
         </div>
