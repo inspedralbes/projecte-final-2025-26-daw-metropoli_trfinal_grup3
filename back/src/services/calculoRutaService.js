@@ -106,6 +106,11 @@ const calcularRutaDesdeCoords = async (lat, lng, idPoiDestino) => {
         graph[v].push({ node: u, weight });
     });
 
+    console.log(`[DEBUG] Dijkstra: Buscando ruta desde ${idNodoOrigen} hasta ${idNodoDestino}`);
+    console.log(`[DEBUG] Grafo: ${Object.keys(graph).length} nodos con conexiones.`);
+    console.log(`[DEBUG] Nodo Origen en grafo? ${!!graph[String(idNodoOrigen)]}`);
+    console.log(`[DEBUG] Nodo Destino en grafo? ${!!graph[String(idNodoDestino)]}`);
+
     // 4. Calcular Ruta
     const rutaNodosIds = dijkstraUtils.calculateShortestPath(graph, idNodoOrigen, idNodoDestino);
 

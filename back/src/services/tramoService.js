@@ -68,16 +68,22 @@ const createPathFromCoords = async (coords, isBidirectional) => {
     const connection = null; // Usaremos la query por defecto
 
     for (const coord of coords) {
-        // Buscamos si ya existe un nodo muy cerca (umbral de 1 metro aprox)
-        // Por simplicidad en este MVP, crearemos nodos nuevos para cada punto de la polilínea
-        // a menos que el usuario esté pinchando exactamente en un POI (esto se gestionará en el front)
+        // Buscamos si ya existe un nodo muy cerca (umbral de 2 metros) para reutilizarlo
+        // Esto permite que el dibujo de rutas se "enganche" a POIs o nodos existentes
+        const nearest = await nodoModel.findNearestNode(coord.lat, coord.lng);
         
-        const newNode = await nodoModel.create({
-            latitud: coord.lat,
-            longitud: coord.lng,
-            descripcion: 'Punto de ruta dibujado'
-        }, connection);
-        nodeIds.push(newNode.id_nodo);
+        if (nearest && nearest.distance < 0.002) { 
+            // Reutilizamos el nodo existente si está a menos de 2 metros
+            nodeIds.push(nearest.id_nodo);
+        } else {
+            // Si no hay nada cerca, creamos uno nuevo
+            const newNode = await nodoModel.create({
+                latitud: coord.lat,
+                longitud: coord.lng,
+                descripcion: 'Punto de ruta dibujado'
+            }, connection);
+            nodeIds.push(newNode.id_nodo);
+        }
     }
 
     const tramosToCreate = [];

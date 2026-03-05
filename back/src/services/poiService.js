@@ -10,20 +10,33 @@ const createPoiSimple = async (poiData) => {
     try {
         await connection.beginTransaction();
 
-        // 1. Crear un nodo coincidente
-        const nodoResult = await nodoModel.create({
-            latitud: poiData.latitud,
-            longitud: poiData.longitud,
-            descripcion: `Punto de acceso para ${poiData.nombre}`
-        }, connection);
+        let finalNodoAccesoId = poiData.id_nodo_acceso;
 
-        // 2. Asociar el ID del nodo al POI
+        // Si no viene un ID de nodo, intentamos "snapping" o creamos uno nuevo
+        if (!finalNodoAccesoId) {
+            // 1. Snapping: ¿Hay algún nodo ya existente muy cerca (2 metros)?
+            const nearest = await nodoModel.findNearestNode(poiData.latitud, poiData.longitud);
+            
+            if (nearest && nearest.distance < 0.002) {
+                // Reutilizamos el nodo cercano
+                finalNodoAccesoId = nearest.id_nodo;
+            } else {
+                // 2. Si no hay nada cerca, creamos un nodo nuevo
+                const nodoResult = await nodoModel.create({
+                    latitud: poiData.latitud,
+                    longitud: poiData.longitud,
+                    descripcion: `Acceso: ${poiData.nombre}`
+                }, connection);
+                finalNodoAccesoId = nodoResult.id_nodo;
+            }
+        }
+
+        // 3. Asociar el ID final al POI y guardarlo
         const poiConNodo = {
             ...poiData,
-            id_nodo_acceso: nodoResult.id_nodo
+            id_nodo_acceso: finalNodoAccesoId
         };
 
-        // 3. Crear el POI
         const nuevoPoi = await poiModel.create(poiConNodo, connection);
 
         await connection.commit();

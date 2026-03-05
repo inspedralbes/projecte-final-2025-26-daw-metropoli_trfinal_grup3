@@ -564,8 +564,11 @@ const Admin = () => {
 
               <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden mb-5 h-64 relative z-0">
                 <MapContainer
-                  center={[41.57, 2.2611]}
-                  zoom={14}
+                  center={[41.3864, 2.1058]}
+                  zoom={17}
+                  minZoom={14}
+                  maxZoom={19}
+                  maxBounds={[[41.37, 2.08], [41.40, 2.12]]}
                   className="w-full h-full"
                   zoomControl={false}
                 >
@@ -646,6 +649,11 @@ const Admin = () => {
                         key={`poi-${point.id_poi}`}
                         position={[point.latitud, point.longitud]}
                         icon={createCustomIcon(iconName, bgColor)}
+                        eventHandlers={isDrawMode ? {
+                          click: (e) => {
+                            handleNodeInteraction(point.id_nodo_acceso, e.latlng);
+                          }
+                        } : {}}
                       >
                         {!isDrawMode && (
                           <Popup eventHandlers={{ add: () => handleFetchNodeTramos(point.id_nodo_acceso) }}>

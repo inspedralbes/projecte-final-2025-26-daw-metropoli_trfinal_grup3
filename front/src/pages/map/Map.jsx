@@ -48,7 +48,7 @@ const UserIcon = L.divIcon({
 
 const Map = () => {
   const mapRef = useRef(null);
-  const initialCenter = [41.57, 2.2611];
+  const initialCenter = [41.3864, 2.1058];
   const [userPosition, setUserPosition] = useState(null);
   const [isLegendOpen, setIsLegendOpen] = useState(false); // State for collapsible legend
   const [isSatelliteView, setIsSatelliteView] = useState(true); // State for satellite view toggle
@@ -61,10 +61,13 @@ const Map = () => {
 
   // State for future logic
   const [selectedFeature, setSelectedFeature] = useState(null); // To store clicking on a marker
+  const [originFeature, setOriginFeature] = useState(null); // POI de origen manual
+  const [destinationFeature, setDestinationFeature] = useState(null); // POI de destino manual
   const [markers, setMarkers] = useState([]);
   const [categories, setCategories] = useState([]); // Categorias de la BD para la leyenda
   const [activeFilter, setActiveFilter] = useState(null); // null = mostrar todos, id_categoria = filtrar
   const [route, setRoute] = useState(null); // Array de [lat, lng] para Dijkstra Polyline
+  const [distance, setDistance] = useState(null); // Distancia de la ruta
 
   useEffect(() => {
     const fetchPois = async () => {
@@ -142,6 +145,27 @@ const Map = () => {
           parseFloat(nodo.longitud)
         ]);
         setRoute(polylineCoords);
+
+        // Calcular distancia total de la ruta
+        let totalDistance = 0;
+        for (let i = 0; i < polylineCoords.length - 1; i++) {
+          totalDistance += L.latLng(polylineCoords[i]).distanceTo(polylineCoords[i + 1]);
+        }
+        setDistance(totalDistance);
+
+        // Si tenemos el ref del mapa, ajustamos la vista para que quepa toda la ruta
+        if (mapRef.current && polylineCoords.length > 0) {
+          // Si hay posición de usuario, la incluimos en los límites para que la ruta empiece desde él
+          const bounds = userPosition
+            ? L.latLngBounds([userPosition, ...polylineCoords])
+            : L.latLngBounds(polylineCoords);
+
+          mapRef.current.fitBounds(bounds, {
+            padding: [50, 50],
+            animate: true,
+            duration: 1.5
+          });
+        }
       }
     } catch (error) {
       console.error("Error fetching Route:", error);
@@ -227,8 +251,10 @@ const Map = () => {
         <MapContainer
           ref={mapRef}
           center={initialCenter}
-          zoom={15}
-          minZoom={13}
+          zoom={17}
+          minZoom={15}
+          maxZoom={19}
+          maxBounds={[[41.37, 2.08], [41.40, 2.12]]}
           scrollWheelZoom={true}
           className="w-full h-full outline-none"
           zoomControl={false}
@@ -254,7 +280,22 @@ const Map = () => {
 
           {/* Dynamic Markers rendering (currently empty) */}
           {/* Dijkstra Route rendering */}
-          {route && <Polyline positions={route} color="#3b82f6" weight={5} opacity={0.8} dashArray="10, 10" />}
+          {route && (
+            <>
+              {/* Connector line from user to the path */}
+              {userPosition && (
+                <Polyline
+                  positions={[userPosition, route[0]]}
+                  color="#3b82f6"
+                  weight={4}
+                  opacity={0.6}
+                  dashArray="5, 10"
+                />
+              )}
+              {/* Main path */}
+              <Polyline positions={route} color="#3b82f6" weight={6} opacity={0.9} />
+            </>
+          )}
 
           {/* Dynamic Markers rendering — si hay filtro activo, solo mostramos los de esa categoria */}
           {markers.map((marker, index) => {
@@ -267,9 +308,17 @@ const Map = () => {
               <Marker
                 key={marker.id || index}
                 position={marker.position}
-                icon={createCustomIcon(marker.iconName, marker.bgColor)}
+                icon={
+                  originFeature?.id === marker.id
+                    ? createCustomIcon('fa-play', '#10b981') // Verde para origen
+                    : destinationFeature?.id === marker.id
+                      ? createCustomIcon('fa-flag-checkered', '#ef4444') // Rojo para destino
+                      : createCustomIcon(marker.iconName, marker.bgColor)
+                }
                 eventHandlers={{
-                  click: () => setSelectedFeature(marker)
+                  click: () => {
+                    setSelectedFeature(marker);
+                  }
                 }}
               >
                 <Popup>
@@ -450,36 +499,162 @@ const Map = () => {
           </button>
         </div>
 
-        {/* Info Card */}
-        {selectedFeature && (
-          <div className="px-4 mb-24 pointer-events-auto">
-            <div className="bg-white/95 dark:bg-slate-900/95 backdrop-blur-md border border-slate-200 dark:border-slate-800 rounded-3xl p-5 shadow-2xl">
-              <div className="flex justify-between items-start mb-3">
-                <div>
-                  <h3 className="text-lg font-bold text-slate-800 dark:text-white">{selectedFeature.name || "Selected Item"}</h3>
-                  <p className="text-sm text-slate-500 dark:text-slate-400">{selectedFeature.description || "Details unavailable"}</p>
+        {/* Side Info Panel */}
+        <div
+          className={`absolute right-0 top-0 bottom-0 w-80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-l border-slate-200 dark:border-slate-800 shadow-2xl transition-transform duration-300 z-50 pointer-events-auto flex flex-col p-6 ${selectedFeature || route ? 'translate-x-0' : 'translate-x-full'}`}
+        >
+          <div className="flex justify-between items-center mb-6 pt-4">
+            <h2 className="text-xl font-bold text-slate-800 dark:text-white">
+              {route ? "Navegación Activa" : "Información del Sitio"}
+            </h2>
+            <button
+              onClick={() => {
+                setSelectedFeature(null);
+                setOriginFeature(null);
+                setDestinationFeature(null);
+                setRoute(null);
+                setDistance(null);
+              }}
+              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
+            >
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
+
+          <div className="flex-grow overflow-y-auto pr-2 custom-scrollbar">
+            {route ? (
+              <div className="space-y-6">
+                <div className="bg-primary/10 rounded-2xl p-5 border border-primary/20">
+                  <div className="flex items-center gap-3 mb-4 last:mb-0">
+                    <div className="flex flex-col items-center gap-1">
+                      <span className="material-symbols-outlined text-emerald-500 text-sm">play_circle</span>
+                      <div className="w-0.5 h-4 bg-slate-300 dark:bg-slate-700"></div>
+                      <span className="material-symbols-outlined text-red-500 text-sm">tour</span>
+                    </div>
+                    <div className="flex flex-col gap-3">
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Desde</span>
+                        <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                          {originFeature ? originFeature.name : "Tu ubicación"}
+                        </span>
+                      </div>
+                      <div>
+                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Hasta</span>
+                        <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
+                          {destinationFeature ? destinationFeature.name : "Destino"}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
                 </div>
-                <button onClick={() => setSelectedFeature(null)} className="text-slate-400 hover:text-slate-600">
-                  <span className="material-icons">close</span>
+
+                <div className="bg-indigo-500/10 rounded-2xl p-5 border border-indigo-500/20">
+                  <div className="flex items-center gap-3 mb-3">
+                    <span className="material-symbols-outlined text-indigo-500">straighten</span>
+                    <span className="text-sm font-bold text-indigo-500 uppercase tracking-wider">Distancia Estimada</span>
+                  </div>
+                  <div className="flex items-baseline gap-2">
+                    <span className="text-3xl font-black text-slate-800 dark:text-white">
+                      {distance > 1000 ? (distance / 1000).toFixed(2) : Math.round(distance)}
+                    </span>
+                    <span className="text-lg font-bold text-slate-500">
+                      {distance > 1000 ? "km" : "m"}
+                    </span>
+                  </div>
+                </div>
+
+                <button
+                  onClick={() => {
+                    setOriginFeature(null);
+                    setDestinationFeature(null);
+                    setRoute(null);
+                    setDistance(null);
+                  }}
+                  className="w-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold py-4 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
+                >
+                  <span className="material-symbols-outlined text-lg">cancel</span>
+                  Limpiar Navegación
                 </button>
               </div>
-              <button
-                onClick={() => {
-                  if (userPosition) {
-                    fetchRoute(null, selectedFeature.id, { lat: userPosition[0], lng: userPosition[1] });
-                  } else {
-                    handleLocate();
-                    alert("Localizando tu posición... Vuelve a intentarlo en un momento.");
-                  }
-                }}
-                className="w-full bg-primary text-white font-semibold py-3 px-4 rounded-xl shadow-lg shadow-primary/20 flex items-center justify-center gap-2"
-              >
-                <span className="material-icons text-sm">navigation</span>
-                Navigate
-              </button>
-            </div>
+            ) : selectedFeature ? (
+              <div className="space-y-6">
+                <div className="flex flex-col items-center text-center">
+                  <div
+                    className="w-20 h-20 rounded-3xl flex items-center justify-center text-white text-3xl mb-4 border-4 border-white dark:border-slate-800 shadow-xl"
+                    style={{ backgroundColor: (originFeature?.id === selectedFeature.id ? '#10b981' : destinationFeature?.id === selectedFeature.id ? '#ef4444' : selectedFeature.bgColor) }}
+                  >
+                    {originFeature?.id === selectedFeature.id ? (
+                      <i className="fa-play"></i>
+                    ) : destinationFeature?.id === selectedFeature.id ? (
+                      <i className="fa-flag-checkered"></i>
+                    ) : selectedFeature.iconName && selectedFeature.iconName.startsWith('fa-') ? (
+                      <i className={selectedFeature.iconName}></i>
+                    ) : (
+                      <span className="material-symbols-outlined text-4xl">location_on</span>
+                    )}
+                  </div>
+                  <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
+                    {selectedFeature.name}
+                  </h3>
+                  <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">
+                    {categories.find(c => c.id_categoria === selectedFeature.id_categoria)?.nombre || "Punto de Interés"}
+                  </span>
+                  <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
+                    {selectedFeature.description || "No hay descripción disponible para este sitio."}
+                  </p>
+                </div>
+
+                <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
+                  {/* Navegación desde ubicación */}
+                  <button
+                    onClick={() => {
+                      setOriginFeature(null);
+                      if (userPosition) {
+                        fetchRoute(null, selectedFeature.id, { lat: userPosition[0], lng: userPosition[1] });
+                        setDestinationFeature(selectedFeature);
+                      } else {
+                        handleLocate();
+                        alert("Localizando tu posición... Vuelve a intentarlo en un momento.");
+                      }
+                    }}
+                    className="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/30 hover:bg-red-600 transition-all flex items-center justify-center gap-3 active:scale-95"
+                  >
+                    <span className="material-symbols-outlined">my_location</span>
+                    Ir desde mi ubicación
+                  </button>
+
+                  <div className="grid grid-cols-2 gap-3">
+                    <button
+                      onClick={() => {
+                        setOriginFeature(selectedFeature);
+                        if (destinationFeature && destinationFeature.id !== selectedFeature.id) {
+                          fetchRoute(selectedFeature.id, destinationFeature.id);
+                        }
+                      }}
+                      className={`py-3 px-2 rounded-xl font-bold text-xs flex flex-col items-center gap-1 transition-all border-2 ${originFeature?.id === selectedFeature.id ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white dark:bg-slate-800 border-emerald-500/30 text-emerald-600'}`}
+                    >
+                      <span className="material-symbols-outlined text-lg">play_circle</span>
+                      <span>Origen</span>
+                    </button>
+
+                    <button
+                      onClick={() => {
+                        setDestinationFeature(selectedFeature);
+                        if (originFeature && originFeature.id !== selectedFeature.id) {
+                          fetchRoute(originFeature.id, selectedFeature.id);
+                        }
+                      }}
+                      className={`py-3 px-2 rounded-xl font-bold text-xs flex flex-col items-center gap-1 transition-all border-2 ${destinationFeature?.id === selectedFeature.id ? 'bg-red-500 border-red-500 text-white' : 'bg-white dark:bg-slate-800 border-red-500/30 text-red-600'}`}
+                    >
+                      <span className="material-symbols-outlined text-lg">tour</span>
+                      <span>Destino</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            ) : null}
           </div>
-        )}
+        </div>
       </div>
 
       <Navbar />
