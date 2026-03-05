@@ -22,7 +22,33 @@
     "air": "Aire",
     "track": "Pista",
     "rain": "Pluja",
-    "wind": "Vent"
+    "wind": "Vent",
+    "quickAccess": "Accés Ràpid",
+    "trackConditions": "Condicions de Pista",
+    "openCircuitMap": "Mapa del Circuit",
+    "communityFeed": "Comunitat"
+  },
+  "community": {
+    "yourGroup": "El teu Grup",
+    "inviteFriends": "Invita Amics",
+    "shareQR": "Comparteix el teu codi QR de grup",
+    "showQR": "Mostrar Codi QR",
+    "trending": "Tendències",
+    "posts": "publicacions",
+    "friends": "Amics",
+    "noFriends": "Sense amics afegits",
+    "friendsInCommunity": "a la comunitat oficial",
+    "friend": "amic",
+    "friends_plural": "amics",
+    "communityFeed": "Comunitat",
+    "newPost": "Nova publicació",
+    "publish": "Publicar",
+    "tabs": {
+      "recent": "Recents",
+      "official": "Oficial",
+      "fanZone": "Fan Zone",
+      "popular": "Popular"
+    }
   },
   "nav": {
     "home": "Inici",

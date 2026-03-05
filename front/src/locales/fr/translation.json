@@ -22,7 +22,33 @@
     "air": "Air",
     "track": "Piste",
     "rain": "Pluie",
-    "wind": "Vent"
+    "wind": "Vent",
+    "quickAccess": "Accès Rapide",
+    "trackConditions": "Conditions de Piste",
+    "openCircuitMap": "Ouvrir la Carte",
+    "communityFeed": "Communauté"
+  },
+  "community": {
+    "yourGroup": "Votre Groupe",
+    "inviteFriends": "Inviter des Amis",
+    "shareQR": "Partagez votre code QR de groupe",
+    "showQR": "Afficher le code QR",
+    "trending": "Tendances",
+    "posts": "publications",
+    "friends": "Amis",
+    "noFriends": "Aucun ami ajouté",
+    "friendsInCommunity": "dans la communauté officielle",
+    "friend": "ami",
+    "friends_plural": "amis",
+    "communityFeed": "Communauté",
+    "newPost": "Nouvelle publication",
+    "publish": "Publier",
+    "tabs": {
+      "recent": "Récents",
+      "official": "Officiel",
+      "fanZone": "Fan Zone",
+      "popular": "Populaire"
+    }
   },
   "nav": {
     "home": "Accueil",

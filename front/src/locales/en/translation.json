@@ -22,7 +22,33 @@
     "air": "Air",
     "track": "Track",
     "rain": "Rain",
-    "wind": "Wind"
+    "wind": "Wind",
+    "quickAccess": "Quick Access",
+    "trackConditions": "Track Conditions",
+    "openCircuitMap": "Open Circuit Map",
+    "communityFeed": "Community Feed"
+  },
+  "community": {
+    "yourGroup": "Your Group",
+    "inviteFriends": "Invite Friends",
+    "shareQR": "Share your group QR code",
+    "showQR": "Show QR Code",
+    "trending": "Trending",
+    "posts": "posts",
+    "friends": "Friends",
+    "noFriends": "No friends added",
+    "friendsInCommunity": "in the official community",
+    "friend": "friend",
+    "friends_plural": "friends",
+    "communityFeed": "Community",
+    "newPost": "New Post",
+    "publish": "Publish",
+    "tabs": {
+      "recent": "Recent",
+      "official": "Official",
+      "fanZone": "Fan Zone",
+      "popular": "Popular"
+    }
   },
   "nav": {
     "home": "Home",

@@ -485,7 +485,7 @@ const Home = () => {
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-4 h-1 bg-primary rounded-full"></div>
                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-white/60">
-                  Track Conditions
+                  {t("home.trackConditions")}
                 </h3>
               </div>
               <div className="grid grid-cols-2 gap-4">
@@ -534,7 +534,7 @@ const Home = () => {
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-4 h-1 bg-primary rounded-full"></div>
                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-white/60">
-                  Quick Access
+                  {t("home.quickAccess")}
                 </h3>
               </div>
               <div className="space-y-2">
@@ -542,19 +542,19 @@ const Home = () => {
                   {
                     to: "/events",
                     icon: "calendar_month",
-                    label: "View Schedule",
+                    label: t("home.viewSchedule"),
                     color: "bg-primary/10 text-primary",
                   },
                   {
                     to: "/",
                     icon: "map",
-                    label: "Open Circuit Map",
+                    label: t("home.openCircuitMap"),
                     color: "bg-blue-500/10 text-blue-500",
                   },
                   {
                     to: "/community",
                     icon: "groups",
-                    label: "Community Feed",
+                    label: t("home.communityFeed"),
                     color: "bg-indigo-500/10 text-indigo-500",
                   },
                 ].map((link) => (
