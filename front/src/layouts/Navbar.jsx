@@ -12,9 +12,12 @@ const navItems = [
 const Navbar = () => {
   const { pathname } = useLocation();
 
-  const [darkMode, setDarkMode] = useState(() =>
-    document.documentElement.classList.contains("dark")
-  );
+  const [darkMode, setDarkMode] = useState(() => {
+    const saved = localStorage.getItem("theme");
+    if (saved) return saved === "dark";
+    // Default to dark if no preference is set
+    return document.documentElement.classList.contains("dark") || true;
+  });
 
   const toggleDark = () => {
     const next = !darkMode;

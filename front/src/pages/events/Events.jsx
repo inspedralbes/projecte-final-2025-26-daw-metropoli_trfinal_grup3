@@ -87,7 +87,7 @@ const Events = () => {
                     Race <span className="text-primary">Weekend</span>
                 </h1>
                 <Link to="/profile" className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden shadow-sm">
-                    <img src="https://i.pravatar.cc/150?img=12" alt="Profile" className="w-full h-full object-cover rounded-full" />
+                    <img src="https://cdn-icons-png.flaticon.com/512/149/149071.png" alt="Profile" className="w-full h-full object-cover rounded-full" />
                 </Link>
             </div>
 
@@ -103,7 +103,7 @@ const Events = () => {
                         </h1>
 
                         {/* Date Tabs — column on desktop, row on mobile */}
-                        <div className="flex gap-2 p-1 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none lg:flex-col">
+                        <div className="flex gap-2 p-1 bg-white dark:bg-[#12080a] rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none lg:flex-col">
                             {['fri', 'sat', 'sun'].map((day) => (
                                 <button
                                     key={day}
@@ -122,7 +122,7 @@ const Events = () => {
                         </div>
 
                         {/* Desktop session summary */}
-                        <div className="hidden lg:block mt-4 p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm">
+                        <div className="hidden lg:block mt-4 p-4 bg-white dark:bg-[#12080a] rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm">
                             <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Sessions today</div>
                             <div className="text-2xl font-black text-slate-800 dark:text-white">{currentEvents.length}</div>
                             <div className="mt-2 flex gap-2 flex-wrap">
@@ -156,7 +156,7 @@ const Events = () => {
                                 )}
 
                                 {event.isMain ? (
-                                    <div className="relative bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl overflow-hidden shadow-md dark:shadow-none transition-all hover:scale-[1.01] active:scale-[0.99]">
+                                    <div className="relative bg-white dark:bg-[#12080a] border border-slate-200 dark:border-white/5 rounded-2xl overflow-hidden shadow-md dark:shadow-none transition-all hover:scale-[1.01] active:scale-[0.99]">
                                         <div className="absolute right-0 top-0 bottom-0 w-1 bg-primary"></div>
                                         <div className="p-4 relative z-10">
                                             <div className="flex items-center justify-between mb-2">
@@ -179,7 +179,7 @@ const Events = () => {
                                         </div>
                                     </div>
                                 ) : event.isLive ? (
-                                    <div className="bg-white dark:bg-slate-900 border-2 border-primary/30 rounded-2xl p-4 shadow-xl shadow-primary/5 dark:shadow-none transition-all hover:scale-[1.01] active:scale-[0.99]">
+                                    <div className="bg-white dark:bg-[#12080a] border-2 border-primary/30 rounded-2xl p-4 shadow-xl shadow-primary/5 dark:shadow-none transition-all hover:scale-[1.01] active:scale-[0.99]">
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="bg-primary/10 dark:bg-primary/20 text-primary text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-tighter flex items-center gap-1">
                                                 <span className="w-1 h-1 rounded-full bg-primary animate-pulse"></span>
@@ -198,7 +198,7 @@ const Events = () => {
                                         </div>
                                     </div>
                                 ) : (
-                                    <div className={`bg-white dark:bg-slate-900 border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex items-center justify-between shadow-sm dark:shadow-none transition-all hover:scale-[1.01] active:scale-[0.99] ${event.status === 'completed' ? 'opacity-60 border-dashed' : ''}`}>
+                                    <div className={`bg-white dark:bg-[#12080a] border border-slate-200 dark:border-white/5 rounded-2xl p-4 flex items-center justify-between shadow-sm dark:shadow-none transition-all hover:scale-[1.01] active:scale-[0.99] ${event.status === 'completed' ? 'opacity-60 border-dashed' : ''}`}>
                                         <div>
                                             <span className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-widest">{event.time}</span>
                                             <h3 className="text-slate-800 dark:text-white font-extrabold italic uppercase">{event.title}</h3>

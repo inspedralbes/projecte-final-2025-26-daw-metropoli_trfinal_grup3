@@ -473,7 +473,7 @@ const Admin = () => {
           </div>
           <Link
             to="/profile"
-            className="bg-white dark:bg-slate-900 p-2 rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
+            className="bg-white dark:bg-[#12080a] p-2 rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors"
           >
             <span className="material-symbols-outlined text-2xl block">person</span>
           </Link>
@@ -484,7 +484,7 @@ const Admin = () => {
       <div className="overflow-y-auto no-scrollbar pb-24 md:pb-10 px-5 pt-6 md:max-w-6xl md:mx-auto">
 
         {/* Tabs Navigation */}
-        <div className="flex p-1 bg-slate-200/50 dark:bg-slate-900 rounded-2xl mb-6 shadow-inner w-full custom-tabs mx-auto lg:max-w-2xl">
+        <div className="flex p-1 bg-slate-200/50 dark:bg-[#12080a] rounded-2xl mb-6 shadow-inner w-full custom-tabs mx-auto lg:max-w-2xl">
           <button
             onClick={() => setActiveTab('events')}
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 ${activeTab === 'events' ? 'bg-white dark:bg-slate-800 text-primary shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
@@ -562,7 +562,7 @@ const Admin = () => {
                 </div>
               )}
 
-              <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden mb-5 h-64 relative z-0">
+              <div className="bg-white dark:bg-[#12080a] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden mb-5 h-64 relative z-0">
                 <MapContainer
                   center={[41.3864, 2.1058]}
                   zoom={17}
@@ -765,7 +765,7 @@ const Admin = () => {
                 </MapContainer>
               </div>
 
-              <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 space-y-4 poi-form">
+              <div className="bg-white dark:bg-[#12080a] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 space-y-4 poi-form">
                 <div>
                   <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
                     Point Name
@@ -821,7 +821,7 @@ const Admin = () => {
               </div>
 
               {/* Create Category Panel */}
-              <div className="mt-6 bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 space-y-4">
+              <div className="mt-6 bg-white dark:bg-[#12080a] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 space-y-4">
                 <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
                   Add New Point Type / Category
                 </h3>
@@ -941,7 +941,7 @@ const Admin = () => {
                       {savedEvents.map((event) => (
                         <div
                           key={event.id_evento || event.id}
-                          className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex justify-between items-center group"
+                          className="bg-white dark:bg-[#12080a] p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex justify-between items-center group"
                         >
                           <div className="flex items-center gap-4">
                             {event.foto ? (
@@ -1005,7 +1005,7 @@ const Admin = () => {
                       ))}
                     </div>
                   ) : (
-                    <div className="bg-slate-50 dark:bg-slate-900 text-slate-400 dark:text-slate-500 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-8 text-center flex flex-col items-center justify-center">
+                    <div className="bg-slate-50 dark:bg-[#12080a] text-slate-400 dark:text-slate-500 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-8 text-center flex flex-col items-center justify-center">
                       <span className="material-symbols-outlined text-4xl mb-2 opacity-50">event_busy</span>
                       <p className="font-medium text-sm">No hay eventos activos.</p>
                     </div>
@@ -1019,7 +1019,7 @@ const Admin = () => {
                   Event Management
                 </h3>
 
-                <div className="bg-white dark:bg-slate-900 rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 space-y-4">
+                <div className="bg-white dark:bg-[#12080a] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 space-y-4">
                   {/* Nombre */}
                   <div>
                     <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
