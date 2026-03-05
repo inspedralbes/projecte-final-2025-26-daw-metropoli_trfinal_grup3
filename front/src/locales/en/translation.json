@@ -29,7 +29,21 @@
     "events": "Events",
     "map": "Map",
     "community": "Community",
-    "settings": "Settings"
+    "profile": "Profile",
+    "settings": "Settings",
+    "lightMode": "Light Mode",
+    "darkMode": "Dark Mode"
+  },
+  "events": {
+    "raceWeekend": "Race Weekend",
+    "noEvents": "No events scheduled",
+    "sessionsToday": "Sessions today",
+    "live": "Live",
+    "upcoming": "Upcoming",
+    "done": "Done",
+    "noEventsForDay": "No events for this day",
+    "mainEvent": "Main Event",
+    "liveNow": "Live Now"
   },
   "settings": {
     "title": "Settings",

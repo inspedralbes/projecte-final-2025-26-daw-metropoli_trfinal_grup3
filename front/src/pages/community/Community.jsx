@@ -413,7 +413,7 @@ const Community = () => {
     if (usuarioLogged) {
       getAmigos(usuarioLogged.id_usuario)
         .then((data) => {
-          setAmigos(data || []);
+          setAmigos(data.data || []);
         })
         .catch((err) => console.error("Error al cargar amigos", err));
     }

@@ -3,12 +3,14 @@ import { Link } from 'react-router-dom';
 import Navbar from '../../layouts/Navbar';
 import { getEventos } from '../../services/communicationManager';
 import socket from '../../services/socketManager';
+import { useTranslation } from "react-i18next";
 
 // Nombres cortos de los días de la semana (0 = Domingo, 1 = Lunes, ...)
 const NOMBRES_DIA = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const NOMBRES_MES = ['Ene', 'Feb', 'Mar', 'Abr', 'May', 'Jun', 'Jul', 'Ago', 'Sep', 'Oct', 'Nov', 'Dic'];
 
 const Events = () => {
+    const { t } = useTranslation();
     // La clave del tab activo es una string con formato "YYYY-MM-DD"
     const [activeTab, setActiveTab] = useState('');
 
@@ -190,7 +192,7 @@ const Events = () => {
                     </Link>
                 </div>
                 <h1 className="hidden md:block text-2xl font-black italic uppercase tracking-tighter text-slate-800 dark:text-white">
-                    Race <span className="text-primary">Weekend</span>
+                    {t('events.raceWeekend')}
                 </h1>
 
                 {/* Foto de perfil del usuario logueado */}
@@ -214,14 +216,14 @@ const Events = () => {
                     {/* Left: selector de días */}
                     <div className="mb-6 lg:mb-0">
                         <h1 className="text-3xl font-black text-slate-800 dark:text-white italic tracking-tighter uppercase leading-none mb-4 lg:hidden">
-                            Race <span className="text-primary">Weekend</span>
+                            {t('events.raceWeekend')}
                         </h1>
 
                         {/* Tabs de días — fila en móvil, columna en desktop */}
                         <div className="flex gap-2 p-1 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none lg:flex-col overflow-x-auto no-scrollbar">
                             {diasConEventos.length === 0 && (
                                 <div className="flex-1 py-4 text-center text-slate-400 text-xs font-medium">
-                                    No hay eventos programados
+                                    {t('events.noEvents')}
                                 </div>
                             )}
 
@@ -244,19 +246,19 @@ const Events = () => {
 
                         {/* Resumen del día — solo visible en desktop */}
                         <div className="hidden lg:block mt-4 p-4 bg-white dark:bg-slate-900 rounded-2xl border border-slate-100 dark:border-white/5 shadow-sm">
-                            <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">Sesiones hoy</div>
+                            <div className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-2">{t('events.sessionsToday')}</div>
                             <div className="text-2xl font-black text-slate-800 dark:text-white">{eventosDelDia.length}</div>
                             <div className="mt-2 flex gap-2 flex-wrap">
                                 {totalLive > 0 && (
                                     <span className="text-[9px] font-bold bg-primary/10 text-primary px-2 py-0.5 rounded-full uppercase">
-                                        {totalLive} Live
+                                        {totalLive} {t('events.live')}
                                     </span>
                                 )}
                                 <span className="text-[9px] font-bold bg-slate-100 dark:bg-white/5 text-slate-500 px-2 py-0.5 rounded-full uppercase">
-                                    {totalUpcoming} Upcoming
+                                    {totalUpcoming} {t('events.upcoming')}
                                 </span>
                                 <span className="text-[9px] font-bold bg-slate-100 dark:bg-white/5 text-slate-500 px-2 py-0.5 rounded-full uppercase">
-                                    {totalCompleted} Done
+                                    {totalCompleted} {t('events.done')}
                                 </span>
                             </div>
                         </div>
@@ -268,7 +270,7 @@ const Events = () => {
 
                         {eventosDelDia.length === 0 && (
                             <div className="pl-12 text-slate-400 dark:text-slate-500 text-sm font-medium py-8 text-center">
-                                No hay eventos para este día
+                                {t('events.noEventsForDay')}
                             </div>
                         )}
 
@@ -291,7 +293,7 @@ const Events = () => {
                                         <div className="p-4 relative z-10">
                                             <div className="flex items-center justify-between mb-2">
                                                 <span className="text-[10px] font-bold text-slate-400 dark:text-gray-400 uppercase tracking-widest">{event.time}</span>
-                                                <div className="px-2 py-0.5 bg-slate-100 dark:bg-white/5 rounded text-[9px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest border border-slate-200 dark:border-white/5">Main Event</div>
+                                                <div className="px-2 py-0.5 bg-slate-100 dark:bg-white/5 rounded text-[9px] font-bold text-slate-500 dark:text-gray-400 uppercase tracking-widest border border-slate-200 dark:border-white/5">{t('events.mainEvent')}</div>
                                             </div>
                                             <div className="flex items-start justify-between">
                                                 <div>
@@ -316,7 +318,7 @@ const Events = () => {
                                         <div className="flex items-center justify-between mb-2">
                                             <div className="bg-primary/10 dark:bg-primary/20 text-primary text-[9px] font-black px-2 py-0.5 rounded uppercase tracking-tighter flex items-center gap-1">
                                                 <span className="w-1 h-1 rounded-full bg-primary animate-pulse"></span>
-                                                Live Now
+                                                {t('events.liveNow')}
                                             </div>
                                             <span className="text-[10px] font-bold text-primary uppercase tracking-widest">{event.time}</span>
                                         </div>
