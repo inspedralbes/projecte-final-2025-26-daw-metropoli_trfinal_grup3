@@ -45,7 +45,9 @@ export const deletePoi = async (id) => {
 // Obtiene los 3 POIs más cercanos al usuario usando la lógica difusa del backend
 export const getPoisCercanos = async (lat, lng) => {
   try {
-    const response = await fetch(`${API_URL}/api/pois/cercanos?lat=${lat}&lng=${lng}`);
+    const response = await fetch(
+      `${API_URL}/api/pois/cercanos?lat=${lat}&lng=${lng}`,
+    );
     if (!response.ok) throw new Error("Failed to fetch POIs cercanos");
     return await response.json();
   } catch (error) {
@@ -64,7 +66,7 @@ export const uploadPoiImage = async (idPoi, file) => {
 
     const response = await fetch(`${API_URL}/api/pois/${idPoi}/imagen`, {
       method: "POST",
-      body: formData
+      body: formData,
     });
     if (!response.ok) throw new Error("Failed to upload POI image");
     return await response.json();
@@ -83,7 +85,7 @@ export const getRoute = async (origenId, destinoId, coords = null) => {
     } else {
       url += `&origen=${origenId}`;
     }
-    
+
     const response = await fetch(url);
     if (!response.ok) throw new Error("Failed to fetch Route");
     return await response.json();
@@ -527,9 +529,12 @@ export const addAmigo = async (userId, friendId) => {
 
 export const removeAmigo = async (userId, friendId) => {
   try {
-    const response = await fetch(`${API_URL}/api/amigos/${userId}/${friendId}`, {
-      method: "DELETE",
-    });
+    const response = await fetch(
+      `${API_URL}/api/amigos/${userId}/${friendId}`,
+      {
+        method: "DELETE",
+      },
+    );
     if (!response.ok) throw new Error("Failed to remove Amigo");
     return await response.json();
   } catch (error) {
