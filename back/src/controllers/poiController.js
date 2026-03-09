@@ -216,9 +216,9 @@ const uploadPoiImage = async (req, res) => {
         }
 
         // Construimos la ruta relativa que guardaremos en la BD
-        // req.file.path devuelve algo como 'public/images/pois/poi-1234567890.jpg'
-        // La convertimos a una ruta pública que el frontend puede usar
-        const rutaRelativa = '/' + req.file.path.replace(/\\/g, '/');
+        // Usamos req.file.filename (igual que eventoController) para obtener solo el nombre
+        // del archivo, y prefijamos la carpeta pública: /images/pois/poi-123.jpg
+        const rutaRelativa = `/images/pois/${req.file.filename}`;
 
         await poiModel.updateImageUrl(id, rutaRelativa);
 

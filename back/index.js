@@ -29,6 +29,8 @@ app.use(express.json());
 
 // Servir la carpeta 'public' para acceder a los QR generados
 app.use("/public", express.static(path.join(__dirname, "public")));
+// Servir imágenes directamente en /images — los controladores guardan rutas como /images/eventos/foto.jpg
+app.use("/images", express.static(path.join(__dirname, "public/images")));
 // Servir uploads directamente en /uploads (para imágenes de la comunidad y perfil)
 app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 
