@@ -17,9 +17,9 @@ import socket from "../../services/socketManager";
 const formatDate = (date) =>
   date
     ? new Date(date).toLocaleDateString("es-ES", {
-      day: "2-digit",
-      month: "short",
-    })
+        day: "2-digit",
+        month: "short",
+      })
     : "";
 
 /**
@@ -233,10 +233,11 @@ const PostCard = ({ pub, onComentarioCreado }) => {
       <div className="px-4 py-3 flex items-center gap-5 border-t border-slate-100 dark:border-white/5">
         <button
           onClick={handleLike}
-          className={`flex items-center gap-1.5 transition-colors cursor-pointer group ${liked
-            ? "text-primary"
-            : "text-slate-400 dark:text-white/40 hover:text-primary"
-            }`}
+          className={`flex items-center gap-1.5 transition-colors cursor-pointer group ${
+            liked
+              ? "text-primary"
+              : "text-slate-400 dark:text-white/40 hover:text-primary"
+          }`}
         >
           <span
             className="material-symbols-outlined text-[20px] group-active:scale-125 transition-transform"
@@ -431,10 +432,10 @@ const Community = () => {
         lista.map((pub) =>
           String(pub.id_usuario) === String(usuarioActualizado.id_usuario)
             ? {
-              ...pub,
-              nombre_usuario: usuarioActualizado.nuevo_nombre,
-              foto_perfil: usuarioActualizado.nueva_foto,
-            }
+                ...pub,
+                nombre_usuario: usuarioActualizado.nuevo_nombre,
+                foto_perfil: usuarioActualizado.nueva_foto,
+              }
             : pub,
         ),
       );
@@ -493,12 +494,16 @@ const Community = () => {
     }
   };
 
-  let fotoUsuario = null;
-  if (usuarioLogged && (usuarioLogged.foto_perfil || usuarioLogged.foto)) {
-    fotoUsuario =
-      (import.meta.env.VITE_API_URL || "http://localhost:3000") +
-      (usuarioLogged.foto_perfil || usuarioLogged.foto);
-  }
+  // URL de la foto del usuario (con fallback al avatar genérico, igual que en Home)
+  const getAvatarUrl = (fotoUrl) => {
+    if (!fotoUrl)
+      return "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+    if (fotoUrl.startsWith("http")) return fotoUrl;
+    return `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${fotoUrl}`;
+  };
+  const fotoUsuario = getAvatarUrl(
+    usuarioLogged?.foto_perfil || usuarioLogged?.foto,
+  );
 
   // Contadores manuales para Trending Topics
   let countPopular = 0;
@@ -530,10 +535,10 @@ const Community = () => {
 
   // Mapa de key de tab → valor de tipo_publicacion en la BD
   const tabFiltro = {
-    "Recent": null,
-    "Official": "oficial",
+    Recent: null,
+    Official: "oficial",
     "Fan Zone": "fanzone",
-    "Popular": "popular",
+    Popular: "popular",
   };
 
   // Publicaciones filtradas según el tab activo
@@ -566,19 +571,11 @@ const Community = () => {
           to="/profile"
           className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden shadow-sm flex-shrink-0"
         >
-          {fotoUsuario ? (
-            <img
-              src={fotoUsuario}
-              alt="Profile"
-              className="w-full h-full object-cover rounded-full"
-            />
-          ) : (
-            <div className="w-full h-full rounded-full bg-primary/20 flex items-center justify-center">
-              <span className="text-primary font-black text-sm">
-                {usuarioLogged ? usuarioLogged.nombre.charAt(0).toUpperCase() : "?"}
-              </span>
-            </div>
-          )}
+          <img
+            src={fotoUsuario}
+            alt="Profile"
+            className="w-full h-full object-cover rounded-full"
+          />
         </Link>
       </div>
 
@@ -593,10 +590,11 @@ const Community = () => {
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`text-[10px] font-bold px-5 py-2.5 rounded-full uppercase tracking-wider shrink-0 cursor-pointer transition-all duration-300 ${activeTab === tab.key
-                    ? "bg-primary text-white shadow-lg shadow-primary/30 scale-105"
-                    : "bg-white dark:bg-[#12080a] text-slate-400 dark:text-white/40 border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none hover:bg-slate-50 dark:hover:bg-white/5"
-                    }`}
+                  className={`text-[10px] font-bold px-5 py-2.5 rounded-full uppercase tracking-wider shrink-0 cursor-pointer transition-all duration-300 ${
+                    activeTab === tab.key
+                      ? "bg-primary text-white shadow-lg shadow-primary/30 scale-105"
+                      : "bg-white dark:bg-[#12080a] text-slate-400 dark:text-white/40 border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none hover:bg-slate-50 dark:hover:bg-white/5"
+                  }`}
                 >
                   {tab.label}
                 </button>
@@ -619,11 +617,14 @@ const Community = () => {
                   No hay publicaciones todavía. ¡Sé el primero!
                 </p>
               )}
-              {!loading && !error && publicaciones.length > 0 && publicacionesFiltradas.length === 0 && (
-                <p className="text-center text-slate-400 dark:text-white/40 text-sm py-8">
-                  No hay publicaciones en esta categoría.
-                </p>
-              )}
+              {!loading &&
+                !error &&
+                publicaciones.length > 0 &&
+                publicacionesFiltradas.length === 0 && (
+                  <p className="text-center text-slate-400 dark:text-white/40 text-sm py-8">
+                    No hay publicaciones en esta categoría.
+                  </p>
+                )}
               {!loading &&
                 !error &&
                 publicacionesFiltradas.map((pub) => (
@@ -698,7 +699,9 @@ const Community = () => {
               </div>
               <div className="flex -space-x-2 mb-3">
                 {amigos.length === 0 ? (
-                  <span className="text-xs text-slate-400">{t("community.noFriends")}</span>
+                  <span className="text-xs text-slate-400">
+                    {t("community.noFriends")}
+                  </span>
                 ) : (
                   <>
                     {/* Renderizamos máximo 5 avatares redondos reales de amigos */}
@@ -719,7 +722,9 @@ const Community = () => {
                     {/* Si hay más de 5, mostramos el contador de "+X" */}
                     {amigos.length > 5 && (
                       <div className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 bg-primary flex items-center justify-center">
-                        <span className="text-[8px] font-black text-white">+{amigos.length - 5}</span>
+                        <span className="text-[8px] font-black text-white">
+                          +{amigos.length - 5}
+                        </span>
                       </div>
                     )}
                   </>
@@ -727,7 +732,10 @@ const Community = () => {
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 <span className="font-bold text-slate-700 dark:text-white">
-                  {amigos.length} {amigos.length !== 1 ? t("community.friends_plural") : t("community.friend")}
+                  {amigos.length}{" "}
+                  {amigos.length !== 1
+                    ? t("community.friends_plural")
+                    : t("community.friend")}
                 </span>{" "}
                 {t("community.friendsInCommunity")}
               </p>
