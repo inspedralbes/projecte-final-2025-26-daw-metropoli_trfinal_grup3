@@ -2,10 +2,9 @@ import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Navbar from "../../layouts/Navbar";
-import {
-  getUsuario,
-  updatePerfil,
-} from '../../services/communicationManager';
+import { getUsuario, updatePerfil } from "../../services/communicationManager";
+
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 const EditProfile = () => {
   const { t } = useTranslation();
@@ -14,7 +13,9 @@ const EditProfile = () => {
   // Get current user from localStorage
   const storedUser = localStorage.getItem("usuario");
   const currentUser = storedUser ? JSON.parse(storedUser) : null;
-  const ID_USUARIO_ACTUAL = currentUser ? (currentUser.id_usuario || currentUser.id) : null;
+  const ID_USUARIO_ACTUAL = currentUser
+    ? currentUser.id_usuario || currentUser.id
+    : null;
 
   // Estado del formulario — se rellena desde la BD al cargar la pantalla
   const [nombre, setNombre] = useState("");
@@ -27,8 +28,6 @@ const EditProfile = () => {
   const [guardado, setGuardado] = useState(false);
   const [errores, setErrores] = useState({});
   const [cargando, setCargando] = useState(true);
-
-  const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
   // Al entrar a la pantalla, pedimos los datos actuales del usuario a la BD
   useEffect(() => {
@@ -54,19 +53,84 @@ const EditProfile = () => {
 
   const validar = () => {
     const nuevosErrores = {};
-    if (!nombre.trim()) nuevosErrores.nombre = t("editProfile.errorName") || "El nombre es obligatorio";
+    if (!nombre.trim())
+      nuevosErrores.nombre =
+        t("editProfile.errorName") || "El nombre es obligatorio";
     if (nombre.trim().length > 40)
-      nuevosErrores.nombre = t("editProfile.errorNameLong") || "El nombre es muy largo";
-    if (bio.length > 100) nuevosErrores.bio = t("editProfile.errorBioLong") || "La biografía es muy larga";
+      nuevosErrores.nombre =
+        t("editProfile.errorNameLong") || "El nombre es muy largo";
+    if (bio.length > 100)
+      nuevosErrores.bio =
+        t("editProfile.errorBioLong") || "La biografía es muy larga";
     return nuevosErrores;
   };
 
-  const handleCambioFoto = (evento) => {
+  // Comprime una imagen usando Canvas antes de subirla al servidor
+  // Esto evita errores 413 (Request Entity Too Large) en producción
+  const comprimirImagen = (archivo) => {
+    return new Promise((resolve) => {
+      const MAX_SIZE = 800; // px máximo en el lado más largo
+      const QUALITY = 0.8; // 80% de calidad JPEG
+
+      const img = new Image();
+      const urlTemporal = URL.createObjectURL(archivo);
+
+      img.onload = () => {
+        URL.revokeObjectURL(urlTemporal);
+
+        // Calculamos las nuevas dimensiones manteniendo la proporción
+        let ancho = img.width;
+        let alto = img.height;
+
+        if (ancho > MAX_SIZE || alto > MAX_SIZE) {
+          if (ancho > alto) {
+            alto = Math.round((alto * MAX_SIZE) / ancho);
+            ancho = MAX_SIZE;
+          } else {
+            ancho = Math.round((ancho * MAX_SIZE) / alto);
+            alto = MAX_SIZE;
+          }
+        }
+
+        const canvas = document.createElement("canvas");
+        canvas.width = ancho;
+        canvas.height = alto;
+
+        const ctx = canvas.getContext("2d");
+        ctx.drawImage(img, 0, 0, ancho, alto);
+
+        canvas.toBlob(
+          (blob) => {
+            // Convertimos el blob en un File para que multer lo trate igual
+            const archivoComprimido = new File([blob], archivo.name, {
+              type: "image/jpeg",
+              lastModified: Date.now(),
+            });
+            resolve(archivoComprimido);
+          },
+          "image/jpeg",
+          QUALITY,
+        );
+      };
+
+      img.onerror = () => {
+        // Si falla la compresión, usamos el archivo original
+        URL.revokeObjectURL(urlTemporal);
+        resolve(archivo);
+      };
+
+      img.src = urlTemporal;
+    });
+  };
+
+  const handleCambioFoto = async (evento) => {
     const archivoSeleccionado = evento.target.files[0];
     if (archivoSeleccionado) {
-      setArchivoDeFoto(archivoSeleccionado);
-      // Creamos una URL temporal para mostrar la imagen antes de subirla
-      setPrevisualizacionDeFoto(URL.createObjectURL(archivoSeleccionado));
+      // Comprimimos la imagen antes de guardarla en el estado
+      const archivoComprimido = await comprimirImagen(archivoSeleccionado);
+      setArchivoDeFoto(archivoComprimido);
+      // Creamos una URL temporal para mostrar la imagen comprimida como previsualización
+      setPrevisualizacionDeFoto(URL.createObjectURL(archivoComprimido));
     }
   };
 
@@ -104,7 +168,7 @@ const EditProfile = () => {
           bio,
           // Si el backend nos devolvió una nueva ruta de foto, la usamos
           foto: resp.data?.foto_perfil || currentUser.foto,
-          foto_perfil: resp.data?.foto_perfil || currentUser.foto_perfil
+          foto_perfil: resp.data?.foto_perfil || currentUser.foto_perfil,
         };
 
         localStorage.setItem("usuario", JSON.stringify(newUserData));
@@ -178,7 +242,11 @@ const EditProfile = () => {
             <div className="relative">
               <div className="w-28 h-28 md:w-32 md:h-32 rounded-full border-4 border-white dark:border-slate-800 shadow-lg overflow-hidden bg-slate-100 dark:bg-slate-800">
                 <img
-                  src={previsualizacionDeFoto || currentUser?.foto || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+                  src={
+                    previsualizacionDeFoto ||
+                    currentUser?.foto ||
+                    "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                  }
                   alt="Avatar"
                   className="w-full h-full object-cover"
                 />
@@ -222,10 +290,11 @@ const EditProfile = () => {
                 onChange={(e) => setNombre(e.target.value)}
                 maxLength={40}
                 placeholder={t("editProfile.namePlaceholder") || "Tu nombre"}
-                className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-2xl px-4 py-3.5 text-base text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${errores.nombre
+                className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-2xl px-4 py-3.5 text-base text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
+                  errores.nombre
                     ? "border-red-400 focus:ring-red-400"
                     : "border-slate-200 dark:border-slate-800 focus:border-primary"
-                  }`}
+                }`}
               />
               <div className="flex justify-between items-center mt-1.5 px-1">
                 <p className="text-red-500 text-xs font-medium">
@@ -250,14 +319,20 @@ const EditProfile = () => {
                 onChange={(e) => setBio(e.target.value)}
                 maxLength={100}
                 rows={3}
-                placeholder={t("editProfile.bioPlaceholder") || "Cuéntanos algo sobre ti..."}
-                className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-2xl px-4 py-3.5 text-base text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors resize-none ${errores.bio
+                placeholder={
+                  t("editProfile.bioPlaceholder") ||
+                  "Cuéntanos algo sobre ti..."
+                }
+                className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-2xl px-4 py-3.5 text-base text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors resize-none ${
+                  errores.bio
                     ? "border-red-400 focus:ring-red-400"
                     : "border-slate-200 dark:border-slate-800 focus:border-primary"
-                  }`}
+                }`}
               />
               <div className="flex justify-between items-center mt-1.5 px-1">
-                <p className="text-red-500 text-xs font-medium">{errores.bio}</p>
+                <p className="text-red-500 text-xs font-medium">
+                  {errores.bio}
+                </p>
                 <p className="text-[10px] font-bold text-slate-400 tracking-wider">
                   {bio.length}/100
                 </p>
