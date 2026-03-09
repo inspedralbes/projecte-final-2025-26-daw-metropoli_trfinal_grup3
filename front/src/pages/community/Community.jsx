@@ -1,5 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 import Navbar from "../../layouts/Navbar";
 import {
   getPublicaciones,
@@ -8,6 +9,7 @@ import {
   createRespuesta,
   toggleLike,
   uploadFotoComunidad,
+  getAmigos,
 } from "../../services/communicationManager";
 import socket from "../../services/socketManager";
 
@@ -15,9 +17,9 @@ import socket from "../../services/socketManager";
 const formatDate = (date) =>
   date
     ? new Date(date).toLocaleDateString("es-ES", {
-        day: "2-digit",
-        month: "short",
-      })
+      day: "2-digit",
+      month: "short",
+    })
     : "";
 
 /**
@@ -231,11 +233,10 @@ const PostCard = ({ pub, onComentarioCreado }) => {
       <div className="px-4 py-3 flex items-center gap-5 border-t border-slate-100 dark:border-white/5">
         <button
           onClick={handleLike}
-          className={`flex items-center gap-1.5 transition-colors cursor-pointer group ${
-            liked
-              ? "text-primary"
-              : "text-slate-400 dark:text-white/40 hover:text-primary"
-          }`}
+          className={`flex items-center gap-1.5 transition-colors cursor-pointer group ${liked
+            ? "text-primary"
+            : "text-slate-400 dark:text-white/40 hover:text-primary"
+            }`}
         >
           <span
             className="material-symbols-outlined text-[20px] group-active:scale-125 transition-transform"
@@ -364,11 +365,17 @@ const PostCard = ({ pub, onComentarioCreado }) => {
 // ─── Componente principal ─────────────────────────────────────────────────────
 const Community = () => {
   const navigate = useNavigate();
+  const { t } = useTranslation();
   const usuarioInfo = localStorage.getItem("usuario");
   const usuarioLogged = usuarioInfo ? JSON.parse(usuarioInfo) : null;
 
   const [activeTab, setActiveTab] = useState("Recent");
-  const tabs = ["Recent", "Official", "Fan Zone", "Popular"];
+  const tabs = [
+    { key: "Recent", label: t("community.tabs.recent") },
+    { key: "Official", label: t("community.tabs.official") },
+    { key: "Fan Zone", label: t("community.tabs.fanZone") },
+    { key: "Popular", label: t("community.tabs.popular") },
+  ];
 
   const [publicaciones, setPublicaciones] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -386,6 +393,8 @@ const Community = () => {
     tipo_publicacion: "popular",
     ubicacion: "",
   });
+
+  const [amigos, setAmigos] = useState([]);
 
   const cargarPublicaciones = async () => {
     try {
@@ -408,16 +417,24 @@ const Community = () => {
   useEffect(() => {
     cargarPublicaciones();
 
+    if (usuarioLogged) {
+      getAmigos(usuarioLogged.id_usuario)
+        .then((data) => {
+          setAmigos(data.data || []);
+        })
+        .catch((err) => console.error("Error al cargar amigos", err));
+    }
+
     socket.on("nueva_publicacion", () => cargarPublicaciones());
     socket.on("perfil_actualizado", (usuarioActualizado) => {
       setPublicaciones((lista) =>
         lista.map((pub) =>
           String(pub.id_usuario) === String(usuarioActualizado.id_usuario)
             ? {
-                ...pub,
-                nombre_usuario: usuarioActualizado.nuevo_nombre,
-                foto_perfil: usuarioActualizado.nueva_foto,
-              }
+              ...pub,
+              nombre_usuario: usuarioActualizado.nuevo_nombre,
+              foto_perfil: usuarioActualizado.nueva_foto,
+            }
             : pub,
         ),
       );
@@ -476,6 +493,54 @@ const Community = () => {
     }
   };
 
+  let fotoUsuario = null;
+  if (usuarioLogged && (usuarioLogged.foto_perfil || usuarioLogged.foto)) {
+    fotoUsuario =
+      (import.meta.env.VITE_API_URL || "http://localhost:3000") +
+      (usuarioLogged.foto_perfil || usuarioLogged.foto);
+  }
+
+  // Contadores manuales para Trending Topics
+  let countPopular = 0;
+  let countOfficial = 0;
+  let countFanZone = 0;
+
+  for (let i = 0; i < publicaciones.length; i++) {
+    if (publicaciones[i].tipo_publicacion === "popular") countPopular++;
+    if (publicaciones[i].tipo_publicacion === "oficial") countOfficial++;
+    if (publicaciones[i].tipo_publicacion === "fanzone") countFanZone++;
+  }
+
+  const trendingTopics = [
+    { tag: "#Popular", posts: countPopular },
+    { tag: "#Oficial", posts: countOfficial },
+    { tag: "#FanZone", posts: countFanZone },
+  ];
+
+  // Ordenar de mayor a menor con bubble sort simple
+  for (let i = 0; i < trendingTopics.length - 1; i++) {
+    for (let j = 0; j < trendingTopics.length - 1 - i; j++) {
+      if (trendingTopics[j].posts < trendingTopics[j + 1].posts) {
+        let temp = trendingTopics[j];
+        trendingTopics[j] = trendingTopics[j + 1];
+        trendingTopics[j + 1] = temp;
+      }
+    }
+  }
+
+  // Mapa de key de tab → valor de tipo_publicacion en la BD
+  const tabFiltro = {
+    "Recent": null,
+    "Official": "oficial",
+    "Fan Zone": "fanzone",
+    "Popular": "popular",
+  };
+
+  // Publicaciones filtradas según el tab activo
+  const publicacionesFiltradas = tabFiltro[activeTab]
+    ? publicaciones.filter((p) => p.tipo_publicacion === tabFiltro[activeTab])
+    : publicaciones;
+
   return (
     <div className="min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-white font-display select-none transition-colors duration-300 md:pl-16">
       {/* Header */}
@@ -499,13 +564,21 @@ const Community = () => {
         </h1>
         <Link
           to="/profile"
-          className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden shadow-sm"
+          className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden shadow-sm flex-shrink-0"
         >
-          <img
-            src="https://cdn-icons-png.flaticon.com/512/149/149071.png"
-            alt="Profile"
-            className="w-full h-full object-cover rounded-full"
-          />
+          {fotoUsuario ? (
+            <img
+              src={fotoUsuario}
+              alt="Profile"
+              className="w-full h-full object-cover rounded-full"
+            />
+          ) : (
+            <div className="w-full h-full rounded-full bg-primary/20 flex items-center justify-center">
+              <span className="text-primary font-black text-sm">
+                {usuarioLogged ? usuarioLogged.nombre.charAt(0).toUpperCase() : "?"}
+              </span>
+            </div>
+          )}
         </Link>
       </div>
 
@@ -518,15 +591,14 @@ const Community = () => {
             <div className="flex gap-3 overflow-x-auto no-scrollbar py-2 -mx-5 px-5 mb-4">
               {tabs.map((tab) => (
                 <button
-                  key={tab}
-                  onClick={() => setActiveTab(tab)}
-                  className={`text-[10px] font-bold px-5 py-2.5 rounded-full uppercase tracking-wider shrink-0 cursor-pointer transition-all duration-300 ${
-                    activeTab === tab
-                      ? "bg-primary text-white shadow-lg shadow-primary/30 scale-105"
-                      : "bg-white dark:bg-[#12080a] text-slate-400 dark:text-white/40 border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none hover:bg-slate-50 dark:hover:bg-white/5"
-                  }`}
+                  key={tab.key}
+                  onClick={() => setActiveTab(tab.key)}
+                  className={`text-[10px] font-bold px-5 py-2.5 rounded-full uppercase tracking-wider shrink-0 cursor-pointer transition-all duration-300 ${activeTab === tab.key
+                    ? "bg-primary text-white shadow-lg shadow-primary/30 scale-105"
+                    : "bg-white dark:bg-[#12080a] text-slate-400 dark:text-white/40 border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none hover:bg-slate-50 dark:hover:bg-white/5"
+                    }`}
                 >
-                  {tab}
+                  {tab.label}
                 </button>
               ))}
             </div>
@@ -547,9 +619,14 @@ const Community = () => {
                   No hay publicaciones todavía. ¡Sé el primero!
                 </p>
               )}
+              {!loading && !error && publicaciones.length > 0 && publicacionesFiltradas.length === 0 && (
+                <p className="text-center text-slate-400 dark:text-white/40 text-sm py-8">
+                  No hay publicaciones en esta categoría.
+                </p>
+              )}
               {!loading &&
                 !error &&
-                publicaciones.map((pub) => (
+                publicacionesFiltradas.map((pub) => (
                   <PostCard
                     key={pub._id}
                     pub={pub}
@@ -566,7 +643,7 @@ const Community = () => {
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-4 h-1 bg-primary rounded-full"></div>
                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-white/60">
-                  Your Group
+                  {t("community.yourGroup")}
                 </h3>
               </div>
               <div className="flex items-center gap-3 mb-4">
@@ -577,72 +654,82 @@ const Community = () => {
                 </div>
                 <div>
                   <p className="font-bold text-slate-800 dark:text-white text-sm">
-                    Invite Friends
+                    {t("community.inviteFriends")}
                   </p>
                   <p className="text-xs text-slate-400">
-                    Share your group QR code
+                    {t("community.shareQR")}
                   </p>
                 </div>
               </div>
               <button className="w-full bg-primary text-white font-bold py-2.5 rounded-xl text-sm shadow-lg shadow-primary/30 hover:bg-[#ff1e3c] transition-colors">
-                Show QR Code
+                {t("community.showQR")}
               </button>
             </div>
 
-            {/* Trending Topics */}
+            {/* Trending Topics (Actividad por categoría calculada en vivo) */}
             <div className="bg-white dark:bg-[#12080a] rounded-[24px] border border-slate-100 dark:border-white/5 p-5 shadow-sm">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-4 h-1 bg-primary rounded-full"></div>
                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-white/60">
-                  Trending
+                  {t("community.trending")}
                 </h3>
               </div>
               <div className="space-y-3">
-                {[
-                  "#SpanishGP",
-                  "#F1 2026",
-                  "#Qualifying",
-                  "#CatalunyaCircuit",
-                  "#FanZone",
-                ].map((tag, i) => (
+                {trendingTopics.map((item, i) => (
                   <div key={i} className="flex items-center justify-between">
                     <span className="text-sm font-bold text-primary">
-                      {tag}
+                      {item.tag}
                     </span>
                     <span className="text-[10px] font-bold text-slate-400">
-                      {(Math.random() * 10 + 1).toFixed(1)}k posts
+                      {item.posts} {t("community.posts")}
                     </span>
                   </div>
                 ))}
               </div>
             </div>
 
-            {/* Online Now */}
+            {/* Online Now -> Modificado a Amigos (Datos Reales) */}
             <div className="bg-white dark:bg-[#12080a] rounded-[24px] border border-slate-100 dark:border-white/5 p-5 shadow-sm">
               <div className="flex items-center gap-2 mb-4">
                 <div className="w-4 h-1 bg-primary rounded-full"></div>
                 <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-white/60">
-                  Online Now
+                  {t("community.friends")}
                 </h3>
               </div>
               <div className="flex -space-x-2 mb-3">
-                {[12, 15, 20, 25, 30].map((img) => (
-                  <img
-                    key={img}
-                    src={`https://i.pravatar.cc/40?img=${img}`}
-                    className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900"
-                    alt="User"
-                  />
-                ))}
-                <div className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 bg-primary flex items-center justify-center">
-                  <span className="text-[8px] font-black text-white">+48</span>
-                </div>
+                {amigos.length === 0 ? (
+                  <span className="text-xs text-slate-400">{t("community.noFriends")}</span>
+                ) : (
+                  <>
+                    {/* Renderizamos máximo 5 avatares redondos reales de amigos */}
+                    {amigos.slice(0, 5).map((amigo) => (
+                      <img
+                        key={amigo.id_amigo}
+                        src={
+                          amigo.foto_amigo
+                            ? `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${amigo.foto_amigo}`
+                            : "https://cdn-icons-png.flaticon.com/512/149/149071.png"
+                        }
+                        className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 object-cover bg-white"
+                        alt={amigo.nombre_amigo || "User"}
+                        title={amigo.nombre_amigo}
+                      />
+                    ))}
+
+                    {/* Si hay más de 5, mostramos el contador de "+X" */}
+                    {amigos.length > 5 && (
+                      <div className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 bg-primary flex items-center justify-center">
+                        <span className="text-[8px] font-black text-white">+{amigos.length - 5}</span>
+                      </div>
+                    )}
+                  </>
+                )}
               </div>
               <p className="text-xs text-slate-500 dark:text-slate-400">
                 <span className="font-bold text-slate-700 dark:text-white">
-                  53 fans
+                  {amigos.length} {amigos.length !== 1 ? t("community.friends_plural") : t("community.friend")}
                 </span>{" "}
-                at the circuit right now
+                {t("community.friendsInCommunity")}
               </p>
             </div>
           </div>

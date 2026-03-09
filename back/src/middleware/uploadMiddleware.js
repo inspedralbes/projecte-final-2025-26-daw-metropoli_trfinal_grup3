@@ -5,16 +5,29 @@ const storage = multer.diskStorage({
     destination: (req, file, cb) => {
         // Determinamos la carpeta destino según el campo del archivo
         let folder = 'public/images/eventos/';
+
         if (file.fieldname === 'fotoPerfil') {
             folder = 'public/images/usuarios/';
         } else if (file.fieldname === 'fotoPublicacion') {
             folder = 'public/images/comunidad/';
+        } else if (file.fieldname === 'imagenPoi') {
+            folder = 'public/images/pois/';
         }
+
         cb(null, folder);
     },
     filename: (req, file, cb) => {
         const ext = path.extname(file.originalname);
-        const prefix = file.fieldname === 'fotoPerfil' ? 'user' : 'evento';
+
+        let prefix = 'evento';
+        if (file.fieldname === 'fotoPerfil') {
+            prefix = 'user';
+        } else if (file.fieldname === 'fotoPublicacion') {
+            prefix = 'publicacion';
+        } else if (file.fieldname === 'imagenPoi') {
+            prefix = 'poi';
+        }
+
         const fileName = `${prefix}-${Date.now()}${ext}`;
         cb(null, fileName);
     }

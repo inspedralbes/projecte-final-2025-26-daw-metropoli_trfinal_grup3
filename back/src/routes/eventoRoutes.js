@@ -40,5 +40,6 @@ router.get('/', eventoController.getEventos);
  * Podeis enviar solo el campo que cambia (Edicion Parcial).
  */
 router.put('/:id', upload.single('imagen'), eventoController.updateEvento);
+router.delete('/:id', eventoController.deleteEvento);
 
 export default router;

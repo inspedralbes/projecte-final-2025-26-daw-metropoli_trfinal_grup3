@@ -24,6 +24,10 @@ const deleteById = async (id) => {
     return await query('DELETE FROM pois WHERE id_poi = ?', [id]);
 };
 
+const updateImageUrl = async (id, imagenUrl) => {
+    return await query('UPDATE pois SET imagen_url = ? WHERE id_poi = ?', [imagenUrl, id]);
+};
+
 const nullifyNodeReference = async (nodeId) => {
     return await query('UPDATE pois SET id_nodo_acceso = NULL WHERE id_nodo_acceso = ?', [nodeId]);
 };
@@ -33,5 +37,6 @@ export default {
     getAll,
     getNodoAccesoId,
     deleteById,
-    nullifyNodeReference
+    nullifyNodeReference,
+    updateImageUrl
 };

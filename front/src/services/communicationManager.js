@@ -42,6 +42,38 @@ export const deletePoi = async (id) => {
   }
 };
 
+// Obtiene los 3 POIs más cercanos al usuario usando la lógica difusa del backend
+export const getPoisCercanos = async (lat, lng) => {
+  try {
+    const response = await fetch(`${API_URL}/api/pois/cercanos?lat=${lat}&lng=${lng}`);
+    if (!response.ok) throw new Error("Failed to fetch POIs cercanos");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getPoisCercanos:", error);
+    throw error;
+  }
+};
+
+// Sube una imagen para un POI ya creado y actualiza su imagen_url en la BD
+export const uploadPoiImage = async (idPoi, file) => {
+  try {
+    // Usamos FormData para enviar el archivo como multipart/form-data
+    // El campo se llama 'imagenPoi' que es el que espera multer en el backend
+    const formData = new FormData();
+    formData.append("imagenPoi", file);
+
+    const response = await fetch(`${API_URL}/api/pois/${idPoi}/imagen`, {
+      method: "POST",
+      body: formData
+    });
+    if (!response.ok) throw new Error("Failed to upload POI image");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in uploadPoiImage:", error);
+    throw error;
+  }
+};
+
 // ── Ruta Dijkstra ──
 export const getRoute = async (origenId, destinoId, coords = null) => {
   try {
@@ -495,12 +527,9 @@ export const addAmigo = async (userId, friendId) => {
 
 export const removeAmigo = async (userId, friendId) => {
   try {
-    const response = await fetch(
-      `${API_URL}/api/amigos/${userId}/${friendId}`,
-      {
-        method: "DELETE",
-      },
-    );
+    const response = await fetch(`${API_URL}/api/amigos/${userId}/${friendId}`, {
+      method: "DELETE",
+    });
     if (!response.ok) throw new Error("Failed to remove Amigo");
     return await response.json();
   } catch (error) {

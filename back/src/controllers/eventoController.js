@@ -127,9 +127,39 @@ const getNextEvento = async (req, res) => {
     }
 };
 
+const deleteEvento = async (req, res) => {
+    try {
+        const id = req.params.id;
+
+        const result = await eventoService.deleteEvento(id);
+
+        if (result.affectedRows === 0) {
+            return res.status(404).json({
+                success: false,
+                message: 'Evento no encontrado'
+            });
+        }
+
+        // 📻 Avisamos a todos los clientes para que recarguen la lista de eventos
+        emitirMensaje('actualizacion_eventos', `Se ha eliminado el evento ${id}`);
+
+        res.json({
+            success: true,
+            message: 'Evento eliminado correctamente'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+            error_code: 'ERROR_INTERNO'
+        });
+    }
+};
+
 export default {
     createEvento,
     getEventos,
     updateEvento,
-    getNextEvento
+    getNextEvento,
+    deleteEvento
 };

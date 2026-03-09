@@ -65,9 +65,15 @@ const getNext = async () => {
     return result[0];
 };
 
+const deleteById = async (id) => {
+    const result = await query('DELETE FROM eventos WHERE id_evento = ?', [id]);
+    return result[0];
+};
+
 export default {
     create,
     getAll,
     update,
-    getNext
+    getNext,
+    deleteById
 };

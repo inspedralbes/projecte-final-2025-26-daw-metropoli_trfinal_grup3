@@ -17,17 +17,59 @@
     "driverQA": "Q&A con Pilotos en 15 min",
     "discoverNearby": "Descubrir Cerca",
     "seeAll": "Ver Todo",
+    "groups": "Comunidad",
+    "connectWithFans": "Conecta con otros fans",
     "air": "Aire",
     "track": "Pista",
     "rain": "Lluvia",
-    "wind": "Viento"
+    "wind": "Viento",
+    "quickAccess": "Acceso Rápido",
+    "trackConditions": "Condiciones de Pista",
+    "openCircuitMap": "Mapa del Circuito",
+    "communityFeed": "Comunidad"
+  },
+  "community": {
+    "yourGroup": "Tu Grupo",
+    "inviteFriends": "Invitar Amigos",
+    "shareQR": "Comparte tu código QR de grupo",
+    "showQR": "Mostrar Código QR",
+    "trending": "Tendencias",
+    "posts": "publicaciones",
+    "friends": "Amigos",
+    "noFriends": "Sin amigos añadidos",
+    "friendsInCommunity": "en la comunidad oficial",
+    "friend": "amigo",
+    "friends_plural": "amigos",
+    "communityFeed": "Comunidad",
+    "newPost": "Nueva publicación",
+    "publish": "Publicar",
+    "tabs": {
+      "recent": "Recientes",
+      "official": "Oficial",
+      "fanZone": "Fan Zone",
+      "popular": "Popular"
+    }
   },
   "nav": {
     "home": "Inicio",
     "events": "Eventos",
     "map": "Mapa",
     "community": "Comunidad",
-    "settings": "Ajustes"
+    "profile": "Perfil",
+    "settings": "Ajustes",
+    "lightMode": "Modo Claro",
+    "darkMode": "Modo Oscuro"
+  },
+  "events": {
+    "raceWeekend": "Fin de Semana de Carrera",
+    "noEvents": "No hay eventos programados",
+    "sessionsToday": "Sesiones hoy",
+    "live": "En Vivo",
+    "upcoming": "Próximos",
+    "done": "Finalizado",
+    "noEventsForDay": "No hay eventos para este día",
+    "mainEvent": "Evento Principal",
+    "liveNow": "En Vivo"
   },
   "settings": {
     "title": "Ajustes",

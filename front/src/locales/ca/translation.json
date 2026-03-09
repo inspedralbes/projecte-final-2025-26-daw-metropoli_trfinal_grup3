@@ -17,17 +17,59 @@
     "driverQA": "Q&A amb Pilots en 15 min",
     "discoverNearby": "Descobrir a Prop",
     "seeAll": "Veure Tot",
+    "groups": "Comunitat",
+    "connectWithFans": "Connecta amb altres fans",
     "air": "Aire",
     "track": "Pista",
     "rain": "Pluja",
-    "wind": "Vent"
+    "wind": "Vent",
+    "quickAccess": "Accés Ràpid",
+    "trackConditions": "Condicions de Pista",
+    "openCircuitMap": "Mapa del Circuit",
+    "communityFeed": "Comunitat"
+  },
+  "community": {
+    "yourGroup": "El teu Grup",
+    "inviteFriends": "Invita Amics",
+    "shareQR": "Comparteix el teu codi QR de grup",
+    "showQR": "Mostrar Codi QR",
+    "trending": "Tendències",
+    "posts": "publicacions",
+    "friends": "Amics",
+    "noFriends": "Sense amics afegits",
+    "friendsInCommunity": "a la comunitat oficial",
+    "friend": "amic",
+    "friends_plural": "amics",
+    "communityFeed": "Comunitat",
+    "newPost": "Nova publicació",
+    "publish": "Publicar",
+    "tabs": {
+      "recent": "Recents",
+      "official": "Oficial",
+      "fanZone": "Fan Zone",
+      "popular": "Popular"
+    }
   },
   "nav": {
     "home": "Inici",
     "events": "Esdeveniments",
     "map": "Mapa",
     "community": "Comunitat",
-    "settings": "Configuració"
+    "profile": "Perfil",
+    "settings": "Configuraci\u00f3",
+    "lightMode": "Mode Clar",
+    "darkMode": "Mode Fosc"
+  },
+  "events": {
+    "raceWeekend": "Cap de Setmana de Cursa",
+    "noEvents": "No hi ha esdeveniments programats",
+    "sessionsToday": "Sessions avui",
+    "live": "En Directe",
+    "upcoming": "Propers",
+    "done": "Finalitzat",
+    "noEventsForDay": "No hi ha esdeveniments per aquest dia",
+    "mainEvent": "Esdeveniment Principal",
+    "liveNow": "En Directe"
   },
   "settings": {
     "title": "Configuració",
