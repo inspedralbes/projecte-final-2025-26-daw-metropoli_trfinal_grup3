@@ -1,27 +1,16 @@
 import loginService from '../services/loginService.js';
 import googleAuthService from '../services/googleAuthService.js';
-import captchaService from '../services/captchaService.js';
 
 // ── POST /api/auth/register ───────────────────────────────────────────────────
 const register = async (req, res) => {
     try {
-        const { nombre, email, password, rol, captchaToken } = req.body;
+        const { nombre, email, password, rol } = req.body;
 
-        if (!nombre || !email || !password || !captchaToken) {
+        if (!nombre || !email || !password) {
             return res.status(400).json({
                 success:    false,
-                message:    'Todos los campos y el CAPTCHA son obligatorios',
+                message:    'Todos los campos son obligatorios',
                 error_code: 'MISSING_FIELDS',
-            });
-        }
-
-        // Verify CAPTCHA
-        const isCaptchaValid = await captchaService.verifyCaptcha(captchaToken);
-        if (!isCaptchaValid) {
-            return res.status(400).json({
-                success:    false,
-                message:    'Verificación de CAPTCHA fallida',
-                error_code: 'INVALID_CAPTCHA',
             });
         }
 
@@ -51,23 +40,13 @@ const register = async (req, res) => {
 // ── POST /api/auth/login ──────────────────────────────────────────────────────
 const login = async (req, res) => {
     try {
-        const { email, password, captchaToken } = req.body;
+        const { email, password } = req.body;
 
-        if (!email || !password || !captchaToken) {
+        if (!email || !password) {
             return res.status(400).json({
                 success:    false,
-                message:    'Email, password y CAPTCHA son obligatorios',
+                message:    'Email y password son obligatorios',
                 error_code: 'MISSING_FIELDS',
-            });
-        }
-
-        // Verify CAPTCHA
-        const isCaptchaValid = await captchaService.verifyCaptcha(captchaToken);
-        if (!isCaptchaValid) {
-            return res.status(400).json({
-                success:    false,
-                message:    'Verificación de CAPTCHA fallida',
-                error_code: 'INVALID_CAPTCHA',
             });
         }
 

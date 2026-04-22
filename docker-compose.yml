@@ -5,16 +5,22 @@ services:
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
-    volumes:
-      - ./back:/app
-      - /app/node_modules
+    env_file:
+      - ./back/.env
     environment:
       - DB_HOST=db
       - DB_USER=root
       - DB_PASSWORD=password
       - DB_NAME=metropoli
-      - MONGO_URI=${MONGO_URI} # ← Lee del .env — apunta a MongoDB Atlas
-      - GEMINI_API_KEY=${GEMINI_API_KEY}
+    develop:
+      watch:
+        - action: sync
+          path: ./back
+          target: /app
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./back/package.json
     command: npm run dev
     depends_on:
       db:
@@ -28,12 +34,20 @@ services:
       dockerfile: Dockerfile
     ports:
       - "5173:5173"
-    volumes:
-      - ./front:/app
-      - /app/node_modules
+    env_file:
+      - ./front/.env
     environment:
       - VITE_API_URL=http://localhost:3000
       - NODE_OPTIONS=--max-old-space-size=4096
+    develop:
+      watch:
+        - action: sync
+          path: ./front
+          target: /app
+          ignore:
+            - node_modules/
+        - action: rebuild
+          path: ./front/package.json
     depends_on:
       - backend
     networks:

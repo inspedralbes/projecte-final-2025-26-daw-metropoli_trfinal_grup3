@@ -39,6 +39,23 @@ Aquí podeu trobar més informació sobre la nostra planificació i disseny del 
   </p>
 </div>
 
+## 🚀 Desarrollo y Despliegue
+
+Ahora puedes gestionar el proyecto fácilmente usando scripts de Node/NPM desde la raíz:
+
+- **`npm run dev`**: Realiza un ciclo completo (apaga contenedores, reconstruye imágenes, levanta en segundo plano y muestra logs).
+- **`npm run up`**: Levanta los contenedores existentes.
+- **`npm run down`**: Detiene y elimina los contenedores.
+- **`npm run build`**: Reconstruye las imágenes de Docker.
+- **`npm run logs`**: Muestra los logs en tiempo real.
+- **`npm run clean`**: Limpieza total (elimina imágenes y volúmenes/base de datos).
+
+### Requisitos
+- Tener instalado Node.js y Docker.
+- Los scripts se encargan de ejecutar `docker compose` internamente.
+
+---
+
 # Aquest fitxer ha de contenir com a mínim:
 
 - Petita descripció

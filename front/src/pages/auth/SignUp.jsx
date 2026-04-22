@@ -1,9 +1,7 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
-import ReCAPTCHA from "react-google-recaptcha";
 
-const RECAPTCHA_SITE_KEY = "6Lds134sAAAAALzw8aavdWcmsi93AfO5bAdaPTMJ";
 const API_BASE = import.meta.env.VITE_API_URL
   ? `${import.meta.env.VITE_API_URL}/api`
   : "http://localhost:3000/api";
@@ -12,7 +10,6 @@ const SignUp = () => {
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState(null);
   const [step, setStep] = useState("form"); // "form" | "check-email"
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -20,7 +17,6 @@ const SignUp = () => {
   const [verifyLoading, setVerifyLoading] = useState(false);
   const [verifyError, setVerifyError] = useState(null);
   const [verifyStatus, setVerifyStatus] = useState("idle"); // "idle" | "loading" | "success" | "error"
-  const captchaRef = useRef(null);
 
   const [googleData, setGoogleData] = useState(null); // { token, email, nombre }
 
@@ -94,11 +90,6 @@ const SignUp = () => {
     e.preventDefault();
     setError(null);
 
-    if (!captchaToken) {
-      setError("Por favor completa el CAPTCHA antes de continuar.");
-      return;
-    }
-
     const nombre = e.target.name.value.trim();
     const email = e.target.email.value.trim();
     const password = e.target.password.value;
@@ -114,22 +105,18 @@ const SignUp = () => {
       const res = await fetch(`${API_BASE}/auth/register`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ nombre, email, password, captchaToken }),
+        body: JSON.stringify({ nombre, email, password }),
       });
       const data = await res.json();
 
       if (!res.ok) {
         setError(data.message || "Error al registrar. Inténtalo de nuevo.");
-        captchaRef.current?.reset();
-        setCaptchaToken(null);
         return;
       }
 
       setStep("check-email");
     } catch {
       setError("No se pudo conectar con el servidor. Inténtalo más tarde.");
-      captchaRef.current?.reset();
-      setCaptchaToken(null);
     } finally {
       setLoading(false);
     }
@@ -602,29 +589,12 @@ const SignUp = () => {
               </label>
             </div>
 
-            {/* reCAPTCHA */}
-            <div className="flex justify-center pt-1">
-              <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-primary/15">
-                <ReCAPTCHA
-                  ref={captchaRef}
-                  sitekey={RECAPTCHA_SITE_KEY}
-                  theme={
-                    document.documentElement.classList.contains("dark")
-                      ? "dark"
-                      : "light"
-                  }
-                  onChange={(token) => setCaptchaToken(token)}
-                  onExpired={() => setCaptchaToken(null)}
-                />
-              </div>
-            </div>
-
             {/* Submit */}
             <button
               className="w-full text-white font-bold py-4 rounded-xl transform transition-all active:scale-[0.98] hover:opacity-90 flex items-center justify-center gap-2 group disabled:opacity-40 disabled:cursor-not-allowed shadow-lg shadow-primary/20"
               style={{ backgroundColor: "#ee2b4b" }}
               type="submit"
-              disabled={!captchaToken || loading}
+              disabled={loading}
             >
               {loading ? (
                 <>

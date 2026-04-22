@@ -1,19 +1,15 @@
-import { useState, useRef } from "react";
+import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
-import ReCAPTCHA from "react-google-recaptcha";
 
-const RECAPTCHA_SITE_KEY = "6Lds134sAAAAALzw8aavdWcmsi93AfO5bAdaPTMJ";
 const API_BASE = import.meta.env.VITE_API_URL
   ? `${import.meta.env.VITE_API_URL}/api`
   : "http://localhost:3000/api";
 
 const Login = () => {
   const [showPassword, setShowPassword] = useState(false);
-  const [captchaToken, setCaptchaToken] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
-  const captchaRef = useRef(null);
   const navigate = useNavigate();
 
   const loginWithGoogle = useGoogleLogin({
@@ -60,11 +56,6 @@ const Login = () => {
     e.preventDefault();
     setError(null);
 
-    if (!captchaToken) {
-      setError("Por favor completa el CAPTCHA antes de continuar.");
-      return;
-    }
-
     const email = e.target.email.value.trim();
     const password = e.target.password.value;
 
@@ -73,7 +64,7 @@ const Login = () => {
       const res = await fetch(`${API_BASE}/auth/login`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ email, password, captchaToken }),
+        body: JSON.stringify({ email, password }),
       });
       const data = await res.json();
 
@@ -86,8 +77,6 @@ const Login = () => {
         } else {
           setError(data.message || "Credenciales incorrectas.");
         }
-        captchaRef.current?.reset();
-        setCaptchaToken(null);
         return;
       }
 
@@ -97,8 +86,6 @@ const Login = () => {
       navigate("/home");
     } catch {
       setError("No se pudo conectar con el servidor. Inténtalo más tarde.");
-      captchaRef.current?.reset();
-      setCaptchaToken(null);
     } finally {
       setLoading(false);
     }
@@ -250,23 +237,6 @@ const Login = () => {
               </div>
             </div>
 
-            {/* reCAPTCHA */}
-            <div className="flex justify-center pt-1">
-              <div className="rounded-xl overflow-hidden border border-slate-200 dark:border-primary/15">
-                <ReCAPTCHA
-                  ref={captchaRef}
-                  sitekey={RECAPTCHA_SITE_KEY}
-                  theme={
-                    document.documentElement.classList.contains("dark")
-                      ? "dark"
-                      : "light"
-                  }
-                  onChange={(token) => setCaptchaToken(token)}
-                  onExpired={() => setCaptchaToken(null)}
-                />
-              </div>
-            </div>
-
             {/* Submit */}
             <button
               className="w-full text-white font-bold py-4 rounded-xl transform transition-all active:scale-[0.98] mt-2 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
@@ -275,7 +245,7 @@ const Login = () => {
                 boxShadow: "0 10px 25px -5px rgba(238,43,75,0.2)",
               }}
               type="submit"
-              disabled={!captchaToken || loading}
+              disabled={loading}
             >
               {loading ? (
                 <>
