@@ -1,4 +1,5 @@
 import Publicacion from "./mongo/Publicacion.js";
+import Mensaje from "./mongo/Mensaje.js";
 
 // =============================================
 // PUBLICACIONES
@@ -69,10 +70,46 @@ const toggleLike = async (id_publicacion, userId) => {
   }
 };
 
+// =============================================
+// ACTIVIDAD Y CHAT
+// =============================================
+
+const getActividadReciente = async () => {
+  // Agregamos las últimas publicaciones y los últimos comentarios
+  const ultimasPubs = await Publicacion.find()
+    .sort({ createdAt: -1 })
+    .limit(10)
+    .select("nombre_usuario foto_perfil texto createdAt")
+    .lean();
+
+  const actividad = ultimasPubs.map(p => ({
+    tipo: 'post',
+    usuario: p.nombre_usuario,
+    foto: p.foto_perfil,
+    texto: p.texto,
+    fecha: p.createdAt
+  }));
+
+  // Podríamos agregar más tipos de actividad aquí en el futuro
+  return actividad.sort((a, b) => b.fecha - a.fecha);
+};
+
+const getChatHistory = async (room) => {
+  return await Mensaje.find({ room }).sort({ createdAt: 1 }).limit(50).lean();
+};
+
+const saveMensaje = async (data) => {
+  const msg = new Mensaje(data);
+  return await msg.save();
+};
+
 export default {
   getAll,
   create,
   addComentario,
   addRespuesta,
   toggleLike,
+  getActividadReciente,
+  getChatHistory,
+  saveMensaje
 };

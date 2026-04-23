@@ -43,6 +43,14 @@ const updatePerfil = async (id, nombre, bio, fotoPerfil) => {
     );
 };
 
+const searchByName = async (name) => {
+    const [rows] = await query(
+        'SELECT id_usuario, nombre, foto_perfil, bio FROM usuario WHERE nombre LIKE ? LIMIT 10',
+        [`%${name}%`]
+    );
+    return rows;
+};
+
 export default {
     create,
     findByEmail,
@@ -50,5 +58,6 @@ export default {
     verifyEmail,
     getAll,
     getById,
-    updatePerfil
+    updatePerfil,
+    searchByName
 };

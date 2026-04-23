@@ -16,6 +16,30 @@ export const initSocket = (servidorPrincipal) => {
         antenaSocket.on("connection", (cliente) => {
             console.log(`🔌 Un dispositivo se ha conectado a la radio: ${cliente.id}`);
 
+            // Unirse a una sala específica (para chat privado o secciones)
+            cliente.on("join_room", (room) => {
+                cliente.join(room);
+                console.log(`🏠 Usuario ${cliente.id} se unió a la sala: ${room}`);
+            });
+
+            // Chat privado persistente
+            cliente.on("private_message", async (data) => {
+                const { room, senderId, senderName, receiverId, text } = data;
+                
+                // 1. Guardar en MongoDB (importamos dinámicamente o usamos el service)
+                try {
+                    const { default: comunidadService } = await import('../services/comunidadService.js');
+                    const mensajeGuardado = await comunidadService.saveMensaje({
+                        room, senderId, senderName, receiverId, text
+                    });
+
+                    // 2. Emitir a la sala (incluye al remitente si está en ella)
+                    antenaSocket.to(room).emit("private_message", mensajeGuardado);
+                } catch (error) {
+                    console.error("❌ Error al guardar mensaje socket:", error);
+                }
+            });
+
             // Y si cierra la pestaña, lo registramos para que no consuma memoria a lo tonto
             cliente.on("disconnect", () => {
                 console.log(`❌ Dispositivo desconectado: ${cliente.id}`);

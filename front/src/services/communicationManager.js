@@ -210,6 +210,39 @@ export const getPublicaciones = async () => {
   }
 };
 
+export const getActividad = async () => {
+  try {
+    const response = await fetch(`${API_URL}/api/comunidad/actividad`);
+    if (!response.ok) throw new Error("Failed to fetch Actividad");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getActividad:", error);
+    throw error;
+  }
+};
+
+export const getChatHistory = async (room) => {
+  try {
+    const response = await fetch(`${API_URL}/api/comunidad/chat/${room}`);
+    if (!response.ok) throw new Error("Failed to fetch Chat History");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getChatHistory:", error);
+    throw error;
+  }
+};
+
+export const searchUsers = async (query) => {
+  try {
+    const response = await fetch(`${API_URL}/api/usuarios/search?q=${encodeURIComponent(query)}`);
+    if (!response.ok) throw new Error("Failed to search Users");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in searchUsers:", error);
+    throw error;
+  }
+};
+
 export const createPublicacion = async (publicacionData) => {
   try {
     const response = await fetch(`${API_URL}/api/comunidad`, {
