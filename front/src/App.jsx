@@ -35,7 +35,7 @@ function App() {
       root.style.setProperty("--theme-color", "#10b981");
       root.style.setProperty("--theme-text", "#ffffff");
     } else if (themeColor === "pink") {
-      root.style.setProperty("--theme-color", "#ec4899");
+      root.style.setProperty("--theme-color", "#ff007f");
       root.style.setProperty("--theme-text", "#ffffff");
     } else {
       root.style.removeProperty("--theme-color");

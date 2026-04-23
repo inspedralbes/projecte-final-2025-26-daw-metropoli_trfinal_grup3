@@ -46,7 +46,7 @@ const Settings = () => {
       root.style.setProperty("--theme-color", "#10b981"); // Tailwind emerald-500
       root.style.setProperty("--theme-text", "#ffffff");
     } else if (themeColor === "pink") {
-      root.style.setProperty("--theme-color", "#ec4899"); // Tailwind pink-500
+      root.style.setProperty("--theme-color", "#ff007f"); // Vibrant Neon Pink
       root.style.setProperty("--theme-text", "#ffffff");
     } else {
       // Default (Black/White depending on dark mode)
@@ -193,7 +193,7 @@ const Settings = () => {
                     { id: "default", bg: "bg-slate-800 dark:bg-slate-200" },
                     { id: "red", bg: "bg-red-500" },
                     { id: "green", bg: "bg-emerald-500" },
-                    { id: "pink", bg: "bg-pink-500" }
+                    { id: "pink", bg: "bg-[#ff007f]" }
                   ].map((color) => (
                     <button
                       key={color.id}
