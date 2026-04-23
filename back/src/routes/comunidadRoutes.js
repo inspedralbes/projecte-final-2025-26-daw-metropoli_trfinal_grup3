@@ -17,4 +17,8 @@ router.post(
 // Likes
 router.post("/:id/like", comunidadController.toggleLike);
 
+// Actividad y Chat
+router.get("/actividad", comunidadController.getActividad);
+router.get("/chat/:room", comunidadController.getChatHistory);
+
 export default router;

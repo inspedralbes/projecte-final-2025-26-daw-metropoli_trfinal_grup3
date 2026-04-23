@@ -115,9 +115,23 @@ const getUsuarioById = async (req, res) => {
     }
 };
 
+const searchUsuarios = async (req, res) => {
+    try {
+        const { q } = req.query;
+        if (!q) {
+            return res.json({ success: true, data: [] });
+        }
+        const usuarios = await usuarioService.searchUsuarios(q);
+        res.json({ success: true, data: usuarios });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 export default {
     createUsuario,
     getUsuarios,
     getUsuarioById,
-    editarPerfil
+    editarPerfil,
+    searchUsuarios
 };

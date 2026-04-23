@@ -235,10 +235,31 @@ const toggleLike = async (req, res) => {
   }
 };
 
+const getActividad = async (req, res) => {
+  try {
+    const actividad = await comunidadService.getActividadReciente();
+    res.json({ success: true, data: actividad });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
+const getChatHistory = async (req, res) => {
+  try {
+    const { room } = req.params;
+    const history = await comunidadService.getChatHistory(room);
+    res.json({ success: true, data: history });
+  } catch (error) {
+    res.status(500).json({ success: false, message: error.message });
+  }
+};
+
 export default {
   getPublicaciones,
   createPublicacion,
   addComentario,
   addRespuesta,
   toggleLike,
+  getActividad,
+  getChatHistory
 };

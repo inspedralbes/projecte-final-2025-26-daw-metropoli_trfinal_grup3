@@ -17,9 +17,14 @@ const actualizarPerfil = async (id, nombre, bio, fotoPerfil) => {
     return await usuarioModel.updatePerfil(id, nombre, bio, fotoPerfil);
 };
 
+const searchUsuarios = async (name) => {
+    return await usuarioModel.searchByName(name);
+};
+
 export default {
     registerUsuario,
     getAllUsuarios,
     getUsuarioById,
-    actualizarPerfil
+    actualizarPerfil,
+    searchUsuarios
 };
