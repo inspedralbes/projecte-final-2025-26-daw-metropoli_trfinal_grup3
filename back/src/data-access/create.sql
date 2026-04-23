@@ -24,16 +24,6 @@ CREATE TABLE IF NOT EXISTS categoria (
     color_hex VARCHAR(7)
 );
 
--- 3. EVENTOS (Independiente)
-CREATE TABLE IF NOT EXISTS eventos (
-    id_evento INTEGER PRIMARY KEY AUTO_INCREMENT,
-    nombre VARCHAR(100) NOT NULL,
-    descripcion TEXT,
-    foto VARCHAR(255),
-    fecha_inicio DATETIME NOT NULL,
-    fecha_fin DATETIME NOT NULL,
-    estado VARCHAR(20) DEFAULT 'programado'
-);
 
 -- 4. NODOS DE NAVEGACIÓN (¡OJO! Movido ANTES de POIS)
 CREATE TABLE IF NOT EXISTS nodos_navegacion (
@@ -71,27 +61,6 @@ CREATE TABLE IF NOT EXISTS pois (
     FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
 );
 
--- 7. EVENTO_POI_CONFIG (Depende de Eventos y Pois)
-CREATE TABLE IF NOT EXISTS evento_poi_config (
-    id_evento INTEGER,
-    id_poi INTEGER,
-    estado VARCHAR(20) DEFAULT 'disponible',
-    PRIMARY KEY (id_evento, id_poi),
-    FOREIGN KEY (id_evento) REFERENCES eventos(id_evento),
-    FOREIGN KEY (id_poi) REFERENCES pois(id_poi)
-);
-
--- 8. HORARIOS DETALLADOS (Depende de Pois y Eventos)
-CREATE TABLE IF NOT EXISTS poi_horarios (
-    id_horario INTEGER PRIMARY KEY AUTO_INCREMENT,
-    id_poi INTEGER NOT NULL,
-    id_evento INTEGER NOT NULL,
-    dia_semana VARCHAR(10) NOT NULL,
-    hora_apertura TIME NOT NULL,
-    hora_cierre TIME NOT NULL,
-    FOREIGN KEY (id_poi) REFERENCES pois(id_poi),
-    FOREIGN KEY (id_evento) REFERENCES eventos(id_evento)
-);
 
 -- 9. MULTIMEDIA (Depende de Pois)
 CREATE TABLE IF NOT EXISTS poi_multimedia (

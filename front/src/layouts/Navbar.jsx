@@ -4,7 +4,6 @@ import { useTranslation } from "react-i18next";
 
 const navItems = [
   { to: "/home", icon: "home", labelKey: "home" },
-  { to: "/events", icon: "calendar_month", labelKey: "events" },
   { to: "/", icon: "map", labelKey: "map" },
   { to: "/community", icon: "groups", labelKey: "community" },
   { to: "/profile", icon: "person", labelKey: "profile" },
@@ -42,7 +41,7 @@ const Navbar = () => {
   return (
     <>
       {/* ─── MOBILE: bottom bar ─── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border-t border-slate-200/80 dark:border-white/5 flex items-center justify-around px-2 pb-safe transition-colors duration-300"
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-black/90 dark:bg-black/90 backdrop-blur-lg flex items-center justify-around px-2 pb-safe transition-colors duration-300"
         style={{ height: "64px" }}>
         {navItems.map((item) => {
           const active = isActive(item.to);
@@ -50,20 +49,15 @@ const Navbar = () => {
             <Link
               key={item.to}
               to={item.to}
-              className={`flex flex-col items-center justify-center gap-0.5 w-14 h-full transition-all duration-200 relative ${active ? "text-primary" : "text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300"
-                }`}
+              className={`flex flex-col items-center justify-center w-14 h-full transition-all duration-200 relative ${
+                active ? "text-white" : "text-white/50 hover:text-white"
+              }`}
             >
-              {active && (
-                <span className="absolute top-0 left-1/2 -translate-x-1/2 w-6 h-0.5 bg-primary rounded-full" />
-              )}
               <span
-                className={`material-symbols-outlined text-[26px] leading-none transition-all duration-200 ${active ? "font-variation-settings-filled scale-110" : ""
-                  }`}
+                className="material-symbols-outlined text-[28px] leading-none transition-all duration-200"
+                style={active ? { fontVariationSettings: "'FILL' 1" } : {}}
               >
                 {item.icon}
-              </span>
-              <span className={`text-[9px] font-bold uppercase tracking-wider transition-all duration-200 ${active ? "opacity-100" : "opacity-0"}`}>
-                {t(`nav.${item.labelKey}`)}
               </span>
             </Link>
           );
@@ -71,18 +65,13 @@ const Navbar = () => {
       </nav>
 
       {/* ─── DESKTOP: left sidebar ─── */}
-      <nav className="hidden md:flex fixed top-0 left-0 bottom-0 z-[100] w-16 flex-col items-center py-5 gap-2 bg-white/95 dark:bg-slate-950/95 backdrop-blur-2xl border-r border-slate-200/80 dark:border-white/5 transition-colors duration-300">
+      <nav className="hidden md:flex fixed top-0 left-0 bottom-0 z-[100] w-16 flex-col items-center py-5 gap-4 bg-black/95 dark:bg-black/95 backdrop-blur-2xl transition-colors duration-300">
         {/* Logo at top */}
         <Link to="/home" className="mb-4 flex items-center justify-center">
           <img
-            src="/logo/logo1.png"
-            alt="Logo"
-            className="h-12 w-auto object-contain block dark:hidden"
-          />
-          <img
             src="/logo/logo.png"
             alt="Logo"
-            className="h-12 w-auto object-contain hidden dark:block"
+            className="h-10 w-auto object-contain"
           />
         </Link>
 
@@ -94,17 +83,15 @@ const Navbar = () => {
               key={item.to}
               to={item.to}
               title={t(`nav.${item.labelKey}`)}
-              className={`relative flex flex-col items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 group ${active
-                  ? "bg-primary text-white shadow-lg shadow-primary/30"
-                  : "text-slate-400 dark:text-slate-500 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-slate-700 dark:hover:text-white"
-                }`}
+              className={`relative flex flex-col items-center justify-center w-12 h-12 transition-all duration-200 group ${
+                active ? "text-white" : "text-white/50 hover:text-white"
+              }`}
             >
-              <span className={`material-symbols-outlined text-[22px] leading-none ${active ? "font-variation-settings-filled" : ""}`}>
+              <span 
+                className="material-symbols-outlined text-[26px] leading-none transition-all duration-200"
+                style={active ? { fontVariationSettings: "'FILL' 1" } : {}}
+              >
                 {item.icon}
-              </span>
-              {/* Tooltip on hover */}
-              <span className="absolute left-full ml-3 px-2 py-1 bg-slate-800 dark:bg-white text-white dark:text-slate-800 text-xs font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-lg">
-                {t(`nav.${item.labelKey}`)}
               </span>
             </Link>
           );
@@ -115,13 +102,13 @@ const Navbar = () => {
           <button
             onClick={toggleDark}
             title={darkMode ? t("nav.lightMode") : t("nav.darkMode")}
-            className="relative flex flex-col items-center justify-center w-10 h-10 rounded-xl transition-all duration-200 group text-slate-400 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-white/5 hover:text-yellow-500 dark:hover:text-yellow-300"
+            className="relative flex flex-col items-center justify-center w-12 h-12 transition-all duration-200 group text-white/50 hover:text-white"
           >
-            <span className="material-symbols-outlined text-[22px] leading-none transition-all duration-300">
+            <span 
+              className="material-symbols-outlined text-[26px] leading-none transition-all duration-300"
+              style={darkMode ? { fontVariationSettings: "'FILL' 1" } : {}}
+            >
               {darkMode ? "light_mode" : "dark_mode"}
-            </span>
-            <span className="absolute left-full ml-3 px-2 py-1 bg-slate-800 dark:bg-white text-white dark:text-slate-800 text-xs font-bold rounded-lg whitespace-nowrap opacity-0 group-hover:opacity-100 transition-opacity duration-200 pointer-events-none shadow-lg">
-              {darkMode ? t("nav.lightMode") : t("nav.darkMode")}
             </span>
           </button>
         </div>

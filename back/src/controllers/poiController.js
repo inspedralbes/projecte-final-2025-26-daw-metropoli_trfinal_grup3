@@ -216,7 +216,7 @@ const uploadPoiImage = async (req, res) => {
         }
 
         // Construimos la ruta relativa que guardaremos en la BD
-        // Usamos req.file.filename (igual que eventoController) para obtener solo el nombre
+        // Usamos req.file.filename para obtener solo el nombre
         // del archivo, y prefijamos la carpeta pública: /images/pois/poi-123.jpg
         const rutaRelativa = `/images/pois/${req.file.filename}`;
 

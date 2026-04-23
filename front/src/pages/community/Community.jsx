@@ -16,7 +16,7 @@ import socket from "../../services/socketManager";
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const formatDate = (date) =>
   date
-    ? new Date(date).toLocaleDateString("es-ES", {
+    ? new Date(date).toLocaleDateString("ca-ES", {
         day: "2-digit",
         month: "short",
       })
@@ -48,7 +48,7 @@ const compressImage = (file, maxPx = 1024, quality = 0.8) =>
       canvas.getContext("2d").drawImage(img, 0, 0, width, height);
       canvas.toBlob(
         (blob) => {
-          if (!blob) return reject(new Error("No se pudo comprimir la imagen"));
+          if (!blob) return reject(new Error("No s'ha pogut comprimir la imatge"));
           resolve(
             new File([blob], file.name.replace(/\.[^.]+$/, ".jpg"), {
               type: "image/jpeg",
@@ -61,7 +61,7 @@ const compressImage = (file, maxPx = 1024, quality = 0.8) =>
     };
     img.onerror = () => {
       URL.revokeObjectURL(url);
-      reject(new Error("No se pudo cargar la imagen"));
+      reject(new Error("No s'ha pogut carregar la imatge"));
     };
     img.src = url;
   });
@@ -84,11 +84,11 @@ const InputComentario = ({ placeholder, onSubmit, autoFocus = false }) => {
         value={texto}
         onChange={(e) => setTexto(e.target.value)}
         placeholder={placeholder}
-        className="flex-1 bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white text-xs rounded-full px-4 py-2 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50"
+        className="flex-1 bg-white/10 dark:bg-slate-800 text-slate-800 dark:text-white text-xs rounded-full px-4 py-2 placeholder-slate-400 focus:outline-none focus:ring-1 focus:ring-white/30 backdrop-blur-md"
       />
       <button
         type="submit"
-        className="w-8 h-8 bg-primary rounded-full flex items-center justify-center text-white hover:bg-[#ff1e3c] transition-colors shrink-0"
+        className="w-8 h-8 bg-white/20 backdrop-blur-md rounded-full flex items-center justify-center text-white hover:bg-white/40 transition-colors shrink-0 border border-white/30"
       >
         <span className="material-symbols-outlined text-[16px]">send</span>
       </button>
@@ -101,8 +101,6 @@ const PostCard = ({ pub, onComentarioCreado }) => {
   const [showComments, setShowComments] = useState(false);
   const [respondendoA, setRespondendoA] = useState(null);
   const [moderationError, setModerationError] = useState("");
-
-  const clearError = () => setModerationError("");
 
   // Likes
   const [liked, setLiked] = useState(false);
@@ -118,7 +116,7 @@ const PostCard = ({ pub, onComentarioCreado }) => {
       navigate("/login");
       return;
     }
-    if (isLikeLoading) return; // evita spam: espera a que termine la llamada anterior
+    if (isLikeLoading) return;
     const prevLiked = liked;
     const prevCount = likesCount;
     setIsLikeLoading(true);
@@ -128,9 +126,8 @@ const PostCard = ({ pub, onComentarioCreado }) => {
       const res = await toggleLike(pub._id, {
         id_usuario: usuarioLogged.id_usuario,
       });
-      // Sincronizamos con el valor real del servidor
       setLikesCount(res.likes);
-      setLiked(res.likes_usuarios?.includes("1") ?? !prevLiked);
+      setLiked(res.likes_usuarios?.includes(String(usuarioLogged.id_usuario)) ?? !prevLiked);
     } catch {
       setLiked(prevLiked);
       setLikesCount(prevCount);
@@ -144,7 +141,7 @@ const PostCard = ({ pub, onComentarioCreado }) => {
       navigate("/login");
       return;
     }
-    clearError();
+    setModerationError("");
     try {
       await createComentario(pub._id, {
         id_usuario: usuarioLogged.id_usuario,
@@ -158,205 +155,121 @@ const PostCard = ({ pub, onComentarioCreado }) => {
     }
   };
 
-  const handleRespuesta = async (cid, texto) => {
-    if (!usuarioLogged) {
-      navigate("/login");
-      return;
-    }
-    clearError();
-    try {
-      await createRespuesta(pub._id, cid, {
-        id_usuario: usuarioLogged.id_usuario,
-        nombre_usuario: usuarioLogged.nombre,
-        foto_perfil: usuarioLogged.foto_perfil || null,
-        texto,
-      });
-      onComentarioCreado(pub._id);
-      setRespondendoA(null);
-    } catch (err) {
-      setModerationError(err.message);
-    }
-  };
-
   const comentarios = pub.comentarios || [];
+  const hasImage = !!pub.foto;
 
   return (
-    <article className="bg-white dark:bg-[#12080a] rounded-[24px] shadow-sm dark:shadow-none border border-slate-100 dark:border-white/5 overflow-hidden transition-all">
-      {/* Cabecera del post */}
-      <div className="p-5 flex items-start gap-3">
-        <div className="w-10 h-10 rounded-full border-2 border-primary p-0.5 shrink-0 overflow-hidden">
-          <img
-            alt="User"
-            className="w-full h-full object-cover rounded-full"
-            src={
-              pub.foto_perfil ||
-              "https://cdn-icons-png.flaticon.com/512/149/149071.png"
-            }
+    <article 
+      className={`relative w-full rounded-[3rem] overflow-hidden shadow-xl transition-all duration-500 group mb-6 ${
+        hasImage ? "aspect-[4/5]" : "bg-white dark:bg-slate-900 p-8 min-h-[200px] flex flex-col justify-between border border-gray-100 dark:border-white/5"
+      }`}
+    >
+      {hasImage ? (
+        <>
+          <img 
+            src={pub.foto} 
+            alt="Post" 
+            className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-105"
           />
-        </div>
-        <div className="flex-1">
-          <div className="flex items-center justify-between mb-1">
-            <span className="text-sm font-bold text-slate-800 dark:text-white">
-              {pub.nombre_usuario || `Usuario #${pub.id_usuario}`}
-            </span>
-            <span className="text-[10px] text-slate-400 dark:text-white/40 font-bold">
-              {formatDate(pub.createdAt)}
-            </span>
-          </div>
-          {pub.texto && (
-            <p className="text-sm text-slate-600 dark:text-white/70 leading-relaxed font-medium">
-              {pub.texto}
-            </p>
-          )}
-        </div>
-      </div>
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
+          
+          <div className="absolute inset-0 p-8 flex flex-col justify-between pointer-events-none">
+            <div className="flex items-center gap-3">
+              <div className="w-10 h-10 rounded-full border border-white/30 p-0.5 overflow-hidden backdrop-blur-md">
+                <img src={pub.foto_perfil || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} className="w-full h-full object-cover rounded-full" />
+              </div>
+              <div>
+                <p className="text-white font-bold text-sm leading-none">{pub.nombre_usuario}</p>
+                <p className="text-white/60 text-[10px] mt-1 uppercase tracking-widest">{formatDate(pub.createdAt)}</p>
+              </div>
+            </div>
 
-      {/* Foto del post */}
-      {pub.foto && (
-        <div className="px-5 pb-2">
-          <div className="w-full bg-slate-100 dark:bg-slate-800/50 rounded-[16px] overflow-hidden flex items-center justify-center max-h-[400px]">
-            <img
-              alt="Publicación"
-              className="w-full max-h-[400px] object-contain rounded-[16px]"
-              src={pub.foto}
-              onError={(e) => {
-                e.target.style.display = "none";
-                e.target.parentElement.innerHTML =
-                  '<div class="flex flex-col items-center justify-center py-8 text-slate-400 gap-2"><span class="material-symbols-outlined text-4xl">broken_image</span><p class="text-xs">No se pudo cargar la imagen</p></div>';
-              }}
-            />
+            <div className="space-y-4">
+              <h3 className="text-white text-4xl font-medium tracking-tighter leading-none pointer-events-auto">
+                {pub.texto}
+              </h3>
+              
+              <div className="flex items-center gap-4 pointer-events-auto">
+                <button 
+                  onClick={handleLike}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full backdrop-blur-md border border-white/20 transition-all ${liked ? 'bg-white text-black border-white' : 'bg-white/10 text-white'}`}
+                >
+                  <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: liked ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
+                  <span className="text-xs font-bold">{likesCount}</span>
+                </button>
+                <button 
+                  onClick={() => setShowComments(!showComments)}
+                  className="flex items-center gap-2 px-4 py-2 rounded-full bg-white/10 backdrop-blur-md border border-white/20 text-white transition-all hover:bg-white/20"
+                >
+                  <span className="material-symbols-outlined text-lg">chat_bubble</span>
+                  <span className="text-xs font-bold">{comentarios.length}</span>
+                </button>
+              </div>
+            </div>
           </div>
-        </div>
+        </>
+      ) : (
+        <>
+          <div className="flex items-center gap-3 mb-6">
+            <div className="w-10 h-10 rounded-full border border-gray-200 dark:border-white/10 p-0.5 overflow-hidden">
+              <img src={pub.foto_perfil || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} className="w-full h-full object-cover rounded-full" />
+            </div>
+            <div>
+              <p className="text-black dark:text-white font-bold text-sm leading-none">{pub.nombre_usuario}</p>
+              <p className="text-gray-400 text-[10px] mt-1 uppercase tracking-widest">{formatDate(pub.createdAt)}</p>
+            </div>
+          </div>
+
+          <p className="text-[#1a1a1a] dark:text-white text-2xl font-medium tracking-tight mb-8">
+            {pub.texto}
+          </p>
+
+          <div className="flex items-center gap-4">
+            <button 
+              onClick={handleLike}
+              className={`flex items-center gap-2 px-4 py-2 rounded-full border transition-all ${liked ? 'bg-black text-white border-black' : 'bg-gray-50 dark:bg-white/5 text-gray-400 border-gray-200 dark:border-white/10'}`}
+            >
+              <span className="material-symbols-outlined text-lg" style={{ fontVariationSettings: liked ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
+              <span className="text-xs font-bold">{likesCount}</span>
+            </button>
+            <button 
+              onClick={() => setShowComments(!showComments)}
+              className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-50 dark:bg-white/5 text-gray-400 border border-gray-200 dark:border-white/10 hover:bg-gray-100"
+            >
+              <span className="material-symbols-outlined text-lg">chat_bubble</span>
+              <span className="text-xs font-bold">{comentarios.length}</span>
+            </button>
+          </div>
+        </>
       )}
 
-      {/* Acciones: likes, comentarios, compartir */}
-      <div className="px-4 py-3 flex items-center gap-5 border-t border-slate-100 dark:border-white/5">
-        <button
-          onClick={handleLike}
-          className={`flex items-center gap-1.5 transition-colors cursor-pointer group ${
-            liked
-              ? "text-primary"
-              : "text-slate-400 dark:text-white/40 hover:text-primary"
-          }`}
-        >
-          <span
-            className="material-symbols-outlined text-[20px] group-active:scale-125 transition-transform"
-            style={{ fontVariationSettings: liked ? "'FILL' 1" : "'FILL' 0" }}
-          >
-            favorite
-          </span>
-          <span className="text-xs font-bold">{likesCount}</span>
-        </button>
-
-        <button
-          onClick={() => setShowComments((v) => !v)}
-          className="flex items-center gap-1.5 text-slate-400 dark:text-white/40 hover:text-primary transition-colors cursor-pointer"
-        >
-          <span className="material-symbols-outlined text-[20px]">
-            chat_bubble
-          </span>
-          <span className="text-xs font-bold">{comentarios.length}</span>
-        </button>
-
-        <button className="flex items-center gap-1.5 text-slate-400 dark:text-white/40 hover:text-slate-600 dark:hover:text-white ml-auto cursor-pointer transition-colors">
-          <span className="material-symbols-outlined text-[20px]">share</span>
-        </button>
-      </div>
-
-      {/* Sección de comentarios (expandible) */}
       {showComments && (
-        <div className="px-5 pb-5 border-t border-slate-100 dark:border-white/5 space-y-4 pt-4">
-          {/* Banner de error de moderación */}
-          {moderationError && (
-            <div className="flex items-start gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-2xl px-4 py-3">
-              <span className="material-symbols-outlined text-red-500 text-[18px] shrink-0 mt-0.5">
-                block
-              </span>
-              <p className="text-xs text-red-600 dark:text-red-400 font-medium">
-                {moderationError}
-              </p>
-            </div>
-          )}
+        <div className={`absolute inset-0 z-20 flex flex-col bg-black/90 backdrop-blur-xl transition-all duration-300 p-8 ${hasImage ? 'rounded-[3rem]' : ''}`}>
+          <div className="flex justify-between items-center mb-6">
+            <h4 className="text-white font-bold text-lg">Comentaris</h4>
+            <button onClick={() => setShowComments(false)} className="text-white/60 hover:text-white">
+              <span className="material-symbols-outlined">close</span>
+            </button>
+          </div>
 
-          {/* Input para nuevo comentario */}
-          <InputComentario
-            placeholder="Escribe un comentario..."
-            onSubmit={handleComentario}
-          />
-
-          {/* Lista de comentarios */}
-          {comentarios.length === 0 && (
-            <p className="text-xs text-slate-400 dark:text-white/30 text-center py-2">
-              Sin comentarios todavía. ¡Sé el primero!
-            </p>
-          )}
-
-          {comentarios.map((com) => (
-            <div key={com._id} className="space-y-2">
-              {/* Comentario raíz */}
-              <div className="flex items-start gap-2">
-                <img
-                  src={
-                    com.foto_perfil ||
-                    "https://cdn-icons-png.flaticon.com/512/149/149071.png"
-                  }
-                  alt="User"
-                  className="w-7 h-7 rounded-full border border-primary/40 shrink-0"
-                />
-                <div className="flex-1 bg-slate-50 dark:bg-slate-800/60 rounded-2xl px-3 py-2">
-                  <p className="text-[11px] font-bold text-slate-700 dark:text-white mb-0.5">
-                    {com.nombre_usuario || `Usuario #${com.id_usuario}`}
-                  </p>
-                  <p className="text-[12px] text-slate-600 dark:text-white/70">
-                    {com.texto}
-                  </p>
-                </div>
-              </div>
-
-              {/* Botón responder */}
-              <button
-                onClick={() =>
-                  setRespondendoA(respondendoA === com._id ? null : com._id)
-                }
-                className="ml-9 text-[11px] font-bold text-primary hover:underline cursor-pointer"
-              >
-                {respondendoA === com._id ? "Cancelar" : "Responder"}
-              </button>
-
-              {/* Input respuesta inline */}
-              {respondendoA === com._id && (
-                <div className="ml-9">
-                  <InputComentario
-                    placeholder={`Responder a ${com.nombre_usuario || "Usuario"}...`}
-                    onSubmit={(texto) => handleRespuesta(com._id, texto)}
-                    autoFocus
-                  />
-                </div>
-              )}
-
-              {/* Respuestas anidadas */}
-              {(com.respuestas || []).map((rep) => (
-                <div key={rep._id} className="ml-9 flex items-start gap-2">
-                  <img
-                    src={
-                      rep.foto_perfil ||
-                      "https://cdn-icons-png.flaticon.com/512/149/149071.png"
-                    }
-                    alt="User"
-                    className="w-6 h-6 rounded-full border border-primary/30 shrink-0"
-                  />
-                  <div className="flex-1 bg-slate-100 dark:bg-slate-700/50 rounded-2xl px-3 py-2">
-                    <p className="text-[10px] font-bold text-slate-700 dark:text-white mb-0.5">
-                      {rep.nombre_usuario || `Usuario #${rep.id_usuario}`}
-                    </p>
-                    <p className="text-[11px] text-slate-600 dark:text-white/70">
-                      {rep.texto}
-                    </p>
+          <div className="flex-1 overflow-y-auto no-scrollbar space-y-4 mb-4">
+            {comentarios.length === 0 ? (
+              <p className="text-white/40 text-center text-sm mt-10">Encara no hi ha comentaris.</p>
+            ) : (
+              comentarios.map(com => (
+                <div key={com._id} className="flex gap-3">
+                  <img src={com.foto_perfil || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} className="w-8 h-8 rounded-full object-cover" />
+                  <div>
+                    <p className="text-white text-xs font-bold">{com.nombre_usuario}</p>
+                    <p className="text-white/80 text-sm">{com.texto}</p>
                   </div>
                 </div>
-              ))}
-            </div>
-          ))}
+              ))
+            )}
+          </div>
+
+          <InputComentario placeholder="Escriu un comentari..." onSubmit={handleComentario} />
+          {moderationError && <p className="text-red-400 text-[10px] mt-2">{moderationError}</p>}
         </div>
       )}
     </article>
@@ -372,10 +285,10 @@ const Community = () => {
 
   const [activeTab, setActiveTab] = useState("Recent");
   const tabs = [
-    { key: "Recent", label: t("community.tabs.recent") },
-    { key: "Official", label: t("community.tabs.official") },
-    { key: "Fan Zone", label: t("community.tabs.fanZone") },
-    { key: "Popular", label: t("community.tabs.popular") },
+    { key: "Recent", label: "Recents" },
+    { key: "Official", label: "Oficial" },
+    { key: "Fan Zone", label: "Fan Zone" },
+    { key: "Popular", label: "Popular" },
   ];
 
   const [publicaciones, setPublicaciones] = useState([]);
@@ -392,7 +305,6 @@ const Community = () => {
     texto: "",
     foto: "",
     tipo_publicacion: "popular",
-    ubicacion: "",
   });
 
   const [amigos, setAmigos] = useState([]);
@@ -402,17 +314,10 @@ const Community = () => {
       const data = await getPublicaciones();
       setPublicaciones(data.data || []);
     } catch (err) {
-      console.error("Error fetching publicaciones:", err);
       setError(err.message);
     } finally {
       setLoading(false);
     }
-  };
-
-  // Recarga solo el post actualizado (comentario nuevo)
-  const actualizarPost = async () => {
-    const data = await getPublicaciones();
-    setPublicaciones(data.data || []);
   };
 
   useEffect(() => {
@@ -426,46 +331,24 @@ const Community = () => {
         .catch((err) => console.error("Error al cargar amigos", err));
     }
 
-    socket.on("nueva_publicacion", () => cargarPublicaciones());
-    socket.on("perfil_actualizado", (usuarioActualizado) => {
-      setPublicaciones((lista) =>
-        lista.map((pub) =>
-          String(pub.id_usuario) === String(usuarioActualizado.id_usuario)
-            ? {
-                ...pub,
-                nombre_usuario: usuarioActualizado.nuevo_nombre,
-                foto_perfil: usuarioActualizado.nueva_foto,
-              }
-            : pub,
-        ),
-      );
-    });
-    socket.on("nuevo_comentario", () => actualizarPost());
-    socket.on("nueva_respuesta", () => actualizarPost());
+    socket.on("nueva_publicacion", cargarPublicaciones);
+    socket.on("nuevo_comentario", cargarPublicaciones);
 
     return () => {
       socket.off("nueva_publicacion");
-      socket.off("perfil_actualizado");
       socket.off("nuevo_comentario");
-      socket.off("nueva_respuesta");
     };
   }, []);
 
   const handleCreate = async () => {
-    if (!newPost.texto && !newPost.foto && !selectedFile) return;
+    if (!newPost.texto && !selectedFile) return;
     setModalError("");
     try {
-      let fotoUrl = newPost.foto;
+      let fotoUrl = "";
 
-      // Si hay un archivo seleccionado, comprimirlo y subirlo
       if (selectedFile) {
         const fileToUpload = await compressImage(selectedFile);
-        console.log(
-          `[Upload] Comprimido: ${(fileToUpload.size / 1024).toFixed(0)} KB`,
-        );
         const uploadRes = await uploadFotoComunidad(fileToUpload);
-        // Usamos window.location.origin como fallback para que funcione
-        // tanto en produccion (catcircuit.daw.inspedralbes.cat) como en local
         const apiBase = import.meta.env.VITE_API_URL || window.location.origin;
         fotoUrl = `${apiBase}${uploadRes.url}`;
       }
@@ -477,63 +360,20 @@ const Community = () => {
         texto: newPost.texto,
         foto: fotoUrl,
         tipo_publicacion: newPost.tipo_publicacion,
-        ubicacion: newPost.ubicacion,
       });
       setNewPost({
         texto: "",
         foto: "",
         tipo_publicacion: "popular",
-        ubicacion: "",
       });
       setSelectedFile(null);
       setPreviewUrl("");
-      setModalError("");
       setShowModal(false);
     } catch (err) {
       setModalError(err.message);
     }
   };
 
-  // URL de la foto del usuario (con fallback al avatar genérico, igual que en Home)
-  const getAvatarUrl = (fotoUrl) => {
-    if (!fotoUrl)
-      return "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-    if (fotoUrl.startsWith("http")) return fotoUrl;
-    return `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${fotoUrl}`;
-  };
-  const fotoUsuario = getAvatarUrl(
-    usuarioLogged?.foto_perfil || usuarioLogged?.foto,
-  );
-
-  // Contadores manuales para Trending Topics
-  let countPopular = 0;
-  let countOfficial = 0;
-  let countFanZone = 0;
-
-  for (let i = 0; i < publicaciones.length; i++) {
-    if (publicaciones[i].tipo_publicacion === "popular") countPopular++;
-    if (publicaciones[i].tipo_publicacion === "oficial") countOfficial++;
-    if (publicaciones[i].tipo_publicacion === "fanzone") countFanZone++;
-  }
-
-  const trendingTopics = [
-    { tag: "#Popular", posts: countPopular },
-    { tag: "#Oficial", posts: countOfficial },
-    { tag: "#FanZone", posts: countFanZone },
-  ];
-
-  // Ordenar de mayor a menor con bubble sort simple
-  for (let i = 0; i < trendingTopics.length - 1; i++) {
-    for (let j = 0; j < trendingTopics.length - 1 - i; j++) {
-      if (trendingTopics[j].posts < trendingTopics[j + 1].posts) {
-        let temp = trendingTopics[j];
-        trendingTopics[j] = trendingTopics[j + 1];
-        trendingTopics[j + 1] = temp;
-      }
-    }
-  }
-
-  // Mapa de key de tab → valor de tipo_publicacion en la BD
   const tabFiltro = {
     Recent: null,
     Official: "oficial",
@@ -541,59 +381,41 @@ const Community = () => {
     Popular: "popular",
   };
 
-  // Publicaciones filtradas según el tab activo
   const publicacionesFiltradas = tabFiltro[activeTab]
     ? publicaciones.filter((p) => p.tipo_publicacion === tabFiltro[activeTab])
     : publicaciones;
 
   return (
-    <div className="min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-white font-display select-none transition-colors duration-300 md:pl-16">
-      {/* Header */}
-      <div className="w-full pt-6 px-5 pb-2 z-20 flex justify-between items-center transition-colors shrink-0 touch-none md:max-w-6xl md:mx-auto">
-        <div className="md:hidden flex items-center gap-2">
-          <Link to="/home">
-            <img
-              src="/logo/logo1.png"
-              alt="Circuit de Catalunya"
-              className="h-12 w-auto object-contain block dark:hidden"
-            />
-            <img
-              src="/logo/logo.png"
-              alt="Circuit de Catalunya"
-              className="h-12 w-auto object-contain hidden dark:block"
-            />
-          </Link>
-        </div>
-        <h1 className="hidden md:block text-2xl font-black italic uppercase tracking-tighter text-slate-800 dark:text-white">
-          Community <span className="text-primary">Feed</span>
+    <div className="min-h-screen w-full bg-[#f0f4f9] dark:bg-slate-950 text-[#1a1a1a] dark:text-white font-display transition-colors duration-300">
+      <header className="pt-12 px-6 flex justify-between items-start md:max-w-6xl md:mx-auto w-full">
+        <h1 className="text-[32px] leading-[1.1] font-medium tracking-tight">
+          La Comunitat <br />
+          <span className="italic font-normal">està passant ara!</span>
         </h1>
         <Link
           to="/profile"
-          className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden shadow-sm flex-shrink-0"
+          className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm flex-shrink-0"
         >
           <img
-            src={fotoUsuario}
+            src={usuarioLogged?.foto_perfil || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
             alt="Profile"
-            className="w-full h-full object-cover rounded-full"
+            className="w-full h-full object-cover"
           />
         </Link>
-      </div>
+      </header>
 
-      {/* Content */}
-      <div className="overflow-y-auto no-scrollbar pb-24 md:pb-10 px-5 pt-2 md:max-w-6xl md:mx-auto">
+      <div className="overflow-y-auto no-scrollbar pb-32 px-6 mt-8 md:max-w-6xl md:mx-auto">
         <div className="lg:grid lg:grid-cols-[1fr_300px] lg:gap-8 lg:items-start">
-          {/* Main Feed */}
-          <div>
-            {/* Tabs */}
-            <div className="flex gap-3 overflow-x-auto no-scrollbar py-2 -mx-5 px-5 mb-4">
+          <main>
+            <div className="flex gap-3 overflow-x-auto no-scrollbar mb-8">
               {tabs.map((tab) => (
                 <button
                   key={tab.key}
                   onClick={() => setActiveTab(tab.key)}
-                  className={`text-[10px] font-bold px-5 py-2.5 rounded-full uppercase tracking-wider shrink-0 cursor-pointer transition-all duration-300 ${
+                  className={`flex items-center gap-2 py-2 px-6 rounded-full transition-all duration-300 border border-transparent shadow-sm whitespace-nowrap uppercase text-[10px] font-bold tracking-widest ${
                     activeTab === tab.key
-                      ? "bg-primary text-white shadow-lg shadow-primary/30 scale-105"
-                      : "bg-white dark:bg-[#12080a] text-slate-400 dark:text-white/40 border border-slate-100 dark:border-white/5 shadow-sm dark:shadow-none hover:bg-slate-50 dark:hover:bg-white/5"
+                      ? "bg-white text-black"
+                      : "bg-[#1a1a1a] text-white dark:bg-white/10"
                   }`}
                 >
                   {tab.label}
@@ -601,150 +423,53 @@ const Community = () => {
               ))}
             </div>
 
-            <div className="space-y-4">
+            <div className="space-y-0">
               {loading && (
-                <p className="text-center text-slate-400 dark:text-white/40 text-sm py-8">
-                  Cargando publicaciones...
-                </p>
-              )}
-              {error && (
-                <p className="text-center text-red-400 text-sm py-8">
-                  Error: {error}
-                </p>
-              )}
-              {!loading && !error && publicaciones.length === 0 && (
-                <p className="text-center text-slate-400 dark:text-white/40 text-sm py-8">
-                  No hay publicaciones todavía. ¡Sé el primero!
-                </p>
+                <p className="text-center py-10 opacity-50">Carregant publicacions...</p>
               )}
               {!loading &&
-                !error &&
-                publicaciones.length > 0 &&
-                publicacionesFiltradas.length === 0 && (
-                  <p className="text-center text-slate-400 dark:text-white/40 text-sm py-8">
-                    No hay publicaciones en esta categoría.
-                  </p>
-                )}
-              {!loading &&
-                !error &&
                 publicacionesFiltradas.map((pub) => (
-                  <PostCard
-                    key={pub._id}
-                    pub={pub}
-                    onComentarioCreado={actualizarPost}
+                  <PostCard key={pub._id} pub={pub} onComentarioCreado={cargarPublicaciones} />
+                ))}
+            </div>
+          </main>
+
+          <aside className="hidden lg:flex flex-col gap-8 sticky top-6">
+            <div className="bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 border border-gray-100 dark:border-white/5 shadow-sm">
+              <h3 className="text-xs font-bold uppercase tracking-widest text-gray-400 mb-6">Tendències</h3>
+              <div className="space-y-4">
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-black dark:text-white">#Barcelona</span>
+                  <span className="text-[10px] text-gray-400 uppercase">120 posts</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-black dark:text-white">#Urbà</span>
+                  <span className="text-[10px] text-gray-400 uppercase">85 posts</span>
+                </div>
+                <div className="flex justify-between items-center">
+                  <span className="font-bold text-black dark:text-white">#Comunitat</span>
+                  <span className="text-[10px] text-gray-400 uppercase">42 posts</span>
+                </div>
+              </div>
+            </div>
+
+            <div className="bg-black text-white dark:bg-white dark:text-black rounded-[2.5rem] p-8 shadow-xl">
+              <h3 className="text-xs font-bold uppercase tracking-widest opacity-60 mb-4">Amics</h3>
+              <div className="flex -space-x-3 mb-6">
+                {amigos.slice(0, 5).map((a) => (
+                  <img
+                    key={a.id_amigo}
+                    src={a.foto_amigo || "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+                    className="w-10 h-10 rounded-full border-2 border-black dark:border-white object-cover"
                   />
                 ))}
+              </div>
+              <p className="text-sm font-medium">Tens {amigos.length} amics connectats</p>
             </div>
-          </div>
-
-          {/* Right Sidebar — desktop only */}
-          <div className="hidden lg:flex flex-col gap-5 sticky top-6">
-            {/* Group QR Invite */}
-            <div className="bg-white dark:bg-[#12080a] rounded-[24px] border border-slate-100 dark:border-white/5 p-5 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-4 h-1 bg-primary rounded-full"></div>
-                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-white/60">
-                  {t("community.yourGroup")}
-                </h3>
-              </div>
-              <div className="flex items-center gap-3 mb-4">
-                <div className="w-12 h-12 bg-primary/10 rounded-2xl flex items-center justify-center">
-                  <span className="material-symbols-outlined text-primary text-2xl">
-                    qr_code_2
-                  </span>
-                </div>
-                <div>
-                  <p className="font-bold text-slate-800 dark:text-white text-sm">
-                    {t("community.inviteFriends")}
-                  </p>
-                  <p className="text-xs text-slate-400">
-                    {t("community.shareQR")}
-                  </p>
-                </div>
-              </div>
-              <button className="w-full bg-primary text-white font-bold py-2.5 rounded-xl text-sm shadow-lg shadow-primary/30 hover:bg-[#ff1e3c] transition-colors">
-                {t("community.showQR")}
-              </button>
-            </div>
-
-            {/* Trending Topics (Actividad por categoría calculada en vivo) */}
-            <div className="bg-white dark:bg-[#12080a] rounded-[24px] border border-slate-100 dark:border-white/5 p-5 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-4 h-1 bg-primary rounded-full"></div>
-                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-white/60">
-                  {t("community.trending")}
-                </h3>
-              </div>
-              <div className="space-y-3">
-                {trendingTopics.map((item, i) => (
-                  <div key={i} className="flex items-center justify-between">
-                    <span className="text-sm font-bold text-primary">
-                      {item.tag}
-                    </span>
-                    <span className="text-[10px] font-bold text-slate-400">
-                      {item.posts} {t("community.posts")}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Online Now -> Modificado a Amigos (Datos Reales) */}
-            <div className="bg-white dark:bg-[#12080a] rounded-[24px] border border-slate-100 dark:border-white/5 p-5 shadow-sm">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-4 h-1 bg-primary rounded-full"></div>
-                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-white/60">
-                  {t("community.friends")}
-                </h3>
-              </div>
-              <div className="flex -space-x-2 mb-3">
-                {amigos.length === 0 ? (
-                  <span className="text-xs text-slate-400">
-                    {t("community.noFriends")}
-                  </span>
-                ) : (
-                  <>
-                    {/* Renderizamos máximo 5 avatares redondos reales de amigos */}
-                    {amigos.slice(0, 5).map((amigo) => (
-                      <img
-                        key={amigo.id_amigo}
-                        src={
-                          amigo.foto_amigo
-                            ? `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${amigo.foto_amigo}`
-                            : "https://cdn-icons-png.flaticon.com/512/149/149071.png"
-                        }
-                        className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 object-cover bg-white"
-                        alt={amigo.nombre_amigo || "User"}
-                        title={amigo.nombre_amigo}
-                      />
-                    ))}
-
-                    {/* Si hay más de 5, mostramos el contador de "+X" */}
-                    {amigos.length > 5 && (
-                      <div className="w-8 h-8 rounded-full border-2 border-white dark:border-slate-900 bg-primary flex items-center justify-center">
-                        <span className="text-[8px] font-black text-white">
-                          +{amigos.length - 5}
-                        </span>
-                      </div>
-                    )}
-                  </>
-                )}
-              </div>
-              <p className="text-xs text-slate-500 dark:text-slate-400">
-                <span className="font-bold text-slate-700 dark:text-white">
-                  {amigos.length}{" "}
-                  {amigos.length !== 1
-                    ? t("community.friends_plural")
-                    : t("community.friend")}
-                </span>{" "}
-                {t("community.friendsInCommunity")}
-              </p>
-            </div>
-          </div>
+          </aside>
         </div>
       </div>
 
-      {/* FAB — new post */}
       <button
         onClick={() => {
           if (!usuarioLogged) {
@@ -753,228 +478,85 @@ const Community = () => {
             setShowModal(true);
           }
         }}
-        className="fixed bottom-24 right-5 md:bottom-8 w-14 h-14 bg-primary text-white rounded-full flex items-center justify-center shadow-lg shadow-primary/40 z-[80] active:scale-90 transition-transform cursor-pointer hover:bg-[#ff1e3c]"
+        className="fixed bottom-24 right-6 w-16 h-16 bg-black dark:bg-white text-white dark:text-black rounded-full flex items-center justify-center shadow-2xl z-50 hover:scale-110 transition-transform"
       >
-        <span className="material-symbols-outlined text-3xl font-bold">
-          add
-        </span>
+        <span className="material-symbols-outlined text-3xl">add</span>
       </button>
 
-      {/* QR tab — mobile only */}
-      <div className="md:hidden fixed left-0 top-1/2 -translate-y-1/2 w-12 h-24 bg-white/10 backdrop-blur-md rounded-r-2xl border-y border-r border-white/20 z-50 flex items-center justify-center shadow-lg cursor-pointer hover:bg-white/20 transition-all active:scale-95 group">
-        <div className="w-10 h-10 bg-primary/20 rounded-full flex items-center justify-center group-hover:bg-primary transition-colors">
-          <span className="material-symbols-outlined text-white text-xl">
-            qr_code_2
-          </span>
-        </div>
-      </div>
-
-      {/* Modal nueva publicación — bottom sheet en móvil, centrado en desktop */}
       {showModal && (
-        <div
-          className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm"
-          onClick={(e) => {
-            if (e.target === e.currentTarget) setShowModal(false);
-          }}
+        <div 
+          className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm p-4" 
+          onClick={() => setShowModal(false)}
         >
-          <div className="w-full md:max-w-lg bg-white dark:bg-[#111] rounded-t-[32px] md:rounded-[32px] shadow-2xl flex flex-col max-h-[92dvh] md:max-h-[90vh]">
-            {/* Handle pill — solo móvil */}
-            <div className="md:hidden flex justify-center pt-3 pb-1 shrink-0">
-              <div className="w-10 h-1.5 rounded-full bg-slate-300 dark:bg-slate-700" />
-            </div>
-
-            {/* Header */}
-            <div className="flex items-center justify-between px-5 pt-3 pb-4 border-b border-slate-100 dark:border-white/5 shrink-0">
-              <h2 className="font-bold text-slate-800 dark:text-white text-[17px]">
-                Nueva publicación
-              </h2>
-              <button
-                onClick={() => setShowModal(false)}
-                className="w-9 h-9 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center active:scale-90 transition-transform"
-              >
-                <span className="material-symbols-outlined text-slate-500 text-[20px]">
-                  close
-                </span>
+          <div 
+            className="w-full md:max-w-lg bg-white dark:bg-slate-900 rounded-[3rem] p-8 flex flex-col space-y-6 animate-in slide-in-from-bottom duration-300" 
+            onClick={e => e.stopPropagation()}
+          >
+            <div className="flex justify-between items-center">
+              <h2 className="text-2xl font-medium tracking-tight">Nova publicació</h2>
+              <button onClick={() => setShowModal(false)} className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center">
+                <span className="material-symbols-outlined">close</span>
               </button>
             </div>
 
-            {/* Contenido scrollable */}
-            <div className="overflow-y-auto flex-1 p-5 space-y-4 pb-24 md:pb-5">
-              {/* Textarea */}
-              <textarea
-                value={newPost.texto}
-                onChange={(e) =>
-                  setNewPost({ ...newPost, texto: e.target.value })
-                }
-                placeholder="¿Qué está pasando en el circuito? 🏎️"
-                className="w-full bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 focus:border-primary rounded-2xl p-4 text-[15px] text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/40 resize-none h-28 transition-colors"
-                autoFocus
-              />
-
-              {/* Inputs hidden (archivo) */}
-              <input
+            <textarea 
+              value={newPost.texto} 
+              onChange={e => setNewPost({...newPost, texto: e.target.value})}
+              placeholder="Què està passant?" 
+              className="w-full bg-gray-50 dark:bg-slate-800 rounded-3xl p-6 text-lg focus:outline-none focus:ring-1 focus:ring-black/10 min-h-[150px] resize-none"
+              autoFocus
+            />
+            
+            <div className="flex gap-4">
+              <button 
+                onClick={() => fileInputRef.current.click()}
+                className="flex-1 py-4 rounded-3xl bg-gray-100 dark:bg-white/5 flex items-center justify-center gap-2 font-bold text-xs uppercase tracking-widest"
+              >
+                <span className="material-symbols-outlined text-lg">image</span>
+                Imatge
+              </button>
+              <input 
                 ref={fileInputRef}
-                type="file"
+                type="file" 
                 accept="image/*"
-                className="hidden"
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (file) {
-                    setSelectedFile(file);
-                    setPreviewUrl(URL.createObjectURL(file));
-                    setNewPost({ ...newPost, foto: "" });
-                  }
-                }}
+                className="hidden" 
+                onChange={e => {
+                  const file = e.target.files[0];
+                  if(file) { setSelectedFile(file); setPreviewUrl(URL.createObjectURL(file)); }
+                }} 
               />
 
-              {/* Botones rápidos de imagen */}
-              {!previewUrl && (
-                <div className="grid grid-cols-2 gap-3">
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (fileInputRef.current) {
-                        fileInputRef.current.removeAttribute("capture");
-                        fileInputRef.current.click();
-                      }
-                    }}
-                    className="flex flex-col items-center justify-center gap-2 py-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-white/10 hover:border-primary hover:bg-primary/5 active:scale-95 transition-all"
-                  >
-                    <span className="material-symbols-outlined text-3xl text-slate-400">
-                      photo_library
-                    </span>
-                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      Galería
-                    </span>
-                  </button>
-                  <button
-                    type="button"
-                    onClick={() => {
-                      if (fileInputRef.current) {
-                        fileInputRef.current.setAttribute(
-                          "capture",
-                          "environment",
-                        );
-                        fileInputRef.current.click();
-                      }
-                    }}
-                    className="flex flex-col items-center justify-center gap-2 py-5 rounded-2xl bg-slate-50 dark:bg-slate-900 border-2 border-dashed border-slate-200 dark:border-white/10 hover:border-primary hover:bg-primary/5 active:scale-95 transition-all"
-                  >
-                    <span className="material-symbols-outlined text-3xl text-slate-400">
-                      photo_camera
-                    </span>
-                    <span className="text-xs font-semibold text-slate-500 dark:text-slate-400">
-                      Cámara
-                    </span>
-                  </button>
-                </div>
-              )}
-
-              {/* Preview imagen seleccionada */}
-              {previewUrl && (
-                <div className="relative rounded-2xl overflow-hidden bg-slate-100 dark:bg-slate-900">
-                  <img
-                    src={previewUrl}
-                    alt="Preview"
-                    className="w-full max-h-64 object-contain"
-                  />
-                  <button
-                    type="button"
-                    onClick={() => {
-                      setSelectedFile(null);
-                      setPreviewUrl("");
-                      if (fileInputRef.current) fileInputRef.current.value = "";
-                    }}
-                    className="absolute top-2 right-2 w-8 h-8 bg-black/60 text-white rounded-full flex items-center justify-center active:scale-90 transition-transform"
-                  >
-                    <span className="material-symbols-outlined text-[18px]">
-                      close
-                    </span>
-                  </button>
-                  <div className="px-3 py-2 bg-black/40 absolute bottom-0 left-0 right-0">
-                    <p className="text-white text-xs truncate">
-                      {selectedFile?.name}
-                    </p>
-                  </div>
-                </div>
-              )}
-
-              {/* URL de foto (colapsada, opcional) */}
-              {!previewUrl && (
-                <details className="group">
-                  <summary className="text-xs text-slate-400 font-medium cursor-pointer list-none flex items-center gap-1 select-none">
-                    <span className="material-symbols-outlined text-[14px]">
-                      link
-                    </span>
-                    O pega una URL de imagen
-                    <span className="material-symbols-outlined text-[14px] ml-auto group-open:rotate-180 transition-transform">
-                      expand_more
-                    </span>
-                  </summary>
-                  <input
-                    type="text"
-                    value={newPost.foto}
-                    onChange={(e) => {
-                      setNewPost({ ...newPost, foto: e.target.value });
-                      if (e.target.value) {
-                        setSelectedFile(null);
-                        setPreviewUrl("");
-                      }
-                    }}
-                    placeholder="https://..."
-                    className="mt-2 w-full px-4 py-3 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl text-sm text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:border-primary transition-colors"
-                  />
-                </details>
-              )}
-
-              {/* Selector de categoría */}
-              <div className="relative">
-                <div className="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
-                  <span className="material-symbols-outlined text-slate-400">
-                    category
-                  </span>
-                </div>
-                <select
-                  value={newPost.tipo_publicacion}
-                  onChange={(e) =>
-                    setNewPost({ ...newPost, tipo_publicacion: e.target.value })
-                  }
-                  className="w-full pl-11 pr-10 py-4 bg-slate-50 dark:bg-slate-900 border border-slate-200 dark:border-white/10 rounded-2xl text-sm text-slate-800 dark:text-white focus:outline-none focus:border-primary focus:ring-2 focus:ring-primary/40 appearance-none transition-colors"
-                >
-                  <option value="popular">🔥 Popular</option>
-                  <option value="oficial">📢 Oficial</option>
-                  <option value="fanzone">🏁 Fan Zone</option>
-                </select>
-                <div className="absolute inset-y-0 right-0 pr-4 flex items-center pointer-events-none">
-                  <span className="material-symbols-outlined text-slate-400">
-                    expand_more
-                  </span>
-                </div>
-              </div>
-
-              {/* Error de moderación */}
-              {modalError && (
-                <div className="flex items-start gap-2 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-500/30 rounded-2xl px-4 py-3">
-                  <span className="material-symbols-outlined text-red-500 text-[18px] shrink-0 mt-0.5">
-                    block
-                  </span>
-                  <p className="text-xs text-red-600 dark:text-red-400 font-medium">
-                    {modalError}
-                  </p>
-                </div>
-              )}
-            </div>
-
-            {/* Botón publicar — sticky al fondo */}
-            <div className="px-5 pb-6 pt-3 border-t border-slate-100 dark:border-white/5 shrink-0">
-              <button
-                onClick={handleCreate}
-                className="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/30 active:scale-95 transition-all hover:bg-primary/90 flex items-center justify-center gap-2 text-base"
+              <select
+                value={newPost.tipo_publicacion}
+                onChange={(e) => setNewPost({ ...newPost, tipo_publicacion: e.target.value })}
+                className="flex-1 py-4 px-4 rounded-3xl bg-gray-100 dark:bg-white/5 font-bold text-xs uppercase tracking-widest outline-none appearance-none text-center"
               >
-                <span className="material-symbols-outlined">send</span>
-                Publicar
-              </button>
+                <option value="popular">🔥 Popular</option>
+                <option value="oficial">📢 Oficial</option>
+                <option value="fanzone">🏁 Fan Zone</option>
+              </select>
             </div>
+
+            {previewUrl && (
+              <div className="relative rounded-3xl overflow-hidden aspect-video border border-gray-100">
+                <img src={previewUrl} className="w-full h-full object-cover" />
+                <button 
+                  onClick={() => {setSelectedFile(null); setPreviewUrl("");}} 
+                  className="absolute top-4 right-4 bg-black/50 text-white w-8 h-8 rounded-full flex items-center justify-center"
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+            )}
+
+            {modalError && <p className="text-red-500 text-xs text-center font-bold">{modalError}</p>}
+
+            <button 
+              onClick={handleCreate} 
+              className="w-full bg-black dark:bg-white text-white dark:text-black py-5 rounded-3xl font-bold uppercase tracking-[0.2em] shadow-xl active:scale-95 transition-transform"
+            >
+              Publicar
+            </button>
           </div>
         </div>
       )}
@@ -995,27 +577,27 @@ const Community = () => {
               </span>
             </div>
             <h3 className="text-xl font-black text-slate-800 dark:text-white mb-2 tracking-tight">
-              Inicia sesión
+              Inicia sessió
             </h3>
             <p className="text-sm text-slate-500 dark:text-white/60 mb-6 font-medium leading-relaxed">
-              Necesitas iniciar sesión para compartir publicaciones y unirte a
-              la conversación.
+              Necessites iniciar sessió per compartir publicacions i unir-te a
+              la conversa.
             </p>
             <div className="flex gap-3">
               <button
                 onClick={() => setShowLoginAlert(false)}
                 className="flex-1 bg-slate-100 dark:bg-slate-800/50 text-slate-700 dark:text-white font-bold py-3.5 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-800 transition-colors"
               >
-                Cancelar
+                Cancel·lar
               </button>
               <button
                 onClick={() => {
                   setShowLoginAlert(false);
                   navigate("/login");
                 }}
-                className="flex-1 bg-primary text-white font-bold py-3.5 rounded-2xl shadow-lg shadow-primary/30 hover:bg-primary/90 active:scale-95 transition-all"
+                className="flex-1 bg-black dark:bg-white text-white dark:text-black font-bold py-3.5 rounded-2xl shadow-lg active:scale-95 transition-all"
               >
-                Ir al login
+                Anar al login
               </button>
             </div>
           </div>

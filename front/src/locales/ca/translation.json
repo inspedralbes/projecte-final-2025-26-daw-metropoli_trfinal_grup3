@@ -52,24 +52,12 @@
   },
   "nav": {
     "home": "Inici",
-    "events": "Esdeveniments",
     "map": "Mapa",
     "community": "Comunitat",
     "profile": "Perfil",
-    "settings": "Configuraci\u00f3",
+    "settings": "Configuració",
     "lightMode": "Mode Clar",
     "darkMode": "Mode Fosc"
-  },
-  "events": {
-    "raceWeekend": "Cap de Setmana de Cursa",
-    "noEvents": "No hi ha esdeveniments programats",
-    "sessionsToday": "Sessions avui",
-    "live": "En Directe",
-    "upcoming": "Propers",
-    "done": "Finalitzat",
-    "noEventsForDay": "No hi ha esdeveniments per aquest dia",
-    "mainEvent": "Esdeveniment Principal",
-    "liveNow": "En Directe"
   },
   "settings": {
     "title": "Configuració",
@@ -104,11 +92,11 @@
     "namePlaceholder": "El teu nom",
     "bio": "Biografia",
     "bioPlaceholder": "Explica'ns alguna cosa sobre tu...",
-    "infoNote": "Els canvis al nom i la foto s\u00f3n visibles per a la resta d'usuaris de la comunitat.",
+    "infoNote": "Els canvis al nom i la foto són visibles per a la resta d'usuaris de la comunitat.",
     "dangerZone": "Zona de Perill",
     "deleteAccount": "Eliminar compte",
     "errorName": "El nom no pot estar buit",
-    "errorNameLong": "El nom no pot superar 40 car\u00e0cters",
-    "errorBioLong": "La biografia no pot superar 100 car\u00e0cters"
+    "errorNameLong": "El nom no pot superar 40 caràcters",
+    "errorBioLong": "La biografia no pot superar 100 caràcters"
   }
 }

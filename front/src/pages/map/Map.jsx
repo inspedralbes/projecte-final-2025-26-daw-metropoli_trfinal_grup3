@@ -19,22 +19,22 @@ import iconShadow from "leaflet/dist/images/marker-shadow.png";
 let DefaultIcon = L.icon({ iconUrl: icon, shadowUrl: iconShadow, iconSize: [25, 41], iconAnchor: [12, 41] });
 L.Marker.prototype.options.icon = DefaultIcon;
 
-// Custom Icons — only FA icons are rendered, otherwise just a colored circle
-const createCustomIcon = (iconName, bgColor) => {
-  const isFA = iconName && iconName.startsWith('fa-');
-  const iconHtml = isFA
-    ? `<i class="${iconName}" style="font-size:14px;line-height:1;"></i>`
-    : ``;
-
-  const isHex = bgColor && bgColor.startsWith('#');
-  const bgClass = isHex ? "" : (bgColor || 'bg-slate-500');
-  const styleString = isHex ? `background-color: ${bgColor};` : "";
-
+// Custom Icons matching the aesthetic (circular image with text below)
+const createCustomIcon = (label, imageUrl) => {
   return L.divIcon({
     className: "custom-map-icon",
-    html: `<div class="${bgClass} text-white rounded-full shadow-lg border-2 border-white flex items-center justify-center" style="width:32px;height:32px;${styleString}">${iconHtml}</div>`,
-    iconSize: [32, 32],
-    iconAnchor: [16, 16],
+    html: `
+      <div class="flex flex-col items-center pointer-events-auto" style="width: 120px; transform: translateX(-40px);">
+        <div class="w-10 h-10 rounded-full border-2 border-white shadow-lg overflow-hidden bg-white">
+          <img src="${imageUrl || 'https://via.placeholder.com/40'}" class="w-full h-full object-cover" />
+        </div>
+        <div class="mt-1 bg-white/80 dark:bg-black/50 backdrop-blur-sm px-1.5 py-0.5 rounded text-black dark:text-white text-[10px] font-bold uppercase tracking-tight text-center leading-tight shadow-sm" style="max-width: 100%; word-wrap: break-word;">
+          ${label || ''}
+        </div>
+      </div>
+    `,
+    iconSize: [40, 40],
+    iconAnchor: [20, 20],
   });
 };
 
@@ -51,7 +51,8 @@ const Map = () => {
   const initialCenter = [41.3864, 2.1058];
   const [userPosition, setUserPosition] = useState(null);
   const [isLegendOpen, setIsLegendOpen] = useState(false); // State for collapsible legend
-  const [isSatelliteView, setIsSatelliteView] = useState(true); // State for satellite view toggle
+  const [isSatelliteView, setIsSatelliteView] = useState(false); // State for satellite view toggle
+  const [isSheetExpanded, setIsSheetExpanded] = useState(true); // State for bottom sheet toggle
 
   // eslint-disable-next-line no-unused-vars
   const [imageBounds, setImageBounds] = useState([
@@ -241,6 +242,19 @@ const Map = () => {
     { color: "bg-blue-500", label: "You" },
   ];
 
+  const curations = [
+    { id: 1, title: 'chinatown & les', user: '@tasha', image: 'https://images.unsplash.com/photo-1498855926480-d98e83099315?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80' },
+    { id: 2, title: 'nyc', user: '@martini22', image: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80' },
+    { id: 3, title: 'brooklyn vibes', user: '@jake', image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80' }
+  ];
+
+  const curators = [
+    { id: 1, name: 'eliza', score: 92, image: 'https://randomuser.me/api/portraits/women/44.jpg' },
+    { id: 2, name: 'gndclouds', score: 68, image: 'https://randomuser.me/api/portraits/men/32.jpg' },
+    { id: 3, name: 'michelle', score: 44, image: 'https://randomuser.me/api/portraits/women/68.jpg' },
+    { id: 4, name: 'weber', score: 42, image: 'https://randomuser.me/api/portraits/men/46.jpg' }
+  ];
+
   return (
     <div
       className="relative h-[100dvh] w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display overflow-hidden select-none transition-colors duration-300 overscroll-none"
@@ -304,42 +318,26 @@ const Map = () => {
               return null;
             }
 
+            const placeholderImages = [
+              "https://images.unsplash.com/photo-1555396273-367ea4eb4db5?w=100&q=80",
+              "https://images.unsplash.com/photo-1517248135467-4c7edcad34c4?w=100&q=80",
+              "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=100&q=80",
+              "https://images.unsplash.com/photo-1554118811-1e0d58224f24?w=100&q=80",
+              "https://images.unsplash.com/photo-1525610553991-2bede1a236e2?w=100&q=80"
+            ];
+            const randomImg = placeholderImages[index % placeholderImages.length];
+
             return (
               <Marker
                 key={marker.id || index}
                 position={marker.position}
-                icon={
-                  originFeature?.id === marker.id
-                    ? createCustomIcon('fa-play', '#10b981') // Verde para origen
-                    : destinationFeature?.id === marker.id
-                      ? createCustomIcon('fa-flag-checkered', '#ef4444') // Rojo para destino
-                      : createCustomIcon(marker.iconName, marker.bgColor)
-                }
+                icon={createCustomIcon(marker.name, randomImg)}
                 eventHandlers={{
                   click: () => {
                     setSelectedFeature(marker);
                   }
                 }}
               >
-                <Popup>
-                  <div className="text-center font-display">
-                    <h3 className="font-bold text-slate-800">{marker.name}</h3>
-                    <p className="text-xs text-slate-500 mb-2">{marker.description}</p>
-                    <button
-                      onClick={() => {
-                        if (userPosition) {
-                          fetchRoute(null, marker.id, { lat: userPosition[0], lng: userPosition[1] });
-                        } else {
-                          handleLocate();
-                          alert("Localizando tu posición... Vuelve a intentarlo en un momento.");
-                        }
-                      }}
-                      className="mt-1 text-xs bg-primary text-white px-3 py-1.5 rounded shadow hover:bg-red-600 transition-colors"
-                    >
-                      Navegar hasta aquí
-                    </button>
-                  </div>
-                </Popup>
               </Marker>
             );
           })}
@@ -352,308 +350,109 @@ const Map = () => {
       </div>
 
       {/* UI Overlay */}
-      <div className="relative z-30 flex flex-col h-full pointer-events-none">
-        {/* Top Bar */}
-        <div className="w-full pt-6 px-5 pointer-events-auto touch-none">
-          <div className="flex justify-between items-center mb-6">
-            <div className="flex items-center gap-2">
-              <Link to="/">
-                <img
-                  src={isSatelliteView ? "/logo/logo.png" : "/logo/logo1.png"}
-                  alt="Circuit Logo"
-                  className="h-12 w-auto object-contain"
-                />
-              </Link>
-            </div>
-            <Link
-              to="/profile"
-              className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden shadow-sm bg-white dark:bg-[#12080a]"
-            >
-              <img
-                src={(() => {
-                  const storedUser = localStorage.getItem("usuario");
-                  const user = storedUser ? JSON.parse(storedUser) : null;
-                  if (!user?.foto) return "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-                  if (user.foto.startsWith("http")) return user.foto;
-                  return `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${user.foto}`;
-                })()}
-                alt="Profile"
-                className="w-full h-full object-cover rounded-full"
-              />
-            </Link>
-          </div>
-
+      <div className="absolute inset-0 z-30 pointer-events-none flex flex-col justify-between">
+        {/* Top Area */}
+        <div className="w-full pt-12 px-5 pointer-events-auto flex flex-col items-center gap-4">
           {/* Search Bar */}
-          <div className="w-full md:max-w-sm">
-            <div className="bg-white/90 dark:bg-[#12080a]/90 backdrop-blur-md rounded-2xl flex items-center px-4 py-3.5 gap-3 pointer-events-auto border border-slate-200 dark:border-slate-800 shadow-xl shadow-slate-200/50 dark:shadow-none">
-              <span className="material-symbols-outlined text-primary text-xl">search</span>
-              <input
-                className="bg-transparent border-none outline-none text-slate-700 dark:text-slate-200 placeholder-slate-400 w-full text-sm font-medium focus:ring-0 p-0"
-                placeholder="Search Grandstand, Food, WC..."
-                type="text"
-              />
-            </div>
-          </div>
-        </div>
-
-        {/* Legend Toggle Tab (Left Side) */}
-        <button
-          onClick={() => setIsLegendOpen(!isLegendOpen)}
-          className={`absolute top-1/2 -translate-y-1/2 z-50 bg-white/90 dark:bg-[#12080a] backdrop-blur-md text-slate-700 dark:text-slate-200 py-6 px-1.5 rounded-r-2xl border-y border-r border-slate-200 dark:border-slate-800 shadow-xl active:scale-95 transition-all duration-300 flex items-center justify-center pointer-events-auto ${isLegendOpen ? 'translate-x-[16rem]' : 'translate-x-0'} left-0`}
-          aria-label="Toggle Legend"
-        >
-          <span className="material-symbols-outlined text-xl">{isLegendOpen ? "chevron_left" : "chevron_right"}</span>
-        </button>
-
-        {/* Collapsible Sidebar Legend */}
-        <div
-          className={`absolute left-0 top-0 bottom-0 w-64 bg-white/95 dark:bg-[#12080a] backdrop-blur-xl border-r border-slate-200 dark:border-slate-800 shadow-2xl transition-transform duration-300 z-40 pointer-events-auto flex flex-col justify-center px-6 ${isLegendOpen ? 'translate-x-0' : '-translate-x-full'}`}
-        >
-          <div className="mb-6">
-            <span className="text-xs uppercase tracking-widest font-bold text-slate-400 block mb-4 border-b border-slate-100 dark:border-slate-800 pb-2">
-              Map Legend
-            </span>
-
-            <div className="space-y-3">
-              {/* Boton para quitar el filtro y ver todos */}
-              <button
-                onClick={() => setActiveFilter(null)}
-                className={`w-full flex items-center gap-4 group rounded-xl px-2 py-1 transition-colors ${activeFilter === null ? 'bg-slate-100 dark:bg-slate-800' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                  }`}
-              >
-                <div className="w-8 h-8 rounded-full bg-slate-200 dark:bg-slate-700 flex items-center justify-center">
-                  <span className="text-xs font-bold text-slate-500">All</span>
-                </div>
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">Show All</span>
-              </button>
-
-              {/* Una fila por cada categoria de la base de datos */}
-              {categories.map((cat) => {
-                const isActive = activeFilter === cat.id_categoria;
-                const colorStyle = cat.color_hex ? { backgroundColor: cat.color_hex } : {};
-
-                return (
-                  <button
-                    key={cat.id_categoria}
-                    onClick={() => {
-                      // Si ya esta activo este filtro, lo quitamos; si no, lo ponemos
-                      if (activeFilter === cat.id_categoria) {
-                        setActiveFilter(null);
-                      } else {
-                        setActiveFilter(cat.id_categoria);
-                      }
-                    }}
-                    className={`w-full flex items-center gap-4 group rounded-xl px-2 py-1 transition-colors ${isActive ? 'bg-slate-100 dark:bg-slate-800' : 'hover:bg-slate-50 dark:hover:bg-slate-800/50'
-                      }`}
-                  >
-                    {/* Circulo de color con icono si existe */}
-                    <div
-                      className="w-8 h-8 rounded-full flex items-center justify-center text-white flex-shrink-0 border-2 border-white shadow"
-                      style={colorStyle}
-                    >
-                      {cat.icono_url && cat.icono_url.startsWith('fa-') && (
-                        <i className={cat.icono_url} style={{ fontSize: '13px' }}></i>
-                      )}
-                    </div>
-                    <span className="text-sm font-medium text-slate-600 dark:text-slate-300 text-left">{cat.nombre}</span>
-                    {isActive && (
-                      <span className="ml-auto text-xs text-primary font-bold">●</span>
-                    )}
-                  </button>
-                );
-              })}
-
-              {/* Tu posicion siempre visible */}
-              <div className="flex items-center gap-4 group rounded-xl px-2 py-1">
-                <div className="w-8 h-8 rounded-full bg-blue-500/10 flex items-center justify-center">
-                  <div className="w-3 h-3 bg-blue-500 rounded-full border-2 border-white shadow-sm"></div>
-                </div>
-                <span className="text-sm font-medium text-slate-600 dark:text-slate-300">You</span>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <div className="flex-grow"></div>
-
-        {/* Right Side Controls (FABs) */}
-        <div className="absolute right-5 bottom-32 flex flex-col gap-4 pointer-events-auto z-40">
-          <Link
-            to="/escaneo"
-            className="bg-indigo-600 text-white p-3.5 rounded-xl shadow-lg shadow-indigo-600/30 active:scale-95 transition-transform flex items-center justify-center"
-          >
-            <span className="material-symbols-outlined text-2xl">
-              qr_code_scanner
-            </span>
-          </Link>
-          <button
-            onClick={handleLocate}
-            className="bg-primary text-white p-3.5 rounded-xl shadow-lg shadow-primary/30 active:scale-95 transition-transform flex items-center justify-center"
-          >
-            <span className="material-symbols-outlined text-2xl">my_location</span>
-          </button>
-          <button
-            onClick={() => setIsSatelliteView(!isSatelliteView)}
-            className="bg-white/90 dark:bg-[#12080a] backdrop-blur-md text-slate-700 dark:text-slate-200 p-3.5 rounded-xl border border-slate-200 dark:border-slate-800 shadow-lg active:scale-95 transition-transform flex items-center justify-center"
-          >
-            <span className="material-symbols-outlined text-2xl">{isSatelliteView ? "map" : "satellite_alt"}</span>
-          </button>
-        </div>
-
-        {/* Side Info Panel */}
-        <div
-          className={`absolute right-0 top-0 bottom-0 w-80 bg-white/95 dark:bg-slate-900/95 backdrop-blur-xl border-l border-slate-200 dark:border-slate-800 shadow-2xl transition-transform duration-300 z-50 pointer-events-auto flex flex-col p-6 ${selectedFeature || route ? 'translate-x-0' : 'translate-x-full'}`}
-        >
-          <div className="flex justify-between items-center mb-6 pt-4">
-            <h2 className="text-xl font-bold text-slate-800 dark:text-white">
-              {route ? "Navegación Activa" : "Información del Sitio"}
-            </h2>
-            <button
-              onClick={() => {
-                setSelectedFeature(null);
-                setOriginFeature(null);
-                setDestinationFeature(null);
-                setRoute(null);
-                setDistance(null);
-              }}
-              className="text-slate-400 hover:text-slate-600 dark:hover:text-slate-200"
-            >
-              <span className="material-symbols-outlined">close</span>
+          <div className="w-full max-w-md bg-[#1a1a1a] rounded-[2rem] flex items-center px-5 py-4 gap-3 shadow-xl border border-gray-800">
+            <span className="material-symbols-outlined text-white text-xl">search</span>
+            <input
+              className="bg-transparent border-none outline-none text-white placeholder-gray-400 w-full text-base font-medium focus:ring-0 p-0"
+              placeholder="search for something"
+              type="text"
+            />
+            <button className="bg-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 ml-auto">
+               <span className="material-symbols-outlined text-black text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>near_me</span>
             </button>
           </div>
+        </div>
 
-          <div className="flex-grow overflow-y-auto pr-2 custom-scrollbar">
-            {route ? (
-              <div className="space-y-6">
-                <div className="bg-primary/10 rounded-2xl p-5 border border-primary/20">
-                  <div className="flex items-center gap-3 mb-4 last:mb-0">
-                    <div className="flex flex-col items-center gap-1">
-                      <span className="material-symbols-outlined text-emerald-500 text-sm">play_circle</span>
-                      <div className="w-0.5 h-4 bg-slate-300 dark:bg-slate-700"></div>
-                      <span className="material-symbols-outlined text-red-500 text-sm">tour</span>
-                    </div>
-                    <div className="flex flex-col gap-3">
-                      <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Desde</span>
-                        <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                          {originFeature ? originFeature.name : "Tu ubicación"}
-                        </span>
+        {/* Bottom Area */}
+        <div className="w-full pointer-events-auto flex flex-col items-center">
+          
+          {/* "centrar" button */}
+          <button onClick={handleLocate} className="bg-white text-black font-bold text-sm px-5 py-2.5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] flex items-center gap-2 mb-4 hover:bg-gray-100 transition-colors">
+            <span className="material-symbols-outlined text-lg">my_location</span>
+            centrar
+          </button>
+
+          {/* Filters Bar */}
+          <div className="w-full overflow-x-auto no-scrollbar px-5 mb-4">
+            <div className="flex gap-2 min-w-max">
+              <button className="bg-black text-white px-5 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 shadow-md border border-gray-800">
+                <span className="material-symbols-outlined text-sm">public</span>
+                discover
+                <span className="material-symbols-outlined text-sm">expand_more</span>
+              </button>
+              <button className="bg-white text-black px-5 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 shadow-md">
+                <span className="material-symbols-outlined text-sm text-gray-500">restaurant</span>
+                eat
+              </button>
+              <button className="bg-white text-black px-5 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 shadow-md">
+                <span className="material-symbols-outlined text-sm text-gray-500">local_cafe</span>
+                café
+              </button>
+              <button className="bg-white text-black px-5 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 shadow-md">
+                <span className="material-symbols-outlined text-sm text-gray-500">local_bar</span>
+                bar
+              </button>
+              <button className="bg-white text-black w-10 h-10 rounded-full flex items-center justify-center font-bold shadow-md">
+                <span className="material-symbols-outlined text-sm">add</span>
+              </button>
+            </div>
+          </div>
+
+          {/* Bottom Sheet Modal */}
+          <div className="w-full bg-white dark:bg-slate-900 rounded-t-[2rem] pt-2 pb-24 px-5 shadow-[0_-10px_40px_rgba(0,0,0,0.15)] relative">
+            
+            {/* Drag Handle */}
+            <div 
+              className="w-full flex justify-center mb-2 cursor-pointer py-2"
+              onClick={() => setIsSheetExpanded(!isSheetExpanded)}
+            >
+              <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
+            </div>
+
+            <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isSheetExpanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
+              {/* Curations Section */}
+              <div className="mb-8">
+                <h2 className="text-black dark:text-white font-bold text-lg mb-4 tracking-tight">curations for you</h2>
+                <div className="w-full overflow-x-auto no-scrollbar -mx-5 px-5">
+                  <div className="flex gap-4 min-w-max">
+                    {curations.map(c => (
+                      <div key={c.id} className="relative w-36 h-48 rounded-2xl overflow-hidden shadow-sm">
+                        <img src={c.image} alt={c.title} className="w-full h-full object-cover" />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-3">
+                          <span className="text-white text-xs font-medium">{c.user}</span>
+                          <span className="text-white font-bold text-[15px] leading-tight mt-0.5">{c.title}</span>
+                        </div>
                       </div>
-                      <div>
-                        <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest block">Hasta</span>
-                        <span className="text-sm font-bold text-slate-700 dark:text-slate-200">
-                          {destinationFeature ? destinationFeature.name : "Destino"}
-                        </span>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-
-                <div className="bg-indigo-500/10 rounded-2xl p-5 border border-indigo-500/20">
-                  <div className="flex items-center gap-3 mb-3">
-                    <span className="material-symbols-outlined text-indigo-500">straighten</span>
-                    <span className="text-sm font-bold text-indigo-500 uppercase tracking-wider">Distancia Estimada</span>
-                  </div>
-                  <div className="flex items-baseline gap-2">
-                    <span className="text-3xl font-black text-slate-800 dark:text-white">
-                      {distance > 1000 ? (distance / 1000).toFixed(2) : Math.round(distance)}
-                    </span>
-                    <span className="text-lg font-bold text-slate-500">
-                      {distance > 1000 ? "km" : "m"}
-                    </span>
-                  </div>
-                </div>
-
-                <button
-                  onClick={() => {
-                    setOriginFeature(null);
-                    setDestinationFeature(null);
-                    setRoute(null);
-                    setDistance(null);
-                  }}
-                  className="w-full bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-300 font-bold py-4 rounded-2xl hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-lg">cancel</span>
-                  Limpiar Navegación
-                </button>
-              </div>
-            ) : selectedFeature ? (
-              <div className="space-y-6">
-                <div className="flex flex-col items-center text-center">
-                  <div
-                    className="w-20 h-20 rounded-3xl flex items-center justify-center text-white text-3xl mb-4 border-4 border-white dark:border-slate-800 shadow-xl"
-                    style={{ backgroundColor: (originFeature?.id === selectedFeature.id ? '#10b981' : destinationFeature?.id === selectedFeature.id ? '#ef4444' : selectedFeature.bgColor) }}
-                  >
-                    {originFeature?.id === selectedFeature.id ? (
-                      <i className="fa-play"></i>
-                    ) : destinationFeature?.id === selectedFeature.id ? (
-                      <i className="fa-flag-checkered"></i>
-                    ) : selectedFeature.iconName && selectedFeature.iconName.startsWith('fa-') ? (
-                      <i className={selectedFeature.iconName}></i>
-                    ) : (
-                      <span className="material-symbols-outlined text-4xl">location_on</span>
-                    )}
-                  </div>
-                  <h3 className="text-2xl font-bold text-slate-800 dark:text-white mb-2">
-                    {selectedFeature.name}
-                  </h3>
-                  <span className="px-3 py-1 bg-slate-100 dark:bg-slate-800 rounded-full text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">
-                    {categories.find(c => c.id_categoria === selectedFeature.id_categoria)?.nombre || "Punto de Interés"}
-                  </span>
-                  <p className="text-slate-500 dark:text-slate-400 leading-relaxed">
-                    {selectedFeature.description || "No hay descripción disponible para este sitio."}
-                  </p>
-                </div>
-
-                <div className="space-y-3 pt-4 border-t border-slate-100 dark:border-slate-800">
-                  {/* Navegación desde ubicación */}
-                  <button
-                    onClick={() => {
-                      setOriginFeature(null);
-                      if (userPosition) {
-                        fetchRoute(null, selectedFeature.id, { lat: userPosition[0], lng: userPosition[1] });
-                        setDestinationFeature(selectedFeature);
-                      } else {
-                        handleLocate();
-                        alert("Localizando tu posición... Vuelve a intentarlo en un momento.");
-                      }
-                    }}
-                    className="w-full bg-primary text-white font-bold py-4 rounded-2xl shadow-lg shadow-primary/30 hover:bg-red-600 transition-all flex items-center justify-center gap-3 active:scale-95"
-                  >
-                    <span className="material-symbols-outlined">my_location</span>
-                    Ir desde mi ubicación
-                  </button>
-
-                  <div className="grid grid-cols-2 gap-3">
-                    <button
-                      onClick={() => {
-                        setOriginFeature(selectedFeature);
-                        if (destinationFeature && destinationFeature.id !== selectedFeature.id) {
-                          fetchRoute(selectedFeature.id, destinationFeature.id);
-                        }
-                      }}
-                      className={`py-3 px-2 rounded-xl font-bold text-xs flex flex-col items-center gap-1 transition-all border-2 ${originFeature?.id === selectedFeature.id ? 'bg-emerald-500 border-emerald-500 text-white' : 'bg-white dark:bg-slate-800 border-emerald-500/30 text-emerald-600'}`}
-                    >
-                      <span className="material-symbols-outlined text-lg">play_circle</span>
-                      <span>Origen</span>
-                    </button>
-
-                    <button
-                      onClick={() => {
-                        setDestinationFeature(selectedFeature);
-                        if (originFeature && originFeature.id !== selectedFeature.id) {
-                          fetchRoute(originFeature.id, selectedFeature.id);
-                        }
-                      }}
-                      className={`py-3 px-2 rounded-xl font-bold text-xs flex flex-col items-center gap-1 transition-all border-2 ${destinationFeature?.id === selectedFeature.id ? 'bg-red-500 border-red-500 text-white' : 'bg-white dark:bg-slate-800 border-red-500/30 text-red-600'}`}
-                    >
-                      <span className="material-symbols-outlined text-lg">tour</span>
-                      <span>Destino</span>
-                    </button>
+                    ))}
                   </div>
                 </div>
               </div>
-            ) : null}
+
+              {/* Curators Section */}
+              <div>
+                <h2 className="text-black dark:text-white font-bold text-lg mb-4 tracking-tight">curators for you</h2>
+                <div className="w-full overflow-x-auto no-scrollbar -mx-5 px-5">
+                  <div className="flex gap-6 min-w-max">
+                    {curators.map(c => (
+                      <div key={c.id} className="flex flex-col items-center gap-2 w-16">
+                        <div className="relative">
+                          <img src={c.image} alt={c.name} className="w-16 h-16 rounded-full object-cover shadow-sm border border-gray-100 dark:border-gray-800" />
+                          <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-800 text-black dark:text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow border border-gray-100 dark:border-gray-700 flex items-center gap-0.5">
+                            <span className="material-symbols-outlined text-[10px]">visibility</span>
+                            {c.score}
+                          </div>
+                        </div>
+                        <span className="text-black dark:text-white text-xs font-medium mt-2 text-center truncate w-full">{c.name}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>

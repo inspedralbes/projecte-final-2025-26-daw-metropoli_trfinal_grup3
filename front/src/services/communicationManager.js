@@ -184,58 +184,7 @@ export const getPoiNodes = async () => {
   }
 };
 
-// ── Eventos ──
-export const getEventos = async () => {
-  try {
-    const response = await fetch(`${API_URL}/api/eventos`);
-    if (!response.ok) throw new Error("Failed to fetch Eventos");
-    return await response.json();
-  } catch (error) {
-    console.error("Error in getEventos:", error);
-    throw error;
-  }
-};
 
-export const getNextEvento = async () => {
-  try {
-    const response = await fetch(`${API_URL}/api/eventos/proximo`);
-    if (!response.ok) throw new Error("Failed to fetch next Evento");
-    return await response.json();
-  } catch (error) {
-    console.error("Error in getNextEvento:", error);
-    throw error;
-  }
-};
-
-export const createEvento = async (eventoData) => {
-  try {
-    const response = await fetch(`${API_URL}/api/eventos`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(eventoData),
-    });
-    if (!response.ok) throw new Error("Failed to create Evento");
-    return await response.json();
-  } catch (error) {
-    console.error("Error in createEvento:", error);
-    throw error;
-  }
-};
-
-export const updateEvento = async (id, eventoData) => {
-  try {
-    const response = await fetch(`${API_URL}/api/eventos/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(eventoData),
-    });
-    if (!response.ok) throw new Error("Failed to update Evento");
-    return await response.json();
-  } catch (error) {
-    console.error("Error in updateEvento:", error);
-    throw error;
-  }
-};
 
 // ── Tiempo (Weather) ──
 export const getTiempo = async () => {

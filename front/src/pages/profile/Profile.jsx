@@ -85,7 +85,7 @@ const GuestProfileView = () => {
             </div>
             <div>
               <p className="font-bold text-sm text-slate-800 dark:text-white">Feed de la Comunidad</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Comenta y reacciona a los eventos.</p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">Comenta y reacciona a las publicaciones.</p>
             </div>
           </div>
         </div>

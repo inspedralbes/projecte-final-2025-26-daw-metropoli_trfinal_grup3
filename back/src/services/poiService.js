@@ -1,5 +1,4 @@
 import poiModel from '../models/poiModel.js';
-import horarioModel from '../models/horarioModel.js';
 import multimediaModel from '../models/multimediaModel.js';
 import pool from '../config/mysql.js';
 
@@ -61,11 +60,7 @@ const createPoiCompleto = async (fullData) => {
         const nuevoPoi = await poiModel.create(poiData, connection);
         const idPoi = nuevoPoi.id_poi;
 
-        // 2. Insertar Horarios (usando el modelo de Horario)
-        if (horarios && horarios.length > 0) {
-            const horarioValues = horarios.map(h => [idPoi, h.id_evento, h.dia_semana, h.hora_apertura, h.hora_cierre]);
-            await horarioModel.createBulk(horarioValues, connection);
-        }
+
 
         // 3. Insertar Multimedia (usando el modelo de Multimedia)
         if (multimedia && multimedia.length > 0) {

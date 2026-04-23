@@ -1,6 +1,5 @@
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/home/Home";
-import Events from "./pages/events/Events";
 import Map from "./pages/map/Map";
 import Admin from "./pages/admin/Admin";
 import Community from "./pages/community/Community";
@@ -21,7 +20,6 @@ function App() {
           <Route path="/login" element={<Login />} />
           <Route path="/signup" element={<SignUp />} />
           <Route path="/home" element={<Home />} />
-          <Route path="/events" element={<Events />} />
           <Route path="/" element={<Map />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/community" element={<Community />} />

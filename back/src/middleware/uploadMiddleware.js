@@ -8,9 +8,7 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PUBLIC_BASE = path.join(__dirname, "..", "..", "public");
 
-// Carpetas que deben existir — las creamos si no están
 const UPLOAD_DIRS = [
-  path.join(PUBLIC_BASE, "images", "eventos"),
   path.join(PUBLIC_BASE, "images", "usuarios"),
   path.join(PUBLIC_BASE, "images", "comunidad"),
   path.join(PUBLIC_BASE, "images", "pois"),
@@ -26,7 +24,7 @@ for (const dir of UPLOAD_DIRS) {
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     // Determinamos la carpeta destino según el campo del archivo
-    let folder = path.join(PUBLIC_BASE, "images", "eventos");
+    let folder = path.join(PUBLIC_BASE, "images", "temporal");
 
     if (file.fieldname === "fotoPerfil") {
       folder = path.join(PUBLIC_BASE, "images", "usuarios");
@@ -41,7 +39,7 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
 
-    let prefix = "evento";
+    let prefix = "upload";
     if (file.fieldname === "fotoPerfil") {
       prefix = "user";
     } else if (file.fieldname === "fotoPublicacion") {

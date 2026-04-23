@@ -1,4 +1,4 @@
-// Guardamos en una variable global la antena (io) para poder usarla en otros archivos (como los controladores de eventos)
+// Guardamos en una variable global la antena (io) para poder usarla en otros archivos
 let antenaSocket;
 
 export const initSocket = (servidorPrincipal) => {
