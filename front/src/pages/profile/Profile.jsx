@@ -16,42 +16,41 @@ const GuestProfileView = () => {
       {/* Top Bar for Guest View */}
       <div className="w-full pt-0 pb-10 flex justify-between items-center md:max-w-md">
         <div className="flex items-center gap-2">
-          <Link to="/">
-            <img
-              src="/logo/logo1.png"
-              alt="Circuit Logo"
-              className="h-12 w-auto object-contain block dark:hidden"
-            />
-            <img
-              src="/logo/logo.png"
-              alt="Circuit Logo"
-              className="h-12 w-auto object-contain hidden dark:block"
-            />
+          <Link to="/" className="flex items-center">
+            <span className="text-2xl font-black italic tracking-tighter text-slate-900 dark:text-white">
+              Aplicación
+            </span>
           </Link>
         </div>
         <Link
           to="/settings"
           className="w-10 h-10 flex items-center justify-center bg-white dark:bg-[#12080a] rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
         >
-          <span className="material-symbols-outlined text-[22px]">settings</span>
+          <span className="material-symbols-outlined text-[22px]">
+            settings
+          </span>
         </Link>
       </div>
 
       <div className="w-full max-w-md bg-white dark:bg-[#12080a] rounded-[32px] p-8 shadow-2xl flex flex-col items-center text-center border border-slate-100 dark:border-slate-800 relative overflow-hidden">
         {/* Decorative Background */}
-        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-primary/10 to-transparent dark:from-primary/20 pointer-events-none"></div>
+        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-primary/10 to-transparent pointer-events-none"></div>
 
-        <div className="w-20 h-20 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center mb-6 relative z-10">
+        <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6 relative z-10">
           <span className="material-symbols-outlined text-4xl text-primary font-variation-settings-filled">
             account_circle
           </span>
         </div>
 
         <h1 className="text-2xl font-black italic tracking-tight text-slate-800 dark:text-white mb-2 relative z-10">
-          Unlock the Full <span className="text-primary">Experience</span>
+          Unlock the Full{" "}
+          <span className="text-primary underline decoration-primary">
+            Experience
+          </span>
         </h1>
         <p className="text-slate-500 dark:text-slate-400 text-sm mb-8 relative z-10">
-          Inicia sesión o regístrate para acceder a todas las funcionalidades exclusivas del circuito.
+          Inicia sesión o regístrate para acceder a todas las funcionalidades
+          exclusivas de la ciudad y crear tus propias rutas.
         </p>
 
         <div className="flex flex-col gap-4 w-full mb-8 relative z-10">
@@ -62,21 +61,15 @@ const GuestProfileView = () => {
               </span>
             </div>
             <div>
-              <p className="font-bold text-sm text-slate-800 dark:text-white">Añade Amigos con QR</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Escanea códigos rápidamente en la pista.</p>
+              <p className="font-bold text-sm text-slate-800 dark:text-white">
+                Añade Amigos con QR
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Escanea códigos rápidamente en tus rutas.
+              </p>
             </div>
           </div>
-          <div className="flex items-center gap-3 text-left">
-            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-slate-600 dark:text-slate-300 text-sm">
-                emoji_events
-              </span>
-            </div>
-            <div>
-              <p className="font-bold text-sm text-slate-800 dark:text-white">Consigue Logros</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Desbloquea medallas por tu asistencia.</p>
-            </div>
-          </div>
+
           <div className="flex items-center gap-3 text-left">
             <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
               <span className="material-symbols-outlined text-slate-600 dark:text-slate-300 text-sm">
@@ -84,8 +77,12 @@ const GuestProfileView = () => {
               </span>
             </div>
             <div>
-              <p className="font-bold text-sm text-slate-800 dark:text-white">Feed de la Comunidad</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Comenta y reacciona a las publicaciones.</p>
+              <p className="font-bold text-sm text-slate-800 dark:text-white">
+                Feed de la Comunidad
+              </p>
+              <p className="text-xs text-slate-500 dark:text-slate-400">
+                Comenta y reacciona a las publicaciones.
+              </p>
             </div>
           </div>
         </div>
@@ -93,7 +90,7 @@ const GuestProfileView = () => {
         <div className="flex flex-col gap-3 w-full relative z-10">
           <Link
             to="/login"
-            className="w-full py-3.5 rounded-full bg-primary text-white font-bold text-sm hover:bg-[#ff1e3c] transition-colors shadow-lg shadow-primary/30 flex justify-center items-center"
+            className="w-full py-3.5 rounded-full bg-primary text-primary-text font-bold text-sm hover:opacity-90 transition-colors shadow-lg shadow-primary/20 flex justify-center items-center"
           >
             Iniciar Sesión
           </Link>
@@ -114,7 +111,10 @@ const GuestProfileView = () => {
 const MyQrModal = ({ user, onClose }) => {
   // El QR contiene un JSON con los datos del usuario
   // TODO: cuando haya login, usar el ID real del usuario autenticado
-  const qrData = JSON.stringify({ userId: user.id_usuario || user.id, nombre: user.nombre });
+  const qrData = JSON.stringify({
+    userId: user.id_usuario || user.id,
+    nombre: user.nombre,
+  });
 
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm px-4 pb-6 md:pb-0">
@@ -175,13 +175,13 @@ const ScanQrModal = ({ allUsers, onAdd, onClose }) => {
       const data = JSON.parse(decoded);
       // El QR puede contener userId o id_usuario
       const targetId = data.userId || data.id_usuario || data.id;
-      
+
       if (!targetId) {
         throw new Error("Invalid QR data");
       }
 
       const found = allUsers.find((u) => (u.id_usuario || u.id) == targetId);
-      
+
       if (!found) {
         setError("Usuario no encontrado en la comunidad");
         setScanning(false);
@@ -226,14 +226,18 @@ const ScanQrModal = ({ allUsers, onAdd, onClose }) => {
               {result ? "Usuario Encontrado" : "Escanear Amigo"}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
-              {result ? "Confirma que quieres añadir a esta persona" : "Apunta con la cámara al código QR"}
+              {result
+                ? "Confirma que quieres añadir a esta persona"
+                : "Apunta con la cámara al código QR"}
             </p>
           </div>
           <button
             onClick={onClose}
             className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center hover:bg-slate-200 dark:hover:bg-slate-700 transition-all transform hover:rotate-90"
           >
-            <span className="material-symbols-outlined text-slate-500">close</span>
+            <span className="material-symbols-outlined text-slate-500">
+              close
+            </span>
           </button>
         </div>
 
@@ -243,79 +247,106 @@ const ScanQrModal = ({ allUsers, onAdd, onClose }) => {
               <Suspense
                 fallback={
                   <div className="flex flex-col items-center justify-center py-20 text-slate-400 gap-3">
-                    <span className="material-symbols-outlined animate-spin text-3xl">progress_activity</span>
+                    <span className="material-symbols-outlined animate-spin text-3xl">
+                      progress_activity
+                    </span>
                     <p className="text-sm font-medium">Iniciando cámara...</p>
                   </div>
                 }
               >
-                <QrScanner onResult={handleResult} onError={(err) => {setError(err); setScanning(false);}} />
+                <QrScanner
+                  onResult={handleResult}
+                  onError={(err) => {
+                    setError(err);
+                    setScanning(false);
+                  }}
+                />
               </Suspense>
-              
+
               {/* Indicador de "Buscando..." */}
               <div className="absolute top-4 left-4 flex items-center gap-2 bg-black/50 backdrop-blur-md px-3 py-1.5 rounded-full border border-white/10">
-                <div className="w-2 h-2 bg-primary rounded-full animate-pulse"></div>
-                <span className="text-[10px] font-bold text-white uppercase tracking-wider">Buscando QR...</span>
+                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
+                <span className="text-[10px] font-bold text-white uppercase tracking-wider">
+                  Buscando QR...
+                </span>
               </div>
             </div>
           ) : result ? (
             /* Vista de Éxito / Confirmación */
             <div className="flex flex-col items-center py-4 animate-in fade-in zoom-in duration-300">
-               <div className="w-24 h-24 rounded-full border-4 border-primary/20 p-1 mb-4 relative">
-                  <img 
-                    src={getAvatarUrl(result.foto_perfil || result.foto)} 
-                    alt={result.nombre}
-                    className="w-full h-full object-cover rounded-full shadow-lg"
-                  />
-                  <div className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-900">
-                    <span className="material-symbols-outlined text-white text-sm font-bold">person_add</span>
-                  </div>
-               </div>
-               <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1">{result.nombre}</h3>
-               <p className="text-sm text-slate-500 dark:text-slate-400 text-center px-6 mb-8">
-                  {result.bio || "F1 Enthusiast"}
-               </p>
-               
-               <div className="flex gap-3 w-full">
-                  <button
-                    onClick={() => {setScanning(true); setResult(null); setError(null);}}
-                    className="flex-1 py-3 px-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
-                  >
-                    Reintentar
-                  </button>
-                  <button
-                    onClick={handleAdd}
-                    className="flex-[2] py-3 px-4 rounded-2xl bg-primary text-white font-bold text-sm shadow-lg shadow-primary/30 hover:bg-primary-dark transition-all transform active:scale-95"
-                  >
-                    Añadir Amigo
-                  </button>
-               </div>
+              <div className="w-24 h-24 rounded-full border-4 border-primary/20 p-1 mb-4 relative">
+                <img
+                  src={getAvatarUrl(result.foto_perfil || result.foto)}
+                  alt={result.nombre}
+                  className="w-full h-full object-cover rounded-full shadow-lg"
+                />
+                <div className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-900">
+                  <span className="material-symbols-outlined text-primary-text text-sm font-bold">
+                    person_add
+                  </span>
+                </div>
+              </div>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-1">
+                {result.nombre}
+              </h3>
+              <p className="text-sm text-slate-500 dark:text-slate-400 text-center px-6 mb-8">
+                {result.bio || "City Explorer"}
+              </p>
+
+              <div className="flex gap-3 w-full">
+                <button
+                  onClick={() => {
+                    setScanning(true);
+                    setResult(null);
+                    setError(null);
+                  }}
+                  className="flex-1 py-3 px-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-200 font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors"
+                >
+                  Reintentar
+                </button>
+                <button
+                  onClick={handleAdd}
+                  className="flex-[2] py-3 px-4 rounded-2xl bg-primary text-primary-text font-bold text-sm shadow-lg shadow-primary/20 hover:opacity-90 transition-all transform active:scale-95"
+                >
+                  Añadir Amigo
+                </button>
+              </div>
             </div>
           ) : (
             /* Vista de Error */
             <div className="flex flex-col items-center py-8 text-center animate-in fade-in slide-in-from-bottom-4">
               <div className="w-16 h-16 bg-red-100 dark:bg-red-900/30 rounded-full flex items-center justify-center mb-4">
-                <span className="material-symbols-outlined text-red-500 text-3xl">error</span>
+                <span className="material-symbols-outlined text-red-500 text-3xl">
+                  error
+                </span>
               </div>
-              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 underline decoration-red-500 decoration-2 underline-offset-4">Error al escanear</h3>
+              <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 underline decoration-red-500 decoration-2 underline-offset-4">
+                Error al escanear
+              </h3>
               <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 max-w-[200px]">
                 {error || "No se ha podido detectar un código válido."}
               </p>
               <button
-                onClick={() => {setScanning(true); setError(null);}}
+                onClick={() => {
+                  setScanning(true);
+                  setError(null);
+                }}
                 className="w-full py-4 rounded-2xl bg-slate-100 dark:bg-slate-800 text-slate-800 dark:text-white font-bold text-sm hover:bg-slate-200 dark:hover:bg-slate-700 transition-colors flex items-center justify-center gap-2"
               >
-                <span className="material-symbols-outlined text-lg">refresh</span>
+                <span className="material-symbols-outlined text-lg">
+                  refresh
+                </span>
                 Intentar de nuevo
               </button>
             </div>
           )}
         </div>
-        
+
         {/* Footer tip */}
         <div className="bg-slate-50 dark:bg-slate-800/50 p-4 text-center">
-            <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest font-medium">
-               Metrópoli Connectivity • F1 Circuit System
-            </p>
+          <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest font-medium">
+            Metrópoli Connectivity • City Routes
+          </p>
         </div>
       </div>
     </div>
@@ -327,13 +358,14 @@ const ScanQrModal = ({ allUsers, onAdd, onClose }) => {
 const Profile = () => {
   const { t } = useTranslation();
   const navigate = useNavigate();
-  
+
   const storedUser = localStorage.getItem("usuario");
   const currentUser = storedUser ? JSON.parse(storedUser) : null;
-  
+
   // Utilidad para construir la URL del avatar
   const getAvatarUrl = (fotoUrl) => {
-    if (!fotoUrl) return "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+    if (!fotoUrl)
+      return "https://cdn-icons-png.flaticon.com/512/149/149071.png";
     if (fotoUrl.startsWith("http")) return fotoUrl;
     return `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${fotoUrl}`;
   };
@@ -358,10 +390,7 @@ const Profile = () => {
     <div className="min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display select-none transition-colors duration-300 md:pl-16">
       {/* Modales QR */}
       {showMyQr && (
-        <MyQrModal
-          user={currentUser}
-          onClose={() => setShowMyQr(false)}
-        />
+        <MyQrModal user={currentUser} onClose={() => setShowMyQr(false)} />
       )}
       {showScanQr && (
         <ScanQrModal
@@ -386,26 +415,22 @@ const Profile = () => {
         <div className="flex justify-between items-center mb-2">
           {/* Logo container visible on all screens */}
           <div className="flex items-center gap-2">
-            <Link to="/">
-              <img
-                src="/logo/logo1.png"
-                alt="Circuit Logo"
-                className="h-12 w-auto object-contain block dark:hidden"
-              />
-              <img
-                src="/logo/logo.png"
-                alt="Circuit Logo"
-                className="h-12 w-auto object-contain hidden dark:block"
-              />
+            <Link to="/" className="flex items-center">
+              <span className="text-2xl font-black italic tracking-tighter text-slate-900 dark:text-white">
+                Aplicación
+              </span>
             </Link>
           </div>
           <h1 className="hidden md:block text-2xl font-black italic uppercase tracking-tighter text-slate-800 dark:text-white">
-            My <span className="text-primary">Profile</span>
+            My{" "}
+            <span className="text-primary underline decoration-primary">
+              Profile
+            </span>
           </h1>
-            <Link
-              to="/settings"
-              className="w-10 h-10 flex items-center justify-center bg-white dark:bg-[#12080a] rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
-            >
+          <Link
+            to="/settings"
+            className="w-10 h-10 flex items-center justify-center bg-white dark:bg-[#12080a] rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
+          >
             <span className="material-symbols-outlined text-[22px]">
               settings
             </span>
@@ -431,7 +456,7 @@ const Profile = () => {
                 {currentUser.nombre}
               </h2>
               <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
-                {currentUser.bio || "F1 Enthusiast & Gold Member"}
+                {currentUser.bio || "Urban Explorer & Map Enthusiast"}
               </p>
               <Link
                 to="/profile/edit"
@@ -445,32 +470,27 @@ const Profile = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-2 gap-3">
               {[
+                { key: "posts", count: 12, label: t("profile.posts") },
                 {
                   key: "friends",
                   count: friends.length,
                   label: t("profile.friends"),
                 },
-                { key: "posts", count: 12, label: t("profile.posts") },
-                {
-                  key: "achievements",
-                  count: 8,
-                  label: t("profile.achievements"),
-                },
               ].map(({ key, count, label }) => (
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
-                  className={`p-3 rounded-2xl border shadow-sm flex flex-col items-center justify-center text-center transition-all duration-300 ${activeTab === key ? "bg-primary border-primary text-white scale-105" : "bg-white dark:bg-[#12080a] border-slate-100 dark:border-slate-800"}`}
+                  className={`p-3 rounded-2xl border shadow-sm flex flex-col items-center justify-center text-center transition-all duration-300 ${activeTab === key ? "bg-primary border-primary text-primary-text scale-105" : "bg-white dark:bg-[#12080a] border-slate-100 dark:border-slate-800"}`}
                 >
                   <span
-                    className={`text-lg font-bold ${activeTab === key ? "text-white" : "text-primary"}`}
+                    className={`text-lg font-bold ${activeTab === key ? "text-primary-text" : "text-primary"}`}
                   >
                     {count}
                   </span>
                   <span
-                    className={`text-[10px] uppercase font-bold tracking-wider ${activeTab === key ? "text-white/90" : "text-slate-400"}`}
+                    className={`text-[10px] uppercase font-bold tracking-wider ${activeTab === key ? "text-primary-text opacity-90" : "text-slate-400"}`}
                   >
                     {label}
                   </span>
@@ -479,7 +499,7 @@ const Profile = () => {
             </div>
 
             {/* Log Out */}
-            <button 
+            <button
               onClick={() => {
                 localStorage.removeItem("token");
                 localStorage.removeItem("usuario");
@@ -498,16 +518,11 @@ const Profile = () => {
               {[
                 { key: "posts", label: t("profile.posts"), icon: "grid_view" },
                 { key: "friends", label: t("profile.friends"), icon: "group" },
-                {
-                  key: "achievements",
-                  label: t("profile.achievements"),
-                  icon: "emoji_events",
-                },
               ].map(({ key, label, icon }) => (
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${activeTab === key ? "bg-primary text-white shadow-lg shadow-primary/30" : "bg-white dark:bg-[#12080a] text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800 hover:border-primary/40"}`}
+                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${activeTab === key ? "bg-primary text-primary-text shadow-lg shadow-primary/20" : "bg-white dark:bg-[#12080a] text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800 hover:border-primary/40"}`}
                 >
                   <span className="material-symbols-outlined text-base">
                     {icon}
@@ -540,7 +555,7 @@ const Profile = () => {
                     </button>
                     <button
                       onClick={() => setShowScanQr(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-white text-xs font-bold hover:bg-primary/90 transition-colors shadow-lg shadow-primary/30"
+                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-text text-xs font-bold hover:opacity-90 transition-colors shadow-lg shadow-primary/20"
                     >
                       <span className="material-symbols-outlined text-base">
                         qr_code_scanner
@@ -636,8 +651,8 @@ const Profile = () => {
                       <div className="p-4">
                         <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">
                           {post === 1
-                            ? "Amazing day at the track! 🏎️💨"
-                            : "Can't wait for the next season! 🏆"}
+                            ? "Descubriendo nuevos rincones de la ciudad! 🗺️🚶‍♂️"
+                            : "Increíble ruta por el centro histórico! 🏛️✨"}
                         </p>
                         <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
                           <span className="flex items-center gap-1">
@@ -653,68 +668,6 @@ const Profile = () => {
                             {post * 12}
                           </span>
                         </div>
-                      </div>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* ── Tab Logros ── */}
-            {activeTab === "achievements" && (
-              <div className="space-y-4 animate-fade-in">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 lg:hidden">
-                  {t("profile.yourAchievements")}
-                </h3>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                  {[
-                    {
-                      icon: "emoji_events",
-                      color: "text-yellow-500",
-                      bg: "bg-yellow-500/10",
-                      title: "Gold Member",
-                      desc: "Member for 5+ years",
-                    },
-                    {
-                      icon: "directions_car",
-                      color: "text-blue-500",
-                      bg: "bg-blue-500/10",
-                      title: "Track Day Hero",
-                      desc: "Attended 10+ races",
-                    },
-                    {
-                      icon: "confirmation_number",
-                      color: "text-purple-500",
-                      bg: "bg-purple-500/10",
-                      title: "Early Bird",
-                      desc: "Booked 3 months in advance",
-                    },
-                    {
-                      icon: "groups",
-                      color: "text-emerald-500",
-                      bg: "bg-emerald-500/10",
-                      title: "Community Pillar",
-                      desc: "100+ forum posts",
-                    },
-                  ].map((badge, idx) => (
-                    <div
-                      key={idx}
-                      className="flex items-center gap-4 bg-white dark:bg-[#12080a] p-4 rounded-2xl border border-slate-100 dark:border-slate-800"
-                    >
-                      <div
-                        className={`w-12 h-12 rounded-full ${badge.bg} ${badge.color} flex items-center justify-center shrink-0`}
-                      >
-                        <span className="material-symbols-outlined text-2xl">
-                          {badge.icon}
-                        </span>
-                      </div>
-                      <div>
-                        <h4 className="font-bold text-slate-800 dark:text-white text-sm">
-                          {badge.title}
-                        </h4>
-                        <p className="text-xs text-slate-500 dark:text-slate-400">
-                          {badge.desc}
-                        </p>
                       </div>
                     </div>
                   ))}

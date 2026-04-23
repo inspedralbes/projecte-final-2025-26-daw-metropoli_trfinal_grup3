@@ -217,7 +217,7 @@ const EditProfile = () => {
             className={`px-4 py-2 rounded-full text-sm font-bold transition-all duration-300 shadow-sm ${
               guardado
                 ? "bg-emerald-500 text-white shadow-emerald-500/30"
-                : "bg-primary text-white hover:bg-primary/90 shadow-primary/30"
+                : "bg-primary text-primary-text hover:opacity-90 shadow-primary/30"
             }`}
           >
             {guardado ? (
@@ -253,7 +253,7 @@ const EditProfile = () => {
               </div>
               <label
                 htmlFor="avatar-upload"
-                className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 hover:bg-primary/90 transition-colors border-2 border-white dark:border-slate-900 cursor-pointer"
+                className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-primary text-primary-text flex items-center justify-center shadow-lg shadow-primary/30 hover:opacity-90 transition-colors border-2 border-white dark:border-slate-900 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-xl">
                   photo_camera
@@ -347,7 +347,7 @@ const EditProfile = () => {
               <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed font-medium">
                 {t(
                   "editProfile.infoNote",
-                  "Your profile information is visible to other fans in the community. Changes to your avatar will update across all your posts and comments.",
+                  "Your profile information is visible to other explorers in the community. Changes to your avatar will update across all your routes and comments.",
                 )}
               </p>
             </div>

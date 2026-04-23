@@ -2,8 +2,9 @@
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-primary: #ee2b4b;
-  --color-primary-dark: #c41e3a;
+  --color-primary: var(--theme-color, #000000);
+  --color-primary-text: var(--theme-text, #ffffff);
+  --color-primary-dark: color-mix(in srgb, var(--theme-color, #000000) 80%, black);
   --color-background-light: #f8f6f6;
   --color-background-dark: #0f0506;
   --color-surface-dark: #1f1214;
@@ -14,7 +15,12 @@
 }
 
 :root {
-  --primary-color: #ee2b4b;
+  --theme-color: #000000;
+  --theme-text: #ffffff;
+}
+html.dark {
+  --theme-color: #ffffff;
+  --theme-text: #000000;
 }
 
 body {

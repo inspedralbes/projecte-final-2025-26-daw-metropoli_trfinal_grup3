@@ -1,3 +1,4 @@
+import { useEffect } from "react";
 import { Routes, Route } from "react-router-dom";
 import Home from "./pages/home/Home";
 import Map from "./pages/map/Map";
@@ -13,6 +14,35 @@ import QRScanner from "./components/QrScanner";
 import "./App.css";
 
 function App() {
+  useEffect(() => {
+    // Initialize Dark Mode
+    const savedTheme = localStorage.getItem("theme");
+    // Default to true (dark) if not set, or read from localStorage
+    const isDark = savedTheme === "dark" || savedTheme === null;
+    if (isDark) {
+      document.documentElement.classList.add("dark");
+    } else {
+      document.documentElement.classList.remove("dark");
+    }
+
+    // Initialize Theme Color
+    const themeColor = localStorage.getItem("themeColor") || "default";
+    const root = document.documentElement;
+    if (themeColor === "red") {
+      root.style.setProperty("--theme-color", "#ef4444");
+      root.style.setProperty("--theme-text", "#ffffff");
+    } else if (themeColor === "green") {
+      root.style.setProperty("--theme-color", "#10b981");
+      root.style.setProperty("--theme-text", "#ffffff");
+    } else if (themeColor === "pink") {
+      root.style.setProperty("--theme-color", "#ec4899");
+      root.style.setProperty("--theme-text", "#ffffff");
+    } else {
+      root.style.removeProperty("--theme-color");
+      root.style.removeProperty("--theme-text");
+    }
+  }, []);
+
   return (
     <FriendsProvider>
       <div className="map-page-wrapper">

@@ -19,6 +19,13 @@ const Settings = () => {
     return true;
   });
 
+  const [themeColor, setThemeColor] = useState(() => {
+    if (typeof window !== "undefined") {
+      return localStorage.getItem("themeColor") || "default";
+    }
+    return "default";
+  });
+
   useEffect(() => {
     if (darkMode) {
       document.documentElement.classList.add("dark");
@@ -28,6 +35,25 @@ const Settings = () => {
       localStorage.setItem("theme", "light");
     }
   }, [darkMode]);
+
+  useEffect(() => {
+    localStorage.setItem("themeColor", themeColor);
+    const root = document.documentElement;
+    if (themeColor === "red") {
+      root.style.setProperty("--theme-color", "#ef4444"); // Tailwind red-500
+      root.style.setProperty("--theme-text", "#ffffff");
+    } else if (themeColor === "green") {
+      root.style.setProperty("--theme-color", "#10b981"); // Tailwind emerald-500
+      root.style.setProperty("--theme-text", "#ffffff");
+    } else if (themeColor === "pink") {
+      root.style.setProperty("--theme-color", "#ec4899"); // Tailwind pink-500
+      root.style.setProperty("--theme-text", "#ffffff");
+    } else {
+      // Default (Black/White depending on dark mode)
+      root.style.removeProperty("--theme-color");
+      root.style.removeProperty("--theme-text");
+    }
+  }, [themeColor, darkMode]);
 
   const Toggle = ({ value, onChange }) => (
     <button
@@ -45,17 +71,10 @@ const Settings = () => {
       {/* Header */}
       <div className="w-full pt-6 px-5 pb-2 z-20 flex justify-between items-center transition-colors shrink-0 touch-none md:max-w-3xl md:mx-auto">
         <div className="md:hidden flex items-center gap-2">
-          <Link to="/home">
-            <img
-              src="/logo/logo1.png"
-              alt="Circuit de Catalunya"
-              className="h-12 w-auto object-contain block dark:hidden"
-            />
-            <img
-              src="/logo/logo.png"
-              alt="Circuit de Catalunya"
-              className="h-12 w-auto object-contain hidden dark:block"
-            />
+          <Link to="/home" className="flex items-center">
+            <span className="text-2xl font-black italic tracking-tighter text-slate-900 dark:text-white">
+              Aplicación
+            </span>
           </Link>
         </div>
         <h1 className="hidden md:block text-2xl font-black italic uppercase tracking-tighter text-slate-800 dark:text-white">
@@ -151,22 +170,57 @@ const Settings = () => {
                 ))}
               </div>
             </div>
+
+            {/* Theme Color Selection */}
+            <div>
+              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">
+                {t("settings.themeColor", "Theme Color")}
+              </h3>
+              <div className="bg-white dark:bg-[#12080a] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden p-4 flex justify-between items-center">
+                <div className="flex items-center gap-3">
+                  <div className="w-8 h-8 rounded-full bg-pink-50 dark:bg-pink-900/30 text-pink-500 flex items-center justify-center">
+                    <span className="material-symbols-outlined text-lg">
+                      palette
+                    </span>
+                  </div>
+                  <span className="text-slate-700 dark:text-slate-200 font-semibold text-sm">
+                    {t("settings.accentColor", "Accent Color")}
+                  </span>
+                </div>
+                
+                <div className="flex gap-2">
+                  {[
+                    { id: "default", bg: "bg-slate-800 dark:bg-slate-200" },
+                    { id: "red", bg: "bg-red-500" },
+                    { id: "green", bg: "bg-emerald-500" },
+                    { id: "pink", bg: "bg-pink-500" }
+                  ].map((color) => (
+                    <button
+                      key={color.id}
+                      onClick={() => setThemeColor(color.id)}
+                      className={`w-8 h-8 rounded-full ${color.bg} flex items-center justify-center transition-transform ${themeColor === color.id ? 'scale-110 ring-2 ring-offset-2 ring-offset-white dark:ring-offset-[#12080a] ring-primary' : 'hover:scale-105'}`}
+                    >
+                      {themeColor === color.id && (
+                        <span className={`material-symbols-outlined text-sm font-bold ${color.id === 'default' ? 'text-white dark:text-black' : 'text-white'}`}>
+                          check
+                        </span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
+            </div>
           </div>
 
           <div className="space-y-8">
             {/* App Info */}
             <div className="bg-white dark:bg-[#12080a] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5">
               <div className="flex items-center gap-3 mb-4">
-                <img
-                  src="/logo/logo1.png"
-                  alt="Logo"
-                  className="h-8 w-auto block dark:hidden"
-                />
-                <img
-                  src="/logo/logo.png"
-                  alt="Logo"
-                  className="h-8 w-auto hidden dark:block"
-                />
+                <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary">
+                  <span className="material-symbols-outlined text-2xl font-black">
+                    map
+                  </span>
+                </div>
                 <div>
                   <p className="font-bold text-slate-800 dark:text-white text-sm">
                     {t("settings.footerApp")}
