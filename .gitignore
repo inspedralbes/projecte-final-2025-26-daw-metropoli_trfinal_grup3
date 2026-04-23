@@ -1,4 +1,11 @@
 .env
+node_modules/
+dist/
+.DS_Store
+
 # Imágenes subidas por usuarios — no subir a git
 back/public/uploads/
+back/public/images/qr/
 
+# Docker logs
+*.log
