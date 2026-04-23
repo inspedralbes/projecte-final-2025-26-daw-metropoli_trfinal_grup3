@@ -6,8 +6,8 @@ const connectMongo = async () => {
         await mongoose.connect(mongoURI);
         console.log('MongoDB connected successfully');
     } catch (error) {
-        console.error('MongoDB connection error:', error);
-        process.exit(1);
+        console.error('MongoDB connection error (Check your MONGO_URI in .env):', error.message);
+        // process.exit(1); // Do not crash the entire app if Mongo is down
     }
 };
 
