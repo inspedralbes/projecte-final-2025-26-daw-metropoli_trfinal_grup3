@@ -390,13 +390,12 @@ const Admin = () => {
       <div className="w-full pt-6 px-5 pb-4 bg-gray-50 dark:bg-slate-950 z-20 transition-colors duration-300 border-b border-slate-200 dark:border-slate-800 md:max-w-6xl md:mx-auto">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <img src="/logo/logo.png" alt="Circuit Logo" className="h-10 w-auto object-contain block dark:hidden" />
-            <img src="/logo/logo1.png" alt="Circuit Logo" className="h-10 w-auto object-contain hidden dark:block" />
+            <img src="/logo/logo.png" alt="Metropoli Logo" className="h-10 w-auto object-contain dark:invert transition-all" />
             <div>
               <h1 className="text-xl font-black italic uppercase tracking-tighter text-slate-800 dark:text-white leading-none">
                 Admin <span className="text-primary">Panel</span>
               </h1>
-              <p className="text-xs text-slate-400 font-medium">Circuit de Catalunya</p>
+              <p className="text-xs text-slate-400 font-medium">Metropoli App</p>
             </div>
           </div>
           <Link

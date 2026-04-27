@@ -41,7 +41,7 @@ const Navbar = () => {
   return (
     <>
       {/* ─── MOBILE: bottom bar ─── */}
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-black/90 dark:bg-black/90 backdrop-blur-lg flex items-center justify-around px-2 pb-safe transition-colors duration-300"
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-white/90 dark:bg-black/90 border-t border-gray-100 dark:border-none backdrop-blur-lg flex items-center justify-around px-2 pb-safe transition-colors duration-300"
         style={{ height: "64px" }}>
         {navItems.map((item) => {
           const active = isActive(item.to);
@@ -50,7 +50,9 @@ const Navbar = () => {
               key={item.to}
               to={item.to}
               className={`flex flex-col items-center justify-center w-14 h-full transition-all duration-200 relative ${
-                active ? "text-white" : "text-white/50 hover:text-white"
+                active 
+                ? "text-black dark:text-white" 
+                : "text-gray-400 dark:text-white/50 hover:text-black dark:hover:text-white"
               }`}
             >
               <span
@@ -65,13 +67,13 @@ const Navbar = () => {
       </nav>
 
       {/* ─── DESKTOP: left sidebar ─── */}
-      <nav className="hidden md:flex fixed top-0 left-0 bottom-0 z-[100] w-16 flex-col items-center py-5 gap-4 bg-black/95 dark:bg-black/95 backdrop-blur-2xl transition-colors duration-300">
+      <nav className="hidden md:flex fixed top-0 left-0 bottom-0 z-[100] w-16 flex-col items-center py-5 gap-4 bg-white/95 dark:bg-black/95 border-r border-gray-100 dark:border-none backdrop-blur-2xl transition-colors duration-300">
         {/* Logo at top */}
         <Link to="/home" className="mb-4 flex items-center justify-center">
           <img
             src="/logo/logo.png"
             alt="Logo"
-            className="h-10 w-auto object-contain"
+            className="h-10 w-auto object-contain dark:invert"
           />
         </Link>
 
@@ -84,7 +86,9 @@ const Navbar = () => {
               to={item.to}
               title={t(`nav.${item.labelKey}`)}
               className={`relative flex flex-col items-center justify-center w-12 h-12 transition-all duration-200 group ${
-                active ? "text-white" : "text-white/50 hover:text-white"
+                active 
+                ? "text-black dark:text-white" 
+                : "text-gray-400 dark:text-white/50 hover:text-black dark:hover:text-white"
               }`}
             >
               <span 
@@ -102,7 +106,7 @@ const Navbar = () => {
           <button
             onClick={toggleDark}
             title={darkMode ? t("nav.lightMode") : t("nav.darkMode")}
-            className="relative flex flex-col items-center justify-center w-12 h-12 transition-all duration-200 group text-white/50 hover:text-white"
+            className="relative flex flex-col items-center justify-center w-12 h-12 transition-all duration-200 group text-gray-400 dark:text-white/50 hover:text-black dark:hover:text-white"
           >
             <span 
               className="material-symbols-outlined text-[26px] leading-none transition-all duration-300"

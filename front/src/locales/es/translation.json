@@ -1,9 +1,9 @@
 {
   "home": {
-    "title": "F1 BARCELONA",
+    "title": "METROPOLI",
     "liveNow": "En Vivo",
-    "spanishGP": "Gran Premio de España 2026",
-    "raceWeekend": "PRÓXIMO EVENTO",
+    "spanishGP": "Explora la ciudad",
+    "raceWeekend": "PRÓXIMA AVENTURA",
     "days": "Días",
     "hours": "Hrs",
     "minutes": "Mins",
@@ -24,8 +24,8 @@
     "rain": "Lluvia",
     "wind": "Viento",
     "quickAccess": "Acceso Rápido",
-    "trackConditions": "Condiciones de Pista",
-    "openCircuitMap": "Mapa del Circuito",
+    "trackConditions": "Estado de la Ciudad",
+    "openCircuitMap": "Mapa de la Metropoli",
     "communityFeed": "Comunidad"
   },
   "community": {
@@ -73,7 +73,7 @@
     "privacySecurity": "Privacidad y Seguridad",
     "helpSupport": "Ayuda y Soporte",
     "logout": "Cerrar Sesión",
-    "footerApp": "App Circuit de Barcelona-Catalunya",
+    "footerApp": "App Metropoli",
     "footerVersion": "Versión 1.0.0 (Build 2026.05)"
   },
   "profile": {

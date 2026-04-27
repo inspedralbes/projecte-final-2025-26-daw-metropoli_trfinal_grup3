@@ -113,7 +113,7 @@ const Home = () => {
           <input 
             type="text" 
             placeholder="On t'agradaria anar?" 
-            className="bg-transparent border-none outline-none text-lg placeholder-gray-400 w-full p-0 focus:ring-0"
+            className="bg-transparent border-none outline-none text-lg placeholder-gray-400 w-full p-0 focus:ring-0 text-[#1a1a1a] dark:text-white"
           />
         </div>
       </section>
@@ -124,10 +124,10 @@ const Home = () => {
           {categories.map((cat) => (
             <button 
               key={cat.id} 
-              className={`flex items-center gap-3 py-1.5 pl-1.5 pr-5 rounded-full transition-all duration-300 border border-transparent shadow-sm ${
+              className={`flex items-center gap-3 py-1.5 pl-1.5 pr-5 rounded-full transition-all duration-300 border shadow-sm ${
                 cat.active 
-                ? "bg-white text-black" 
-                : "bg-[#1a1a1a] text-white dark:bg-white/10 dark:text-white"
+                ? "bg-black text-white dark:bg-white dark:text-black border-transparent" 
+                : "bg-white text-black border-gray-200 dark:bg-white/5 dark:text-white dark:border-white/10"
               }`}
             >
               <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20">
@@ -144,7 +144,7 @@ const Home = () => {
         <div className="flex justify-between items-end mb-6">
           <h2 className="text-2xl font-medium tracking-tight">Les teves rutes</h2>
           {user && (
-            <Link to="/profile" className="text-gray-400 text-sm font-medium">Veure-ho tot</Link>
+            <Link to="/profile" className="text-gray-400 dark:text-white/40 text-sm font-medium hover:text-black dark:hover:text-white transition-colors">Veure-ho tot</Link>
           )}
         </div>
 
@@ -215,7 +215,7 @@ const Home = () => {
           <h2 className="text-2xl font-medium tracking-tight mb-6">Dels teus amics</h2>
           <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-6 px-6">
             {friendCollections.map((col) => (
-              <div key={col.id} className="min-w-[320px] bg-white dark:bg-white/5 rounded-[2.5rem] p-6 border border-gray-100 dark:border-white/5 shadow-sm">
+              <div key={col.id} className="min-w-[320px] bg-white dark:bg-white/10 rounded-[2.5rem] p-6 border border-gray-100 dark:border-white/10 shadow-sm transition-colors duration-300">
                 <div className="relative aspect-[16/10] rounded-[1.5rem] overflow-hidden mb-6">
                   <img src={col.image} className="w-full h-full object-cover" />
                   <div className="absolute top-4 left-4 w-10 h-10 rounded-full border-2 border-white overflow-hidden shadow-md">
@@ -224,7 +224,7 @@ const Home = () => {
                 </div>
                 <h3 className="font-medium text-lg tracking-tight truncate mb-2">{col.title}</h3>
                 <div className="flex justify-between items-center">
-                  <span className="text-lg font-medium tracking-tight text-gray-400">{col.user}</span>
+                  <span className="text-lg font-medium tracking-tight text-gray-400 dark:text-white/40">{col.user}</span>
                   <span className="text-lg font-medium tracking-tight bg-gray-100 dark:bg-white/10 px-3 py-1 rounded-full">{col.spots} punts</span>
                 </div>
               </div>
@@ -233,17 +233,17 @@ const Home = () => {
         </div>
 
         {/* User Stats Section */}
-        <div className="mt-12 bg-[#1a1a1a] text-white dark:bg-white dark:text-black rounded-[3rem] p-8 shadow-2xl relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-48 h-48 bg-white/5 dark:bg-black/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+        <div className="mt-12 bg-white dark:bg-slate-900 text-black dark:text-white rounded-[3rem] p-8 shadow-xl dark:shadow-2xl border border-gray-100 dark:border-white/5 relative overflow-hidden">
+          <div className="absolute top-0 right-0 w-48 h-48 bg-gray-100 dark:bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
           
           <div className="flex justify-between items-start mb-10 relative z-10">
             <div>
               <h2 className="text-2xl font-medium tracking-tight mb-1">El teu impacte</h2>
-              <p className="text-xs opacity-40 uppercase tracking-widest font-bold text-gray-400">Activitat setmanal</p>
+              <p className="text-xs opacity-40 uppercase tracking-widest font-bold">Activitat setmanal</p>
             </div>
             <div className="text-right">
               <p className="text-4xl font-medium tracking-tight">{userStats.kmWalked}</p>
-              <p className="text-[10px] opacity-40 uppercase font-bold text-gray-400">KM totals</p>
+              <p className="text-[10px] opacity-40 uppercase font-bold">KM totals</p>
             </div>
           </div>
 
@@ -251,9 +251,9 @@ const Home = () => {
           <div className="flex items-end justify-between h-32 gap-3 mb-10 relative z-10">
             {weeklyActivity.map((day, idx) => (
               <div key={idx} className="flex-1 flex flex-col items-center gap-3 group h-full">
-                <div className="relative w-full flex flex-col justify-end h-full bg-white/5 dark:bg-black/5 rounded-full overflow-hidden">
+                <div className="relative w-full flex flex-col justify-end h-full bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
                   <div 
-                    className="w-full bg-white dark:bg-black rounded-full transition-all duration-[1500ms] ease-out"
+                    className="w-full bg-black dark:bg-white rounded-full transition-all duration-[1500ms] ease-out"
                     style={{ height: `${day.value}%` }}
                   ></div>
                 </div>
@@ -263,8 +263,8 @@ const Home = () => {
           </div>
 
           <div className="grid grid-cols-2 gap-4 relative z-10">
-            <div className="bg-white/5 dark:bg-black/5 rounded-[2rem] p-4 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-white/10 dark:bg-black/10 flex items-center justify-center">
+            <div className="bg-gray-50 dark:bg-white/5 rounded-[2rem] p-4 flex items-center gap-4 border border-gray-100 dark:border-transparent">
+              <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center">
                 <span className="material-symbols-outlined text-xl">location_on</span>
               </div>
               <div>
@@ -272,8 +272,8 @@ const Home = () => {
                 <p className="text-[9px] opacity-40 uppercase font-bold">Llocs descoberts</p>
               </div>
             </div>
-            <div className="bg-white/5 dark:bg-black/5 rounded-[2rem] p-4 flex items-center gap-4">
-              <div className="w-10 h-10 rounded-full bg-white/10 dark:bg-black/10 flex items-center justify-center">
+            <div className="bg-gray-50 dark:bg-white/5 rounded-[2rem] p-4 flex items-center gap-4 border border-gray-100 dark:border-transparent">
+              <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center">
                 <span className="material-symbols-outlined text-xl">route</span>
               </div>
               <div>

@@ -12,97 +12,71 @@ const QrScanner = lazy(() => import("../../components/QrScanner"));
 const GuestProfileView = () => {
   const { t } = useTranslation();
   return (
-    <div className="min-h-screen w-full bg-slate-50 dark:bg-slate-950 flex flex-col items-center p-6 md:pl-16 transition-colors duration-300">
-      {/* Top Bar for Guest View */}
-      <div className="w-full pt-0 pb-10 flex justify-between items-center md:max-w-md">
-        <div className="flex items-center gap-2">
-          <Link to="/">
-            <img
-              src="/logo/logo1.png"
-              alt="Circuit Logo"
-              className="h-12 w-auto object-contain block dark:hidden"
-            />
-            <img
-              src="/logo/logo.png"
-              alt="Circuit Logo"
-              className="h-12 w-auto object-contain hidden dark:block"
-            />
-          </Link>
-        </div>
-        <Link
-          to="/settings"
-          className="w-10 h-10 flex items-center justify-center bg-white dark:bg-[#12080a] rounded-full text-slate-700 dark:text-slate-200 shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
-        >
-          <span className="material-symbols-outlined text-[22px]">settings</span>
-        </Link>
+    <div className="min-h-screen w-full bg-[#f0f4f9] dark:bg-slate-950 flex flex-col items-center justify-center p-6 md:pl-16 transition-colors duration-300 relative overflow-hidden font-display">
+      {/* Decorative Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-white dark:bg-white/5 blur-[120px] opacity-50"></div>
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-black/5 dark:bg-black blur-[120px] opacity-30"></div>
       </div>
 
-      <div className="w-full max-w-md bg-white dark:bg-[#12080a] rounded-[32px] p-8 shadow-2xl flex flex-col items-center text-center border border-slate-100 dark:border-slate-800 relative overflow-hidden">
-        {/* Decorative Background */}
-        <div className="absolute top-0 left-0 w-full h-32 bg-gradient-to-br from-primary/10 to-transparent dark:from-primary/20 pointer-events-none"></div>
-
-        <div className="w-20 h-20 bg-primary/10 dark:bg-primary/20 rounded-full flex items-center justify-center mb-6 relative z-10">
-          <span className="material-symbols-outlined text-4xl text-primary font-variation-settings-filled">
-            account_circle
-          </span>
-        </div>
-
-        <h1 className="text-2xl font-black italic tracking-tight text-slate-800 dark:text-white mb-2 relative z-10">
-          Unlock the Full <span className="text-primary">Experience</span>
-        </h1>
-        <p className="text-slate-500 dark:text-slate-400 text-sm mb-8 relative z-10">
-          Inicia sesión o regístrate para acceder a todas las funcionalidades exclusivas del circuito.
-        </p>
-
-        <div className="flex flex-col gap-4 w-full mb-8 relative z-10">
-          <div className="flex items-center gap-3 text-left">
-            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-slate-600 dark:text-slate-300 text-sm">
-                qr_code_scanner
-              </span>
-            </div>
-            <div>
-              <p className="font-bold text-sm text-slate-800 dark:text-white">Añade Amigos con QR</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Escanea códigos rápidamente en la pista.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 text-left">
-            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-slate-600 dark:text-slate-300 text-sm">
-                emoji_events
-              </span>
-            </div>
-            <div>
-              <p className="font-bold text-sm text-slate-800 dark:text-white">Consigue Logros</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Desbloquea medallas por tu asistencia.</p>
-            </div>
-          </div>
-          <div className="flex items-center gap-3 text-left">
-            <div className="w-10 h-10 rounded-full bg-slate-100 dark:bg-slate-800 flex items-center justify-center shrink-0">
-              <span className="material-symbols-outlined text-slate-600 dark:text-slate-300 text-sm">
-                chat_bubble
-              </span>
-            </div>
-            <div>
-              <p className="font-bold text-sm text-slate-800 dark:text-white">Feed de la Comunidad</p>
-              <p className="text-xs text-slate-500 dark:text-slate-400">Comenta y reacciona a las publicaciones.</p>
-            </div>
+      <div className="w-full max-w-md z-10 space-y-10">
+        {/* Header Branding */}
+        <div className="flex flex-col items-center text-center space-y-4">
+          <i className="fa-solid fa-location-dot text-6xl opacity-20" style={{ color: 'rgb(254, 254, 254)' }}></i>
+          <div className="space-y-1">
+            <h1 className="text-4xl font-medium tracking-tighter">Georutes</h1>
+            <p className="text-gray-400 font-medium tracking-tight">Explora la teva ciutat</p>
           </div>
         </div>
 
-        <div className="flex flex-col gap-3 w-full relative z-10">
-          <Link
-            to="/login"
-            className="w-full py-3.5 rounded-full bg-primary text-white font-bold text-sm hover:bg-[#ff1e3c] transition-colors shadow-lg shadow-primary/30 flex justify-center items-center"
-          >
-            Iniciar Sesión
-          </Link>
-          <Link
-            to="/signup"
-            className="w-full py-3.5 rounded-full bg-white dark:bg-slate-800 text-slate-800 dark:text-white font-bold text-sm hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors border-2 border-slate-200 dark:border-slate-700 flex justify-center items-center"
-          >
-            Registrarse
-          </Link>
+        {/* Info Card */}
+        <div className="bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-white dark:border-white/10 rounded-[2.5rem] p-8 shadow-2xl space-y-8">
+          <div className="space-y-6">
+            <div className="flex items-center gap-4 group">
+              <div className="w-12 h-12 rounded-2xl bg-white dark:bg-white/10 flex items-center justify-center shadow-sm border border-white dark:border-white/5 shrink-0 transition-transform group-hover:scale-110">
+                <span className="material-symbols-outlined text-gray-400 dark:text-gray-500">explore</span>
+              </div>
+              <div>
+                <p className="font-medium text-[#1a1a1a] dark:text-white tracking-tight">Descobreix racons únics</p>
+                <p className="text-xs text-gray-400 font-medium tracking-tight">Troba llocs que no apareixen a les guies convencionals.</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 group">
+              <div className="w-12 h-12 rounded-2xl bg-white dark:bg-white/10 flex items-center justify-center shadow-sm border border-white dark:border-white/5 shrink-0 transition-transform group-hover:scale-110">
+                <span className="material-symbols-outlined text-gray-400 dark:text-gray-500">route</span>
+              </div>
+              <div>
+                <p className="font-medium text-[#1a1a1a] dark:text-white tracking-tight">Crea les teves rutes</p>
+                <p className="text-xs text-gray-400 font-medium tracking-tight">Dissenya i comparteix itineraris personalitzats per la ciutat.</p>
+              </div>
+            </div>
+
+            <div className="flex items-center gap-4 group">
+              <div className="w-12 h-12 rounded-2xl bg-white dark:bg-white/10 flex items-center justify-center shadow-sm border border-white dark:border-white/5 shrink-0 transition-transform group-hover:scale-110">
+                <span className="material-symbols-outlined text-gray-400 dark:text-gray-500">groups</span>
+              </div>
+              <div>
+                <p className="font-medium text-[#1a1a1a] dark:text-white tracking-tight">Comunitat d'exploradors</p>
+                <p className="text-xs text-gray-400 font-medium tracking-tight">Connecta amb altres persones que estimen la ciutat tant com tu.</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 pt-4">
+            <Link
+              to="/login"
+              className="w-full py-4 rounded-2xl bg-[#1a1a1a] dark:bg-white text-white dark:text-[#1a1a1a] font-medium text-sm hover:scale-[1.02] active:scale-[0.98] transition-all flex justify-center items-center shadow-xl"
+            >
+              Començar a explorar
+            </Link>
+            <Link
+              to="/signup"
+              className="w-full py-4 rounded-2xl bg-white/50 dark:bg-white/5 text-[#1a1a1a] dark:text-white font-medium text-sm hover:bg-white dark:hover:bg-white/10 transition-all border border-white dark:border-white/10 flex justify-center items-center"
+            >
+              Crear un compte nou
+            </Link>
+          </div>
         </div>
       </div>
       <Navbar />
@@ -388,14 +362,9 @@ const Profile = () => {
           <div className="flex items-center gap-2">
             <Link to="/">
               <img
-                src="/logo/logo1.png"
-                alt="Circuit Logo"
-                className="h-12 w-auto object-contain block dark:hidden"
-              />
-              <img
                 src="/logo/logo.png"
-                alt="Circuit Logo"
-                className="h-12 w-auto object-contain hidden dark:block"
+                alt="Metropoli Logo"
+                className="h-12 w-auto object-contain dark:invert transition-all"
               />
             </Link>
           </div>

@@ -1,9 +1,9 @@
 {
   "home": {
-    "title": "F1 BARCELONA",
+    "title": "METROPOLI",
     "liveNow": "En Directe",
-    "spanishGP": "Gran Premi d'Espanya 2026",
-    "raceWeekend": "PROPER ESDEVENIMENT",
+    "spanishGP": "Explora la ciutat",
+    "raceWeekend": "PROPERA AVENTURA",
     "days": "Dies",
     "hours": "Hores",
     "minutes": "Mins",
@@ -24,8 +24,8 @@
     "rain": "Pluja",
     "wind": "Vent",
     "quickAccess": "Accés Ràpid",
-    "trackConditions": "Condicions de Pista",
-    "openCircuitMap": "Mapa del Circuit",
+    "trackConditions": "Estat de la Ciutat",
+    "openCircuitMap": "Mapa de la Metropoli",
     "communityFeed": "Comunitat"
   },
   "community": {
