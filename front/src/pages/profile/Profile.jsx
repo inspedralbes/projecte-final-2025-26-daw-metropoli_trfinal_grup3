@@ -450,7 +450,7 @@ const Profile = () => {
           </div>
           <h1 className="hidden md:block text-2xl font-black italic uppercase tracking-tighter text-slate-800 dark:text-white">
             {t("profile.my", "Mi")}{" "}
-            <span className="text-primary underline decoration-primary">
+            <span className="text-primary">
               {t("nav.profile", "Perfil")}
             </span>
           </h1>
