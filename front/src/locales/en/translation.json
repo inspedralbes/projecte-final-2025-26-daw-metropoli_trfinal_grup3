@@ -1,9 +1,9 @@
 {
   "home": {
-    "title": "F1 BARCELONA",
+    "title": "METROPOLI",
     "liveNow": "Live Now",
-    "spanishGP": "Spanish Grand Prix 2026",
-    "raceWeekend": "NEXT EVENT",
+    "spanishGP": "Explore the city",
+    "raceWeekend": "NEXT ADVENTURE",
     "days": "Days",
     "hours": "Hrs",
     "minutes": "Mins",
@@ -24,8 +24,8 @@
     "rain": "Rain",
     "wind": "Wind",
     "quickAccess": "Quick Access",
-    "trackConditions": "Track Conditions",
-    "openCircuitMap": "Open Circuit Map",
+    "trackConditions": "City Status",
+    "openCircuitMap": "Metropoli Map",
     "communityFeed": "Community Feed"
   },
   "community": {

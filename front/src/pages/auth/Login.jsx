@@ -14,7 +14,6 @@ const Login = () => {
 
   const loginWithGoogle = useGoogleLogin({
     onSuccess: async (tokenResponse) => {
-      console.log("Google token response:", tokenResponse);
       setLoading(true);
       setError(null);
       try {
@@ -29,33 +28,27 @@ const Login = () => {
         const data = await res.json();
 
         if (!res.ok) {
-          setError(data.message || "Error al iniciar sesión con Google.");
+          setError(data.message || "Error al iniciar sessió amb Google.");
           return;
         }
 
-        // Save token and redirect
         localStorage.setItem("token", data.data.token);
         localStorage.setItem("usuario", JSON.stringify(data.data.usuario));
         navigate("/home");
       } catch (err) {
-        console.error("Google login error:", err);
-        setError(
-          "No se pudo conectar con el servidor para el login de Google.",
-        );
+        setError("No es va poder connectar amb el servidor.");
       } finally {
         setLoading(false);
       }
     },
-    onError: (error) => {
-      console.error("Google login failed:", error);
-      setError("El inicio de sesión con Google falló o fue cancelado.");
+    onError: () => {
+      setError("L'inici de sessió amb Google ha fallat.");
     },
   });
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setError(null);
-
     const email = e.target.email.value.trim();
     const password = e.target.password.value;
 
@@ -69,266 +62,142 @@ const Login = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        // Specific message for unverified accounts
         if (data.error_code === "EMAIL_NOT_VERIFIED") {
-          setError(
-            "Debes verificar tu correo antes de iniciar sesión. Revisa tu bandeja de entrada.",
-          );
+          setError("Has de verificar el teu correu abans d'entrar.");
         } else {
-          setError(data.message || "Credenciales incorrectas.");
+          setError(data.message || "Credencials incorrectes.");
         }
         return;
       }
 
-      // Save token and redirect
       localStorage.setItem("token", data.data.token);
       localStorage.setItem("usuario", JSON.stringify(data.data.usuario));
       navigate("/home");
     } catch {
-      setError("No se pudo conectar con el servidor. Inténtalo más tarde.");
+      setError("Error de connexió amb el servidor.");
     } finally {
       setLoading(false);
     }
   };
 
   return (
-    <div
-      className="relative flex min-h-screen w-full flex-col items-center justify-center p-6 overflow-hidden bg-gray-50 dark:bg-[#121011] transition-colors duration-300"
-      style={{
-        backgroundImage:
-          "linear-gradient(45deg, currentColor 25%, transparent 25%), linear-gradient(-45deg, currentColor 25%, transparent 25%), linear-gradient(45deg, transparent 75%, currentColor 75%), linear-gradient(-45deg, transparent 75%, currentColor 75%)",
-        backgroundSize: "8px 8px",
-        backgroundPosition: "0 0, 0 4px, 4px 4px, 4px 0",
-      }}
-    >
-      {/* Pattern opacity filter */}
-      <div className="absolute inset-0 opacity-[0.03] dark:opacity-[0.05] pointer-events-none text-slate-900 dark:text-slate-100"></div>
+    <div className="relative min-h-screen w-full flex flex-col items-center justify-center p-6 bg-[#f0f4f9] dark:bg-slate-950 text-[#1a1a1a] dark:text-white transition-colors duration-300 overflow-hidden font-display">
+      
+      {/* Abstract Background Elements */}
+      <div className="absolute top-0 left-0 w-full h-full overflow-hidden pointer-events-none">
+        <div className="absolute top-[-10%] right-[-10%] w-[60%] h-[60%] rounded-full bg-white dark:bg-white/5 blur-[120px] opacity-50"></div>
+        <div className="absolute bottom-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-black/5 dark:bg-black blur-[120px] opacity-30"></div>
+      </div>
 
-      {/* Background Glow */}
-      <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] pointer-events-none bg-primary/5 dark:bg-primary/10" />
-      <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full blur-[120px] pointer-events-none bg-primary/5 dark:bg-primary/5" />
-
-      {/* ── Back button ── */}
+      {/* Back to Home */}
       <Link
-        to="/"
-        className="absolute top-6 left-6 z-50 w-10 h-10 flex items-center justify-center rounded-full bg-white/40 dark:bg-white/5 backdrop-blur-md border border-slate-200 dark:border-white/10 text-slate-600 dark:text-slate-300 hover:bg-white/60 dark:hover:bg-white/10 transition-colors shadow-sm"
-        aria-label="Back to App"
+        to="/home"
+        className="absolute top-8 left-8 z-50 flex items-center gap-2 text-sm font-medium opacity-40 hover:opacity-100 transition-opacity"
       >
-        <span className="material-symbols-outlined text-[24px]">close</span>
+        <span className="material-symbols-outlined text-lg">west</span>
+        Tornar a l'inici
       </Link>
 
-      <div className="w-full max-w-md z-10 space-y-8">
-        {/* ── Logo & Title ── */}
-        <div className="flex flex-col items-center space-y-4">
-          <img
-            src="/logo/logo1.png"
-            alt="Circuit de Barcelona-Catalunya"
-            className="h-24 w-auto object-contain drop-shadow-xl block dark:hidden"
-          />
-          <img
-            src="/logo/logo.png"
-            alt="Circuit de Barcelona-Catalunya"
-            className="h-24 w-auto object-contain drop-shadow-[0_0_24px_rgba(238,43,75,0.35)] hidden dark:block"
-          />
-          <div className="text-center">
-            <h1 className="text-2xl font-bold tracking-tight text-slate-800 dark:text-slate-100">
-              Welcome Back
-            </h1>
-            <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
-              Sign in to your race experience
-            </p>
+      <div className="w-full max-w-[400px] z-10 space-y-10">
+        {/* Header */}
+        <div className="flex flex-col items-center text-center space-y-4">
+          <i className="fa-solid fa-location-dot text-5xl opacity-20" style={{ color: 'rgb(254, 254, 254)' }}></i>
+          <div className="space-y-1">
+            <h1 className="text-4xl font-medium tracking-tighter"> Georutes </h1>
+            <p className="text-gray-400 font-medium tracking-tight">Entra per continuar explorant</p>
           </div>
         </div>
 
-        {/* ── Glass Panel ── */}
-        <div className="p-6 rounded-2xl shadow-2xl bg-white/80 dark:bg-[#12080a] backdrop-blur-md border border-slate-200 dark:border-primary/10">
-          <form onSubmit={handleSubmit} className="space-y-5">
-            {/* Error banner */}
+        {/* Form Container */}
+        <div className="bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-white dark:border-white/10 rounded-[2.5rem] p-8 shadow-2xl space-y-6">
+          <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div
-                className="flex items-start gap-3 px-4 py-3 rounded-xl text-sm"
-                style={{
-                  background: "rgba(238,43,75,0.12)",
-                  border: "1px solid rgba(238,43,75,0.30)",
-                  color: "#fca5a5",
-                }}
-              >
-                <span
-                  className="material-symbols-outlined mt-0.5"
-                  style={{ fontSize: "18px", flexShrink: 0 }}
-                >
-                  error
-                </span>
+              <div className="bg-red-500/10 border border-red-500/20 text-red-500 text-xs font-bold py-3 px-4 rounded-2xl flex items-center gap-2">
+                <span className="material-symbols-outlined text-sm">error</span>
                 {error}
               </div>
             )}
 
-            {/* Email */}
-            <div className="space-y-2">
-              <label
-                className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400 ml-1"
-                htmlFor="email"
+            <div className="space-y-1">
+              <input
+                id="email"
+                name="email"
+                type="email"
+                placeholder="Correu electrònic"
+                className="w-full bg-white dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-white/20 rounded-2xl py-4 px-6 text-sm font-medium placeholder-gray-400 outline-none transition-all"
+                required
+              />
+            </div>
+
+            <div className="space-y-1 relative">
+              <input
+                id="password"
+                name="password"
+                type={showPassword ? "text" : "password"}
+                placeholder="Contrasenya"
+                className="w-full bg-white dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-white/20 rounded-2xl py-4 px-6 text-sm font-medium placeholder-gray-400 outline-none transition-all"
+                required
+              />
+              <button
+                type="button"
+                onClick={() => setShowPassword(!showPassword)}
+                className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black dark:hover:text-white transition-colors"
               >
-                Email Address
-              </label>
-              <div className="relative">
-                <span
-                  className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
-                  style={{ fontSize: "20px" }}
-                >
-                  mail
+                <span className="material-symbols-outlined text-xl">
+                  {showPassword ? "visibility_off" : "visibility"}
                 </span>
-                <input
-                  className="w-full bg-white dark:bg-slate-950/50 border border-slate-200 dark:border-slate-700/50 rounded-xl py-3.5 pl-12 pr-4 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all shadow-sm"
-                  id="email"
-                  name="email"
-                  placeholder="name@example.com"
-                  type="email"
-                  autoComplete="email"
-                  required
-                />
-              </div>
+              </button>
             </div>
 
-            {/* Password */}
-            <div className="space-y-2">
-              <div className="flex items-center justify-between px-1">
-                <label
-                  className="text-xs font-semibold uppercase tracking-wider text-slate-500 dark:text-slate-400"
-                  htmlFor="password"
-                >
-                  Password
-                </label>
-                <a
-                  className="text-xs font-medium text-primary hover:text-primary/80 transition-colors"
-                  href="#"
-                >
-                  Forgot?
-                </a>
-              </div>
-              <div className="relative">
-                <span
-                  className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500"
-                  style={{ fontSize: "20px" }}
-                >
-                  lock
-                </span>
-                <input
-                  className="w-full bg-white dark:bg-slate-950/50 border border-slate-200 dark:border-slate-700/50 rounded-xl py-3.5 pl-12 pr-12 text-slate-800 dark:text-slate-100 placeholder:text-slate-400 dark:placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-primary/50 focus:border-primary transition-all shadow-sm"
-                  id="password"
-                  name="password"
-                  placeholder="••••••••"
-                  type={showPassword ? "text" : "password"}
-                  autoComplete="current-password"
-                  required
-                />
-                <button
-                  type="button"
-                  onClick={() => setShowPassword(!showPassword)}
-                  className="absolute right-4 top-1/2 -translate-y-1/2 text-slate-400 dark:text-slate-500 hover:text-slate-600 dark:hover:text-slate-300 transition-colors"
-                >
-                  <span
-                    className="material-symbols-outlined"
-                    style={{ fontSize: "20px" }}
-                  >
-                    {showPassword ? "visibility_off" : "visibility"}
-                  </span>
-                </button>
-              </div>
-            </div>
-
-            {/* Submit */}
             <button
-              className="w-full text-white font-bold py-4 rounded-xl transform transition-all active:scale-[0.98] mt-2 hover:opacity-90 disabled:opacity-40 disabled:cursor-not-allowed flex items-center justify-center gap-2"
-              style={{
-                backgroundColor: "#ee2b4b",
-                boxShadow: "0 10px 25px -5px rgba(238,43,75,0.2)",
-              }}
               type="submit"
               disabled={loading}
+              className="w-full bg-black text-white dark:bg-white dark:text-black font-medium tracking-tight py-4 rounded-2xl shadow-xl active:scale-[0.98] transition-all disabled:opacity-50 mt-4 flex items-center justify-center gap-2"
             >
               {loading ? (
-                <>
-                  <span
-                    className="material-symbols-outlined animate-spin"
-                    style={{ fontSize: "20px" }}
-                  >
-                    autorenew
-                  </span>
-                  SIGNING IN…
-                </>
+                <span className="material-symbols-outlined animate-spin">progress_activity</span>
               ) : (
-                "LOG IN"
+                "Iniciar sessió"
               )}
             </button>
           </form>
 
-          {/* Divider */}
-          <div className="relative my-8">
+          <div className="relative flex items-center justify-center py-2">
             <div className="absolute inset-0 flex items-center">
-              <div className="w-full border-t border-slate-200 dark:border-slate-700/50" />
+              <div className="w-full border-t border-black/5 dark:border-white/10"></div>
             </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="px-3 text-slate-400 dark:text-slate-500 tracking-widest bg-white dark:bg-[#1a0c0e]">
-                Or continue with
-              </span>
-            </div>
+            <span className="relative px-4 bg-transparent text-[10px] font-bold uppercase tracking-widest text-gray-400">O continua amb</span>
           </div>
 
-          <div className="flex flex-col gap-4">
-            <button
-              type="button"
-              onClick={() => loginWithGoogle()}
-              className="flex items-center justify-center gap-2 border border-slate-200 dark:border-slate-700/50 rounded-xl py-3 px-4 transition-all hover:bg-slate-50 dark:hover:bg-white/10 active:scale-95 w-full bg-white dark:bg-white/5"
-            >
-              <svg
-                className="w-5 h-5"
-                viewBox="0 0 24 24"
-                xmlns="http://www.w3.org/2000/svg"
-              >
-                <path
-                  fill="#4285F4"
-                  d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"
-                />
-                <path
-                  fill="#34A853"
-                  d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"
-                />
-                <path
-                  fill="#FBBC05"
-                  d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z"
-                />
-                <path
-                  fill="#EA4335"
-                  d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z"
-                />
-              </svg>
-              <span className="text-sm font-medium text-slate-600 dark:text-slate-300">
-                Google
-              </span>
-            </button>
-          </div>
+          <button
+            onClick={() => loginWithGoogle()}
+            className="w-full bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 text-sm font-bold py-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-gray-50 dark:hover:bg-white/10 transition-all shadow-sm"
+          >
+            <svg className="w-5 h-5" viewBox="0 0 24 24">
+              <path fill="#4285F4" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" />
+              <path fill="#34A853" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" />
+              <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
+              <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
+            </svg>
+            Google
+          </button>
         </div>
 
-        {/* Footer */}
-        <div className="text-center">
-          <p className="text-sm text-slate-500">
-            Don&apos;t have an account?{" "}
-            <Link
-              className="text-primary font-semibold hover:underline decoration-2 underline-offset-4 ml-1"
-              to="/signup"
-            >
-              Sign Up
-            </Link>
-          </p>
-        </div>
+        {/* Footer Link */}
+        <p className="text-center text-sm font-medium text-gray-400">
+          No tens compte?{" "}
+          <Link to="/signup" className="text-black dark:text-white font-bold hover:underline underline-offset-4 ml-1 transition-all">
+            Registra't gratis
+          </Link>
+        </p>
       </div>
 
-      {/* iOS Home Indicator */}
-      <div
-        className="absolute bottom-2 left-1/2 -translate-x-1/2 w-32 h-1.5 rounded-full"
-        style={{ backgroundColor: "rgba(100,100,120,0.5)" }}
-      />
+      {/* Decorative indicator */}
+      <div className="absolute bottom-10 left-1/2 -translate-x-1/2 flex gap-2 opacity-20">
+        <div className="w-1.5 h-1.5 rounded-full bg-current"></div>
+        <div className="w-1.5 h-1.5 rounded-full bg-current"></div>
+        <div className="w-1.5 h-1.5 rounded-full bg-current"></div>
+      </div>
     </div>
   );
 };
