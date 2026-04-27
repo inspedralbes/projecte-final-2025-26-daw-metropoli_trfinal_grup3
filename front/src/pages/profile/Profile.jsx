@@ -498,9 +498,9 @@ const Profile = () => {
             </Link>
           </div>
           <h1 className="hidden md:block text-2xl font-black italic uppercase tracking-tighter text-slate-800 dark:text-white">
-            {isOwnProfile ? t("profile.my", "Mi") : ""} {" "}
-            <span className="text-primary underline decoration-primary">
-              {t("nav.profile", "Perfil")} {!isOwnProfile ? `de ${displayedUser.nombre}` : ""}
+            {t("profile.my", "Mi")}{" "}
+            <span className="text-primary">
+              {t("nav.profile", "Perfil")}
             </span>
           </h1>
           <Link
