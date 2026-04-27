@@ -34,8 +34,11 @@ function App() {
     } else if (themeColor === "green") {
       root.style.setProperty("--theme-color", "#10b981");
       root.style.setProperty("--theme-text", "#ffffff");
+    } else if (themeColor === "blue") {
+      root.style.setProperty("--theme-color", "#3b82f6");
+      root.style.setProperty("--theme-text", "#ffffff");
     } else if (themeColor === "pink") {
-      root.style.setProperty("--theme-color", "#ff007f");
+      root.style.setProperty("--theme-color", "#ff98cf");
       root.style.setProperty("--theme-text", "#ffffff");
     } else {
       root.style.removeProperty("--theme-color");

@@ -45,9 +45,12 @@ const Settings = () => {
     } else if (themeColor === "green") {
       root.style.setProperty("--theme-color", "#10b981"); // Tailwind emerald-500
       root.style.setProperty("--theme-text", "#ffffff");
-    } else if (themeColor === "pink") {
-      root.style.setProperty("--theme-color", "#ff007f"); // Vibrant Neon Pink
+    } else if (themeColor === "blue") {
+      root.style.setProperty("--theme-color", "#3b82f6"); // Tailwind blue-500
       root.style.setProperty("--theme-text", "#ffffff");
+    } else if (themeColor === "pink") {
+      root.style.setProperty("--theme-color", "#ff98cf"); // Pastel/Vibrant Pink
+      root.style.setProperty("--theme-text", "#ffffff"); // White text requested by user
     } else {
       // Default (Black/White depending on dark mode)
       root.style.removeProperty("--theme-color");
@@ -61,7 +64,7 @@ const Settings = () => {
       className={`w-11 h-6 rounded-full transition-colors flex items-center px-0.5 ${value ? "bg-primary" : "bg-slate-200 dark:bg-slate-700"}`}
     >
       <div
-        className={`w-5 h-5 rounded-full bg-white shadow-sm transition-transform ${value ? "translate-x-[20px]" : "translate-x-0"}`}
+        className={`w-5 h-5 rounded-full shadow-sm transition-transform ${value ? "translate-x-[20px] bg-primary-text" : "translate-x-0 bg-white"}`}
       ></div>
     </button>
   );
@@ -78,7 +81,7 @@ const Settings = () => {
           </Link>
         </div>
         <h1 className="hidden md:block text-2xl font-black italic uppercase tracking-tighter text-slate-800 dark:text-white">
-          <span className="text-primary">App</span> Settings
+          <span className="text-primary">{t("settings.app", "App")}</span> {t("settings.title", "Ajustes")}
         </h1>
         <Link
           to="/profile"
@@ -193,7 +196,8 @@ const Settings = () => {
                     { id: "default", bg: "bg-slate-800 dark:bg-slate-200" },
                     { id: "red", bg: "bg-red-500" },
                     { id: "green", bg: "bg-emerald-500" },
-                    { id: "pink", bg: "bg-[#ff007f]" }
+                    { id: "blue", bg: "bg-blue-500" },
+                    { id: "pink", bg: "bg-[#ff98cf]" }
                   ].map((color) => (
                     <button
                       key={color.id}

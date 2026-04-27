@@ -1,9 +1,10 @@
-import { useState, lazy, Suspense } from "react";
+import { useState, useEffect, lazy, Suspense } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { QRCodeSVG } from "qrcode.react";
 import Navbar from "../../layouts/Navbar";
 import { useFriends } from "../../context/FriendsContext";
+import { getPublicaciones } from "../../services/communicationManager";
 
 // Lazy load del escáner (pesa bastante, solo se carga cuando se necesita)
 const QrScanner = lazy(() => import("../../components/QrScanner"));
@@ -381,6 +382,32 @@ const Profile = () => {
   const [lastAdded, setLastAdded] = useState(null);
   const { friends, allUsers, removeFriend } = useFriends();
 
+  const [userPosts, setUserPosts] = useState([]);
+  const [loadingPosts, setLoadingPosts] = useState(true);
+
+  useEffect(() => {
+    if (!currentUser) return;
+    const fetchUserPosts = async () => {
+      try {
+        setLoadingPosts(true);
+        const response = await getPublicaciones();
+        if (response.success && response.data) {
+          const myPosts = response.data.filter(
+            (post) => post.id_usuario === currentUser.id || post.id_usuario === currentUser.id_usuario
+          );
+          // Sort by newest first
+          myPosts.sort((a, b) => new Date(b.creado_en) - new Date(a.creado_en));
+          setUserPosts(myPosts);
+        }
+      } catch (err) {
+        console.error("Error fetching user posts:", err);
+      } finally {
+        setLoadingPosts(false);
+      }
+    };
+    fetchUserPosts();
+  }, [currentUser?.id, currentUser?.id_usuario]);
+
   const handleFriendAdded = (user) => {
     setLastAdded(user);
     setTimeout(() => setLastAdded(null), 3000);
@@ -422,9 +449,9 @@ const Profile = () => {
             </Link>
           </div>
           <h1 className="hidden md:block text-2xl font-black italic uppercase tracking-tighter text-slate-800 dark:text-white">
-            My{" "}
+            {t("profile.my", "Mi")}{" "}
             <span className="text-primary underline decoration-primary">
-              Profile
+              {t("nav.profile", "Perfil")}
             </span>
           </h1>
           <Link
@@ -470,13 +497,18 @@ const Profile = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-3 gap-3">
               {[
-                { key: "posts", count: 12, label: t("profile.posts") },
+                { key: "posts", count: userPosts.length, label: t("profile.posts") },
                 {
                   key: "friends",
                   count: friends.length,
                   label: t("profile.friends"),
+                },
+                {
+                  key: "routes",
+                  count: 0,
+                  label: t("profile.routes", "Rutas"),
                 },
               ].map(({ key, count, label }) => (
                 <button
@@ -507,7 +539,7 @@ const Profile = () => {
               }}
               className="w-full py-4 text-red-500 font-semibold text-sm rounded-2xl hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
             >
-              Log Out
+              {t("settings.logout", "Log Out")}
             </button>
           </div>
 
@@ -518,6 +550,7 @@ const Profile = () => {
               {[
                 { key: "posts", label: t("profile.posts"), icon: "grid_view" },
                 { key: "friends", label: t("profile.friends"), icon: "group" },
+                { key: "routes", label: t("profile.routes", "Rutas"), icon: "route" },
               ].map(({ key, label, icon }) => (
                 <button
                   key={key}
@@ -637,40 +670,77 @@ const Profile = () => {
                 <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 lg:hidden">
                   {t("profile.recentPosts")}
                 </h3>
-                <div className="lg:grid lg:grid-cols-2 lg:gap-4 space-y-4 lg:space-y-0">
-                  {[1, 2].map((post) => (
-                    <div
-                      key={post}
-                      className="bg-white dark:bg-[#12080a] rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden"
-                    >
-                      <img
-                        src={`https://images.unsplash.com/photo-${post === 1 ? "1568605117036-5fe5e7bab0b7" : "1492684223066-81342ee5ff30"}?auto=format&fit=crop&q=80&w=800`}
-                        alt="Post"
-                        className="w-full h-48 object-cover"
-                      />
-                      <div className="p-4">
-                        <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">
-                          {post === 1
-                            ? "Descubriendo nuevos rincones de la ciudad! 🗺️🚶‍♂️"
-                            : "Increíble ruta por el centro histórico! 🏛️✨"}
-                        </p>
-                        <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
-                          <span className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-base">
-                              favorite
+                <div className="flex flex-col gap-4">
+                  {loadingPosts ? (
+                    <div className="col-span-2 text-center py-10 text-slate-500">
+                      <span className="material-symbols-outlined animate-spin text-2xl mb-2">progress_activity</span>
+                      <p>Cargando publicaciones...</p>
+                    </div>
+                  ) : userPosts.length === 0 ? (
+                    <div className="col-span-2 text-center py-10 text-slate-500 bg-white dark:bg-[#12080a] rounded-2xl border border-slate-100 dark:border-slate-800">
+                      No tienes publicaciones todavía.
+                    </div>
+                  ) : (
+                    userPosts.map((post) => (
+                      <div
+                        key={post.id}
+                        className="bg-white dark:bg-[#12080a] rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden"
+                      >
+                        {post.foto && (
+                          <img
+                            src={getAvatarUrl(post.foto)}
+                            alt="Post"
+                            className="w-full h-48 object-cover"
+                          />
+                        )}
+                        <div className="p-4">
+                          <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">
+                            {post.texto || "Sin descripción"}
+                          </p>
+                          <div className="flex items-center gap-4 text-xs font-bold text-slate-400">
+                            <span className="flex items-center gap-1">
+                              <span className="material-symbols-outlined text-base">
+                                favorite
+                              </span>
+                              {post.likes || 0}
                             </span>
-                            {post * 45}
-                          </span>
-                          <span className="flex items-center gap-1">
-                            <span className="material-symbols-outlined text-base">
-                              chat_bubble
+                            <span className="flex items-center gap-1">
+                              <span className="material-symbols-outlined text-base">
+                                chat_bubble
+                              </span>
+                              {post.comentarios ? post.comentarios.length : 0}
                             </span>
-                            {post * 12}
-                          </span>
+                          </div>
                         </div>
                       </div>
-                    </div>
-                  ))}
+                    ))
+                  )}
+                </div>
+              </div>
+            )}
+
+            {/* ── Tab Rutas ── */}
+            {activeTab === "routes" && (
+              <div className="space-y-4 animate-fade-in">
+                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 lg:hidden">
+                  {t("profile.myRoutes", "Mis Rutas")}
+                </h3>
+                <div className="flex flex-col items-center justify-center py-12 text-slate-400 dark:text-slate-500 bg-white dark:bg-[#12080a] rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm text-center px-4">
+                  <span className="material-symbols-outlined text-5xl mb-3 text-slate-300 dark:text-slate-700">
+                    map
+                  </span>
+                  <p className="font-bold text-slate-700 dark:text-slate-300 mb-1">
+                    Aún no has guardado ninguna ruta
+                  </p>
+                  <p className="text-sm max-w-[250px] mx-auto">
+                    Explora el mapa y guarda lugares para que aparezcan aquí.
+                  </p>
+                  <Link
+                    to="/map"
+                    className="mt-5 px-5 py-2 bg-primary/10 text-primary font-bold rounded-full hover:bg-primary/20 transition-colors"
+                  >
+                    Ir al Mapa
+                  </Link>
                 </div>
               </div>
             )}

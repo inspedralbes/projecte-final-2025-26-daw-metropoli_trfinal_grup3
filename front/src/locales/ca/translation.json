@@ -74,6 +74,7 @@
     "logout": "Tancar Sessió"
   },
   "profile": {
+    "my": "El meu",
     "friends": "Amics",
     "posts": "Publicacions",
     "achievements": "Assoliments",

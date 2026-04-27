@@ -76,8 +76,11 @@
     "footerApp": "Aplicación"
   },
   "profile": {
+    "my": "Mi",
     "friends": "Amigos",
     "posts": "Posts",
+    "routes": "Rutas",
+    "myRoutes": "Mis Rutas",
     "achievements": "Logros",
     "friendsList": "Mis Amigos",
     "recentPosts": "Actividad Reciente",

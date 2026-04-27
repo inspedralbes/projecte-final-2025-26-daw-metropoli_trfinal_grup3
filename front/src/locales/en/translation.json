@@ -75,11 +75,32 @@
     "footerApp": "Application"
   },
   "profile": {
+    "my": "My",
     "friends": "Friends",
     "posts": "Posts",
+    "routes": "Routes",
+    "myRoutes": "My Routes",
     "achievements": "Achievements",
     "friendsList": "My Friends",
     "recentPosts": "Recent Activity",
-    "yourAchievements": "Badges & Awards"
+    "yourAchievements": "Badges & Awards",
+    "editProfile": "Edit Profile"
+  },
+  "editProfile": {
+    "title": "Edit Profile",
+    "save": "Save",
+    "saved": "Saved",
+    "changeAvatar": "Tap to change your photo",
+    "chooseAvatar": "Choose an avatar",
+    "name": "Name",
+    "namePlaceholder": "Your name",
+    "bio": "Bio",
+    "bioPlaceholder": "Tell us about yourself...",
+    "infoNote": "Name and photo changes are visible to other community members.",
+    "dangerZone": "Danger Zone",
+    "deleteAccount": "Delete account",
+    "errorName": "Name cannot be empty",
+    "errorNameLong": "Name cannot exceed 40 characters",
+    "errorBioLong": "Bio cannot exceed 100 characters"
   }
 }

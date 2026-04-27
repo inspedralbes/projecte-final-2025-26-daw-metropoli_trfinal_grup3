@@ -73,11 +73,32 @@
     "footerApp": "Application"
   },
   "profile": {
+    "my": "Mon",
     "friends": "Amis",
     "posts": "Messages",
+    "routes": "Itinéraires",
+    "myRoutes": "Mes Itinéraires",
     "achievements": "Réalisations",
     "friendsList": "Mes Amis",
     "recentPosts": "Activité Récente",
-    "yourAchievements": "Badges et Récompenses"
+    "yourAchievements": "Badges et Récompenses",
+    "editProfile": "Modifier le Profil"
+  },
+  "editProfile": {
+    "title": "Modifier le Profil",
+    "save": "Enregistrer",
+    "saved": "Enregistré",
+    "changeAvatar": "Touchez pour changer votre photo",
+    "chooseAvatar": "Choisissez un avatar",
+    "name": "Nom",
+    "namePlaceholder": "Votre nom",
+    "bio": "Biographie",
+    "bioPlaceholder": "Parlez-nous de vous...",
+    "infoNote": "Les modifications de votre nom et photo sont visibles par les autres membres de la communauté.",
+    "dangerZone": "Zone de Danger",
+    "deleteAccount": "Supprimer le compte",
+    "errorName": "Le nom ne peut pas être vide",
+    "errorNameLong": "Le nom ne peut pas dépasser 40 caractères",
+    "errorBioLong": "La biographie ne peut pas dépasser 100 caractères"
   }
 }
