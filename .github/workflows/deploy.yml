@@ -21,7 +21,7 @@ jobs:
           key: ${{ secrets.SERVER_SSH_KEY }}
           script: |
             # 1. Entrar a la carpeta donde clonaste el proyecto en el servidor
-            cd ~/projecte-final-2025-26-daw-metropoli_trfinal_grup3
+            cd ${{ secrets.SERVER_PATH }}
 
             # 2. Descargar los últimos cambios de GitHub
             git pull origin main
