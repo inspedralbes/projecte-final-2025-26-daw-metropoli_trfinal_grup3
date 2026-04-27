@@ -5,6 +5,7 @@ import { QRCodeSVG } from "qrcode.react";
 import Navbar from "../../layouts/Navbar";
 import { useFriends } from "../../context/FriendsContext";
 import { getPublicaciones, getUsuario } from "../../services/communicationManager";
+import UserAvatar from "../../components/UserAvatar";
 
 // Lazy load del escáner (pesa bastante, solo se carga cuando se necesita)
 const QrScanner = lazy(() => import("../../components/QrScanner"));
@@ -110,12 +111,8 @@ const GuestProfileView = () => {
 
 // ─── Modal: Mi código QR ────────────────────────────────────────────────────
 const MyQrModal = ({ user, onClose }) => {
-  // El QR contiene un JSON con los datos del usuario
-  // TODO: cuando haya login, usar el ID real del usuario autenticado
-  const qrData = JSON.stringify({
-    userId: user.id_usuario || user.id,
-    nombre: user.nombre,
-  });
+  // El QR contiene la URL al perfil del usuario
+  const qrData = `${window.location.origin}/profile/${user.id_usuario || user.id}`;
 
   return (
     <div className="fixed inset-0 z-50 flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm px-4 pb-6 md:pb-0">
@@ -164,8 +161,8 @@ const ScanQrModal = ({ allUsers, onAdd, onClose }) => {
   const [scanning, setScanning] = useState(true);
 
   // Utilidad para construir la URL del avatar
-  const getAvatarUrl = (fotoUrl) => {
-    if (!fotoUrl) return "https://i.pravatar.cc/150?img=12";
+  const getFullPostImageUrl = (fotoUrl) => {
+    if (!fotoUrl) return null;
     if (fotoUrl.startsWith("http")) return fotoUrl;
     return `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${fotoUrl}`;
   };
@@ -173,11 +170,21 @@ const ScanQrModal = ({ allUsers, onAdd, onClose }) => {
   const handleResult = (decoded) => {
     try {
       console.log("QR Decoded:", decoded);
-      const data = JSON.parse(decoded);
-      // El QR puede contener userId o id_usuario
-      const targetId = data.userId || data.id_usuario || data.id;
+      let targetId;
 
-      if (!targetId) {
+      // Intentar extraer ID de la URL o parsear JSON
+      if (decoded.includes("/profile/")) {
+        targetId = decoded.split("/profile/").pop();
+      } else {
+        try {
+          const data = JSON.parse(decoded);
+          targetId = data.userId || data.id_usuario || data.id;
+        } catch (e) {
+          targetId = decoded; // Asumir que es el ID directamente
+        }
+      }
+
+      if (!targetId || targetId === "undefined") {
         throw new Error("Invalid QR data");
       }
 
@@ -275,11 +282,11 @@ const ScanQrModal = ({ allUsers, onAdd, onClose }) => {
           ) : result ? (
             /* Vista de Éxito / Confirmación */
             <div className="flex flex-col items-center py-4 animate-in fade-in zoom-in duration-300">
-              <div className="w-24 h-24 rounded-full border-4 border-primary/20 p-1 mb-4 relative">
-                <img
-                  src={getAvatarUrl(result.foto_perfil || result.foto)}
-                  alt={result.nombre}
-                  className="w-full h-full object-cover rounded-full shadow-lg"
+              <div className="w-24 h-24 rounded-full mb-4 relative">
+                <UserAvatar
+                  user={result}
+                  className="w-full h-full"
+                  size={200}
                 />
                 <div className="absolute bottom-0 right-0 w-8 h-8 bg-primary rounded-full flex items-center justify-center shadow-lg border-2 border-white dark:border-slate-900">
                   <span className="material-symbols-outlined text-primary-text text-sm font-bold">
@@ -371,10 +378,9 @@ const Profile = () => {
   const displayedUser = isOwnProfile ? currentUser : targetUser;
   const displayedUserId = displayedUser?.id_usuario || displayedUser?.id;
 
-  // Utilidad para construir la URL del avatar
-  const getAvatarUrl = (fotoUrl) => {
-    if (!fotoUrl)
-      return "https://cdn-icons-png.flaticon.com/512/149/149071.png";
+  // Utilidad para construir la URL de las fotos de posts (no avatares)
+  const getFullPostImageUrl = (fotoUrl) => {
+    if (!fotoUrl) return null;
     if (fotoUrl.startsWith("http")) return fotoUrl;
     return `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${fotoUrl}`;
   };
@@ -388,7 +394,7 @@ const Profile = () => {
   const [showMyQr, setShowMyQr] = useState(false);
   const [showScanQr, setShowScanQr] = useState(false);
   const [lastAdded, setLastAdded] = useState(null);
-  const { friends, allUsers, removeFriend } = useFriends();
+  const { friends, allUsers, removeFriend, addFriend, isFriend } = useFriends();
 
   const [userPosts, setUserPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
@@ -521,11 +527,11 @@ const Profile = () => {
           <div className="flex flex-col gap-5 lg:sticky lg:top-6">
             {/* Profile Card */}
             <div className="bg-white dark:bg-[#12080a] rounded-[28px] border border-slate-100 dark:border-slate-800 shadow-sm p-6 flex flex-col items-center text-center">
-              <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-full bg-slate-200 dark:bg-slate-800 border-4 border-white dark:border-slate-700 shadow-lg overflow-hidden mb-3">
-                <img
-                  src={getAvatarUrl(displayedUser.foto_perfil || displayedUser.foto)}
-                  alt="User Profile"
-                  className="w-full h-full object-cover"
+              <div className="mb-3">
+                <UserAvatar
+                  user={displayedUser}
+                  className="w-24 h-24 lg:w-32 lg:h-32"
+                  size={256}
                 />
               </div>
               <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
@@ -534,7 +540,7 @@ const Profile = () => {
               <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
                 {displayedUser.bio || "Urban Explorer & Map Enthusiast"}
               </p>
-              {isOwnProfile && (
+              {isOwnProfile ? (
                 <Link
                   to="/profile/edit"
                   className="flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-primary text-primary text-xs font-bold hover:bg-primary/10 transition-colors"
@@ -544,6 +550,29 @@ const Profile = () => {
                   </span>
                   {t("profile.editProfile")}
                 </Link>
+              ) : isFriend(displayedUserId) ? (
+                <button
+                  onClick={() => removeFriend(displayedUserId)}
+                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-red-500 text-red-500 text-xs font-bold hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-base">
+                    person_remove
+                  </span>
+                  Eliminar Amigo
+                </button>
+              ) : (
+                <button
+                  onClick={async () => {
+                    const res = await addFriend(displayedUserId);
+                    if (res.success) handleFriendAdded(displayedUser);
+                  }}
+                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary text-primary-text text-xs font-bold hover:opacity-90 transition-opacity shadow-lg shadow-primary/20"
+                >
+                  <span className="material-symbols-outlined text-base font-bold">
+                    person_add
+                  </span>
+                  Añadir Amigo
+                </button>
               )}
             </div>
 
@@ -679,17 +708,13 @@ const Profile = () => {
                         key={friend.id_usuario || friend.id}
                         className="flex items-center gap-3 bg-white dark:bg-[#12080a] p-3 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm group"
                       >
-                        <img
-                          src={friend.avatar}
-                          alt={friend.nombre}
-                          className="w-12 h-12 rounded-full object-cover border-2 border-slate-100 dark:border-slate-700 shrink-0"
-                        />
+                        <UserAvatar user={friend} className="w-12 h-12" />
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm text-slate-800 dark:text-white truncate">
                             {friend.nombre}
                           </p>
                           <p className="text-xs text-slate-400 dark:text-slate-500">
-                            {friend.badge}
+                            {friend.badge || "City Explorer"}
                           </p>
                         </div>
                         <button
@@ -745,7 +770,7 @@ const Profile = () => {
                       >
                         {post.foto && (
                           <img
-                            src={getAvatarUrl(post.foto)}
+                            src={getFullPostImageUrl(post.foto)}
                             alt="Post"
                             className="w-full h-48 object-cover"
                           />

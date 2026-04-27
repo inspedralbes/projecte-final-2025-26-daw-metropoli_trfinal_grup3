@@ -12,6 +12,7 @@ import SignUp from "./pages/auth/SignUp";
 import CreateList from "./pages/map/CreateList";
 import { FriendsProvider } from "./context/FriendsContext";
 import QRScanner from "./components/QrScanner";
+import CircuitScannerPage from "./pages/CircuitScanner";
 import "./App.css";
 
 function App() {
@@ -61,7 +62,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/:id" element={<Profile />} />
           <Route path="/profile/edit" element={<EditProfile />} />
-          <Route path="/escaneo" element={<QRScanner />} />
+          <Route path="/escaneo" element={<CircuitScannerPage />} />
           <Route path="/create-list" element={<CreateList />} />
         </Routes>
       </div>

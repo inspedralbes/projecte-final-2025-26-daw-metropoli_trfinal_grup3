@@ -2,17 +2,14 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Navbar from "../../layouts/Navbar";
+import UserAvatar from "../../components/UserAvatar";
 
 const Home = () => {
   const { t } = useTranslation();
   const storedUser = localStorage.getItem("usuario");
   const user = storedUser ? JSON.parse(storedUser) : null;
 
-  const getAvatarUrl = (fotoUrl) => {
-    if (!fotoUrl) return "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-    if (fotoUrl.startsWith("http")) return fotoUrl;
-    return `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${fotoUrl}`;
-  };
+
 
   const categories = [
     { id: 1, name: "Bares", image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=100&q=80", active: true },
@@ -97,8 +94,8 @@ const Home = () => {
           </h1>
         </div>
         <div className="flex flex-col gap-3 items-end">
-          <Link to="/profile" className="w-12 h-12 rounded-full overflow-hidden border-2 border-white shadow-sm">
-            <img src={getAvatarUrl(user?.foto)} alt="Profile" className="w-full h-full object-cover" />
+          <Link to="/profile">
+            <UserAvatar user={user} className="w-12 h-12" />
           </Link>
           <button className="w-10 h-10 rounded-full border border-gray-300 dark:border-white/20 flex items-center justify-center bg-white/50 dark:bg-white/5 backdrop-blur-sm">
             <span className="material-symbols-outlined text-gray-600 dark:text-white text-xl">menu</span>
@@ -218,8 +215,8 @@ const Home = () => {
               <div key={col.id} className="min-w-[320px] bg-white dark:bg-white/10 rounded-[2.5rem] p-6 border border-gray-100 dark:border-white/10 shadow-sm transition-colors duration-300">
                 <div className="relative aspect-[16/10] rounded-[1.5rem] overflow-hidden mb-6">
                   <img src={col.image} className="w-full h-full object-cover" />
-                  <div className="absolute top-4 left-4 w-10 h-10 rounded-full border-2 border-white overflow-hidden shadow-md">
-                    <img src={col.avatar} className="w-full h-full object-cover" />
+                  <div className="absolute top-4 left-4">
+                    <UserAvatar user={{ avatar: col.avatar, nombre: col.user }} className="w-10 h-10" />
                   </div>
                 </div>
                 <h3 className="font-medium text-lg tracking-tight truncate mb-2">{col.title}</h3>

@@ -8,6 +8,7 @@ import {
 } from "react-leaflet";
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../../layouts/Navbar"; // Import the new Navbar component
+import UserAvatar from "../../components/UserAvatar";
 import { getPois, getRoute, getCategorias, getListas, getNodos } from "../../services/communicationManager";
 import socket from "../../services/socketManager";
 import "leaflet/dist/leaflet.css";
@@ -476,7 +477,7 @@ const Map = () => {
                     {curators.map(c => (
                       <div key={c.id} className="flex flex-col items-center gap-2 w-16">
                         <div className="relative">
-                          <img src={c.image} alt={c.name} className="w-16 h-16 rounded-full object-cover shadow-sm border border-gray-100 dark:border-gray-800" />
+                          <UserAvatar user={{ avatar: c.image, nombre: c.name }} className="w-16 h-16" />
                           <div className="absolute -bottom-2 left-1/2 -translate-x-1/2 bg-white dark:bg-slate-800 text-black dark:text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow border border-gray-100 dark:border-gray-700 flex items-center gap-0.5">
                             <span className="material-symbols-outlined text-[10px]">visibility</span>
                             {c.score}

@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link } from "react-router-dom";
 import socket from "../../services/socketManager";
 import { getChatHistory } from "../../services/communicationManager";
+import UserAvatar from "../UserAvatar";
 
 const ChatModal = ({ friend, onClose, user }) => {
   const [messages, setMessages] = useState([]);
@@ -88,12 +89,7 @@ const ChatModal = ({ friend, onClose, user }) => {
         <div className="p-6 bg-white/50 dark:bg-white/5 backdrop-blur-md border-b border-gray-100 dark:border-white/5 flex justify-between items-center">
           <div className="flex items-center gap-3">
             <Link to={`/profile/${friend.id_usuario}`} className="relative group">
-                <div className="w-12 h-12 rounded-full border-2 border-primary p-0.5 shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
-                    <img 
-                        src={friend.foto_perfil || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} 
-                        className="w-full h-full object-cover rounded-full" 
-                    />
-                </div>
+                <UserAvatar user={friend} className="w-12 h-12" borderColor="border-primary" />
                 <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full shadow-sm"></div>
             </Link>
             <div>

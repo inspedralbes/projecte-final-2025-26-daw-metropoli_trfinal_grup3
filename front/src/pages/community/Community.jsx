@@ -14,6 +14,7 @@ import {
 } from "../../services/communicationManager";
 import socket from "../../services/socketManager";
 import ChatModal from "../../components/community/ChatModal";
+import UserAvatar from "../../components/UserAvatar";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const formatDate = (date) =>
@@ -128,11 +129,7 @@ const PostCard = ({ pub, onComentarioCreado }) => {
       <div className="p-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link to={`/profile/${pub.id_usuario}`}>
-            <img 
-              src={pub.foto_perfil || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} 
-              className="w-10 h-10 rounded-full object-cover border border-gray-100 hover:opacity-80 transition-opacity" 
-              onError={(e) => e.target.src = "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
-            />
+            <UserAvatar user={{ foto_perfil: pub.foto_perfil, nombre: pub.nombre_usuario }} className="w-10 h-10" />
           </Link>
           <div>
             <Link to={`/profile/${pub.id_usuario}`}>
@@ -176,7 +173,7 @@ const PostCard = ({ pub, onComentarioCreado }) => {
                 {pub.comentarios?.map(com => (
                     <div key={com._id} className="flex gap-2">
                         <Link to={`/profile/${com.id_usuario}`}>
-                          <img src={com.foto_perfil || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} className="w-6 h-6 rounded-full object-cover hover:opacity-80 transition-opacity" />
+                          <UserAvatar user={{ foto_perfil: com.foto_perfil, nombre: com.nombre_usuario }} className="w-6 h-6" />
                         </Link>
                         <div className="bg-white dark:bg-slate-800 px-3 py-2 rounded-2xl rounded-tl-none border border-gray-100 dark:border-white/5">
                             <Link to={`/profile/${com.id_usuario}`}>
@@ -307,8 +304,8 @@ const Community = () => {
               >
                 <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: view === "activity" ? "'FILL' 1" : "'FILL' 0" }}>bolt</span>
               </button>
-              <Link to="/profile" className="w-10 h-10 rounded-full border-2 border-primary overflow-hidden">
-                <img src={usuarioLogged?.foto_perfil || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} className="w-full h-full object-cover" />
+              <Link to="/profile">
+                <UserAvatar user={usuarioLogged} className="w-10 h-10" borderColor="border-primary" />
               </Link>
             </div>
           </div>
@@ -340,9 +337,7 @@ const Community = () => {
                     >
                         <div className="relative">
                             <Link to={`/profile/${amigo.id_usuario}`}>
-                              <div className="w-14 h-14 rounded-full border-2 border-primary p-0.5 group-active:scale-90 transition-transform hover:border-primary-dark">
-                                  <img src={amigo.foto_perfil || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} className="w-full h-full object-cover rounded-full" />
-                              </div>
+                              <UserAvatar user={amigo} className="w-14 h-14" borderColor="border-primary" />
                             </Link>
                             <button 
                               onClick={() => setSelectedFriend(amigo)}
@@ -377,7 +372,7 @@ const Community = () => {
               {actividad.map((act, i) => (
                 <div key={i} className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-gray-100 dark:border-white/5 flex gap-4 items-center shadow-sm">
                   <Link to={`/profile/${act.id_usuario}`}>
-                    <img src={act.foto || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} className="w-10 h-10 rounded-full object-cover hover:opacity-80 transition-opacity" />
+                    <UserAvatar user={{ foto: act.foto, nombre: act.usuario }} className="w-10 h-10" />
                   </Link>
                   <div className="flex-1">
                     <p className="text-xs text-slate-700 dark:text-slate-200">
@@ -405,7 +400,7 @@ const Community = () => {
                         to={`/profile/${user.id_usuario}`}
                         className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-gray-100 dark:border-white/5 flex gap-4 items-center hover:border-primary/30 transition-all shadow-sm"
                     >
-                        <img src={user.foto_perfil || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} className="w-12 h-12 rounded-full object-cover" />
+                        <UserAvatar user={user} className="w-12 h-12" />
                         <div className="flex-1">
                             <h4 className="font-bold text-slate-800 dark:text-white">{user.nombre}</h4>
                             <p className="text-xs text-slate-400 truncate max-w-[200px]">{user.bio || "Sense biografia"}</p>
