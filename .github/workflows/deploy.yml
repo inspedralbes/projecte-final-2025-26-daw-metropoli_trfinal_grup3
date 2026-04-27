@@ -1,26 +1,31 @@
-name: Deploy to Production
+name: Deploy to VPS
 
 on:
   push:
     branches:
-      - main
+      - main # O master, dependiendo de cómo se llame tu rama principal
 
 jobs:
   deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Deploy via SSH
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          script_stop: true
           script: |
-            cd ${{ secrets.SERVER_PATH }}
-            git fetch origin main
-            git reset --hard origin/main
-            git clean -fd
-            docker compose -f docker-compose.prod.yml up --build -d
-            docker image prune -f
+            # 1. Entrar a la carpeta donde clonaste el proyecto en el servidor
+            cd ~/projecte-final-2025-26-daw-metropoli_trfinal_grup3
+
+            # 2. Descargar los últimos cambios de GitHub
+            git pull origin main
+
+            # 3. Reconstruir y levantar los contenedores de Docker
+            docker compose -f docker-compose.prod.yml build
+            docker compose -f docker-compose.prod.yml up -d
