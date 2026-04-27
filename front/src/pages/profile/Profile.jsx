@@ -1,10 +1,10 @@
-import { useState, useEffect, lazy, Suspense } from "react";
-import { Link, useNavigate } from "react-router-dom";
+import { useState, useEffect, lazy, Suspense, useMemo } from "react";
+import { Link, useNavigate, useParams } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import { QRCodeSVG } from "qrcode.react";
 import Navbar from "../../layouts/Navbar";
 import { useFriends } from "../../context/FriendsContext";
-import { getPublicaciones } from "../../services/communicationManager";
+import { getPublicaciones, getUsuario } from "../../services/communicationManager";
 
 // Lazy load del escáner (pesa bastante, solo se carga cuando se necesita)
 const QrScanner = lazy(() => import("../../components/QrScanner"));
@@ -358,10 +358,18 @@ const ScanQrModal = ({ allUsers, onAdd, onClose }) => {
 
 const Profile = () => {
   const { t } = useTranslation();
-  const navigate = useNavigate();
+  const { id } = useParams();
+  const currentUser = useMemo(() => {
+    const storedUser = localStorage.getItem("usuario");
+    return storedUser ? JSON.parse(storedUser) : null;
+  }, []);
 
-  const storedUser = localStorage.getItem("usuario");
-  const currentUser = storedUser ? JSON.parse(storedUser) : null;
+  const [targetUser, setTargetUser] = useState(null);
+  const [loadingUser, setLoadingUser] = useState(!!id && id !== "undefined");
+
+  const isOwnProfile = !id || id === "undefined" || (currentUser && (id == currentUser.id || id == currentUser.id_usuario));
+  const displayedUser = isOwnProfile ? currentUser : targetUser;
+  const displayedUserId = displayedUser?.id_usuario || displayedUser?.id;
 
   // Utilidad para construir la URL del avatar
   const getAvatarUrl = (fotoUrl) => {
@@ -386,14 +394,37 @@ const Profile = () => {
   const [loadingPosts, setLoadingPosts] = useState(true);
 
   useEffect(() => {
-    if (!currentUser) return;
+    if (!id || id === "undefined" || isOwnProfile) {
+      setTargetUser(null);
+      setLoadingUser(false);
+      return;
+    }
+
+    const fetchTargetUser = async () => {
+      try {
+        setLoadingUser(true);
+        const res = await getUsuario(id);
+        if (res) {
+          setTargetUser(res);
+        }
+      } catch (err) {
+        console.error("Error fetching target user:", err);
+      } finally {
+        setLoadingUser(false);
+      }
+    };
+    fetchTargetUser();
+  }, [id, isOwnProfile]);
+
+  useEffect(() => {
+    if (!displayedUserId) return;
     const fetchUserPosts = async () => {
       try {
         setLoadingPosts(true);
         const response = await getPublicaciones();
         if (response.success && response.data) {
           const myPosts = response.data.filter(
-            (post) => post.id_usuario === currentUser.id || post.id_usuario === currentUser.id_usuario
+            (post) => post.id_usuario == displayedUserId
           );
           // Sort by newest first
           myPosts.sort((a, b) => new Date(b.creado_en) - new Date(a.creado_en));
@@ -406,12 +437,30 @@ const Profile = () => {
       }
     };
     fetchUserPosts();
-  }, [currentUser?.id, currentUser?.id_usuario]);
+  }, [displayedUserId]);
 
   const handleFriendAdded = (user) => {
     setLastAdded(user);
     setTimeout(() => setLastAdded(null), 3000);
   };
+
+  if (loadingUser) {
+    return (
+      <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-slate-950">
+        <span className="material-symbols-outlined animate-spin text-4xl text-primary">progress_activity</span>
+      </div>
+    );
+  }
+
+  if (!displayedUser && !isOwnProfile) {
+    return (
+      <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gray-50 dark:bg-slate-950 text-slate-500">
+        <span className="material-symbols-outlined text-6xl mb-4">person_off</span>
+        <h2 className="text-xl font-bold">Usuario no encontrado</h2>
+        <Link to="/community" className="mt-4 text-primary font-bold hover:underline">Volver a Comunidad</Link>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display select-none transition-colors duration-300 md:pl-16">
@@ -449,9 +498,9 @@ const Profile = () => {
             </Link>
           </div>
           <h1 className="hidden md:block text-2xl font-black italic uppercase tracking-tighter text-slate-800 dark:text-white">
-            {t("profile.my", "Mi")}{" "}
+            {isOwnProfile ? t("profile.my", "Mi") : ""} {" "}
             <span className="text-primary underline decoration-primary">
-              {t("nav.profile", "Perfil")}
+              {t("nav.profile", "Perfil")} {!isOwnProfile ? `de ${displayedUser.nombre}` : ""}
             </span>
           </h1>
           <Link
@@ -474,26 +523,28 @@ const Profile = () => {
             <div className="bg-white dark:bg-[#12080a] rounded-[28px] border border-slate-100 dark:border-slate-800 shadow-sm p-6 flex flex-col items-center text-center">
               <div className="w-24 h-24 lg:w-32 lg:h-32 rounded-full bg-slate-200 dark:bg-slate-800 border-4 border-white dark:border-slate-700 shadow-lg overflow-hidden mb-3">
                 <img
-                  src={getAvatarUrl(currentUser.foto)}
+                  src={getAvatarUrl(displayedUser.foto_perfil || displayedUser.foto)}
                   alt="User Profile"
                   className="w-full h-full object-cover"
                 />
               </div>
               <h2 className="text-2xl font-bold text-slate-800 dark:text-white">
-                {currentUser.nombre}
+                {displayedUser.nombre}
               </h2>
               <p className="text-slate-500 dark:text-slate-400 text-sm mb-4">
-                {currentUser.bio || "Urban Explorer & Map Enthusiast"}
+                {displayedUser.bio || "Urban Explorer & Map Enthusiast"}
               </p>
-              <Link
-                to="/profile/edit"
-                className="flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-primary text-primary text-xs font-bold hover:bg-primary/10 transition-colors"
-              >
-                <span className="material-symbols-outlined text-base">
-                  edit
-                </span>
-                {t("profile.editProfile")}
-              </Link>
+              {isOwnProfile && (
+                <Link
+                  to="/profile/edit"
+                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-primary text-primary text-xs font-bold hover:bg-primary/10 transition-colors"
+                >
+                  <span className="material-symbols-outlined text-base">
+                    edit
+                  </span>
+                  {t("profile.editProfile")}
+                </Link>
+              )}
             </div>
 
             {/* Stats */}
@@ -531,16 +582,18 @@ const Profile = () => {
             </div>
 
             {/* Log Out */}
-            <button
-              onClick={() => {
-                localStorage.removeItem("token");
-                localStorage.removeItem("usuario");
-                navigate("/login");
-              }}
-              className="w-full py-4 text-red-500 font-semibold text-sm rounded-2xl hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
-            >
-              {t("settings.logout", "Log Out")}
-            </button>
+            {isOwnProfile && (
+              <button
+                onClick={() => {
+                  localStorage.removeItem("token");
+                  localStorage.removeItem("usuario");
+                  navigate("/login");
+                }}
+                className="w-full py-4 text-red-500 font-semibold text-sm rounded-2xl hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+              >
+                {t("settings.logout", "Log Out")}
+              </button>
+            )}
           </div>
 
           {/* Columna derecha */}
@@ -576,26 +629,28 @@ const Profile = () => {
                       ({friends.length})
                     </span>
                   </h3>
-                  <div className="flex gap-2">
-                    <button
-                      onClick={() => setShowMyQr(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-[#12080a] border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:border-primary hover:text-primary transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-base">
-                        qr_code_2
-                      </span>
-                      Mi QR
-                    </button>
-                    <button
-                      onClick={() => setShowScanQr(true)}
-                      className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-text text-xs font-bold hover:opacity-90 transition-colors shadow-lg shadow-primary/20"
-                    >
-                      <span className="material-symbols-outlined text-base">
-                        qr_code_scanner
-                      </span>
-                      Escanear
-                    </button>
-                  </div>
+                  {isOwnProfile && (
+                    <div className="flex gap-2">
+                      <button
+                        onClick={() => setShowMyQr(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-[#12080a] border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:border-primary hover:text-primary transition-colors"
+                      >
+                        <span className="material-symbols-outlined text-base">
+                          qr_code_2
+                        </span>
+                        Mi QR
+                      </button>
+                      <button
+                        onClick={() => setShowScanQr(true)}
+                        className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-text text-xs font-bold hover:opacity-90 transition-colors shadow-lg shadow-primary/20"
+                      >
+                        <span className="material-symbols-outlined text-base">
+                          qr_code_scanner
+                        </span>
+                        Escanear
+                      </button>
+                    </div>
+                  )}
                 </div>
 
                 {/* Lista de amigos */}
@@ -621,7 +676,7 @@ const Profile = () => {
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
                     {friends.map((friend) => (
                       <div
-                        key={friend.id}
+                        key={friend.id_usuario || friend.id}
                         className="flex items-center gap-3 bg-white dark:bg-[#12080a] p-3 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm group"
                       >
                         <img
@@ -652,15 +707,17 @@ const Profile = () => {
                 )}
 
                 {/* Botón escanear al fondo */}
-                <button
-                  onClick={() => setShowScanQr(true)}
-                  className="w-full mt-2 py-3 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 text-sm font-semibold hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2"
-                >
-                  <span className="material-symbols-outlined text-lg">
-                    qr_code_scanner
-                  </span>
-                  Escanear QR de un amigo
-                </button>
+                {isOwnProfile && (
+                  <button
+                    onClick={() => setShowScanQr(true)}
+                    className="w-full mt-2 py-3 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 text-sm font-semibold hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2"
+                  >
+                    <span className="material-symbols-outlined text-lg">
+                      qr_code_scanner
+                    </span>
+                    Escanear QR de un amigo
+                  </button>
+                )}
               </div>
             )}
 
@@ -681,9 +738,9 @@ const Profile = () => {
                       No tienes publicaciones todavía.
                     </div>
                   ) : (
-                    userPosts.map((post) => (
+                    userPosts.map((post, idx) => (
                       <div
-                        key={post.id}
+                        key={post.id_publicacion || post.id || post._id || idx}
                         className="bg-white dark:bg-[#12080a] rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden"
                       >
                         {post.foto && (

@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { Link } from "react-router-dom";
 import socket from "../../services/socketManager";
 import { getChatHistory } from "../../services/communicationManager";
 
@@ -86,17 +87,19 @@ const ChatModal = ({ friend, onClose, user }) => {
         {/* Header */}
         <div className="p-6 bg-white/50 dark:bg-white/5 backdrop-blur-md border-b border-gray-100 dark:border-white/5 flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <div className="relative">
-                <div className="w-12 h-12 rounded-full border-2 border-primary p-0.5 shadow-lg shadow-primary/20">
+            <Link to={`/profile/${friend.id_usuario}`} className="relative group">
+                <div className="w-12 h-12 rounded-full border-2 border-primary p-0.5 shadow-lg shadow-primary/20 group-hover:scale-105 transition-transform">
                     <img 
                         src={friend.foto_perfil || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} 
                         className="w-full h-full object-cover rounded-full" 
                     />
                 </div>
                 <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-900 rounded-full shadow-sm"></div>
-            </div>
+            </Link>
             <div>
-              <h3 className="font-bold text-slate-800 dark:text-white text-lg tracking-tight leading-none">{friend.nombre}</h3>
+              <Link to={`/profile/${friend.id_usuario}`}>
+                <h3 className="font-bold text-slate-800 dark:text-white text-lg tracking-tight leading-none hover:text-primary transition-colors">{friend.nombre}</h3>
+              </Link>
               <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest mt-1.5 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
                 En línia ara

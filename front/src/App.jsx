@@ -58,6 +58,7 @@ function App() {
           <Route path="/community" element={<Community />} />
           <Route path="/settings" element={<Settings />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/profile/:id" element={<Profile />} />
           <Route path="/profile/edit" element={<EditProfile />} />
           <Route path="/escaneo" element={<QRScanner />} />
         </Routes>

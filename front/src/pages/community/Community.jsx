@@ -127,13 +127,17 @@ const PostCard = ({ pub, onComentarioCreado }) => {
     <article className="bg-white dark:bg-slate-900 rounded-[2rem] border border-gray-100 dark:border-white/5 shadow-sm overflow-hidden mb-6 transition-all hover:shadow-md">
       <div className="p-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
-          <img 
-            src={pub.foto_perfil || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} 
-            className="w-10 h-10 rounded-full object-cover border border-gray-100" 
-            onError={(e) => e.target.src = "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
-          />
+          <Link to={`/profile/${pub.id_usuario}`}>
+            <img 
+              src={pub.foto_perfil || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} 
+              className="w-10 h-10 rounded-full object-cover border border-gray-100 hover:opacity-80 transition-opacity" 
+              onError={(e) => e.target.src = "https://cdn-icons-png.flaticon.com/512/149/149071.png"}
+            />
+          </Link>
           <div>
-            <h4 className="text-sm font-bold text-slate-800 dark:text-white leading-none">{pub.nombre_usuario}</h4>
+            <Link to={`/profile/${pub.id_usuario}`}>
+              <h4 className="text-sm font-bold text-slate-800 dark:text-white leading-none hover:text-primary transition-colors">{pub.nombre_usuario}</h4>
+            </Link>
             <span className="text-[10px] text-slate-400 uppercase tracking-widest">{formatDate(pub.createdAt)}</span>
           </div>
         </div>
@@ -171,9 +175,13 @@ const PostCard = ({ pub, onComentarioCreado }) => {
             <div className="space-y-3 max-h-60 overflow-y-auto no-scrollbar">
                 {pub.comentarios?.map(com => (
                     <div key={com._id} className="flex gap-2">
-                        <img src={com.foto_perfil || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} className="w-6 h-6 rounded-full object-cover" />
+                        <Link to={`/profile/${com.id_usuario}`}>
+                          <img src={com.foto_perfil || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} className="w-6 h-6 rounded-full object-cover hover:opacity-80 transition-opacity" />
+                        </Link>
                         <div className="bg-white dark:bg-slate-800 px-3 py-2 rounded-2xl rounded-tl-none border border-gray-100 dark:border-white/5">
-                            <p className="text-[10px] font-bold text-slate-400">{com.nombre_usuario}</p>
+                            <Link to={`/profile/${com.id_usuario}`}>
+                              <p className="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors">{com.nombre_usuario}</p>
+                            </Link>
                             <p className="text-xs text-slate-700 dark:text-slate-200">{com.texto}</p>
                         </div>
                     </div>
@@ -326,19 +334,25 @@ const Community = () => {
             <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 ml-1">Amics Online</h3>
             <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
                 {amigos.map(amigo => (
-                    <button 
+                    <div 
                         key={amigo.id_usuario} 
-                        onClick={() => setSelectedFriend(amigo)}
                         className="flex flex-col items-center gap-2 flex-shrink-0 group"
                     >
                         <div className="relative">
-                            <div className="w-14 h-14 rounded-full border-2 border-primary p-0.5 group-active:scale-90 transition-transform">
-                                <img src={amigo.foto_perfil || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} className="w-full h-full object-cover rounded-full" />
-                            </div>
-                            <div className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-950 rounded-full"></div>
+                            <Link to={`/profile/${amigo.id_usuario}`}>
+                              <div className="w-14 h-14 rounded-full border-2 border-primary p-0.5 group-active:scale-90 transition-transform hover:border-primary-dark">
+                                  <img src={amigo.foto_perfil || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} className="w-full h-full object-cover rounded-full" />
+                              </div>
+                            </Link>
+                            <button 
+                              onClick={() => setSelectedFriend(amigo)}
+                              className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-950 rounded-full cursor-pointer hover:scale-110 transition-transform"
+                            ></button>
                         </div>
-                        <span className="text-[10px] font-bold text-slate-500 max-w-[60px] truncate">{amigo.nombre}</span>
-                    </button>
+                        <Link to={`/profile/${amigo.id_usuario}`}>
+                          <span className="text-[10px] font-bold text-slate-500 max-w-[60px] truncate hover:text-primary transition-colors">{amigo.nombre}</span>
+                        </Link>
+                    </div>
                 ))}
             </div>
         </div>
@@ -350,8 +364,8 @@ const Community = () => {
               {loading ? (
                 <div className="text-center py-20 opacity-30 font-bold uppercase tracking-widest text-xs">Carregant publicacions...</div>
               ) : (
-                publicaciones.map(pub => (
-                  <PostCard key={pub._id} pub={pub} onComentarioCreado={cargarPublicaciones} />
+                publicaciones.map((pub, idx) => (
+                  <PostCard key={pub.id_publicacion || pub._id || pub.id || idx} pub={pub} onComentarioCreado={cargarPublicaciones} />
                 ))
               )}
             </div>
@@ -362,10 +376,14 @@ const Community = () => {
               <h3 className="text-xl font-black text-indigo-500 italic mb-6">Activitat Recent</h3>
               {actividad.map((act, i) => (
                 <div key={i} className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-gray-100 dark:border-white/5 flex gap-4 items-center shadow-sm">
-                  <img src={act.foto || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} className="w-10 h-10 rounded-full object-cover" />
+                  <Link to={`/profile/${act.id_usuario}`}>
+                    <img src={act.foto || "https://cdn-icons-png.flaticon.com/512/149/149071.png"} className="w-10 h-10 rounded-full object-cover hover:opacity-80 transition-opacity" />
+                  </Link>
                   <div className="flex-1">
                     <p className="text-xs text-slate-700 dark:text-slate-200">
-                      <span className="font-bold">{act.usuario}</span> ha creat una nova publicació
+                      <Link to={`/profile/${act.id_usuario}`}>
+                        <span className="font-bold hover:text-primary transition-colors">{act.usuario}</span>
+                      </Link> ha creat una nova publicació
                     </p>
                     <p className="text-[10px] text-slate-400 mt-1">{formatDate(act.fecha)}</p>
                   </div>
@@ -381,9 +399,9 @@ const Community = () => {
                {searchResults.length === 0 ? (
                  <div className="text-center py-20 opacity-30">No s'han trobat usuaris</div>
                ) : (
-                 searchResults.map(user => (
+                searchResults.map((user, idx) => (
                     <Link 
-                        key={user.id_usuario}
+                        key={user.id_usuario || user.id || idx}
                         to={`/profile/${user.id_usuario}`}
                         className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-gray-100 dark:border-white/5 flex gap-4 items-center hover:border-primary/30 transition-all shadow-sm"
                     >
@@ -394,7 +412,7 @@ const Community = () => {
                         </div>
                         <span className="material-symbols-outlined text-slate-300">chevron_right</span>
                     </Link>
-                 ))
+                ))
                )}
             </div>
           )}
