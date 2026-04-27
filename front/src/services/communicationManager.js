@@ -524,3 +524,67 @@ export const removeAmigo = async (userId, friendId) => {
     throw error;
   }
 };
+
+// ── Listas ──
+
+export const getListas = async () => {
+  try {
+    const response = await fetch(`${API_URL}/api/listas`);
+    if (!response.ok) throw new Error("Failed to fetch Listas");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getListas:", error);
+    throw error;
+  }
+};
+
+export const getUsuarioListas = async (userId) => {
+  try {
+    const response = await fetch(`${API_URL}/api/listas/usuario/${userId}`);
+    if (!response.ok) throw new Error("Failed to fetch Usuario Listas");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getUsuarioListas:", error);
+    throw error;
+  }
+};
+
+export const getListaById = async (id) => {
+  try {
+    const response = await fetch(`${API_URL}/api/listas/${id}`);
+    if (!response.ok) throw new Error("Failed to fetch Lista");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getListaById:", error);
+    throw error;
+  }
+};
+
+export const createLista = async (listaData) => {
+  try {
+    const response = await fetch(`${API_URL}/api/listas`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(listaData),
+    });
+    if (!response.ok) throw new Error("Failed to create Lista");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in createLista:", error);
+    throw error;
+  }
+};
+
+export const deleteLista = async (id) => {
+  try {
+    const response = await fetch(`${API_URL}/api/listas/${id}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) throw new Error("Failed to delete Lista");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in deleteLista:", error);
+    throw error;
+  }
+};
+

@@ -7,14 +7,14 @@
     "days": "Days",
     "hours": "Hrs",
     "minutes": "Mins",
-    "viewSchedule": "View Schedule",
-    "liveMap": "Live Map",
-    "gpsTrack": "GPS Track Locator",
+    "viewSchedule": "View News",
+    "liveMap": "Explore Map",
+    "gpsTrack": "My Location",
     "dining": "Dining",
     "orderFood": "Order Food & Drinks",
-    "fanZone": "Fan Zone",
-    "experience": "Experience",
-    "driverQA": "Driver Q&A starting in 15 mins",
+    "fanZone": "Local Events",
+    "experience": "Routes",
+    "driverQA": "New routes added",
     "discoverNearby": "Discover Nearby",
     "seeAll": "See All",
     "groups": "Community",
@@ -46,7 +46,7 @@
     "tabs": {
       "recent": "Recent",
       "official": "Official",
-      "fanZone": "Fan Zone",
+      "fanZone": "Social",
       "popular": "Popular"
     }
   },
@@ -55,6 +55,7 @@
     "map": "Map",
     "community": "Community",
     "profile": "Profile",
+    "createList": "Create List",
     "settings": "Settings",
     "lightMode": "Light Mode",
     "darkMode": "Dark Mode"

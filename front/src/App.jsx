@@ -9,6 +9,7 @@ import Profile from "./pages/profile/Profile";
 import EditProfile from "./pages/profile/EditProfile";
 import Login from "./pages/auth/Login";
 import SignUp from "./pages/auth/SignUp";
+import CreateList from "./pages/map/CreateList";
 import { FriendsProvider } from "./context/FriendsContext";
 import QRScanner from "./components/QrScanner";
 import "./App.css";
@@ -61,6 +62,7 @@ function App() {
           <Route path="/profile/:id" element={<Profile />} />
           <Route path="/profile/edit" element={<EditProfile />} />
           <Route path="/escaneo" element={<QRScanner />} />
+          <Route path="/create-list" element={<CreateList />} />
         </Routes>
       </div>
     </FriendsProvider>

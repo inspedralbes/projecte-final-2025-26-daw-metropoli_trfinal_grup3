@@ -14,6 +14,7 @@ import weatherRoutes from "./weatherRoutes.js";
 import comunidadRoutes from "./comunidadRoutes.js";
 import uploadRoutes from "./uploadRoutes.js";
 import qrRoutes from "./qrRoutes.js";
+import listaRoutes from './listaRoutes.js';
 
 const router = express.Router();
 
@@ -32,5 +33,6 @@ router.use("/tiempo", weatherRoutes);
 router.use("/comunidad", comunidadRoutes);
 router.use("/qrs", qrRoutes);
 router.use("/upload", uploadRoutes);
+router.use("/listas", listaRoutes);
 
 export default router;

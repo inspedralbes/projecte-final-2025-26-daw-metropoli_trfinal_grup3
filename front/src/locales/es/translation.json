@@ -7,14 +7,14 @@
     "days": "Días",
     "hours": "Hrs",
     "minutes": "Mins",
-    "viewSchedule": "Ver Horario",
-    "liveMap": "Mapa en Vivo",
-    "gpsTrack": "Localizador GPS de Pista",
+    "viewSchedule": "Ver Novedades",
+    "liveMap": "Explorar Mapa",
+    "gpsTrack": "Mi Ubicación",
     "dining": "Comida",
     "orderFood": "Pedir Comida y Bebida",
-    "fanZone": "Fan Zone",
-    "experience": "Experiencia",
-    "driverQA": "Q&A con Pilotos en 15 min",
+    "fanZone": "Eventos Locales",
+    "experience": "Rutas",
+    "driverQA": "Nuevas rutas añadidas",
     "discoverNearby": "Descubrir Cerca",
     "seeAll": "Ver Todo",
     "groups": "Comunidad",
@@ -46,7 +46,7 @@
     "tabs": {
       "recent": "Recientes",
       "official": "Oficial",
-      "fanZone": "Fan Zone",
+      "fanZone": "Social",
       "popular": "Popular"
     }
   },
@@ -55,6 +55,7 @@
     "map": "Mapa",
     "community": "Comunidad",
     "profile": "Perfil",
+    "createList": "Crear Lista",
     "settings": "Ajustes",
     "lightMode": "Modo Claro",
     "darkMode": "Modo Oscuro"
@@ -103,5 +104,26 @@
     "errorName": "El nombre no puede estar vacío",
     "errorNameLong": "El nombre no puede superar 40 caracteres",
     "errorBioLong": "La biografía no puede superar 100 caracteres"
+  },
+  "createList": {
+    "title": "Crear Lista",
+    "subtitle": "Selecciona puntos en el mapa para crear tu itinerario personalizado.",
+    "map": "Mapa",
+    "satellite": "Satélite",
+    "center": "Centrar en mi ubicación",
+    "selection": "Tu Selección",
+    "pointsSelected": "puntos seleccionados",
+    "noPoints": "Aún no has seleccionado puntos...",
+    "generate": "Generar Itinerario",
+    "finishTitle": "Finalizar Lista",
+    "nameLabel": "Nombre",
+    "namePlaceholder": "Escribe un título...",
+    "descLabel": "Descripción",
+    "descPlaceholder": "¿De qué trata esta lista?",
+    "back": "Atrás",
+    "save": "Guardar y Publicar",
+    "success": "¡Lista creada con éxito!",
+    "errorMinPoints": "Selecciona al menos 2 puntos para crear una lista.",
+    "errorNoName": "Ponle un nombre a tu lista."
   }
 }

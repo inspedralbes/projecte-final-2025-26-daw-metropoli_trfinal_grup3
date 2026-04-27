@@ -41,8 +41,8 @@ const calcularScore = (distanciaMetros, esAccesible) => {
 
 const createPoiSimple = async (req, res) => {
     try {
-        const { nombre, descripcion, latitud, longitud, id_categoria, es_accesible, es_fijo, imagen_url, id_nodo_acceso } = req.body;
-        const nuevoPoi = await poiService.createPoiSimple({ nombre, descripcion, latitud, longitud, id_categoria, es_accesible, es_fijo, imagen_url, id_nodo_acceso });
+        const { nombre, descripcion, latitud, longitud, id_categoria, es_accesible, es_fijo, imagen_url, id_nodo_acceso, id_usuario, visibilidad } = req.body;
+        const nuevoPoi = await poiService.createPoiSimple({ nombre, descripcion, latitud, longitud, id_categoria, es_accesible, es_fijo, imagen_url, id_nodo_acceso, id_usuario, visibilidad });
         res.status(201).json({
             success: true,
             message: 'POI creado',
