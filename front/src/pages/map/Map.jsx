@@ -6,9 +6,9 @@ import {
   TileLayer,
   Polyline,
 } from "react-leaflet";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../../layouts/Navbar"; // Import the new Navbar component
-import { getPois, getRoute, getCategorias } from "../../services/communicationManager";
+import { getPois, getRoute, getCategorias, getListas, getNodos } from "../../services/communicationManager";
 import socket from "../../services/socketManager";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -70,6 +70,8 @@ const Map = () => {
   const [route, setRoute] = useState(null); // Array de [lat, lng] para Dijkstra Polyline
   const [distance, setDistance] = useState(null); // Distancia de la ruta
 
+  const navigate = useNavigate();
+
   useEffect(() => {
     const fetchPois = async () => {
       try {
@@ -121,18 +123,37 @@ const Map = () => {
       }
     };
 
+    const fetchUserLists = async () => {
+      try {
+        const res = await getListas();
+        if (res.success) setUserLists(res.data);
+      } catch (err) {
+        console.error("Error fetching lists:", err);
+      }
+    };
+
     fetchPois();
+    fetchUserLists();
 
     // Listen to real-time map updates from WebSockets
     socket.on('mapa_actualizado', () => {
       console.log("WebSocket Notice: Map updated! Refreshing POIs...");
       fetchPois();
+      fetchUserLists();
     });
 
     return () => {
       socket.off('mapa_actualizado');
     };
   }, []);
+
+  // Auto-locate on startup
+  useEffect(() => {
+    handleLocate();
+  }, []);
+
+  const [userLists, setUserLists] = useState([]);
+
 
   // Transformation of Dijkstra Output to Leaflet Polyline Coordinates
   const fetchRoute = async (origenId, destinoId, coords = null) => {
@@ -268,7 +289,6 @@ const Map = () => {
           zoom={17}
           minZoom={15}
           maxZoom={19}
-          maxBounds={[[41.37, 2.08], [41.40, 2.12]]}
           scrollWheelZoom={true}
           className="w-full h-full outline-none"
           zoomControl={false}
@@ -310,6 +330,7 @@ const Map = () => {
               <Polyline positions={route} color="#3b82f6" weight={6} opacity={0.9} />
             </>
           )}
+
 
           {/* Dynamic Markers rendering — si hay filtro activo, solo mostramos los de esa categoria */}
           {markers.map((marker, index) => {
@@ -358,23 +379,35 @@ const Map = () => {
             <span className="material-symbols-outlined text-white text-xl">search</span>
             <input
               className="bg-transparent border-none outline-none text-white placeholder-gray-400 w-full text-base font-medium focus:ring-0 p-0"
-              placeholder="search for something"
+              placeholder="explorar ciudad..."
               type="text"
             />
-            <button className="bg-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 ml-auto">
-               <span className="material-symbols-outlined text-black text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>near_me</span>
-            </button>
+            <div className="flex items-center gap-2 ml-auto shrink-0">
+               <button className="bg-white rounded-full w-8 h-8 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-black text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>near_me</span>
+               </button>
+            </div>
           </div>
         </div>
 
         {/* Bottom Area */}
         <div className="w-full pointer-events-auto flex flex-col items-center">
-          
+
           {/* "centrar" button */}
           <button onClick={handleLocate} className="bg-white text-black font-bold text-sm px-5 py-2.5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] flex items-center gap-2 mb-4 hover:bg-gray-100 transition-colors">
             <span className="material-symbols-outlined text-lg">my_location</span>
             centrar
           </button>
+
+          {/* Floating Action Button for Creating List - Fixed position for visibility */}
+          <div className="fixed bottom-24 right-6 z-[110] pointer-events-auto">
+            <Link
+              to="/create-list"
+              className="w-16 h-16 rounded-full flex items-center justify-center bg-pink-500 text-white shadow-[0_8px_25px_-5px_rgba(236,72,153,0.5)] hover:bg-pink-600 transition-all hover:scale-110 active:scale-95"
+            >
+              <span className="material-symbols-outlined text-4xl">add</span>
+            </Link>
+          </div>
 
           {/* Filters Bar */}
           <div className="w-full overflow-x-auto no-scrollbar px-5 mb-4">
@@ -396,17 +429,15 @@ const Map = () => {
                 <span className="material-symbols-outlined text-sm text-gray-500">local_bar</span>
                 bar
               </button>
-              <button className="bg-white text-black w-10 h-10 rounded-full flex items-center justify-center font-bold shadow-md">
-                <span className="material-symbols-outlined text-sm">add</span>
-              </button>
+
             </div>
           </div>
 
           {/* Bottom Sheet Modal */}
           <div className="w-full bg-white dark:bg-slate-900 rounded-t-[2rem] pt-2 pb-24 px-5 shadow-[0_-10px_40px_rgba(0,0,0,0.15)] relative">
-            
+
             {/* Drag Handle */}
-            <div 
+            <div
               className="w-full flex justify-center mb-2 cursor-pointer py-2"
               onClick={() => setIsSheetExpanded(!isSheetExpanded)}
             >
@@ -414,20 +445,25 @@ const Map = () => {
             </div>
 
             <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isSheetExpanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
+
               {/* Curations Section */}
               <div className="mb-8">
                 <h2 className="text-black dark:text-white font-bold text-lg mb-4 tracking-tight">curations for you</h2>
                 <div className="w-full overflow-x-auto no-scrollbar -mx-5 px-5">
                   <div className="flex gap-4 min-w-max">
-                    {curations.map(c => (
-                      <div key={c.id} className="relative w-36 h-48 rounded-2xl overflow-hidden shadow-sm">
-                        <img src={c.image} alt={c.title} className="w-full h-full object-cover" />
+                    {userLists.length > 0 ? userLists.map(c => (
+                      <div key={c.id_lista} className="relative w-36 h-48 rounded-2xl overflow-hidden shadow-sm bg-slate-100 dark:bg-slate-800">
+                        <img src={c.image || 'https://images.unsplash.com/photo-1498855926480-d98e83099315?w=300&q=80'} alt={c.nombre} className="w-full h-full object-cover" />
                         <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-3">
-                          <span className="text-white text-xs font-medium">{c.user}</span>
-                          <span className="text-white font-bold text-[15px] leading-tight mt-0.5">{c.title}</span>
+                          <span className="text-white text-[10px] font-medium opacity-70">User #{c.id_usuario}</span>
+                          <span className="text-white font-bold text-[14px] leading-tight mt-0.5">{c.nombre}</span>
                         </div>
                       </div>
-                    ))}
+                    )) : (
+                      <div className="w-full text-center py-10 text-slate-400 text-sm italic">
+                        No hay listas públicas todavía.
+                      </div>
+                    )}
                   </div>
                 </div>
               </div>

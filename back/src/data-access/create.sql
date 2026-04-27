@@ -56,9 +56,12 @@ CREATE TABLE IF NOT EXISTS pois (
     es_accesible BOOLEAN DEFAULT 0,
     es_fijo BOOLEAN DEFAULT 1,
     imagen_url VARCHAR(255),
-    id_nodo_acceso INTEGER, -- Coma añadida
-    FOREIGN KEY (id_nodo_acceso) REFERENCES nodos_navegacion(id_nodo), -- Coma añadida
-    FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
+    id_nodo_acceso INTEGER,
+    id_usuario INTEGER NULL,
+    visibilidad ENUM('public', 'friends', 'private') DEFAULT 'public',
+    FOREIGN KEY (id_nodo_acceso) REFERENCES nodos_navegacion(id_nodo),
+    FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria),
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
 );
 
 
@@ -129,4 +132,24 @@ CREATE TABLE IF NOT EXISTS qr_codes (
     activo BOOLEAN DEFAULT 1,
     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_nodo_inicio) REFERENCES nodos_navegacion(id_nodo)
+);
+
+-- 14. LISTAS DE USUARIOS
+CREATE TABLE IF NOT EXISTS listas (
+    id_lista INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    nombre VARCHAR(255) NOT NULL,
+    descripcion TEXT,
+    visibilidad ENUM('public', 'friends', 'private') DEFAULT 'private',
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
+);
+
+CREATE TABLE IF NOT EXISTS lista_pois (
+    id_lista INT NOT NULL,
+    id_poi INT NOT NULL,
+    orden INT NOT NULL,
+    PRIMARY KEY (id_lista, id_poi),
+    FOREIGN KEY (id_lista) REFERENCES listas(id_lista),
+    FOREIGN KEY (id_poi) REFERENCES pois(id_poi)
 );

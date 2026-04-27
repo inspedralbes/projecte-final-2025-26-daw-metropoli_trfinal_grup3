@@ -1,20 +1,20 @@
 {
   "home": {
-    "title": "F1 BARCELONA",
-    "liveNow": "En Directe",
-    "spanishGP": "Gran Premi d'Espanya 2026",
-    "raceWeekend": "PROPER ESDEVENIMENT",
+    "title": "METRÒPOLI",
+    "liveNow": "Explora ara",
+    "spanishGP": "La teva ciutat, al teu ritme",
+    "raceWeekend": "PUNTS DESTACATS",
     "days": "Dies",
     "hours": "Hores",
     "minutes": "Mins",
-    "viewSchedule": "Veure Horari",
-    "liveMap": "Mapa en Directe",
-    "gpsTrack": "Localitzador GPS de Pista",
+    "viewSchedule": "Veure Novetats",
+    "liveMap": "Explorar Mapa",
+    "gpsTrack": "La meva Ubicació",
     "dining": "Menjar",
     "orderFood": "Demanar Menjar i Beguda",
-    "fanZone": "Fan Zone",
-    "experience": "Experiència",
-    "driverQA": "Q&A amb Pilots en 15 min",
+    "fanZone": "Esdeveniments Locals",
+    "experience": "Rutes",
+    "driverQA": "Noves rutes afegides",
     "discoverNearby": "Descobrir a Prop",
     "seeAll": "Veure Tot",
     "groups": "Comunitat",
@@ -24,8 +24,8 @@
     "rain": "Pluja",
     "wind": "Vent",
     "quickAccess": "Accés Ràpid",
-    "trackConditions": "Condicions de Pista",
-    "openCircuitMap": "Mapa del Circuit",
+    "trackConditions": "Guia de la Ciutat",
+    "openCircuitMap": "Mapa Interactiu",
     "communityFeed": "Comunitat"
   },
   "community": {
@@ -46,7 +46,7 @@
     "tabs": {
       "recent": "Recents",
       "official": "Oficial",
-      "fanZone": "Fan Zone",
+      "fanZone": "Social",
       "popular": "Popular"
     }
   },
@@ -55,6 +55,7 @@
     "map": "Mapa",
     "community": "Comunitat",
     "profile": "Perfil",
+    "createList": "Crear Llista",
     "settings": "Configuració",
     "lightMode": "Mode Clar",
     "darkMode": "Mode Fosc"

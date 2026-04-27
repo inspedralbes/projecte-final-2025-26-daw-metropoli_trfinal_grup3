@@ -1,20 +1,20 @@
 {
   "home": {
-    "title": "F1 BARCELONA",
-    "liveNow": "En Vivo",
-    "spanishGP": "Gran Premio de España 2026",
-    "raceWeekend": "PRÓXIMO EVENTO",
+    "title": "METRÓPOLI",
+    "liveNow": "Explora ahora",
+    "spanishGP": "Tu ciudad, a tu ritmo",
+    "raceWeekend": "PUNTOS DESTACADOS",
     "days": "Días",
     "hours": "Hrs",
     "minutes": "Mins",
-    "viewSchedule": "Ver Horario",
-    "liveMap": "Mapa en Vivo",
-    "gpsTrack": "Localizador GPS de Pista",
+    "viewSchedule": "Ver Novedades",
+    "liveMap": "Explorar Mapa",
+    "gpsTrack": "Mi Ubicación",
     "dining": "Comida",
     "orderFood": "Pedir Comida y Bebida",
-    "fanZone": "Fan Zone",
-    "experience": "Experiencia",
-    "driverQA": "Q&A con Pilotos en 15 min",
+    "fanZone": "Eventos Locales",
+    "experience": "Rutas",
+    "driverQA": "Nuevas rutas añadidas",
     "discoverNearby": "Descubrir Cerca",
     "seeAll": "Ver Todo",
     "groups": "Comunidad",
@@ -24,8 +24,8 @@
     "rain": "Lluvia",
     "wind": "Viento",
     "quickAccess": "Acceso Rápido",
-    "trackConditions": "Condiciones de Pista",
-    "openCircuitMap": "Mapa del Circuito",
+    "trackConditions": "Guía de la Ciudad",
+    "openCircuitMap": "Mapa Interactivo",
     "communityFeed": "Comunidad"
   },
   "community": {
@@ -46,7 +46,7 @@
     "tabs": {
       "recent": "Recientes",
       "official": "Oficial",
-      "fanZone": "Fan Zone",
+      "fanZone": "Social",
       "popular": "Popular"
     }
   },
@@ -55,6 +55,7 @@
     "map": "Mapa",
     "community": "Comunidad",
     "profile": "Perfil",
+    "createList": "Crear Lista",
     "settings": "Ajustes",
     "lightMode": "Modo Claro",
     "darkMode": "Modo Oscuro"
@@ -73,7 +74,7 @@
     "privacySecurity": "Privacidad y Seguridad",
     "helpSupport": "Ayuda y Soporte",
     "logout": "Cerrar Sesión",
-    "footerApp": "App Circuit de Barcelona-Catalunya",
+    "footerApp": "Metropoli - Explorador de Ciudad",
     "footerVersion": "Versión 1.0.0 (Build 2026.05)"
   },
   "profile": {
@@ -101,5 +102,26 @@
     "errorName": "El nombre no puede estar vacío",
     "errorNameLong": "El nombre no puede superar 40 caracteres",
     "errorBioLong": "La biografía no puede superar 100 caracteres"
+  },
+  "createList": {
+    "title": "Crear Lista",
+    "subtitle": "Selecciona puntos en el mapa para crear tu itinerario personalizado.",
+    "map": "Mapa",
+    "satellite": "Satélite",
+    "center": "Centrar en mi ubicación",
+    "selection": "Tu Selección",
+    "pointsSelected": "puntos seleccionados",
+    "noPoints": "Aún no has seleccionado puntos...",
+    "generate": "Generar Itinerario",
+    "finishTitle": "Finalizar Lista",
+    "nameLabel": "Nombre",
+    "namePlaceholder": "Escribe un título...",
+    "descLabel": "Descripción",
+    "descPlaceholder": "¿De qué trata esta lista?",
+    "back": "Atrás",
+    "save": "Guardar y Publicar",
+    "success": "¡Lista creada con éxito!",
+    "errorMinPoints": "Selecciona al menos 2 puntos para crear una lista.",
+    "errorNoName": "Ponle un nombre a tu lista."
   }
 }

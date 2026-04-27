@@ -1,20 +1,20 @@
 {
   "home": {
-    "title": "F1 BARCELONA",
-    "liveNow": "Live Now",
-    "spanishGP": "Spanish Grand Prix 2026",
-    "raceWeekend": "NEXT EVENT",
+    "title": "METROPOLI",
+    "liveNow": "Explore Now",
+    "spanishGP": "Your city, your way",
+    "raceWeekend": "HIGHLIGHTS",
     "days": "Days",
     "hours": "Hrs",
     "minutes": "Mins",
-    "viewSchedule": "View Schedule",
-    "liveMap": "Live Map",
-    "gpsTrack": "GPS Track Locator",
+    "viewSchedule": "View News",
+    "liveMap": "Explore Map",
+    "gpsTrack": "My Location",
     "dining": "Dining",
     "orderFood": "Order Food & Drinks",
-    "fanZone": "Fan Zone",
-    "experience": "Experience",
-    "driverQA": "Driver Q&A starting in 15 mins",
+    "fanZone": "Local Events",
+    "experience": "Routes",
+    "driverQA": "New routes added",
     "discoverNearby": "Discover Nearby",
     "seeAll": "See All",
     "groups": "Community",
@@ -24,8 +24,8 @@
     "rain": "Rain",
     "wind": "Wind",
     "quickAccess": "Quick Access",
-    "trackConditions": "Track Conditions",
-    "openCircuitMap": "Open Circuit Map",
+    "trackConditions": "City Guide",
+    "openCircuitMap": "Interactive Map",
     "communityFeed": "Community Feed"
   },
   "community": {
@@ -46,7 +46,7 @@
     "tabs": {
       "recent": "Recent",
       "official": "Official",
-      "fanZone": "Fan Zone",
+      "fanZone": "Social",
       "popular": "Popular"
     }
   },
@@ -55,6 +55,7 @@
     "map": "Map",
     "community": "Community",
     "profile": "Profile",
+    "createList": "Create List",
     "settings": "Settings",
     "lightMode": "Light Mode",
     "darkMode": "Dark Mode"
@@ -72,7 +73,7 @@
     "paymentMethods": "Payment Methods",
     "helpSupport": "Help & Support",
     "logout": "Log Out",
-    "footerApp": "Circuit de Barcelona-Catalunya App",
+    "footerApp": "Metropoli - City Explorer App",
     "footerVersion": "Version 1.0.0 (Build 2026.05)"
   },
   "profile": {
@@ -82,5 +83,26 @@
     "friendsList": "My Friends",
     "recentPosts": "Recent Activity",
     "yourAchievements": "Badges & Awards"
+  },
+  "createList": {
+    "title": "Create List",
+    "subtitle": "Select points on the map to create your custom itinerary.",
+    "map": "Map",
+    "satellite": "Satellite",
+    "center": "Center on my location",
+    "selection": "Your Selection",
+    "pointsSelected": "points selected",
+    "noPoints": "You haven't selected any points yet...",
+    "generate": "Generate Itinerary",
+    "finishTitle": "Finish List",
+    "nameLabel": "Name",
+    "namePlaceholder": "Write a title...",
+    "descLabel": "Description",
+    "descPlaceholder": "What is this list about?",
+    "back": "Back",
+    "save": "Save & Publish",
+    "success": "List created successfully!",
+    "errorMinPoints": "Select at least 2 points to create a list.",
+    "errorNoName": "Please give your list a name."
   }
 }

@@ -22,6 +22,9 @@ services:
             - node_modules/
         - action: rebuild
           path: ./back/package.json
+    volumes:
+      - ./back:/app
+      - /app/node_modules
     command: npm run dev
     depends_on:
       db:
@@ -50,6 +53,9 @@ services:
             - node_modules/
         - action: rebuild
           path: ./front/package.json
+    volumes:
+      - ./front:/app
+      - /app/node_modules
     depends_on:
       - backend
     networks:
@@ -69,8 +75,7 @@ services:
       - ./back/src/data-access/init.sql:/docker-entrypoint-initdb.d/b_init.sql
       - ./back/src/data-access/test_navigation_data.sql:/docker-entrypoint-initdb.d/z_test_navigation_data.sql
     healthcheck:
-      test:
-        ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u${DB_USER}", "-p${MYSQL_ROOT_PASSWORD}"]
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u${DB_USER}", "-p${MYSQL_ROOT_PASSWORD}" ]
       interval: 5s
       timeout: 5s
       retries: 10
@@ -91,7 +96,6 @@ services:
         condition: service_healthy
     networks:
       - app-network
-
   # ⚠️ Contenedor mongo local ELIMINADO — ahora usamos MongoDB Atlas (ver .env)
 
 networks:

@@ -5,6 +5,7 @@ import { useTranslation } from "react-i18next";
 const navItems = [
   { to: "/home", icon: "home", labelKey: "home" },
   { to: "/", icon: "map", labelKey: "map" },
+  { to: "/create-list", icon: "add_circle", labelKey: "createList" },
   { to: "/community", icon: "groups", labelKey: "community" },
   { to: "/profile", icon: "person", labelKey: "profile" },
 ];
