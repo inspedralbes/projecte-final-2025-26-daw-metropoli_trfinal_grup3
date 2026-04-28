@@ -60,4 +60,4 @@ Ahora puedes gestionar el proyecto fácilmente usando scripts de Node/NPM desde 
 # Aquest fitxer ha de contenir com a mínim:
 
 - Petita descripció
-- URL de producció (quan la tingueu)
+- URL de producció (quan la tingueu).
