@@ -1,0 +1,65 @@
+{
+  "changeName": "add-collections-screen",
+  "changeDir": "/Users/paulavera/Desktop/Programacion/projecte-final-2025-26-daw-metropoli_trfinal_grup3/openspec/changes/add-collections-screen",
+  "schemaName": "spec-driven",
+  "contextFiles": {
+    "proposal": "/Users/paulavera/Desktop/Programacion/projecte-final-2025-26-daw-metropoli_trfinal_grup3/openspec/changes/add-collections-screen/proposal.md",
+    "specs": "/Users/paulavera/Desktop/Programacion/projecte-final-2025-26-daw-metropoli_trfinal_grup3/openspec/changes/add-collections-screen/specs/**/*.md",
+    "design": "/Users/paulavera/Desktop/Programacion/projecte-final-2025-26-daw-metropoli_trfinal_grup3/openspec/changes/add-collections-screen/design.md",
+    "tasks": "/Users/paulavera/Desktop/Programacion/projecte-final-2025-26-daw-metropoli_trfinal_grup3/openspec/changes/add-collections-screen/tasks.md"
+  },
+  "progress": {
+    "total": 9,
+    "complete": 0,
+    "remaining": 9
+  },
+  "tasks": [
+    {
+      "id": "1",
+      "description": "1.1 Create mock static data array for the routes (id, title, location, image, etc.)",
+      "done": false
+    },
+    {
+      "id": "2",
+      "description": "1.2 Add translation strings for \"Rutes\" and placeholder texts to i18n localization files",
+      "done": false
+    },
+    {
+      "id": "3",
+      "description": "2.1 Create new `Collections.jsx` screen component",
+      "done": false
+    },
+    {
+      "id": "4",
+      "description": "2.2 Implement the localized \"Rutes\" header and search bar within the screen",
+      "done": false
+    },
+    {
+      "id": "5",
+      "description": "2.3 Implement the route cards design (rectangular, wider than tall, dark mode compatible)",
+      "done": false
+    },
+    {
+      "id": "6",
+      "description": "2.4 Add non-functional pencil edit button to each card",
+      "done": false
+    },
+    {
+      "id": "7",
+      "description": "2.5 Implement state-based search filtering logic to filter cards by name",
+      "done": false
+    },
+    {
+      "id": "8",
+      "description": "3.1 Register the `/colections` route in the application router",
+      "done": false
+    },
+    {
+      "id": "9",
+      "description": "3.2 Update `Navbar.jsx` (or main layout) to replace the profile link on the icon button with a link to `/colections`",
+      "done": false
+    }
+  ],
+  "state": "ready",
+  "instruction": "Read context files, work through pending tasks, mark complete as you go.\nPause if you hit blockers or need clarification."
+}

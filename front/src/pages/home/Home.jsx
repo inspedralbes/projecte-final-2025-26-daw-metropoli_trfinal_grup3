@@ -2,14 +2,12 @@ import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Navbar from "../../layouts/Navbar";
-import UserAvatar from "../../components/UserAvatar";
+import Header from "../../layouts/Header";
 
 const Home = () => {
   const { t } = useTranslation();
   const storedUser = localStorage.getItem("usuario");
   const user = storedUser ? JSON.parse(storedUser) : null;
-
-
 
   const categories = [
     { id: 1, name: "Bares", image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=100&q=80", active: true },
@@ -85,26 +83,10 @@ const Home = () => {
   return (
     <div className="relative min-h-screen w-full bg-[#f0f4f9] dark:bg-slate-950 text-[#1a1a1a] dark:text-white font-display overflow-x-hidden pb-32 transition-colors duration-300">
       
-      {/* Header Section */}
-      <header className="pt-12 px-6 flex justify-between items-start">
-        <div className="space-y-1">
-          <h1 className="text-[32px] leading-[1.1] font-medium tracking-tight">
-            Descobreix la ciutat <br />
-            <span className="italic font-normal">amb nosaltres!</span>
-          </h1>
-        </div>
-        <div className="flex flex-col gap-3 items-end">
-          <Link to="/profile">
-            <UserAvatar user={user} className="w-12 h-12" />
-          </Link>
-          <button className="w-10 h-10 rounded-full border border-gray-300 dark:border-white/20 flex items-center justify-center bg-white/50 dark:bg-white/5 backdrop-blur-sm">
-            <span className="material-symbols-outlined text-gray-600 dark:text-white text-xl">menu</span>
-          </button>
-        </div>
-      </header>
+      <Header />
 
       {/* Search Bar */}
-      <section className="mt-8 px-6">
+      <section className="mt-8 px-6 pt-24">
         <div className="flex items-center gap-3 border-b border-gray-300 dark:border-white/20 pb-2">
           <span className="material-symbols-outlined text-gray-400">search</span>
           <input 

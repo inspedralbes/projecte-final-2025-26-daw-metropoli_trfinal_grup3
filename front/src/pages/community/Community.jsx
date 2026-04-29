@@ -2,6 +2,7 @@ import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Navbar from "../../layouts/Navbar";
+import Header from "../../layouts/Header";
 import {
   getPublicaciones,
   createPublicacion,
@@ -125,7 +126,7 @@ const PostCard = ({ pub, onComentarioCreado }) => {
   const hasImage = !!pub.foto;
 
   return (
-    <article className="bg-white dark:bg-slate-900 rounded-[2rem] border border-gray-100 dark:border-white/5 shadow-sm overflow-hidden mb-6 transition-all hover:shadow-md">
+    <article className="bg-white dark:bg-slate-950 rounded-[2rem] border border-gray-100 dark:border-white/5 shadow-sm overflow-hidden mb-6 transition-all hover:shadow-md">
       <div className="p-5 flex items-center justify-between">
         <div className="flex items-center gap-3">
           <Link to={`/profile/${pub.id_usuario}`}>
@@ -133,9 +134,11 @@ const PostCard = ({ pub, onComentarioCreado }) => {
           </Link>
           <div>
             <Link to={`/profile/${pub.id_usuario}`}>
-              <h4 className="text-sm font-bold text-slate-800 dark:text-white leading-none hover:text-primary transition-colors">{pub.nombre_usuario}</h4>
+              <h4 className="text-sm font-bold text-slate-800 dark:text-white leading-none hover:text-primary transition-colors tracking-tight">
+                {pub.nombre_usuario}
+              </h4>
             </Link>
-            <span className="text-[10px] text-slate-400 uppercase tracking-widest">{formatDate(pub.createdAt)}</span>
+            <span className="text-[10px] text-slate-400 uppercase tracking-widest font-medium">{formatDate(pub.createdAt)}</span>
           </div>
         </div>
         <span className="px-3 py-1 bg-gray-50 dark:bg-white/5 rounded-full text-[10px] font-bold text-slate-500 uppercase tracking-widest">
@@ -290,26 +293,16 @@ const Community = () => {
   };
 
   return (
-    <div className="min-h-screen w-full bg-[#f8fafc] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display transition-colors duration-300 pb-32">
+    <div className="relative min-h-screen w-full bg-[#f0f4f9] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display transition-colors duration-300 pb-32">
       
-      {/* ─── Premium Header ─── */}
-      <div className="sticky top-0 z-50 px-6 pt-10 pb-4 bg-[#f8fafc]/80 dark:bg-slate-950/80 backdrop-blur-xl border-b border-gray-100 dark:border-white/5">
-        <div className="max-w-4xl mx-auto flex flex-col gap-4">
-          <div className="flex justify-between items-center">
-            <h1 className="text-2xl font-black tracking-tight text-slate-900 dark:text-white uppercase italic">Comunitat</h1>
-            <div className="flex items-center gap-3">
-              <button 
-                onClick={() => setView(view === "activity" ? "feed" : "activity")}
-                className={`w-10 h-10 rounded-full flex items-center justify-center transition-all ${view === "activity" ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/30" : "bg-white dark:bg-slate-900 text-slate-400 border border-gray-100 dark:border-white/5"}`}
-              >
-                <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: view === "activity" ? "'FILL' 1" : "'FILL' 0" }}>bolt</span>
-              </button>
-              <Link to="/profile">
-                <UserAvatar user={usuarioLogged} className="w-10 h-10" borderColor="border-primary" />
-              </Link>
-            </div>
-          </div>
+      <Header />
 
+      {/* Spacer to avoid overlap with absolute Header */}
+      <div className="pt-24"></div>
+
+      <div className="sticky top-0 z-40 px-6 pt-4 pb-4 bg-[#f0f4f9]/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-gray-100 dark:border-white/5">
+        <div className="max-w-4xl mx-auto flex flex-col gap-6">
+          
           {/* Search Bar */}
           <div className="relative group">
             <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">search</span>
@@ -318,8 +311,26 @@ const Community = () => {
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
               placeholder="Busca amics o llistes..."
-              className="w-full bg-white dark:bg-slate-900 border border-gray-100 dark:border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm group-focus-within:shadow-md"
+              className="w-full bg-white dark:bg-slate-950 border border-gray-100 dark:border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm group-focus-within:shadow-md font-display"
             />
+          </div>
+
+          {/* Filter Pills */}
+          <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
+            <button 
+              onClick={() => setView("feed")}
+              className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium tracking-tight transition-all border ${view === "feed" ? "bg-black dark:bg-white text-white dark:text-black border-transparent shadow-md" : "bg-white dark:bg-slate-950 text-slate-400 border-gray-100 dark:border-white/5 hover:border-gray-200"}`}
+            >
+              <span className="material-symbols-outlined text-sm">groups</span>
+              Comunitat
+            </button>
+            <button 
+              onClick={() => setView("activity")}
+              className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium tracking-tight transition-all border ${view === "activity" ? "bg-indigo-500 text-white border-transparent shadow-lg shadow-indigo-500/20" : "bg-white dark:bg-slate-950 text-slate-400 border-gray-100 dark:border-white/5 hover:border-gray-200"}`}
+            >
+              <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: view === "activity" ? "'FILL' 1" : "'FILL' 0" }}>bolt</span>
+              Recents
+            </button>
           </div>
         </div>
       </div>
@@ -368,9 +379,9 @@ const Community = () => {
 
           {view === "activity" && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-500 space-y-4">
-              <h3 className="text-xl font-black text-indigo-500 italic mb-6">Activitat Recent</h3>
+              <h3 className="text-xl font-bold tracking-tight text-indigo-500 mb-6">Activitat Recent</h3>
               {actividad.map((act, i) => (
-                <div key={i} className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-gray-100 dark:border-white/5 flex gap-4 items-center shadow-sm">
+                <div key={i} className="bg-white dark:bg-slate-950 p-4 rounded-2xl border border-gray-100 dark:border-white/5 flex gap-4 items-center shadow-sm">
                   <Link to={`/profile/${act.id_usuario}`}>
                     <UserAvatar user={{ foto: act.foto, nombre: act.usuario }} className="w-10 h-10" />
                   </Link>
@@ -390,7 +401,7 @@ const Community = () => {
 
           {view === "search" && (
             <div className="animate-in fade-in zoom-in-95 duration-300 space-y-4">
-               <h3 className="text-xs font-black uppercase tracking-widest text-slate-400 mb-6">Resultats per a "{searchQuery}"</h3>
+               <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Resultats per a "{searchQuery}"</h3>
                {searchResults.length === 0 ? (
                  <div className="text-center py-20 opacity-30">No s'han trobat usuaris</div>
                ) : (
@@ -398,7 +409,7 @@ const Community = () => {
                     <Link 
                         key={user.id_usuario || user.id || idx}
                         to={`/profile/${user.id_usuario}`}
-                        className="bg-white dark:bg-slate-900 p-4 rounded-2xl border border-gray-100 dark:border-white/5 flex gap-4 items-center hover:border-primary/30 transition-all shadow-sm"
+                        className="bg-white dark:bg-slate-950 p-4 rounded-2xl border border-gray-100 dark:border-white/5 flex gap-4 items-center hover:border-primary/30 transition-all shadow-sm"
                     >
                         <UserAvatar user={user} className="w-12 h-12" />
                         <div className="flex-1">
@@ -417,7 +428,7 @@ const Community = () => {
       {/* FAB - Add Post */}
       <button 
         onClick={() => setShowPostModal(true)}
-        className="fixed bottom-24 right-6 w-14 h-14 bg-slate-900 dark:bg-white text-white dark:text-slate-900 rounded-full flex items-center justify-center shadow-2xl z-40 hover:scale-110 active:scale-95 transition-all"
+        className="fixed bottom-24 right-6 w-14 h-14 bg-slate-950 dark:bg-white text-white dark:text-slate-950 rounded-full flex items-center justify-center shadow-2xl z-40 hover:scale-110 active:scale-95 transition-all"
       >
         <span className="material-symbols-outlined text-3xl">add</span>
       </button>
@@ -425,9 +436,9 @@ const Community = () => {
       {/* New Post Modal */}
       {showPostModal && (
         <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowPostModal(false)}>
-          <div className="w-full md:max-w-lg bg-white dark:bg-slate-900 rounded-[2.5rem] p-8 animate-in slide-in-from-bottom duration-300" onClick={e => e.stopPropagation()}>
+          <div className="w-full md:max-w-lg bg-white dark:bg-slate-950 rounded-[2.5rem] p-8 animate-in slide-in-from-bottom duration-300" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-black tracking-tight italic">Nova Publicació</h2>
+                <h2 className="text-xl font-bold tracking-tight">Nova Publicació</h2>
                 <button onClick={() => setShowPostModal(false)} className="text-slate-400"><span className="material-symbols-outlined">close</span></button>
             </div>
             <textarea 

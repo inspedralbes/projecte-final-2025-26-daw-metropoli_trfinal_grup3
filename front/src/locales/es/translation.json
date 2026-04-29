@@ -58,7 +58,14 @@
     "createList": "Crear Lista",
     "settings": "Ajustes",
     "lightMode": "Modo Claro",
-    "darkMode": "Modo Oscuro"
+    "darkMode": "Modo Oscuro",
+    "collections": "Rutas"
+  },
+  "collections": {
+    "title": "Rutas",
+    "search": "Buscar algo...",
+    "nearby": "Destinos Cercanos",
+    "viewAll": "Ver Todo"
   },
   "settings": {
     "title": "Ajustes",

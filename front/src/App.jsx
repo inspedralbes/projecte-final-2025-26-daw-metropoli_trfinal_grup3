@@ -9,10 +9,11 @@ import Profile from "./pages/profile/Profile";
 import EditProfile from "./pages/profile/EditProfile";
 import Login from "./pages/auth/Login";
 import SignUp from "./pages/auth/SignUp";
-import CreateList from "./pages/map/CreateList";
 import { FriendsProvider } from "./context/FriendsContext";
 import QRScanner from "./components/QrScanner";
 import CircuitScannerPage from "./pages/CircuitScanner";
+import CreateList from "./pages/map/CreateList";
+import Collections from "./pages/collections/Collections";
 import "./App.css";
 
 function App() {
@@ -62,8 +63,7 @@ function App() {
           <Route path="/profile" element={<Profile />} />
           <Route path="/profile/:id" element={<Profile />} />
           <Route path="/profile/edit" element={<EditProfile />} />
-          <Route path="/escaneo" element={<CircuitScannerPage />} />
-          <Route path="/create-list" element={<CreateList />} />
+          <Route path="/escaneo" element={<QRScanner />} />
         </Routes>
       </div>
     </FriendsProvider>
