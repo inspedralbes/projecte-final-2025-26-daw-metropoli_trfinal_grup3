@@ -20,4 +20,7 @@ router.post('/:id/imagen', upload.single('imagenPoi'), poiController.uploadPoiIm
 // Eliminar un POI
 router.delete('/:id', poiController.deletePoi);
 
+// Actualizar un POI
+router.put('/:id', poiController.updatePoi);
+
 export default router;

@@ -27,6 +27,15 @@ const calcularRuta = async (req, res) => {
             });
         }
         
+        if (ruta && ruta.success === false) {
+            return res.json({
+                success: false,
+                message: ruta.message,
+                error_code: ruta.error,
+                data: null
+            });
+        }
+
         res.json({
             success: true,
             message: 'Ruta calculada con éxito',
