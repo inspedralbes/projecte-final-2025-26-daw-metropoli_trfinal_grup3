@@ -123,6 +123,7 @@
     "back": "Atrás",
     "save": "Guardar y Publicar",
     "success": "¡Lista creada con éxito!",
+    "noDesc": "Sin descripción disponible.",
     "errorMinPoints": "Selecciona al menos 2 puntos para crear una lista.",
     "errorNoName": "Ponle un nombre a tu lista."
   }

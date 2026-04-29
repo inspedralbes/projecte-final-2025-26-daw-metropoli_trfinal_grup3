@@ -37,7 +37,21 @@ export const deletePoi = async (id) => {
     if (!response.ok) throw new Error("Failed to delete POI");
     return await response.json();
   } catch (error) {
-    console.error("Error in deletePoi:", error);
+    throw error;
+  }
+};
+
+export const updatePoi = async (id, poiData) => {
+  try {
+    const response = await fetch(`${API_URL}/api/pois/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(poiData),
+    });
+    if (!response.ok) throw new Error("Failed to update POI");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in updatePoi:", error);
     throw error;
   }
 };
@@ -584,6 +598,21 @@ export const deleteLista = async (id) => {
     return await response.json();
   } catch (error) {
     console.error("Error in deleteLista:", error);
+    throw error;
+  }
+};
+
+export const updateLista = async (id, listaData) => {
+  try {
+    const response = await fetch(`${API_URL}/api/listas/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(listaData),
+    });
+    if (!response.ok) throw new Error("Failed to update Lista");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in updateLista:", error);
     throw error;
   }
 };

@@ -41,8 +41,8 @@ CREATE TABLE IF NOT EXISTS rutas_tramos (
     distancia_metros DECIMAL(10, 2),
     es_accesible BOOLEAN DEFAULT 1,
     tipo_terreno VARCHAR(50) DEFAULT 'asfalto',
-    FOREIGN KEY (id_nodo_origen) REFERENCES nodos_navegacion(id_nodo),
-    FOREIGN KEY (id_nodo_destino) REFERENCES nodos_navegacion(id_nodo)
+    FOREIGN KEY (id_nodo_origen) REFERENCES nodos_navegacion(id_nodo) ON DELETE CASCADE,
+    FOREIGN KEY (id_nodo_destino) REFERENCES nodos_navegacion(id_nodo) ON DELETE CASCADE
 );
 
 -- 6. POIS (Ahora sí, porque Nodos y Categorías ya existen)
@@ -59,9 +59,9 @@ CREATE TABLE IF NOT EXISTS pois (
     id_nodo_acceso INTEGER,
     id_usuario INTEGER NULL,
     visibilidad ENUM('public', 'friends', 'private') DEFAULT 'public',
-    FOREIGN KEY (id_nodo_acceso) REFERENCES nodos_navegacion(id_nodo),
-    FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria),
-    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
+    FOREIGN KEY (id_nodo_acceso) REFERENCES nodos_navegacion(id_nodo) ON DELETE SET NULL,
+    FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria) ON DELETE CASCADE,
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE
 );
 
 
@@ -73,7 +73,7 @@ CREATE TABLE IF NOT EXISTS poi_multimedia (
     tipo VARCHAR(20) DEFAULT 'imagen',
     titulo VARCHAR(100),
     orden INTEGER DEFAULT 0,
-    FOREIGN KEY (id_poi) REFERENCES pois(id_poi)
+    FOREIGN KEY (id_poi) REFERENCES pois(id_poi) ON DELETE CASCADE
 );
 
 -- 10. INCIDENCIAS (Depende de Pois y Usuarios)
@@ -85,8 +85,8 @@ CREATE TABLE IF NOT EXISTS incidencias (
     descripcion TEXT,
     fecha_reporte DATETIME DEFAULT CURRENT_TIMESTAMP,
     estado VARCHAR(20) DEFAULT 'activa',
-    FOREIGN KEY (id_poi) REFERENCES pois(id_poi),
-    FOREIGN KEY (id_usuario_reporta) REFERENCES usuario(id_usuario)
+    FOREIGN KEY (id_poi) REFERENCES pois(id_poi) ON DELETE CASCADE,
+    FOREIGN KEY (id_usuario_reporta) REFERENCES usuario(id_usuario) ON DELETE CASCADE
 );
 
 -- 11. TRADUCCIONES (Independiente lógicamente, referencialmente débil)
@@ -131,10 +131,13 @@ CREATE TABLE IF NOT EXISTS qr_codes (
     ruta_archivo_qr VARCHAR(255) NOT NULL,
     activo BOOLEAN DEFAULT 1,
     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_nodo_inicio) REFERENCES nodos_navegacion(id_nodo)
+    FOREIGN KEY (id_nodo_inicio) REFERENCES nodos_navegacion(id_nodo) ON DELETE CASCADE
 );
 
 -- 14. LISTAS DE USUARIOS
+-- Eliminamos la tabla multimedia duplicada si existía y usamos poi_multimedia
+-- (ya incluida arriba)
+
 CREATE TABLE IF NOT EXISTS listas (
     id_lista INT AUTO_INCREMENT PRIMARY KEY,
     id_usuario INT NOT NULL,
@@ -142,14 +145,14 @@ CREATE TABLE IF NOT EXISTS listas (
     descripcion TEXT,
     visibilidad ENUM('public', 'friends', 'private') DEFAULT 'private',
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario)
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE
 );
 
 CREATE TABLE IF NOT EXISTS lista_pois (
     id_lista INT NOT NULL,
     id_poi INT NOT NULL,
     orden INT NOT NULL,
-    PRIMARY KEY (id_lista, id_poi),
-    FOREIGN KEY (id_lista) REFERENCES listas(id_lista),
-    FOREIGN KEY (id_poi) REFERENCES pois(id_poi)
+    PRIMARY KEY (id_lista, id_poi), 
+    FOREIGN KEY (id_lista) REFERENCES listas(id_lista) ON DELETE CASCADE,
+    FOREIGN KEY (id_poi) REFERENCES pois(id_poi) ON DELETE CASCADE
 );

@@ -27,7 +27,14 @@ const createLista = async (req, res) => {
 const getPublicListas = async (req, res) => {
     try {
         const listas = await listaModel.getPublicListas();
-        res.json({ success: true, data: listas });
+        
+        // Adjuntamos los POIs a cada lista
+        const listasConPois = await Promise.all(listas.map(async (lista) => {
+            const pois = await listaModel.getPoisByListaId(lista.id_lista);
+            return { ...lista, pois };
+        }));
+
+        res.json({ success: true, data: listasConPois });
     } catch (error) {
         console.error('Error in getPublicListas:', error);
         res.status(500).json({ success: false, message: 'Error al obtener las listas' });
@@ -73,10 +80,33 @@ const deleteLista = async (req, res) => {
     }
 };
 
+const updateLista = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nombre, descripcion, visibilidad, pois } = req.body;
+
+        await listaModel.update(id, { nombre, descripcion, visibilidad });
+
+        if (pois && Array.isArray(pois)) {
+            // Limpiamos los POIs actuales y añadimos los nuevos para actualizar la ruta
+            await listaModel.removeAllPoisFromLista(id);
+            for (let i = 0; i < pois.length; i++) {
+                await listaModel.addPoiToLista(id, pois[i].id_poi || pois[i], i + 1);
+            }
+        }
+
+        res.json({ success: true, message: 'Lista actualizada correctamente' });
+    } catch (error) {
+        console.error('Error in updateLista:', error);
+        res.status(500).json({ success: false, message: 'Error al actualizar la lista' });
+    }
+};
+
 export default {
     createLista,
     getPublicListas,
     getListaById,
     getUsuarioListas,
-    deleteLista
+    deleteLista,
+    updateLista
 };
