@@ -57,7 +57,14 @@
     "profile": "Profil",
     "settings": "Paramètres",
     "lightMode": "Mode Clair",
-    "darkMode": "Mode Sombre"
+    "darkMode": "Mode Sombre",
+    "collections": "Itinéraires"
+  },
+  "collections": {
+    "title": "Itinéraires",
+    "search": "Rechercher quelque chose...",
+    "nearby": "Destinations à Proximité",
+    "viewAll": "Voir Tout"
   },
   "settings": {
     "title": "Paramètres",

@@ -57,7 +57,14 @@
     "profile": "Profile",
     "settings": "Settings",
     "lightMode": "Light Mode",
-    "darkMode": "Dark Mode"
+    "darkMode": "Dark Mode",
+    "collections": "Routes"
+  },
+  "collections": {
+    "title": "Routes",
+    "search": "Search something...",
+    "nearby": "Nearby Destination",
+    "viewAll": "View All"
   },
   "settings": {
     "title": "Settings",

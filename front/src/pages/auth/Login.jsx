@@ -103,7 +103,7 @@ const Login = () => {
         <div className="flex flex-col items-center text-center space-y-4">
           <i className="fa-solid fa-location-dot text-5xl opacity-20" style={{ color: 'rgb(254, 254, 254)' }}></i>
           <div className="space-y-1">
-            <h1 className="text-4xl font-medium tracking-tighter"> Georutes </h1>
+            <h1 className="text-4xl font-medium tracking-tighter">wemap</h1>
             <p className="text-gray-400 font-medium tracking-tight">Entra per continuar explorant</p>
           </div>
         </div>

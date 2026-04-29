@@ -8,6 +8,7 @@ import {
 } from "react-leaflet";
 import { Link } from "react-router-dom";
 import Navbar from "../../layouts/Navbar"; // Import the new Navbar component
+import Header from "../../layouts/Header"; // Import the global header
 import { getPois, getRoute, getCategorias } from "../../services/communicationManager";
 import socket from "../../services/socketManager";
 import "leaflet/dist/leaflet.css";
@@ -350,21 +351,10 @@ const Map = () => {
       </div>
 
       {/* UI Overlay */}
+      <Header />
       <div className="absolute inset-0 z-30 pointer-events-none flex flex-col justify-between">
-        {/* Top Area */}
-        <div className="w-full pt-12 px-5 pointer-events-auto flex flex-col items-center gap-4">
-          {/* Search Bar */}
-          <div className="w-full max-w-md bg-[#1a1a1a] rounded-[2rem] flex items-center px-5 py-4 gap-3 shadow-xl border border-gray-800">
-            <span className="material-symbols-outlined text-white text-xl">search</span>
-            <input
-              className="bg-transparent border-none outline-none text-white placeholder-gray-400 w-full text-base font-medium focus:ring-0 p-0"
-              placeholder="search for something"
-              type="text"
-            />
-            <button className="bg-white rounded-full w-8 h-8 flex items-center justify-center flex-shrink-0 ml-auto">
-               <span className="material-symbols-outlined text-black text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>near_me</span>
-            </button>
-          </div>
+        {/* Top Area — empty, header is handled by fixed Header component */}
+        <div className="w-full pt-32 px-5 pointer-events-auto flex flex-col items-center gap-4">
         </div>
 
         {/* Bottom Area */}
@@ -403,14 +393,14 @@ const Map = () => {
           </div>
 
           {/* Bottom Sheet Modal */}
-          <div className="w-full bg-white dark:bg-slate-900 rounded-t-[2rem] pt-2 pb-24 px-5 shadow-[0_-10px_40px_rgba(0,0,0,0.15)] relative">
+          <div className="w-full bg-white/90 dark:bg-black/90 rounded-t-[2rem] pt-1 pb-24 px-5 shadow-[0_-10px_40px_rgba(0,0,0,0.15)] relative backdrop-blur-lg">
             
             {/* Drag Handle */}
             <div 
-              className="w-full flex justify-center mb-2 cursor-pointer py-2"
+              className="w-full flex justify-center cursor-pointer py-1.5"
               onClick={() => setIsSheetExpanded(!isSheetExpanded)}
             >
-              <div className="w-12 h-1.5 bg-gray-300 dark:bg-gray-700 rounded-full"></div>
+              <div className="w-10 h-1 bg-gray-300 dark:bg-white/30 rounded-full"></div>
             </div>
 
             <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isSheetExpanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>

@@ -57,7 +57,14 @@
     "profile": "Perfil",
     "settings": "Configuració",
     "lightMode": "Mode Clar",
-    "darkMode": "Mode Fosc"
+    "darkMode": "Mode Fosc",
+    "collections": "Rutes"
+  },
+  "collections": {
+    "title": "Rutes",
+    "search": "Cercar alguna cosa...",
+    "nearby": "Destinacions Properes",
+    "viewAll": "Veure Tot"
   },
   "settings": {
     "title": "Configuració",
