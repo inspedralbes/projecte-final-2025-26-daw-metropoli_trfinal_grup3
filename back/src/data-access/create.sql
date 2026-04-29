@@ -153,3 +153,13 @@ CREATE TABLE IF NOT EXISTS lista_pois (
     FOREIGN KEY (id_lista) REFERENCES listas(id_lista),
     FOREIGN KEY (id_poi) REFERENCES pois(id_poi)
 );
+
+-- 15. SEGUIDORES (Sistema follow/unfollow unidireccional)
+CREATE TABLE IF NOT EXISTS seguidores (
+    id_seguidor INTEGER NOT NULL,
+    id_seguido  INTEGER NOT NULL,
+    fecha_seguimiento DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_seguidor, id_seguido),
+    FOREIGN KEY (id_seguidor) REFERENCES usuario(id_usuario) ON DELETE CASCADE,
+    FOREIGN KEY (id_seguido)  REFERENCES usuario(id_usuario) ON DELETE CASCADE
+);

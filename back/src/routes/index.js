@@ -15,6 +15,7 @@ import comunidadRoutes from "./comunidadRoutes.js";
 import uploadRoutes from "./uploadRoutes.js";
 import qrRoutes from "./qrRoutes.js";
 import listaRoutes from './listaRoutes.js';
+import seguidorRoutes from './seguidorRoutes.js';
 
 const router = express.Router();
 
@@ -34,5 +35,6 @@ router.use("/comunidad", comunidadRoutes);
 router.use("/qrs", qrRoutes);
 router.use("/upload", uploadRoutes);
 router.use("/listas", listaRoutes);
+router.use("/seguidores", seguidorRoutes);
 
 export default router;

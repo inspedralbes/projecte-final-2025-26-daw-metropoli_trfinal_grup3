@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { QRCodeSVG } from "qrcode.react";
 import Navbar from "../../layouts/Navbar";
 import { useFriends } from "../../context/FriendsContext";
-import { getPublicaciones, getUsuario } from "../../services/communicationManager";
+import { getPublicaciones, getUsuario, followUsuario, unfollowUsuario, checkIsFollowing, getSeguidoresCounts, getSeguidores, getSiguiendo } from "../../services/communicationManager";
 import UserAvatar from "../../components/UserAvatar";
 
 // Lazy load del escáner (pesa bastante, solo se carga cuando se necesita)
@@ -153,26 +153,18 @@ const MyQrModal = ({ user, onClose }) => {
   );
 };
 
-// ─── Modal: Escanear QR de amigo ─────────────────────────────────────────────
-const ScanQrModal = ({ allUsers, onAdd, onClose }) => {
-  const { addFriend, isFriend } = useFriends();
+// ─── Modal: Escanear QR para seguir usuario ──────────────────────────────────
+const ScanQrModal = ({ allUsers, onFollowed, onClose }) => {
   const [result, setResult] = useState(null);
   const [error, setError] = useState(null);
   const [scanning, setScanning] = useState(true);
-
-  // Utilidad para construir la URL del avatar
-  const getFullPostImageUrl = (fotoUrl) => {
-    if (!fotoUrl) return null;
-    if (fotoUrl.startsWith("http")) return fotoUrl;
-    return `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${fotoUrl}`;
-  };
+  const [loading, setLoading] = useState(false);
 
   const handleResult = (decoded) => {
     try {
       console.log("QR Decoded:", decoded);
       let targetId;
 
-      // Intentar extraer ID de la URL o parsear JSON
       if (decoded.includes("/profile/")) {
         targetId = decoded.split("/profile/").pop();
       } else {
@@ -180,24 +172,15 @@ const ScanQrModal = ({ allUsers, onAdd, onClose }) => {
           const data = JSON.parse(decoded);
           targetId = data.userId || data.id_usuario || data.id;
         } catch (e) {
-          targetId = decoded; // Asumir que es el ID directamente
+          targetId = decoded;
         }
       }
 
-      if (!targetId || targetId === "undefined") {
-        throw new Error("Invalid QR data");
-      }
+      if (!targetId || targetId === "undefined") throw new Error("Invalid QR data");
 
       const found = allUsers.find((u) => (u.id_usuario || u.id) == targetId);
-
       if (!found) {
-        setError("Usuario no encontrado en la comunidad");
-        setScanning(false);
-        return;
-      }
-
-      if (isFriend(targetId)) {
-        setError("Este usuario ya es tu amigo");
+        setError("Usuario no encontrado en Metrópoli");
         setScanning(false);
         return;
       }
@@ -211,31 +194,47 @@ const ScanQrModal = ({ allUsers, onAdd, onClose }) => {
     }
   };
 
-  const handleAdd = async () => {
-    if (result) {
-      const res = await addFriend(result.id_usuario || result.id);
-      if (res.success) {
-        onAdd(result);
-        onClose();
-      } else {
-        setError(res.message || "No se pudo añadir al amigo");
+  const handleFollow = async () => {
+    if (!result || loading) return;
+    setLoading(true);
+    try {
+      const currentUser = JSON.parse(localStorage.getItem("usuario") || "null");
+      if (!currentUser) {
+        setError("Debes iniciar sesión para seguir a alguien");
+        return;
       }
+      const myId = currentUser.id_usuario || currentUser.id;
+      const targetId = result.id_usuario || result.id;
+
+      if (myId == targetId) {
+        setError("No puedes seguirte a ti mismo");
+        return;
+      }
+
+      const { followUsuario } = await import("../../services/communicationManager");
+      await followUsuario(myId, targetId);
+      onFollowed(result);
+      onClose();
+    } catch (e) {
+      console.error("Follow error:", e);
+      setError("No se pudo seguir al usuario");
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/80 backdrop-blur-md px-4">
       <div className="w-full max-w-md bg-white dark:bg-[#12080a] rounded-[32px] shadow-2xl overflow-hidden relative">
-        {/* Header con diseño premium */}
         <div className="absolute top-0 left-0 w-full h-2 bg-primary"></div>
         <div className="flex items-center justify-between px-6 pt-8 pb-4">
           <div>
             <h2 className="text-xl font-bold text-slate-800 dark:text-white leading-tight">
-              {result ? "Usuario Encontrado" : "Escanear Amigo"}
+              {result ? "Usuario Encontrado" : "Escanear para Seguir"}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {result
-                ? "Confirma que quieres añadir a esta persona"
+                ? "Confirma que quieres seguir a esta persona"
                 : "Apunta con la cámara al código QR"}
             </p>
           </div>
@@ -313,10 +312,11 @@ const ScanQrModal = ({ allUsers, onAdd, onClose }) => {
                   Reintentar
                 </button>
                 <button
-                  onClick={handleAdd}
-                  className="flex-[2] py-3 px-4 rounded-2xl bg-primary text-primary-text font-bold text-sm shadow-lg shadow-primary/20 hover:opacity-90 transition-all transform active:scale-95"
+                  onClick={handleFollow}
+                  disabled={loading}
+                  className="flex-[2] py-3 px-4 rounded-2xl bg-primary text-primary-text font-bold text-sm shadow-lg shadow-primary/20 hover:opacity-90 transition-all transform active:scale-95 disabled:opacity-60"
                 >
-                  Añadir Amigo
+                  {loading ? "Siguiendo..." : "Seguir"}
                 </button>
               </div>
             </div>
@@ -398,6 +398,13 @@ const Profile = () => {
 
   const [userPosts, setUserPosts] = useState([]);
   const [loadingPosts, setLoadingPosts] = useState(true);
+  const [followersCount, setFollowersCount] = useState(0);
+  const [followingCount, setFollowingCount] = useState(0);
+  const [followersList, setFollowersList] = useState([]);
+  const [followingList, setFollowingList] = useState([]);
+  const [isFollowing, setIsFollowing] = useState(false);
+  const [followLoading, setFollowLoading] = useState(false);
+  const [socialTab, setSocialTab] = useState("followers");
 
   useEffect(() => {
     if (!id || id === "undefined" || isOwnProfile) {
@@ -410,7 +417,11 @@ const Profile = () => {
       try {
         setLoadingUser(true);
         const res = await getUsuario(id);
-        if (res) {
+        // La API devuelve { success: true, data: {...} }, extraemos solo el usuario
+        if (res && res.data) {
+          setTargetUser(res.data);
+        } else if (res && res.id_usuario) {
+          // Por si la API devuelve el usuario directamente
           setTargetUser(res);
         }
       } catch (err) {
@@ -445,9 +456,53 @@ const Profile = () => {
     fetchUserPosts();
   }, [displayedUserId]);
 
-  const handleFriendAdded = (user) => {
+  const handleFollowedViaQr = (user) => {
     setLastAdded(user);
+    setFollowersCount((c) => c + 1);
     setTimeout(() => setLastAdded(null), 3000);
+  };
+
+  // Cargar contadores, listas y estado isFollowing
+  useEffect(() => {
+    if (!displayedUserId) return;
+    getSeguidoresCounts(displayedUserId).then((res) => {
+      if (res?.data) {
+        setFollowersCount(res.data.followers);
+        setFollowingCount(res.data.following);
+      }
+    });
+    getSeguidores(displayedUserId).then((res) => {
+      if (res?.data) setFollowersList(res.data);
+    });
+    getSiguiendo(displayedUserId).then((res) => {
+      if (res?.data) setFollowingList(res.data);
+    });
+    if (!isOwnProfile && currentUser) {
+      checkIsFollowing(currentUser.id_usuario || currentUser.id, displayedUserId).then((res) => {
+        setIsFollowing(res?.isFollowing ?? false);
+      });
+    }
+  }, [displayedUserId, isOwnProfile, currentUser]);
+
+  const handleFollow = async () => {
+    if (!currentUser || followLoading) return;
+    setFollowLoading(true);
+    try {
+      const myId = currentUser.id_usuario || currentUser.id;
+      if (isFollowing) {
+        await unfollowUsuario(myId, displayedUserId);
+        setIsFollowing(false);
+        setFollowersCount((c) => Math.max(0, c - 1));
+      } else {
+        await followUsuario(myId, displayedUserId);
+        setIsFollowing(true);
+        setFollowersCount((c) => c + 1);
+      }
+    } catch (e) {
+      console.error("Error toggling follow:", e);
+    } finally {
+      setFollowLoading(false);
+    }
   };
 
   if (loadingUser) {
@@ -477,18 +532,18 @@ const Profile = () => {
       {showScanQr && (
         <ScanQrModal
           allUsers={allUsers}
-          onAdd={handleFriendAdded}
+          onFollowed={handleFollowedViaQr}
           onClose={() => setShowScanQr(false)}
         />
       )}
 
-      {/* Toast de amigo añadido */}
+      {/* Toast: ahora sigues a alguien */}
       {lastAdded && (
         <div className="fixed top-6 left-1/2 -translate-x-1/2 z-50 bg-emerald-500 text-white px-4 py-2.5 rounded-full shadow-lg flex items-center gap-2 text-sm font-bold animate-fade-in">
           <span className="material-symbols-outlined text-base">
-            check_circle
+            person_check
           </span>
-          {lastAdded.nombre} añadido como amigo
+          ¡Ahora sigues a {lastAdded.nombre}!
         </div>
       )}
 
@@ -550,60 +605,44 @@ const Profile = () => {
                   </span>
                   {t("profile.editProfile")}
                 </Link>
-              ) : isFriend(displayedUserId) ? (
+              ) : (
+                /* Botón Seguir / Siguiendo — único botón en perfiles ajenos */
                 <button
-                  onClick={() => removeFriend(displayedUserId)}
-                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-red-500 text-red-500 text-xs font-bold hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
+                  onClick={handleFollow}
+                  disabled={followLoading}
+                  className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-bold transition-all shadow-sm ${
+                    isFollowing
+                      ? "border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-red-400 hover:text-red-400"
+                      : "bg-primary text-primary-text hover:opacity-90 shadow-primary/20"
+                  }`}
                 >
                   <span className="material-symbols-outlined text-base">
-                    person_remove
+                    {isFollowing ? "person_check" : "person_add"}
                   </span>
-                  Eliminar Amigo
-                </button>
-              ) : (
-                <button
-                  onClick={async () => {
-                    const res = await addFriend(displayedUserId);
-                    if (res.success) handleFriendAdded(displayedUser);
-                  }}
-                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-full bg-primary text-primary-text text-xs font-bold hover:opacity-90 transition-opacity shadow-lg shadow-primary/20"
-                >
-                  <span className="material-symbols-outlined text-base font-bold">
-                    person_add
-                  </span>
-                  Añadir Amigo
+                  {isFollowing ? "Siguiendo" : "Seguir"}
                 </button>
               )}
+
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-3 gap-3">
               {[
                 { key: "posts", count: userPosts.length, label: t("profile.posts") },
-                {
-                  key: "friends",
-                  count: friends.length,
-                  label: t("profile.friends"),
-                },
-                {
-                  key: "routes",
-                  count: 0,
-                  label: t("profile.routes", "Rutas"),
-                },
+                { key: "followers", count: followersCount, label: "Seguidores" },
+                { key: "following", count: followingCount, label: "Siguiendo" },
               ].map(({ key, count, label }) => (
                 <button
                   key={key}
-                  onClick={() => setActiveTab(key)}
-                  className={`p-3 rounded-2xl border shadow-sm flex flex-col items-center justify-center text-center transition-all duration-300 ${activeTab === key ? "bg-primary border-primary text-primary-text scale-105" : "bg-white dark:bg-[#12080a] border-slate-100 dark:border-slate-800"}`}
+                  onClick={() => setActiveTab(key === "followers" || key === "following" ? "friends" : key)}
+                  className={`p-3 rounded-2xl border shadow-sm flex flex-col items-center justify-center text-center transition-all duration-300 ${
+                    activeTab === key ? "bg-primary border-primary text-primary-text scale-105" : "bg-white dark:bg-[#12080a] border-slate-100 dark:border-slate-800"
+                  }`}
                 >
-                  <span
-                    className={`text-lg font-bold ${activeTab === key ? "text-primary-text" : "text-primary"}`}
-                  >
+                  <span className={`text-lg font-bold ${activeTab === key ? "text-primary-text" : "text-primary"}`}>
                     {count}
                   </span>
-                  <span
-                    className={`text-[10px] uppercase font-bold tracking-wider ${activeTab === key ? "text-primary-text opacity-90" : "text-slate-400"}`}
-                  >
+                  <span className={`text-[10px] uppercase font-bold tracking-wider ${activeTab === key ? "text-primary-text opacity-90" : "text-slate-400"}`}>
                     {label}
                   </span>
                 </button>
@@ -647,86 +686,89 @@ const Profile = () => {
               ))}
             </div>
 
-            {/* ── Tab Amigos ── */}
+            {/* ── Tab Seguidores ── */}
             {activeTab === "friends" && (
               <div className="animate-fade-in space-y-4">
-                {/* Cabecera con botones QR */}
+                {/* Cabecera con sub-tabs y botón QR */}
                 <div className="flex items-center justify-between mb-2">
-                  <h3 className="text-lg font-bold text-slate-800 dark:text-white">
-                    {t("profile.friendsList")}
-                    <span className="ml-2 text-sm font-normal text-slate-400">
-                      ({friends.length})
-                    </span>
-                  </h3>
+                  <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
+                    <button
+                      onClick={() => setSocialTab("followers")}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        socialTab === "followers"
+                          ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm"
+                          : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                      }`}
+                    >
+                      Seguidores ({followersCount})
+                    </button>
+                    <button
+                      onClick={() => setSocialTab("following")}
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        socialTab === "following"
+                          ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm"
+                          : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
+                      }`}
+                    >
+                      Siguiendo ({followingCount})
+                    </button>
+                  </div>
                   {isOwnProfile && (
                     <div className="flex gap-2">
                       <button
                         onClick={() => setShowMyQr(true)}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-[#12080a] border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:border-primary hover:text-primary transition-colors"
                       >
-                        <span className="material-symbols-outlined text-base">
-                          qr_code_2
-                        </span>
+                        <span className="material-symbols-outlined text-base">qr_code_2</span>
                         Mi QR
                       </button>
                       <button
                         onClick={() => setShowScanQr(true)}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-text text-xs font-bold hover:opacity-90 transition-colors shadow-lg shadow-primary/20"
                       >
-                        <span className="material-symbols-outlined text-base">
-                          qr_code_scanner
-                        </span>
-                        Escanear
+                        <span className="material-symbols-outlined text-base">qr_code_scanner</span>
+                        Seguir
                       </button>
                     </div>
                   )}
                 </div>
 
-                {/* Lista de amigos */}
-                {friends.length === 0 ? (
+                {/* Lista de seguidores o seguidos */}
+                {(socialTab === "followers" ? followersList : followingList).length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-slate-400 dark:text-slate-500 gap-3">
-                    <span className="material-symbols-outlined text-5xl">
-                      group_off
-                    </span>
+                    <span className="material-symbols-outlined text-5xl">group_off</span>
                     <p className="text-sm font-medium">
-                      Aún no tienes amigos añadidos
+                      {socialTab === "followers" ? "Aún nadie sigue este perfil" : "No sigue a nadie todavía"}
                     </p>
-                    <button
-                      onClick={() => setShowScanQr(true)}
-                      className="flex items-center gap-1.5 text-primary text-sm font-bold hover:underline"
-                    >
-                      <span className="material-symbols-outlined text-base">
-                        qr_code_scanner
-                      </span>
-                      Escanear el QR de alguien
-                    </button>
+                    {isOwnProfile && socialTab === "followers" && (
+                      <button
+                        onClick={() => setShowScanQr(true)}
+                        className="flex items-center gap-1.5 text-primary text-sm font-bold hover:underline"
+                      >
+                        <span className="material-symbols-outlined text-base">qr_code_scanner</span>
+                        Escanea el QR de alguien para seguirlo
+                      </button>
+                    )}
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {friends.map((friend) => (
-                      <div
-                        key={friend.id_usuario || friend.id}
-                        className="flex items-center gap-3 bg-white dark:bg-[#12080a] p-3 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm group"
+                    {(socialTab === "followers" ? followersList : followingList).map((person) => (
+                      <a
+                        key={person.id_usuario}
+                        href={`/profile/${person.id_usuario}`}
+                        className="flex items-center gap-3 bg-white dark:bg-[#12080a] p-3 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm hover:border-primary/40 transition-colors"
                       >
-                        <UserAvatar user={friend} className="w-12 h-12" />
+                        <UserAvatar user={person} className="w-12 h-12" />
                         <div className="flex-1 min-w-0">
                           <p className="font-semibold text-sm text-slate-800 dark:text-white truncate">
-                            {friend.nombre}
+                            {person.nombre}
                           </p>
-                          <p className="text-xs text-slate-400 dark:text-slate-500">
-                            {friend.badge || "City Explorer"}
+                          <p className="text-xs text-slate-400 dark:text-slate-500 truncate">
+                            {person.bio || "City Explorer"}
                           </p>
                         </div>
-                        <button
-                          onClick={() => removeFriend(friend.id)}
-                          className="opacity-0 group-hover:opacity-100 w-7 h-7 rounded-full bg-red-50 dark:bg-red-900/20 text-red-400 flex items-center justify-center hover:bg-red-100 transition-all shrink-0"
-                          title="Eliminar amigo"
-                        >
-                          <span className="material-symbols-outlined text-sm">
-                            person_remove
-                          </span>
-                        </button>
-                      </div>
+                        <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-base">chevron_right</span>
+                      </a>
                     ))}
                   </div>
                 )}
@@ -737,10 +779,8 @@ const Profile = () => {
                     onClick={() => setShowScanQr(true)}
                     className="w-full mt-2 py-3 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 text-sm font-semibold hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2"
                   >
-                    <span className="material-symbols-outlined text-lg">
-                      qr_code_scanner
-                    </span>
-                    Escanear QR de un amigo
+                    <span className="material-symbols-outlined text-lg">qr_code_scanner</span>
+                    Escanear QR para seguir a alguien
                   </button>
                 )}
               </div>

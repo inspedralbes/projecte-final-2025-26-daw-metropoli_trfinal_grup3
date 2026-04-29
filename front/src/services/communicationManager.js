@@ -588,3 +588,78 @@ export const deleteLista = async (id) => {
   }
 };
 
+// ── Seguidores ──
+
+export const followUsuario = async (idSeguidor, idSeguido) => {
+  try {
+    const response = await fetch(`${API_URL}/api/seguidores/follow`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_seguidor: idSeguidor, id_seguido: idSeguido }),
+    });
+    if (!response.ok) throw new Error("Failed to follow user");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in followUsuario:", error);
+    throw error;
+  }
+};
+
+export const unfollowUsuario = async (idSeguidor, idSeguido) => {
+  try {
+    const response = await fetch(`${API_URL}/api/seguidores/unfollow`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_seguidor: idSeguidor, id_seguido: idSeguido }),
+    });
+    if (!response.ok) throw new Error("Failed to unfollow user");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in unfollowUsuario:", error);
+    throw error;
+  }
+};
+
+export const getSeguidores = async (userId) => {
+  try {
+    const response = await fetch(`${API_URL}/api/seguidores/${userId}/followers`);
+    if (!response.ok) throw new Error("Failed to fetch seguidores");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getSeguidores:", error);
+    throw error;
+  }
+};
+
+export const getSiguiendo = async (userId) => {
+  try {
+    const response = await fetch(`${API_URL}/api/seguidores/${userId}/following`);
+    if (!response.ok) throw new Error("Failed to fetch siguiendo");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getSiguiendo:", error);
+    throw error;
+  }
+};
+
+export const checkIsFollowing = async (userId, targetId) => {
+  try {
+    const response = await fetch(`${API_URL}/api/seguidores/${userId}/isFollowing/${targetId}`);
+    if (!response.ok) throw new Error("Failed to check isFollowing");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in checkIsFollowing:", error);
+    return { isFollowing: false };
+  }
+};
+
+export const getSeguidoresCounts = async (userId) => {
+  try {
+    const response = await fetch(`${API_URL}/api/seguidores/${userId}/counts`);
+    if (!response.ok) throw new Error("Failed to fetch counts");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getSeguidoresCounts:", error);
+    return { data: { followers: 0, following: 0 } };
+  }
+};
