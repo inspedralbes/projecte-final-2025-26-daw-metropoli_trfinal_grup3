@@ -239,11 +239,30 @@ const uploadPoiImage = async (req, res) => {
     }
 };
 
+const updatePoi = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nombre, descripcion } = req.body;
+        await poiModel.update(id, { nombre, descripcion });
+        res.json({
+            success: true,
+            message: 'POI actualizado correctamente'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+            error_code: 'ERROR_INTERNO'
+        });
+    }
+};
+
 export default {
     createPoiSimple,
     createPoiCompleto,
     getPois,
     deletePoi,
     getPoisCercanos,
-    uploadPoiImage
+    uploadPoiImage,
+    updatePoi
 };

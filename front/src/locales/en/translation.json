@@ -110,5 +110,27 @@
     "errorName": "Name cannot be empty",
     "errorNameLong": "Name cannot exceed 40 characters",
     "errorBioLong": "Bio cannot exceed 100 characters"
+  },
+  "createList": {
+    "title": "Create List",
+    "subtitle": "Select points on the map to create your custom itinerary.",
+    "map": "Map",
+    "satellite": "Satellite",
+    "center": "Center on my location",
+    "selection": "Your Selection",
+    "pointsSelected": "points selected",
+    "noPoints": "No points selected yet...",
+    "generate": "Generate Itinerary",
+    "finishTitle": "Finish List",
+    "nameLabel": "Name",
+    "namePlaceholder": "Write a title...",
+    "descLabel": "Description",
+    "descPlaceholder": "What is this list about?",
+    "back": "Back",
+    "save": "Save & Publish",
+    "success": "List created successfully!",
+    "noDesc": "No description available.",
+    "errorMinPoints": "Select at least 2 points to create a list.",
+    "errorNoName": "Please give your list a name."
   }
 }
