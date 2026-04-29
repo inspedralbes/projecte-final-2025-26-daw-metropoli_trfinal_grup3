@@ -1,5 +1,6 @@
 import { Link, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import UserAvatar from "../components/UserAvatar";
 
 const Header = () => {
   const { pathname } = useLocation();
@@ -61,12 +62,8 @@ const Header = () => {
       </div>
 
       {/* Right: User Avatar */}
-      <Link to="/profile" className="w-11 h-11 rounded-full overflow-hidden border-2 border-white shadow-md flex-shrink-0 pointer-events-auto">
-        <img
-          src={getAvatarUrl(user?.foto)}
-          alt="Profile"
-          className="w-full h-full object-cover"
-        />
+      <Link to="/profile" className="pointer-events-auto flex-shrink-0">
+        <UserAvatar user={user} className="w-11 h-11" borderColor="border-white" />
       </Link>
     </div>
   );

@@ -57,6 +57,7 @@ function App() {
           <Route path="/signup" element={<SignUp />} />
           <Route path="/home" element={<Home />} />
           <Route path="/" element={<Map />} />
+          <Route path="/map" element={<Map />} />
           <Route path="/admin" element={<Admin />} />
           <Route path="/community" element={<Community />} />
           <Route path="/settings" element={<Settings />} />
@@ -64,6 +65,9 @@ function App() {
           <Route path="/profile/:id" element={<Profile />} />
           <Route path="/profile/edit" element={<EditProfile />} />
           <Route path="/escaneo" element={<QRScanner />} />
+          <Route path="/create-list" element={<CreateList />} />
+          <Route path="/colections" element={<Collections />} />
+          <Route path="/collections" element={<Collections />} />
         </Routes>
       </div>
     </FriendsProvider>

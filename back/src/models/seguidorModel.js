@@ -1,5 +1,25 @@
 import { query } from '../config/mysql.js';
 
+// Crear la tabla si no existe al cargar el modelo
+const init = async () => {
+    try {
+        await query(`
+            CREATE TABLE IF NOT EXISTS seguidores (
+                id_seguidor INTEGER NOT NULL,
+                id_seguido  INTEGER NOT NULL,
+                fecha_seguimiento DATETIME DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id_seguidor, id_seguido),
+                FOREIGN KEY (id_seguidor) REFERENCES usuario(id_usuario) ON DELETE CASCADE,
+                FOREIGN KEY (id_seguido)  REFERENCES usuario(id_usuario) ON DELETE CASCADE
+            )
+        `);
+    } catch (err) {
+        console.error('Error initializing seguidores table:', err.message);
+    }
+};
+init();
+
+
 /** Seguir a un usuario */
 const follow = async (idSeguidor, idSeguido) => {
     await query(

@@ -1,5 +1,25 @@
 import { query } from '../config/mysql.js';
 
+// Crear la tabla si no existe al cargar el modelo
+const init = async () => {
+    try {
+        await query(`
+            CREATE TABLE IF NOT EXISTS amigos (
+                id_usuario INTEGER NOT NULL,
+                id_amigo INTEGER NOT NULL,
+                fecha_amistad DATETIME DEFAULT CURRENT_TIMESTAMP,
+                PRIMARY KEY (id_usuario, id_amigo),
+                FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario),
+                FOREIGN KEY (id_amigo) REFERENCES usuario(id_usuario)
+            )
+        `);
+    } catch (err) {
+        console.error('Error initializing amigos table:', err.message);
+    }
+};
+init();
+
+
 const getFriendsByUserId = async (userId) => {
     // Obtenemos los datos de los usuarios amigos uniendo con la tabla usuario
     const [rows] = await query(

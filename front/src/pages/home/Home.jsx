@@ -3,6 +3,7 @@ import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Navbar from "../../layouts/Navbar";
 import Header from "../../layouts/Header";
+import UserAvatar from "../../components/UserAvatar";
 
 const Home = () => {
   const { t } = useTranslation();

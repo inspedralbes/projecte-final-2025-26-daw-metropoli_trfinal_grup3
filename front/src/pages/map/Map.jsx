@@ -9,7 +9,8 @@ import {
 import { Link, useNavigate } from "react-router-dom";
 import Navbar from "../../layouts/Navbar"; // Import the new Navbar component
 import Header from "../../layouts/Header"; // Import the global header
-import { getPois, getRoute, getCategorias } from "../../services/communicationManager";
+import UserAvatar from "../../components/UserAvatar";
+import { getPois, getRoute, getCategorias, getListas } from "../../services/communicationManager";
 import socket from "../../services/socketManager";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
