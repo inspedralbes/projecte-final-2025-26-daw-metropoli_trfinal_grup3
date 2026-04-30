@@ -51,8 +51,8 @@ const Navbar = () => {
               to={item.to}
               className={`flex flex-col items-center justify-center w-16 h-full transition-all duration-200 relative ${
                 active 
-                ? "text-black dark:text-white" 
-                : "text-gray-400 dark:text-white/50 hover:text-black dark:hover:text-white"
+                ? "text-black dark:text-primary" 
+                : "text-gray-400 dark:text-white/50 hover:text-black dark:hover:text-primary"
               }`}
             >
               <span
@@ -87,8 +87,8 @@ const Navbar = () => {
               title={t(`nav.${item.labelKey}`)}
               className={`relative flex flex-col items-center justify-center w-14 h-14 transition-all duration-200 group ${
                 active 
-                ? "text-black dark:text-white" 
-                : "text-gray-400 dark:text-white/50 hover:text-black dark:hover:text-white"
+                ? "text-black dark:text-primary" 
+                : "text-gray-400 dark:text-white/50 hover:text-black dark:hover:text-primary"
               }`}
             >
               <span 
@@ -106,7 +106,7 @@ const Navbar = () => {
           <button
             onClick={toggleDark}
             title={darkMode ? t("nav.lightMode") : t("nav.darkMode")}
-            className="relative flex flex-col items-center justify-center w-14 h-14 transition-all duration-200 group text-gray-400 dark:text-white/50 hover:text-black dark:hover:text-white"
+            className="relative flex flex-col items-center justify-center w-14 h-14 transition-all duration-200 group text-gray-400 dark:text-white/50 hover:text-black dark:hover:text-primary"
           >
             <span 
               className="material-symbols-outlined text-[30px] leading-none transition-all duration-300"

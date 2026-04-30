@@ -66,7 +66,7 @@ const Collections = () => {
 
       {/* Pills (Static for design matching) */}
       <div className="flex gap-3 overflow-x-auto pb-4 mb-4 scrollbar-hide">
-        <button className="flex items-center gap-2 bg-black dark:bg-white text-white dark:text-black px-4 py-2 rounded-full whitespace-nowrap">
+        <button className="flex items-center gap-2 bg-black dark:bg-primary text-white dark:text-primary-text px-4 py-2 rounded-full whitespace-nowrap">
           <img src="https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=100" alt="Gràcia" className="w-6 h-6 rounded-full object-cover" />
           Gràcia
         </button>
@@ -108,7 +108,7 @@ const Collections = () => {
                 
                 {/* Pencil Button (Non-functional as requested) */}
                 <button 
-                  className="bg-white text-black w-12 h-12 rounded-full flex items-center justify-center hover:bg-gray-200 transition-colors"
+                  className="bg-white dark:bg-primary text-black dark:text-primary-text w-12 h-12 rounded-full flex items-center justify-center hover:bg-gray-200 dark:hover:bg-primary-dark transition-colors"
                   aria-label="Edit route"
                 >
                   <span className="material-symbols-outlined text-[20px]">

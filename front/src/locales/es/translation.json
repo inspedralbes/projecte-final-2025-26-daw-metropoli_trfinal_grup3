@@ -25,8 +25,7 @@
     "wind": "Viento",
     "quickAccess": "Acceso Rápido",
     "trackConditions": "Estado de la Ciudad",
-    "openCircuitMap": "Mapa de la Metropoli",
-    "communityFeed": "Comunidad"
+    "openCircuitMap": "Mapa de la Metropoli"
   },
   "community": {
     "yourGroup": "Tu Grupo",
@@ -69,19 +68,23 @@
   },
   "settings": {
     "title": "Ajustes",
+    "app": "App",
     "language": "Idioma",
     "appLanguage": "Idioma",
     "appPreferences": "Preferencias de la App",
     "pushNotifications": "Notificaciones Push",
     "locationServices": "Servicios de Ubicación",
     "darkMode": "Modo Oscuro",
+    "themeColor": "Color del Tema",
+    "accentColor": "Color de Acento",
     "account": "Cuenta",
     "personalDetails": "Datos Personales",
     "paymentMethods": "Métodos de Pago",
     "privacySecurity": "Privacidad y Seguridad",
     "helpSupport": "Ayuda y Soporte",
     "logout": "Cerrar Sesión",
-    "footerApp": "Aplicación"
+    "footerApp": "Aplicación Metrópoli",
+    "footerVersion": "Versión Estable"
   },
   "profile": {
     "my": "Mi",
@@ -133,5 +136,131 @@
     "noDesc": "Sin descripción disponible.",
     "errorMinPoints": "Selecciona al menos 2 puntos para crear una lista.",
     "errorNoName": "Ponle un nombre a tu lista."
+  },
+  "auth": {
+    "login": "Iniciar Sesión",
+    "signup": "Registrarse",
+    "tagline": "Entra para continuar explorando",
+    "email": "Correo electrónico",
+    "password": "Contraseña",
+    "confirmPassword": "Confirmar contraseña",
+    "name": "Nombre completo",
+    "backToHome": "Volver al inicio",
+    "backToLogin": "Volver al login",
+    "noAccount": "¿No tienes cuenta?",
+    "hasAccount": "¿Ya tienes cuenta?",
+    "registerFree": "Regístrate gratis",
+    "orContinueWith": "O continúa con",
+    "orRegisterWith": "O regístrate con",
+    "google": "Google",
+    "createAccount": "Crea tu cuenta",
+    "communityTag": "Únete a la comunidad de exploradores urbanos",
+    "checkEmail": "Revisa tu correo",
+    "checkEmailSub": "Te hemos enviado un código de 6 dígitos para activar tu cuenta",
+    "verifyCode": "Verificar código",
+    "accountActivated": "¡Cuenta activada!",
+    "readyToExplore": "Ya puedes iniciar sesión y empezar a explorar la ciudad.",
+    "goToLogin": "Ir al Login",
+    "invalidCode": "Código inválido.",
+    "errorAuth": "Error en la autenticación.",
+    "errorConnect": "Error de conexión con el servidor.",
+    "errorRegister": "Error al registrar.",
+    "passwordsNoMatch": "Las contraseñas no coinciden.",
+    "passwordTooShort": "La contraseña debe tener al menos 6 caracteres.",
+    "verifyEmail": "Has de verificar tu correo antes de entrar.",
+    "credentialsIncorrect": "Credenciales incorrectas.",
+    "newPassword": "Nueva contraseña",
+    "completeRegistration": "Completar registro",
+    "hello": "Hola"
+  },
+  "admin": {
+    "title": "Panel de Control",
+    "networkMode": "Modo Red: Pincha en el asfalto para crear caminos nuevos o pulsa en los nodos/POIs para conectarlos entre sí.",
+    "poiLabel": "POI",
+    "qr": {
+      "selectNode": "Selecciona un nodo del circuito...",
+      "noNodes": "No hay nodos de navegación disponibles",
+      "fileNote": "Por defecto se guardará como zona-sin-definir.png. Se usará este texto como nombre de archivo en servidor."
+    }
+  },
+  "common": {
+    "loading": "Cargando...",
+    "save": "Guardar",
+    "cancel": "Cancelar",
+    "edit": "Editar",
+    "delete": "Eliminar",
+    "back": "Atrás",
+    "version": "Versión",
+    "build": "Compilación"
+  },
+  "map_extra": {
+    "youAreHere": "Estás aquí"
+  },
+  "weather": {
+    "title": "CLIMA METRÓPOLI",
+    "temperature": "Temperatura",
+    "humidity": "Humedad",
+    "wind": "Viento",
+    "condition": "Condición"
+  },
+  "community": {
+    "tabs": {
+      "recent": "Recientes",
+      "popular": "Popular",
+      "official": "Oficial",
+      "fanZone": "Fan Zone"
+    },
+    "friends": "Amigos",
+    "noFriends": "No se han encontrado usuarios",
+    "newPost": "Nueva Publicación",
+    "publish": "Publicar",
+    "follow": "Seguir",
+    "following": "Siguiendo"
+  },
+  "profile": {
+    "my": "Mi",
+    "editProfile": "Editar Perfil",
+    "posts": "Publicaciones",
+    "followers": "Seguidores",
+    "following": "Siguiendo",
+    "friends": "Amigos",
+    "routes": "Rutas",
+    "points": "puntos",
+    "friendsList": "Amigos Online",
+    "loadingPosts": "Cargando publicaciones...",
+    "recentPosts": "Actividad Reciente",
+    "noPosts": "No tienes publicaciones todavía.",
+    "nowFollowing": "¡Ahora sigues a",
+    "noFollowers": "Aún nadie sigue este perfil",
+    "noFollowing": "No sigue a nadie todavía",
+    "qr": {
+      "myTitle": "Mi código QR",
+      "myDesc": "Deja que otro usuario escanee este QR para añadirte como amigo",
+      "scanTitle": "Escanear para Seguir",
+      "scanHelp": "Escanea el QR de alguien para seguirlo",
+      "point": "Apunta con la cámara al código QR",
+      "confirm": "Confirma que quieres seguir a esta persona",
+      "userFound": "Usuario Encontrado",
+      "notFound": "Usuario no encontrado en Metrópoli",
+      "invalid": "Código QR no válido para Metrópoli",
+      "starting": "Iniciando cámara...",
+      "searching": "Buscando QR...",
+      "error": "Error al escanear",
+      "errorSelf": "No puedes seguirte a ti mismo",
+      "errorFollow": "No se pudo seguir al usuario"
+    },
+    "home": {
+      "impact": "Tu impacto",
+      "weeklyActivity": "Actividad semanal",
+      "totalKm": "KM totales",
+      "discovered": "Lugares descubiertos",
+      "completedRoutes": "Rutas hechas",
+      "groups": "De tus amigos",
+      "dining": "Bares",
+      "experience": "Segunda mano",
+      "orderFood": "Cafés",
+      "fanZone": "Cultura",
+      "trackConditions": "El tu impacto"
+    }
   }
 }

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   MapContainer,
   Marker,
@@ -49,6 +50,7 @@ const UserIcon = L.divIcon({
 });
 
 const Map = () => {
+  const { t } = useTranslation();
   const mapRef = useRef(null);
   const initialCenter = [41.3864, 2.1058];
   const [userPosition, setUserPosition] = useState(null);
@@ -258,17 +260,11 @@ const Map = () => {
   useEffect(() => { }, []);
 
   const legendItems = [
-    { color: "bg-primary", label: "Grandstands" },
-    { color: "bg-indigo-500", label: "Fan Zone" },
+    { color: "bg-primary", label: t("home.dining", "Bares") },
+    { color: "bg-indigo-500", label: t("home.fanZone", "Esdeveniments") },
     { color: "bg-slate-500", label: "WC" },
-    { color: "bg-orange-400", label: "Food" },
-    { color: "bg-blue-500", label: "You" },
-  ];
-
-  const curations = [
-    { id: 1, title: 'chinatown & les', user: '@tasha', image: 'https://images.unsplash.com/photo-1498855926480-d98e83099315?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80' },
-    { id: 2, title: 'nyc', user: '@martini22', image: 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80' },
-    { id: 3, title: 'brooklyn vibes', user: '@jake', image: 'https://images.unsplash.com/photo-1555396273-367ea4eb4db5?ixlib=rb-1.2.1&auto=format&fit=crop&w=300&q=80' }
+    { color: "bg-orange-400", label: t("home.dining", "Comida") },
+    { color: "bg-blue-500", label: t("map_extra.youAreHere", "You") },
   ];
 
   const curators = [
@@ -322,14 +318,14 @@ const Map = () => {
               {userPosition && (
                 <Polyline
                   positions={[userPosition, route[0]]}
-                  color="#3b82f6"
+                  color="var(--theme-color, #3b82f6)"
                   weight={4}
                   opacity={0.6}
                   dashArray="5, 10"
                 />
               )}
               {/* Main path */}
-              <Polyline positions={route} color="#3b82f6" weight={6} opacity={0.9} />
+              <Polyline positions={route} color="var(--theme-color, #3b82f6)" weight={6} opacity={0.9} />
             </>
           )}
 
@@ -366,7 +362,7 @@ const Map = () => {
           })}
           {userPosition && (
             <Marker position={userPosition} icon={UserIcon}>
-              <Popup>You are here</Popup>
+              <Popup>{t("map_extra.youAreHere", "You are here")}</Popup>
             </Marker>
           )}
         </MapContainer>
@@ -385,14 +381,14 @@ const Map = () => {
           {/* "centrar" button */}
           <button onClick={handleLocate} className="bg-white text-black font-bold text-sm px-5 py-2.5 rounded-full shadow-[0_4px_12px_rgba(0,0,0,0.1)] flex items-center gap-2 mb-4 hover:bg-gray-100 transition-colors">
             <span className="material-symbols-outlined text-lg">my_location</span>
-            centrar
+            {t("createList.center", "centrar")}
           </button>
 
           {/* Floating Action Button for Creating List - Fixed position for visibility */}
           <div className="fixed bottom-24 right-6 z-[110] pointer-events-auto">
             <Link
               to="/create-list"
-              className="w-16 h-16 rounded-full flex items-center justify-center bg-pink-500 text-white shadow-[0_8px_25px_-5px_rgba(236,72,153,0.5)] hover:bg-pink-600 transition-all hover:scale-110 active:scale-95"
+              className="w-16 h-16 rounded-full flex items-center justify-center bg-primary text-primary-text shadow-primary-glow hover:opacity-90 transition-all hover:scale-110 active:scale-95"
             >
               <span className="material-symbols-outlined text-4xl">add</span>
             </Link>
@@ -403,20 +399,20 @@ const Map = () => {
             <div className="flex gap-2 min-w-max">
               <button className="bg-black text-white px-5 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 shadow-md border border-gray-800">
                 <span className="material-symbols-outlined text-sm">public</span>
-                discover
+                {t("collections.search", "discover")}
                 <span className="material-symbols-outlined text-sm">expand_more</span>
               </button>
               <button className="bg-white text-black px-5 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 shadow-md">
                 <span className="material-symbols-outlined text-sm text-gray-500">restaurant</span>
-                eat
+                {t("home.dining", "eat")}
               </button>
               <button className="bg-white text-black px-5 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 shadow-md">
                 <span className="material-symbols-outlined text-sm text-gray-500">local_cafe</span>
-                café
+                {t("home.orderFood", "café")}
               </button>
               <button className="bg-white text-black px-5 py-2.5 rounded-full text-sm font-bold flex items-center gap-2 shadow-md">
                 <span className="material-symbols-outlined text-sm text-gray-500">local_bar</span>
-                bar
+                {t("home.dining", "bar")}
               </button>
 
             </div>
@@ -437,7 +433,7 @@ const Map = () => {
 
               {/* Curations Section */}
               <div className="mb-8">
-                <h2 className="text-black dark:text-white font-bold text-lg mb-4 tracking-tight">curations for you</h2>
+                <h2 className="text-black dark:text-white font-bold text-lg mb-4 tracking-tight">{t("collections.title", "curations for you")}</h2>
                 <div className="w-full overflow-x-auto no-scrollbar -mx-5 px-5">
                   <div className="flex gap-4 min-w-max">
                     {userLists.length > 0 ? userLists.map(c => (
@@ -450,7 +446,7 @@ const Map = () => {
                       </div>
                     )) : (
                       <div className="w-full text-center py-10 text-slate-400 text-sm italic">
-                        No hay listas públicas todavía.
+                        {t("createList.noPoints", "No hay listas públicas todavía.")}
                       </div>
                     )}
                   </div>
@@ -459,7 +455,7 @@ const Map = () => {
 
               {/* Curators Section */}
               <div>
-                <h2 className="text-black dark:text-white font-bold text-lg mb-4 tracking-tight">curators for you</h2>
+                <h2 className="text-black dark:text-white font-bold text-lg mb-4 tracking-tight">{t("profile.friends", "curators for you")}</h2>
                 <div className="w-full overflow-x-auto no-scrollbar -mx-5 px-5">
                   <div className="flex gap-6 min-w-max">
                     {curators.map(c => (

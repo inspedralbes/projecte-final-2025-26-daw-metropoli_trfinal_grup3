@@ -444,7 +444,7 @@ const Admin = () => {
                     onClick={toggleNetworkMode}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 border ${isDrawMode
                       ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
-                      : 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100'
+                      : 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/20'
                       }`}
                   >
                     <span className="material-symbols-outlined text-[16px]">
@@ -477,8 +477,8 @@ const Admin = () => {
               </div>
 
               {isDrawMode && (
-                <div className="bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs px-3 py-2 rounded-xl mb-3 flex items-start gap-2">
-                  <span className="material-symbols-outlined text-indigo-500 text-sm mt-0.5">info</span>
+                <div className="bg-primary/10 border border-primary/20 text-primary text-xs px-3 py-2 rounded-xl mb-3 flex items-start gap-2">
+                  <span className="material-symbols-outlined text-primary text-sm mt-0.5">info</span>
                   <p><strong>Modo Red:</strong> Pincha en el asfalto para crear caminos nuevos o pulsa en los nodos/POIs para conectarlos entre sí.</p>
                 </div>
               )}
@@ -540,7 +540,7 @@ const Admin = () => {
                   {currentPathCoords.length >= 2 && (
                     <Polyline
                       positions={currentPathCoords}
-                      color="#6366f1" // Indigo 500
+                      color="var(--theme-color, #6366f1)" // Primary Glow
                       weight={5}
                     />
                   )}
@@ -552,7 +552,7 @@ const Admin = () => {
                       position={coord}
                       icon={L.divIcon({
                         className: "path-dot",
-                        html: `<div class="w-3 h-3 bg-indigo-600 rounded-full border-2 border-white shadow-sm"></div>`,
+                        html: `<div class="w-3 h-3 bg-primary rounded-full border-2 border-white shadow-sm"></div>`,
                         iconSize: [12, 12],
                         iconAnchor: [6, 6]
                       })}

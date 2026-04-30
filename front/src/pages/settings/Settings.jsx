@@ -74,10 +74,11 @@ const Settings = () => {
       {/* Header */}
       <div className="w-full pt-6 px-5 pb-2 z-20 flex justify-between items-center transition-colors shrink-0 touch-none md:max-w-3xl md:mx-auto">
         <div className="md:hidden flex items-center gap-2">
-          <Link to="/home" className="flex items-center">
-            <span className="text-2xl font-black italic tracking-tighter text-slate-900 dark:text-white">
-              Aplicación
-            </span>
+          <Link 
+            to="/" 
+            className="w-10 h-10 flex items-center justify-center bg-white dark:bg-primary rounded-full text-slate-700 dark:text-primary-text shadow-sm border border-slate-200 dark:border-transparent hover:bg-slate-100 dark:hover:bg-primary-dark transition-colors shrink-0"
+          >
+            <span className="material-symbols-outlined text-[22px]">home</span>
           </Link>
         </div>
         <h1 className="hidden md:block text-2xl font-black italic uppercase tracking-tighter text-slate-800 dark:text-white">
@@ -227,17 +228,17 @@ const Settings = () => {
                 </div>
                 <div>
                   <p className="font-bold text-slate-800 dark:text-white text-sm">
-                    {t("settings.footerApp")}
+                    {t("settings.footerApp", "Aplicación Metrópoli")}
                   </p>
                   <p className="text-xs text-slate-400">
-                    {t("settings.footerVersion")}
+                    {t("settings.footerVersion", "Versión Estable")}
                   </p>
                 </div>
               </div>
               <div className="flex gap-2">
                 <div className="flex-1 text-center p-2 rounded-xl bg-slate-50 dark:bg-white/5">
                   <p className="text-[10px] font-bold uppercase text-slate-400">
-                    Version
+                    {t("common.version", "Version")}
                   </p>
                   <p className="text-sm font-bold text-slate-700 dark:text-white">
                     1.0.0
@@ -245,7 +246,7 @@ const Settings = () => {
                 </div>
                 <div className="flex-1 text-center p-2 rounded-xl bg-slate-50 dark:bg-white/5">
                   <p className="text-[10px] font-bold uppercase text-slate-400">
-                    Build
+                    {t("common.build", "Build")}
                   </p>
                   <p className="text-sm font-bold text-slate-700 dark:text-white">
                     2026

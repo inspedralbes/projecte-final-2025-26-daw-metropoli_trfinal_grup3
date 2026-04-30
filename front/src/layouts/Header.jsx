@@ -27,22 +27,22 @@ const Header = () => {
     }
     if (pathname === "/home") {
       return (
-        <span className="text-[#1a1a1a] dark:text-white font-display text-3xl font-semibold tracking-tight leading-none">
+        <span className="text-[#1a1a1a] dark:text-primary font-display text-3xl font-semibold tracking-tight leading-none">
           wemap
         </span>
       );
     }
     if (pathname.startsWith("/community")) {
       return (
-        <span className="text-[#1a1a1a] dark:text-white font-display text-3xl font-semibold tracking-tight leading-none">
-          {t("community.communityFeed")}
+        <span className="text-[#1a1a1a] dark:text-primary font-display text-3xl font-semibold tracking-tight leading-none">
+          {t("nav.community")}
         </span>
       );
     }
-    if (pathname.startsWith("/colections")) {
+    if (pathname.startsWith("/collections") || pathname.startsWith("/colections")) {
       return (
-        <span className="text-[#1a1a1a] dark:text-white font-display text-3xl font-semibold tracking-tight leading-none">
-          {t("collections.title")}
+        <span className="text-[#1a1a1a] dark:text-primary font-display text-3xl font-semibold tracking-tight leading-none">
+          {t("nav.collections")}
         </span>
       );
     }
@@ -63,7 +63,7 @@ const Header = () => {
 
       {/* Right: User Avatar */}
       <Link to="/profile" className="pointer-events-auto flex-shrink-0">
-        <UserAvatar user={user} className="w-11 h-11" borderColor="border-white" />
+        <UserAvatar user={user} className="w-11 h-11" borderColor="border-primary" />
       </Link>
     </div>
   );

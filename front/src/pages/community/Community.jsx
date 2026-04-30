@@ -206,6 +206,7 @@ const PostCard = ({ pub, onComentarioCreado }) => {
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 const Community = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const usuarioInfo = localStorage.getItem("usuario");
   const usuarioLogged = usuarioInfo ? JSON.parse(usuarioInfo) : null;
@@ -310,7 +311,7 @@ const Community = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Busca amics o llistes..."
+              placeholder={t("collections.search", "Busca amics o llistes...")}
               className="w-full bg-white dark:bg-slate-950 border border-gray-100 dark:border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm group-focus-within:shadow-md font-display"
             />
           </div>
@@ -319,17 +320,17 @@ const Community = () => {
           <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
             <button 
               onClick={() => setView("feed")}
-              className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium tracking-tight transition-all border ${view === "feed" ? "bg-black dark:bg-white text-white dark:text-black border-transparent shadow-md" : "bg-white dark:bg-slate-950 text-slate-400 border-gray-100 dark:border-white/5 hover:border-gray-200"}`}
+              className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium tracking-tight transition-all border ${view === "feed" ? "bg-black dark:bg-primary text-white dark:text-primary-text border-transparent shadow-md" : "bg-white dark:bg-slate-950 text-slate-400 border-gray-100 dark:border-white/5 hover:border-gray-200"}`}
             >
               <span className="material-symbols-outlined text-sm">groups</span>
-              Comunitat
+              {t("nav.community", "Comunitat")}
             </button>
             <button 
               onClick={() => setView("activity")}
               className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium tracking-tight transition-all border ${view === "activity" ? "bg-indigo-500 text-white border-transparent shadow-lg shadow-indigo-500/20" : "bg-white dark:bg-slate-950 text-slate-400 border-gray-100 dark:border-white/5 hover:border-gray-200"}`}
             >
               <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: view === "activity" ? "'FILL' 1" : "'FILL' 0" }}>bolt</span>
-              Recents
+              {t("community.tabs.recent", "Recents")}
             </button>
           </div>
         </div>
@@ -339,7 +340,7 @@ const Community = () => {
         
         {/* Friends Horizontal List */}
         <div className="mb-8">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 ml-1">Amics Online</h3>
+            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 ml-1">{t("profile.friendsList", "Amics Online")}</h3>
             <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
                 {amigos.map(amigo => (
                     <div 
@@ -368,7 +369,7 @@ const Community = () => {
           {view === "feed" && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               {loading ? (
-                <div className="text-center py-20 opacity-30 font-bold uppercase tracking-widest text-xs">Carregant publicacions...</div>
+                <div className="text-center py-20 opacity-30 font-bold uppercase tracking-widest text-xs">{t("common.loading", "Carregant publicacions...")}</div>
               ) : (
                 publicaciones.map((pub, idx) => (
                   <PostCard key={pub.id_publicacion || pub._id || pub.id || idx} pub={pub} onComentarioCreado={cargarPublicaciones} />
@@ -379,7 +380,7 @@ const Community = () => {
 
           {view === "activity" && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-500 space-y-4">
-              <h3 className="text-xl font-bold tracking-tight text-indigo-500 mb-6">Activitat Recent</h3>
+              <h3 className="text-xl font-bold tracking-tight text-indigo-500 mb-6">{t("profile.recentPosts", "Activitat Recent")}</h3>
               {actividad.map((act, i) => (
                 <div key={i} className="bg-white dark:bg-slate-950 p-4 rounded-2xl border border-gray-100 dark:border-white/5 flex gap-4 items-center shadow-sm">
                   <Link to={`/profile/${act.id_usuario}`}>
@@ -389,7 +390,7 @@ const Community = () => {
                     <p className="text-xs text-slate-700 dark:text-slate-200">
                       <Link to={`/profile/${act.id_usuario}`}>
                         <span className="font-bold hover:text-primary transition-colors">{act.usuario}</span>
-                      </Link> ha creat una nova publicació
+                      </Link> {t("profile.posts", "ha creat una nova publicació")}
                     </p>
                     <p className="text-[10px] text-slate-400 mt-1">{formatDate(act.fecha)}</p>
                   </div>
@@ -401,9 +402,9 @@ const Community = () => {
 
           {view === "search" && (
             <div className="animate-in fade-in zoom-in-95 duration-300 space-y-4">
-               <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">Resultats per a "{searchQuery}"</h3>
+               <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">{t("collections.search", "Resultats")} para "{searchQuery}"</h3>
                {searchResults.length === 0 ? (
-                 <div className="text-center py-20 opacity-30">No s'han trobat usuaris</div>
+                 <div className="text-center py-20 opacity-30">{t("community.noFriends", "No s'han trobat usuaris")}</div>
                ) : (
                 searchResults.map((user, idx) => (
                     <Link 
@@ -414,7 +415,7 @@ const Community = () => {
                         <UserAvatar user={user} className="w-12 h-12" />
                         <div className="flex-1">
                             <h4 className="font-bold text-slate-800 dark:text-white">{user.nombre}</h4>
-                            <p className="text-xs text-slate-400 truncate max-w-[200px]">{user.bio || "Sense biografia"}</p>
+                            <p className="text-xs text-slate-400 truncate max-w-[200px]">{user.bio || t("editProfile.bioPlaceholder", "Sense biografia")}</p>
                         </div>
                         <span className="material-symbols-outlined text-slate-300">chevron_right</span>
                     </Link>
@@ -438,13 +439,13 @@ const Community = () => {
         <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowPostModal(false)}>
           <div className="w-full md:max-w-lg bg-white dark:bg-slate-950 rounded-[2.5rem] p-8 animate-in slide-in-from-bottom duration-300" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
-                <h2 className="text-xl font-bold tracking-tight">Nova Publicació</h2>
+                <h2 className="text-xl font-bold tracking-tight">{t("community.newPost", "Nova Publicació")}</h2>
                 <button onClick={() => setShowPostModal(false)} className="text-slate-400"><span className="material-symbols-outlined">close</span></button>
             </div>
             <textarea 
                 value={newPost.texto}
                 onChange={e => setNewPost({...newPost, texto: e.target.value})}
-                placeholder="Explica algo..." 
+                placeholder={t("editProfile.bioPlaceholder", "Explica algo...")} 
                 className="w-full bg-gray-50 dark:bg-white/5 rounded-2xl p-4 text-sm focus:outline-none min-h-[120px] resize-none border border-gray-100 dark:border-white/5"
             />
             <div className="flex gap-4 mt-4">
@@ -452,16 +453,16 @@ const Community = () => {
                     onClick={() => fileInputRef.current.click()}
                     className="flex-1 py-3 bg-gray-50 dark:bg-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
                 >
-                    <span className="material-symbols-outlined text-lg">image</span> Imatge
+                    <span className="material-symbols-outlined text-lg">image</span> {t("createList.map", "Imatge")}
                 </button>
                 <select 
                     value={newPost.tipo_publicacion}
                     onChange={e => setNewPost({...newPost, tipo_publicacion: e.target.value})}
                     className="flex-1 py-3 bg-gray-50 dark:bg-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest outline-none px-2"
                 >
-                    <option value="popular">Popular</option>
-                    <option value="oficial">Oficial</option>
-                    <option value="fanzone">Fan Zone</option>
+                    <option value="popular">{t("community.tabs.popular", "Popular")}</option>
+                    <option value="oficial">{t("community.tabs.official", "Oficial")}</option>
+                    <option value="fanzone">{t("community.tabs.fanZone", "Fan Zone")}</option>
                 </select>
             </div>
             <input ref={fileInputRef} type="file" className="hidden" onChange={e => {
@@ -474,7 +475,7 @@ const Community = () => {
                     <button onClick={() => {setSelectedFile(null); setPreviewUrl("");}} className="absolute top-2 right-2 bg-black/50 text-white w-6 h-6 rounded-full flex items-center justify-center"><span className="material-symbols-outlined text-sm">close</span></button>
                 </div>
             )}
-            <button onClick={handleCreatePost} className="w-full mt-6 bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/20 active:scale-95 transition-transform">Publicar</button>
+            <button onClick={handleCreatePost} className="w-full mt-6 bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/20 active:scale-95 transition-transform">{t("community.publish", "Publicar")}</button>
           </div>
         </div>
       )}

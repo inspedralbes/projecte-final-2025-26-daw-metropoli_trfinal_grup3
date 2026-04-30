@@ -92,7 +92,7 @@ const Home = () => {
           <span className="material-symbols-outlined text-gray-400">search</span>
           <input 
             type="text" 
-            placeholder="On t'agradaria anar?" 
+            placeholder={t("collections.search", "On t'agradaria anar?")}
             className="bg-transparent border-none outline-none text-lg placeholder-gray-400 w-full p-0 focus:ring-0 text-[#1a1a1a] dark:text-white"
           />
         </div>
@@ -101,7 +101,12 @@ const Home = () => {
       {/* Categories Horizontal Scroll */}
       <section className="mt-8 overflow-x-auto no-scrollbar">
         <div className="flex gap-3 px-6 min-w-max">
-          {categories.map((cat) => (
+          {[
+            { id: 1, name: t("home.dining", "Bares"), image: "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=100&q=80", active: true },
+            { id: 2, name: t("home.experience", "Segona mà"), image: "https://images.unsplash.com/photo-1567401893414-76b7b1e5a7a5?w=100&q=80", active: false },
+            { id: 3, name: t("home.orderFood", "Cafès"), image: "https://images.unsplash.com/photo-1509042239860-f550ce710b93?w=100&q=80", active: false },
+            { id: 4, name: t("home.fanZone", "Cultura"), image: "https://images.unsplash.com/photo-1491153059943-412f4b00ca1a?w=100&q=80", active: false },
+          ].map((cat) => (
             <button 
               key={cat.id} 
               className={`flex items-center gap-3 py-1.5 pl-1.5 pr-5 rounded-full transition-all duration-300 border shadow-sm ${
@@ -122,9 +127,9 @@ const Home = () => {
       {/* Nearby Destinations Section */}
       <section className="mt-10 px-6">
         <div className="flex justify-between items-end mb-6">
-          <h2 className="text-2xl font-medium tracking-tight">Les teves rutes</h2>
+          <h2 className="text-2xl font-medium tracking-tight">{t("nav.collections", "Les teves rutes")}</h2>
           {user && (
-            <Link to="/profile" className="text-gray-400 dark:text-white/40 text-sm font-medium hover:text-black dark:hover:text-white transition-colors">Veure-ho tot</Link>
+            <Link to="/profile" className="text-gray-400 dark:text-white/40 text-sm font-medium hover:text-black dark:hover:text-white transition-colors">{t("collections.viewAll", "Veure-ho tot")}</Link>
           )}
         </div>
 
@@ -178,7 +183,7 @@ const Home = () => {
             />
             <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center gap-2">
               <span className="material-symbols-outlined text-4xl text-white">map</span>
-              <span className="text-lg font-medium tracking-tight text-white">Mapa</span>
+              <span className="text-lg font-medium tracking-tight text-white">{t("nav.map", "Mapa")}</span>
             </div>
           </Link>
           <Link 
@@ -186,13 +191,13 @@ const Home = () => {
             className="flex-1 bg-black text-white dark:bg-white dark:text-black rounded-[2.5rem] flex flex-col items-center justify-center gap-2 shadow-xl active:scale-95 transition-transform"
           >
             <span className="material-symbols-outlined text-3xl">groups</span>
-            <span className="text-lg font-medium tracking-tight opacity-60">Comunitat</span>
+            <span className="text-lg font-medium tracking-tight opacity-60">{t("nav.community", "Comunitat")}</span>
           </Link>
         </div>
 
         {/* Friend Collections Carousel */}
         <div className="mt-12">
-          <h2 className="text-2xl font-medium tracking-tight mb-6">Dels teus amics</h2>
+          <h2 className="text-2xl font-medium tracking-tight mb-6">{t("home.groups", "Dels teus amics")}</h2>
           <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-6 px-6">
             {friendCollections.map((col) => (
               <div key={col.id} className="min-w-[320px] bg-white dark:bg-white/10 rounded-[2.5rem] p-6 border border-gray-100 dark:border-white/10 shadow-sm transition-colors duration-300">
@@ -205,7 +210,7 @@ const Home = () => {
                 <h3 className="font-medium text-lg tracking-tight truncate mb-2">{col.title}</h3>
                 <div className="flex justify-between items-center">
                   <span className="text-lg font-medium tracking-tight text-gray-400 dark:text-white/40">{col.user}</span>
-                  <span className="text-lg font-medium tracking-tight bg-gray-100 dark:bg-white/10 px-3 py-1 rounded-full">{col.spots} punts</span>
+                  <span className="text-lg font-medium tracking-tight bg-gray-100 dark:bg-white/10 px-3 py-1 rounded-full">{col.spots} {t("profile.points", "punts")}</span>
                 </div>
               </div>
             ))}
@@ -218,12 +223,12 @@ const Home = () => {
           
           <div className="flex justify-between items-start mb-10 relative z-10">
             <div>
-              <h2 className="text-2xl font-medium tracking-tight mb-1">El teu impacte</h2>
-              <p className="text-xs opacity-40 uppercase tracking-widest font-bold">Activitat setmanal</p>
+              <h2 className="text-2xl font-medium tracking-tight mb-1">{t("home.impact", "El teu impacte")}</h2>
+              <p className="text-xs opacity-40 uppercase tracking-widest font-bold">{t("home.weeklyActivity", "Activitat setmanal")}</p>
             </div>
             <div className="text-right">
               <p className="text-4xl font-medium tracking-tight">{userStats.kmWalked}</p>
-              <p className="text-[10px] opacity-40 uppercase font-bold">KM totals</p>
+              <p className="text-[10px] opacity-40 uppercase font-bold">{t("home.totalKm", "KM totals")}</p>
             </div>
           </div>
 
@@ -249,7 +254,7 @@ const Home = () => {
               </div>
               <div>
                 <p className="text-xl font-medium tracking-tight">{userStats.discovered}</p>
-                <p className="text-[9px] opacity-40 uppercase font-bold">Llocs descoberts</p>
+                <p className="text-[9px] opacity-40 uppercase font-bold">{t("home.discovered", "Llocs descoberts")}</p>
               </div>
             </div>
             <div className="bg-gray-50 dark:bg-white/5 rounded-[2rem] p-4 flex items-center gap-4 border border-gray-100 dark:border-transparent">
@@ -258,7 +263,7 @@ const Home = () => {
               </div>
               <div>
                 <p className="text-xl font-medium tracking-tight">{userStats.completedRoutes}</p>
-                <p className="text-[9px] opacity-40 uppercase font-bold">Rutes fetes</p>
+                <p className="text-[9px] opacity-40 uppercase font-bold">{t("home.completedRoutes", "Rutes fetes")}</p>
               </div>
             </div>
           </div>

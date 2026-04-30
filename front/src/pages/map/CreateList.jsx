@@ -345,7 +345,7 @@ const CreateList = () => {
             }
           />
 
-          {joinedRoute && <Polyline positions={joinedRoute} color="#ec4899" weight={6} opacity={0.8} />}
+          {joinedRoute && <Polyline positions={joinedRoute} color="var(--theme-color, #ec4899)" weight={6} opacity={0.8} />}
 
           {/* Rendering Other User Lists */}
           {showOtherLists && otherLists
@@ -383,7 +383,7 @@ const CreateList = () => {
               <Fragment key={`list-full-${list.id_lista}`}>
                 <Polyline 
                   positions={geom} 
-                  color={isFocused ? "#6366f1" : "#94a3b8"} 
+                  color={isFocused ? "var(--theme-color, #6366f1)" : "#94a3b8"} 
                   weight={isFocused ? 4 : 2} 
                   dashArray={isFocused ? "" : "5, 10"} 
                   opacity={isFocused ? 1 : 0.5} 
@@ -427,8 +427,8 @@ const CreateList = () => {
               icon={L.divIcon({
                 className: `selected-poi-marker transition-all ${activePoiIndex === idx ? 'scale-125 z-[100]' : ''}`,
                 html: `<div class="w-8 h-8 ${idx === 0 ? 'bg-green-500 text-white border-white' :
-                  activePoiIndex === idx ? 'bg-white text-pink-500 border-pink-500' :
-                    'bg-pink-500 text-white border-white'
+                  activePoiIndex === idx ? 'bg-primary-text text-primary border-primary' :
+                    'bg-primary text-primary-text border-white'
                   } rounded-full border-4 shadow-lg flex items-center justify-center text-xs font-bold transition-all">
                   ${idx === 0 ? '<span class="material-symbols-outlined text-[14px]">play_arrow</span>' : idx + 1}
                 </div>`,
@@ -458,7 +458,7 @@ const CreateList = () => {
 
           <button
             onClick={handleLocate}
-            className="w-12 h-12 bg-pink-500 text-white rounded-2xl shadow-2xl flex items-center justify-center hover:bg-pink-600 transition-all hover:scale-110 active:scale-95"
+            className="w-12 h-12 bg-primary text-primary-text rounded-2xl shadow-2xl flex items-center justify-center hover:opacity-90 transition-all hover:scale-110 active:scale-95"
           >
             <span className="material-symbols-outlined text-xl">my_location</span>
           </button>
@@ -468,10 +468,10 @@ const CreateList = () => {
             className={`w-12 h-12 rounded-2xl shadow-2xl flex flex-col items-center justify-center border-2 transition-all hover:scale-110 active:scale-95 ${
               showOtherLists ? 'bg-indigo-600 text-white border-indigo-400' : 'bg-white text-indigo-600 border-white'
             }`}
-            title="Mostrar/Ocultar Otras Listas"
+            title={t("createList.showOtherLists", "Mostrar/Ocultar Otras Listas")}
           >
             <span className="material-symbols-outlined text-xl">explore</span>
-            <span className="text-[7px] font-black uppercase tracking-tighter">Otras</span>
+            <span className="text-[7px] font-black uppercase tracking-tighter">{t("createList.other", "Otras")}</span>
           </button>
         </div>
       </div>
@@ -495,35 +495,35 @@ const CreateList = () => {
             <div className="space-y-8 animate-fade-in">
               <div className="space-y-1">
                 <h2 className="text-2xl font-black text-white tracking-tighter uppercase leading-none italic">
-                  {editingListId ? 'Editando Lista' : 'Nueva Lista'}<span className="text-pink-500">.</span>
+                  {editingListId ? t("createList.finishTitle", "Finalizar Lista") : t("createList.title", "Crear Lista")}<span className="text-primary">.</span>
                 </h2>
-                <p className="text-[9px] text-white/40 uppercase font-bold tracking-[0.2em]">Configura los detalles de tu ruta</p>
+                <p className="text-[9px] text-white/40 uppercase font-bold tracking-[0.2em]">{t("createList.subtitle", "Selecciona puntos en el mapa para crear tu itinerario personalizado.")}</p>
               </div>
 
               <div className="space-y-6">
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-pink-500 ml-1">Nombre</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">{t("createList.nameLabel", "Nombre")}</label>
                   <input
                     type="text"
-                    placeholder={t("createList.namePlaceholder")}
+                    placeholder={t("createList.namePlaceholder", "Escribe un título...")}
                     value={listName}
                     onChange={(e) => setListName(e.target.value)}
-                    className="w-full bg-white/5 border-2 border-white/10 rounded-2xl px-5 py-4 text-sm text-white placeholder:text-white/20 focus:border-pink-500/50 focus:bg-pink-500/5 transition-all outline-none"
+                    className="w-full bg-white/5 border-2 border-white/10 rounded-2xl px-5 py-4 text-sm text-white placeholder:text-white/20 focus:border-primary/50 focus:bg-primary/5 transition-all outline-none"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-pink-500 ml-1">Descripción</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">{t("createList.descLabel", "Descripción")}</label>
                   <textarea
-                    placeholder="Cuéntanos sobre esta aventura..."
+                    placeholder={t("createList.descPlaceholder", "¿De qué trata esta lista?")}
                     value={listDesc}
                     onChange={(e) => setListDesc(e.target.value)}
-                    className="w-full bg-white/5 border-2 border-white/10 rounded-2xl px-5 py-4 text-sm text-white placeholder:text-white/20 focus:border-pink-500/50 focus:bg-pink-500/5 transition-all outline-none h-32 resize-none"
+                    className="w-full bg-white/5 border-2 border-white/10 rounded-2xl px-5 py-4 text-sm text-white placeholder:text-white/20 focus:border-primary/50 focus:bg-primary/5 transition-all outline-none h-32 resize-none"
                   />
                 </div>
 
                 <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-pink-500 ml-1">Privacidad</label>
+                  <label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">{t("editProfile.dangerZone", "Privacidad")}</label>
                   <div className="grid grid-cols-3 gap-2">
                     {['public', 'private', 'friends'].map((v) => (
                       <button
@@ -531,11 +531,11 @@ const CreateList = () => {
                         onClick={() => setListVisibility(v)}
                         className={`py-2 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all border-2 ${
                           listVisibility === v 
-                          ? 'bg-pink-500 border-pink-500 text-white shadow-lg shadow-pink-500/20' 
+                          ? 'bg-primary border-primary text-primary-text shadow-lg shadow-primary/20' 
                           : 'bg-white/5 border-white/10 text-white/40 hover:border-white/20'
                         }`}
                       >
-                        {v}
+                        {v === 'public' ? t("community.tabs.official", "Pública") : v === 'private' ? t("nav.darkMode", "Privada") : t("community.friends", "Amigos")}
                       </button>
                     ))}
                   </div>
@@ -544,8 +544,8 @@ const CreateList = () => {
 
               <div className="space-y-4 pt-4 border-t border-white/10">
                 <div className="flex items-center justify-between">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Puntos de interés</h3>
-                  <span className="px-2 py-0.5 bg-pink-500/20 rounded text-[9px] font-bold text-pink-500 border border-pink-500/20">{selectedPoisForList.length}</span>
+                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">{t("createList.selection", "Tu Selección")}</h3>
+                  <span className="px-2 py-0.5 bg-primary/20 rounded text-[9px] font-bold text-primary border border-primary/20">{selectedPoisForList.length}</span>
                 </div>
                 
                 <div className="space-y-2 max-h-[200px] overflow-y-auto no-scrollbar pr-2">
@@ -555,11 +555,11 @@ const CreateList = () => {
                       onClick={() => setActivePoiIndex(idx)}
                       className={`group flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer ${
                         activePoiIndex === idx
-                          ? 'bg-pink-500/20 border-pink-500 shadow-lg'
+                          ? 'bg-primary/20 border-primary shadow-lg'
                           : 'bg-white/5 border-white/5 text-white/80 hover:bg-white/10 hover:border-white/20'
                       }`}
                     >
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black ${activePoiIndex === idx ? 'bg-pink-500 text-white' : 'bg-white/10 text-white'}`}>
+                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black ${activePoiIndex === idx ? 'bg-primary text-primary-text' : 'bg-white/10 text-white'}`}>
                         {idx + 1}
                       </div>
                       <span className="text-[11px] font-bold truncate flex-1">{poi.nombre}</span>
@@ -575,9 +575,9 @@ const CreateList = () => {
                 </div>
 
                 {totalDistance > 0 && (
-                  <div className="flex items-center justify-between px-4 py-3 bg-pink-500 text-white rounded-2xl shadow-xl shadow-pink-500/20">
+                  <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-text rounded-2xl shadow-xl shadow-primary/20">
                     <div className="flex flex-col">
-                      <span className="text-[8px] font-black uppercase tracking-widest opacity-60">Distancia Total</span>
+                      <span className="text-[8px] font-black uppercase tracking-widest opacity-60">{t("createList.distanceTotal", "Distancia Total")}</span>
                       <span className="text-sm font-black">
                         {totalDistance > 1000
                           ? `${(totalDistance / 1000).toFixed(2)} km`
@@ -594,11 +594,11 @@ const CreateList = () => {
                   onClick={handleSaveList}
                   disabled={selectedPoisForList.length < 1 || !listName}
                   className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3 ${
-                    editingListId ? 'bg-indigo-600 text-white shadow-indigo-500/40' : 'bg-white text-black'
+                    editingListId ? 'bg-primary text-primary-text shadow-primary/40' : 'bg-white text-black'
                   } disabled:opacity-20 disabled:grayscale`}
                 >
                   <span className="material-symbols-outlined">{editingListId ? 'save_as' : 'cloud_upload'}</span>
-                  {editingListId ? "Actualizar Lista" : t("createList.save")}
+                  {editingListId ? t("common.save", "Actualizar Lista") : t("createList.save", "Guardar y Publicar")}
                 </button>
                 
                 {(editingListId || selectedPoisForList.length > 0) && (
@@ -611,7 +611,7 @@ const CreateList = () => {
                     }}
                     className="w-full text-white/40 text-[10px] font-bold uppercase tracking-widest hover:text-white transition-all py-2"
                   >
-                    Descartar cambios
+                    {t("common.cancel", "Descartar cambios")}
                   </button>
                 )}
               </div>
@@ -623,7 +623,7 @@ const CreateList = () => {
             <div className="space-y-8 animate-fade-in">
               <div className="flex justify-between items-start">
                 <div className="space-y-1">
-                  <span className="px-2 py-0.5 bg-indigo-500 text-[8px] font-black uppercase rounded text-white shadow-lg shadow-indigo-500/20">Modo Inspección</span>
+                  <span className="px-2 py-0.5 bg-primary text-[8px] font-black uppercase rounded text-primary-text shadow-lg shadow-primary/20">{t("createList.inspectMode", "Modo Inspección")}</span>
                   <h3 className="text-2xl font-black text-white italic truncate max-w-[250px] leading-tight">
                     {otherLists.find(l => l.id_lista === focusedListId)?.nombre}
                   </h3>
@@ -638,27 +638,27 @@ const CreateList = () => {
 
               <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
                 <p className="text-[11px] text-white/60 leading-relaxed italic">
-                  {otherLists.find(l => l.id_lista === focusedListId)?.descripcion || "Sin descripción disponible."}
+                  {otherLists.find(l => l.id_lista === focusedListId)?.descripcion || t("createList.noDesc", "Sin descripción disponible.")}
                 </p>
               </div>
 
               <div className="space-y-4">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">Recorrido sugerido</h4>
+                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">{t("createList.suggestedRoute", "Recorrido sugerido")}</h4>
                 <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 no-scrollbar">
                   {otherLists.find(l => l.id_lista === focusedListId)?.pois.map((poi, idx, arr) => (
                     <div key={poi.id_poi} className="relative pl-8">
-                      <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-indigo-500/20 ml-2.5">
+                      <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary/20 ml-2.5">
                         {idx === arr.length - 1 && <div className="absolute top-0 bottom-0 w-full bg-slate-950" style={{top: '12px'}} />}
                       </div>
-                      <div className="absolute left-0 top-0 w-5 h-5 bg-indigo-500 rounded-full flex items-center justify-center text-[9px] font-bold text-white border-2 border-slate-950 z-10">
+                      <div className="absolute left-0 top-0 w-5 h-5 bg-primary rounded-full flex items-center justify-center text-[9px] font-bold text-primary-text border-2 border-slate-950 z-10">
                         {idx + 1}
                       </div>
                       <div className="space-y-1">
                         <h4 className="text-[11px] font-bold text-white leading-none">{poi.nombre}</h4>
                         {idx < arr.length - 1 && (
                           <div className="flex items-center gap-1.5 py-2">
-                            <span className="material-symbols-outlined text-[12px] text-indigo-400">directions_walk</span>
-                            <span className="text-[9px] text-indigo-400 font-black uppercase">
+                            <span className="material-symbols-outlined text-[12px] text-primary">directions_walk</span>
+                            <span className="text-[9px] text-primary font-black uppercase">
                               {otherListGeometries[focusedListId]?.waypoints?.[idx] 
                                 ? `${Math.round(otherListGeometries[focusedListId].waypoints[idx])} m`
                                 : "..."}
@@ -674,8 +674,8 @@ const CreateList = () => {
               <div className="pt-6 border-t border-white/10 space-y-4">
                 <div className="flex justify-between items-end px-2">
                   <div className="flex flex-col">
-                    <span className="text-[9px] text-white/40 uppercase font-black tracking-widest">Longitud Total</span>
-                    <span className="text-3xl font-black text-indigo-400">
+                    <span className="text-[9px] text-white/40 uppercase font-black tracking-widest">{t("createList.distanceTotal", "Longitud Total")}</span>
+                    <span className="text-3xl font-black text-primary">
                       {otherListGeometries[focusedListId]?.distance 
                         ? `${(otherListGeometries[focusedListId].distance / 1000).toFixed(2)} km`
                         : "..."}
@@ -696,10 +696,10 @@ const CreateList = () => {
                         setFocusedListId(null);
                       }
                     }}
-                    className="flex-1 bg-indigo-500 hover:bg-indigo-600 text-white py-4 rounded-2xl text-[11px] font-black uppercase transition-all shadow-xl shadow-indigo-500/20 flex items-center justify-center gap-2"
+                    className="flex-1 bg-primary hover:opacity-90 text-primary-text py-4 rounded-2xl text-[11px] font-black uppercase transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-2"
                   >
                     <span className="material-symbols-outlined text-sm">edit</span>
-                    Editar
+                    {t("common.edit", "Editar")}
                   </button>
                   <button 
                     onClick={() => {
@@ -715,7 +715,7 @@ const CreateList = () => {
                     className="flex-1 bg-white/10 hover:bg-white/20 text-white py-4 rounded-2xl text-[11px] font-black uppercase transition-all flex items-center justify-center gap-2"
                   >
                     <span className="material-symbols-outlined text-sm">content_copy</span>
-                    Copiar
+                    {t("common.copy", "Copiar")}
                   </button>
                 </div>
               </div>
