@@ -7,7 +7,12 @@
     "dev": "vite --host",
     "build": "vite build",
     "lint": "eslint .",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "cypress:open": "cypress open",
+    "cypress:run": "cypress run",
+    "cypress:api": "cypress run --config-file cypress.api.config.js",
+    "cypress:api:open": "cypress open --config-file cypress.api.config.js",
+    "cypress:e2e": "cypress run --spec 'cypress/e2e/auth.cy.js,cypress/e2e/profile.cy.js,cypress/e2e/community.cy.js'"
   },
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.2.0",
@@ -35,6 +40,7 @@
     "@vitejs/plugin-basic-ssl": "^2.1.4",
     "@vitejs/plugin-react": "^5.1.1",
     "autoprefixer": "^10.4.24",
+    "cypress": "^13.17.0",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
     "eslint-plugin-react-refresh": "^0.4.24",
