@@ -1,0 +1,12 @@
+{
+  "usuario_test": {
+    "email": "test@wemap.cat",
+    "password": "Test1234!",
+    "nombre": "Usuari Test"
+  },
+  "usuario_otro": {
+    "email": "otro@wemap.cat",
+    "password": "Test1234!",
+    "nombre": "Altre Usuari"
+  }
+}
