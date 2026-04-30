@@ -48,6 +48,18 @@ const deleteById = async (id) => {
     return await query('DELETE FROM listas WHERE id_lista = ?', [id]);
 };
 
+const update = async (id, data) => {
+    const { nombre, descripcion, visibilidad } = data;
+    return await query(
+        'UPDATE listas SET nombre = ?, descripcion = ?, visibilidad = ? WHERE id_lista = ?',
+        [nombre, descripcion, visibilidad, id]
+    );
+};
+
+const removeAllPoisFromLista = async (id_lista) => {
+    return await query('DELETE FROM lista_pois WHERE id_lista = ?', [id_lista]);
+};
+
 export default {
     create,
     addPoiToLista,
@@ -55,5 +67,7 @@ export default {
     getPoisByListaId,
     getPublicListas,
     getByUsuarioId,
-    deleteById
+    deleteById,
+    update,
+    removeAllPoisFromLista
 };

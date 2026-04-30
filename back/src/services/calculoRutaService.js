@@ -9,7 +9,13 @@ const calcularRuta = async (idPoiOrigen, idPoiDestino) => {
     const idNodoDestino = await poiModel.getNodoAccesoId(idPoiDestino);
 
     if (!idNodoOrigen || !idNodoDestino) {
-        throw new Error('Uno de los POIs no tiene un punto de acceso (nodo) configurado o no existe.');
+        // Fallback: If no nodes, we can't use Dijkstra. 
+        // We'll let the frontend handle the direct line.
+        return {
+            success: false,
+            error: 'MISSING_NODES',
+            message: 'Uno de los POIs no tiene un punto de acceso configurado.'
+        };
     }
 
     if (String(idNodoOrigen) === String(idNodoDestino)) {
@@ -47,7 +53,11 @@ const calcularRuta = async (idPoiOrigen, idPoiDestino) => {
     const rutaNodosIds = dijkstraUtils.calculateShortestPath(graph, idNodoOrigen, idNodoDestino);
 
     if (!rutaNodosIds) {
-        throw new Error('No se ha encontrado un camino a través de los tramos hacia el destino.');
+        return {
+            success: false,
+            error: 'ROUTE_NOT_FOUND',
+            message: 'No se ha encontrado un camino a través de los tramos hacia el destino.'
+        };
     }
 
     // 5. Enriquecer Ruta
@@ -115,7 +125,11 @@ const calcularRutaDesdeCoords = async (lat, lng, idPoiDestino) => {
     const rutaNodosIds = dijkstraUtils.calculateShortestPath(graph, idNodoOrigen, idNodoDestino);
 
     if (!rutaNodosIds) {
-        throw new Error('No existe una conexión de tramos que llegue hasta ese destino (Gráfico desconectado).');
+        return {
+            success: false,
+            error: 'ROUTE_NOT_FOUND',
+            message: 'No existe una conexión de tramos que llegue hasta ese destino (Gráfico desconectado).'
+        };
     }
 
     // 5. Enriquecer Ruta

@@ -37,7 +37,21 @@ export const deletePoi = async (id) => {
     if (!response.ok) throw new Error("Failed to delete POI");
     return await response.json();
   } catch (error) {
-    console.error("Error in deletePoi:", error);
+    throw error;
+  }
+};
+
+export const updatePoi = async (id, poiData) => {
+  try {
+    const response = await fetch(`${API_URL}/api/pois/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(poiData),
+    });
+    if (!response.ok) throw new Error("Failed to update POI");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in updatePoi:", error);
     throw error;
   }
 };
@@ -184,8 +198,6 @@ export const getPoiNodes = async () => {
   }
 };
 
-
-
 // ── Tiempo (Weather) ──
 export const getTiempo = async () => {
   try {
@@ -234,7 +246,9 @@ export const getChatHistory = async (room) => {
 
 export const searchUsers = async (query) => {
   try {
-    const response = await fetch(`${API_URL}/api/usuarios/search?q=${encodeURIComponent(query)}`);
+    const response = await fetch(
+      `${API_URL}/api/usuarios/search?q=${encodeURIComponent(query)}`,
+    );
     if (!response.ok) throw new Error("Failed to search Users");
     return await response.json();
   } catch (error) {
@@ -588,6 +602,21 @@ export const deleteLista = async (id) => {
   }
 };
 
+export const updateLista = async (id, listaData) => {
+  try {
+    const response = await fetch(`${API_URL}/api/listas/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(listaData),
+    });
+    if (!response.ok) throw new Error("Failed to update Lista");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in updateLista:", error);
+    throw error;
+  }
+};
+
 // ── Seguidores ──
 
 export const followUsuario = async (idSeguidor, idSeguido) => {
@@ -622,7 +651,9 @@ export const unfollowUsuario = async (idSeguidor, idSeguido) => {
 
 export const getSeguidores = async (userId) => {
   try {
-    const response = await fetch(`${API_URL}/api/seguidores/${userId}/followers`);
+    const response = await fetch(
+      `${API_URL}/api/seguidores/${userId}/followers`,
+    );
     if (!response.ok) throw new Error("Failed to fetch seguidores");
     return await response.json();
   } catch (error) {
@@ -633,7 +664,9 @@ export const getSeguidores = async (userId) => {
 
 export const getSiguiendo = async (userId) => {
   try {
-    const response = await fetch(`${API_URL}/api/seguidores/${userId}/following`);
+    const response = await fetch(
+      `${API_URL}/api/seguidores/${userId}/following`,
+    );
     if (!response.ok) throw new Error("Failed to fetch siguiendo");
     return await response.json();
   } catch (error) {
@@ -644,7 +677,9 @@ export const getSiguiendo = async (userId) => {
 
 export const checkIsFollowing = async (userId, targetId) => {
   try {
-    const response = await fetch(`${API_URL}/api/seguidores/${userId}/isFollowing/${targetId}`);
+    const response = await fetch(
+      `${API_URL}/api/seguidores/${userId}/isFollowing/${targetId}`,
+    );
     if (!response.ok) throw new Error("Failed to check isFollowing");
     return await response.json();
   } catch (error) {
