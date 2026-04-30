@@ -16,7 +16,8 @@ describe("API - Seguidors", () => {
         failOnStatusCode: false,
       }).then((res) => {
         if (res.status === 200) {
-          myId = res.body.usuario?.id_usuario || res.body.usuario?.id;
+          const usuario = res.body.data?.usuario || res.body.usuario;
+          myId = usuario?.id_usuario || usuario?.id;
         }
       });
 

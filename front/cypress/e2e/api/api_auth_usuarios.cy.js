@@ -15,8 +15,8 @@ describe("API - Autenticació", () => {
         failOnStatusCode: false,
       }).then((res) => {
         expect(res.status).to.be.oneOf([200, 201]);
-        expect(res.body).to.have.property("token");
-        expect(res.body).to.have.property("usuario");
+        expect(res.body.data).to.have.property("token");
+        expect(res.body.data).to.have.property("usuario");
       });
     });
   });
@@ -55,7 +55,7 @@ describe("API - Usuaris", () => {
         body: { email: data.usuario_test.email, password: data.usuario_test.password },
         failOnStatusCode: false,
       }).then((res) => {
-        if (res.status === 200) token = res.body.token;
+        if (res.status === 200) token = res.body.data?.token || res.body.token;
       });
     });
   });
