@@ -3,13 +3,13 @@ import poiModel from '../models/poiModel.js';
 
 const createLista = async (req, res) => {
     try {
-        const { id_usuario, nombre, descripcion, visibilidad, pois } = req.body;
+        const { id_usuario, nombre, descripcion, visibilidad, imagen_url, pois } = req.body;
         
         if (!id_usuario || !nombre) {
             return res.status(400).json({ success: false, message: 'Usuario y nombre son requeridos' });
         }
 
-        const newLista = await listaModel.create({ id_usuario, nombre, descripcion, visibilidad });
+        const newLista = await listaModel.create({ id_usuario, nombre, descripcion, visibilidad, imagen_url });
         
         if (pois && Array.isArray(pois)) {
             for (let i = 0; i < pois.length; i++) {
@@ -26,7 +26,8 @@ const createLista = async (req, res) => {
 
 const getPublicListas = async (req, res) => {
     try {
-        const listas = await listaModel.getPublicListas();
+        const { userId } = req.query; // Capturamos el ID del usuario actual si viene en la query
+        const listas = await listaModel.getPublicListas(userId);
         
         // Adjuntamos los POIs a cada lista
         const listasConPois = await Promise.all(listas.map(async (lista) => {
@@ -83,9 +84,9 @@ const deleteLista = async (req, res) => {
 const updateLista = async (req, res) => {
     try {
         const { id } = req.params;
-        const { nombre, descripcion, visibilidad, pois } = req.body;
+        const { nombre, descripcion, visibilidad, imagen_url, pois } = req.body;
 
-        await listaModel.update(id, { nombre, descripcion, visibilidad });
+        await listaModel.update(id, { nombre, descripcion, visibilidad, imagen_url });
 
         if (pois && Array.isArray(pois)) {
             // Limpiamos los POIs actuales y añadimos los nuevos para actualizar la ruta
@@ -102,11 +103,43 @@ const updateLista = async (req, res) => {
     }
 };
 
+const uploadListaImage = async (req, res) => {
+    try {
+        const { id } = req.params;
+
+        if (!req.file) {
+            return res.status(400).json({
+                success: false,
+                message: 'No se ha recibido ninguna imagen.',
+                error_code: 'ARCHIVO_REQUERIDO'
+            });
+        }
+
+        // Construimos la ruta relativa
+        const rutaRelativa = `/images/listas/${req.file.filename}`;
+
+        await listaModel.updateImageUrl(id, rutaRelativa);
+
+        res.json({
+            success: true,
+            message: 'Imagen de portada actualizada correctamente',
+            data: {
+                id_lista: id,
+                imagen_url: rutaRelativa
+            }
+        });
+    } catch (error) {
+        console.error('Error in uploadListaImage:', error);
+        res.status(500).json({ success: false, message: 'Error al subir la imagen' });
+    }
+};
+
 export default {
     createLista,
     getPublicListas,
     getListaById,
     getUsuarioListas,
     deleteLista,
-    updateLista
+    updateLista,
+    uploadListaImage
 };

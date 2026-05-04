@@ -424,9 +424,9 @@ const Map = () => {
 
           {/* Bottom Sheet Modal */}
           <div className="w-full bg-white/90 dark:bg-black/90 rounded-t-[2rem] pt-1 pb-24 px-5 shadow-[0_-10px_40px_rgba(0,0,0,0.15)] relative backdrop-blur-lg">
-            
+
             {/* Drag Handle */}
-            <div 
+            <div
               className="w-full flex justify-center cursor-pointer py-1.5"
               onClick={() => setIsSheetExpanded(!isSheetExpanded)}
             >

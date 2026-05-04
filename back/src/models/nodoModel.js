@@ -2,10 +2,10 @@ import { query } from '../config/mysql.js';
 
 const create = async (nodo, connection = null) => {
     const runQuery = connection ? connection.query.bind(connection) : query;
-    const { latitud, longitud, descripcion } = nodo;
+    const { latitud, longitud } = nodo;
     const [result] = await runQuery(
-        'INSERT INTO nodos_navegacion (latitud, longitud, descripcion) VALUES (?, ?, ?)',
-        [latitud, longitud, descripcion]
+        'INSERT INTO nodos_navegacion (latitud, longitud) VALUES (?, ?)',
+        [latitud, longitud]
     );
     return { id_nodo: result.insertId, ...nodo };
 };

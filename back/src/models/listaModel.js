@@ -1,10 +1,10 @@
 import { query } from '../config/mysql.js';
 
 const create = async (lista) => {
-    const { id_usuario, nombre, descripcion, visibilidad } = lista;
+    const { id_usuario, nombre, descripcion, visibilidad, imagen_url } = lista;
     const [result] = await query(
-        'INSERT INTO listas (id_usuario, nombre, descripcion, visibilidad) VALUES (?, ?, ?, ?)',
-        [id_usuario, nombre, descripcion, visibilidad]
+        'INSERT INTO listas (id_usuario, nombre, descripcion, visibilidad, imagen_url) VALUES (?, ?, ?, ?, ?)',
+        [id_usuario, nombre, descripcion, visibilidad, imagen_url]
     );
     return { id_lista: result.insertId, ...lista };
 };
@@ -33,8 +33,24 @@ const getPoisByListaId = async (id_lista) => {
     return rows;
 };
 
-const getPublicListas = async () => {
-    const [rows] = await query('SELECT * FROM listas WHERE visibilidad = "public"');
+const getPublicListas = async (currentUserId = null) => {
+    // Si no hay usuario, solo vemos las públicas
+    if (!currentUserId) {
+        const [rows] = await query('SELECT * FROM listas WHERE visibilidad = "public"');
+        return rows;
+    }
+
+    // Si hay usuario, vemos: públicas, de amigos y las propias (incluso privadas)
+    const [rows] = await query(
+        `SELECT DISTINCT l.* 
+         FROM listas l
+         LEFT JOIN amigos a ON (l.id_usuario = a.id_usuario AND a.id_amigo = ?) 
+                            OR (l.id_usuario = a.id_amigo AND a.id_usuario = ?)
+         WHERE l.visibilidad = 'public' 
+            OR l.id_usuario = ? 
+            OR (l.visibilidad = 'friends' AND (a.id_usuario IS NOT NULL OR a.id_amigo IS NOT NULL))`,
+        [currentUserId, currentUserId, currentUserId]
+    );
     return rows;
 };
 
@@ -49,11 +65,15 @@ const deleteById = async (id) => {
 };
 
 const update = async (id, data) => {
-    const { nombre, descripcion, visibilidad } = data;
+    const { nombre, descripcion, visibilidad, imagen_url } = data;
     return await query(
-        'UPDATE listas SET nombre = ?, descripcion = ?, visibilidad = ? WHERE id_lista = ?',
-        [nombre, descripcion, visibilidad, id]
+        'UPDATE listas SET nombre = ?, descripcion = ?, visibilidad = ?, imagen_url = ? WHERE id_lista = ?',
+        [nombre, descripcion, visibilidad, imagen_url, id]
     );
+};
+
+const updateImageUrl = async (id, imagen_url) => {
+    return await query('UPDATE listas SET imagen_url = ? WHERE id_lista = ?', [imagen_url, id]);
 };
 
 const removeAllPoisFromLista = async (id_lista) => {
@@ -69,5 +89,6 @@ export default {
     getByUsuarioId,
     deleteById,
     update,
+    updateImageUrl,
     removeAllPoisFromLista
 };

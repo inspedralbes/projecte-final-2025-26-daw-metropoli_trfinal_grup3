@@ -412,33 +412,7 @@ export const getTramosByNode = async (nodeId) => {
   }
 };
 
-// ── Incidencias ──
 
-export const getIncidencias = async () => {
-  try {
-    const response = await fetch(`${API_URL}/api/incidencias`);
-    if (!response.ok) throw new Error("Failed to fetch Incidencias");
-    return await response.json();
-  } catch (error) {
-    console.error("Error in getIncidencias:", error);
-    throw error;
-  }
-};
-
-export const createIncidencia = async (incidenciaData) => {
-  try {
-    const response = await fetch(`${API_URL}/api/incidencias`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(incidenciaData),
-    });
-    if (!response.ok) throw new Error("Failed to create Incidencia");
-    return await response.json();
-  } catch (error) {
-    console.error("Error in createIncidencia:", error);
-    throw error;
-  }
-};
 
 // ── Usuarios ──
 
@@ -541,9 +515,10 @@ export const removeAmigo = async (userId, friendId) => {
 
 // ── Listas ──
 
-export const getListas = async () => {
+export const getListas = async (userId = null) => {
   try {
-    const response = await fetch(`${API_URL}/api/listas`);
+    const url = userId ? `${API_URL}/api/listas?userId=${userId}` : `${API_URL}/api/listas`;
+    const response = await fetch(url);
     if (!response.ok) throw new Error("Failed to fetch Listas");
     return await response.json();
   } catch (error) {
@@ -613,6 +588,23 @@ export const updateLista = async (id, listaData) => {
     return await response.json();
   } catch (error) {
     console.error("Error in updateLista:", error);
+    throw error;
+  }
+};
+
+export const uploadListaImage = async (idLista, file) => {
+  try {
+    const formData = new FormData();
+    formData.append("imagenLista", file);
+
+    const response = await fetch(`${API_URL}/api/listas/${idLista}/imagen`, {
+      method: "POST",
+      body: formData,
+    });
+    if (!response.ok) throw new Error("Failed to upload Lista image");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in uploadListaImage:", error);
     throw error;
   }
 };
