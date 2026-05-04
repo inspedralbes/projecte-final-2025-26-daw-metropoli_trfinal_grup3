@@ -120,11 +120,8 @@ const Collections = () => {
 
     try {
       setIsSaving(true);
-      const formData = new FormData();
-      formData.append('imagenLista', file);
-
       // Usamos el ID de la ruta seleccionada para la subida
-      const res = await uploadListaImage(selectedRoute.id_lista, formData);
+      const res = await uploadListaImage(selectedRoute.id_lista, file);
       if (res.success) {
         setEditForm(prev => ({ ...prev, imagen_url: res.data.imagen_url }));
       }
