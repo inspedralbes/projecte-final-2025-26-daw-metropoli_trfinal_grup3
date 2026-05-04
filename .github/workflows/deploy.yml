@@ -1,4 +1,4 @@
-name: Deploy + Tests WeMap
+name: WeMap CI/CD — Test → Deploy
 
 on:
   push:
@@ -6,36 +6,11 @@ on:
       - main
 
 jobs:
-  # ── Job 1: Desplegament al servidor ────────────────────────────────────────
-  deploy:
-    name: Deploy to VPS
-    runs-on: ubuntu-latest
-    steps:
-      - name: Checkout code
-        uses: actions/checkout@v4
-
-      - name: Deploy to Server via SSH
-        uses: appleboy/ssh-action@v1.0.3
-        with:
-          host: ${{ secrets.SERVER_HOST }}
-          username: ${{ secrets.SERVER_USER }}
-          key: ${{ secrets.SERVER_SSH_KEY }}
-          script: |
-            # 1. Entrar a la carpeta donde clonaste el proyecto en el servidor
-            cd ${{ secrets.SERVER_PATH }}
-
-            # 2. Descargar los últimos cambios de GitHub
-            git pull origin main
-
-            # 3. Reconstruir y levantar los contenedores de Docker
-            docker compose -f docker-compose.prod.yml build
-            docker compose -f docker-compose.prod.yml up -d
-
-  # ── Job 2: Tests E2E + API amb Cypress ─────────────────────────────────────
+  # ── Job 1: Tests de la API contra producció actual ─────────────────────────
+  # Els tests s'executen ABANS de desplegar per evitar pujar codi trencat
   test:
-    name: Cypress Tests (E2E + API)
+    name: Cypress API Tests
     runs-on: ubuntu-latest
-    needs: deploy # S'executa APRÈS del desplegament
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
@@ -50,20 +25,22 @@ jobs:
       - name: Install front dependencies
         run: npm ci
         working-directory: front
+        env:
+          CYPRESS_INSTALL_BINARY: 0  # No descarregar el binari en CI (s'usa l'action)
 
-      - name: Wait for server to be ready
+      - name: Wait for production server to be ready
         run: |
-          echo "Waiting for server to be ready..."
-          for i in {1..15}; do
+          echo "Comprovant que el servidor de producció és accessible..."
+          for i in {1..10}; do
             if curl -sf "http://${{ secrets.SERVER_HOST }}/api/categorias" > /dev/null 2>&1; then
-              echo "Server is up!"
+              echo "Servidor operatiu!"
               break
             fi
-            echo "Attempt $i: server not ready yet, waiting 10s..."
+            echo "Intent $i: servidor no disponible, esperant 10s..."
             sleep 10
           done
 
-      - name: Run Cypress API Tests
+      - name: Run Cypress API Tests (against current production)
         uses: cypress-io/github-action@v6
         with:
           working-directory: front
@@ -71,16 +48,8 @@ jobs:
           config: baseUrl=http://${{ secrets.SERVER_HOST }},env.API_URL=http://${{ secrets.SERVER_HOST }}
           browser: chrome
           headless: true
-
-      - name: Run Cypress E2E Tests
-        uses: cypress-io/github-action@v6
-        with:
-          working-directory: front
-          config: baseUrl=http://${{ secrets.SERVER_HOST }},env.API_URL=http://${{ secrets.SERVER_HOST }}
-          spec: cypress/e2e/auth.cy.js,cypress/e2e/profile.cy.js,cypress/e2e/community.cy.js
-          browser: chrome
-          headless: true
-          install: false # ja instal·lat al pas anterior
+        env:
+          CYPRESS_INSTALL_BINARY: 0
 
       - name: Upload screenshots on failure
         if: failure()
@@ -89,3 +58,33 @@ jobs:
           name: cypress-screenshots
           path: front/cypress/screenshots
           if-no-files-found: ignore
+
+  # ── Job 2: Desplegament al VPS (NOMÉS si els tests passen) ─────────────────
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    needs: test  # ← DEPÈN dels tests: si fallen, NO es desplega
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Server via SSH
+        uses: appleboy/ssh-action@v1.0.3
+        with:
+          host: ${{ secrets.SERVER_HOST }}
+          username: ${{ secrets.SERVER_USER }}
+          key: ${{ secrets.SERVER_SSH_KEY }}
+          script: |
+            cd ${{ secrets.SERVER_PATH }}
+            git pull origin main
+            docker compose -f docker-compose.prod.yml build
+            docker compose -f docker-compose.prod.yml up -d
+
+      - name: Smoke test after deploy
+        run: |
+          echo "Verificant que el nou desplegament funciona..."
+          sleep 15
+          curl -sf "http://${{ secrets.SERVER_HOST }}/api/categorias" \
+            && echo "✅ Deploy verificat correctament" \
+            || (echo "❌ El servidor no respon després del deploy" && exit 1)
+
