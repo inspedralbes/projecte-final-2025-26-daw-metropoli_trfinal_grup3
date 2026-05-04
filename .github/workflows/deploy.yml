@@ -15,24 +15,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
 
-      - name: Setup Node.js
-        uses: actions/setup-node@v4
-        with:
-          node-version: 20
-          cache: "npm"
-          cache-dependency-path: front/package-lock.json
-
-      - name: Install front dependencies
-        run: npm ci
-        working-directory: front
-        env:
-          CYPRESS_INSTALL_BINARY: 0  # No descarregar el binari en CI (s'usa l'action)
-
       - name: Wait for production server to be ready
         run: |
           echo "Comprovant que el servidor de producció és accessible..."
           for i in {1..10}; do
-            if curl -sf "http://${{ secrets.SERVER_HOST }}/api/categorias" > /dev/null 2>&1; then
+            if curl -sf "http://${{ secrets.SERVER_HOST }}:3000/api/categorias" > /dev/null 2>&1; then
               echo "Servidor operatiu!"
               break
             fi
@@ -41,15 +28,18 @@ jobs:
           done
 
       - name: Run Cypress API Tests (against current production)
+        # L'action gestiona sola: npm ci + instal·lació del binari de Cypress
         uses: cypress-io/github-action@v6
         with:
           working-directory: front
           config-file: cypress.api.config.js
-          config: baseUrl=http://${{ secrets.SERVER_HOST }},env.API_URL=http://${{ secrets.SERVER_HOST }}
+          config: baseUrl=http://${{ secrets.SERVER_HOST }}:8080
+          env: API_URL=http://${{ secrets.SERVER_HOST }}:3000
           browser: chrome
-          headless: true
         env:
-          CYPRESS_INSTALL_BINARY: 0
+          # Credencials de l'usuari de test ja existent a producció
+          CYPRESS_TEST_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          CYPRESS_TEST_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
 
       - name: Upload screenshots on failure
         if: failure()
@@ -58,6 +48,7 @@ jobs:
           name: cypress-screenshots
           path: front/cypress/screenshots
           if-no-files-found: ignore
+
 
   # ── Job 2: Desplegament al VPS (NOMÉS si els tests passen) ─────────────────
   deploy:
@@ -84,7 +75,7 @@ jobs:
         run: |
           echo "Verificant que el nou desplegament funciona..."
           sleep 15
-          curl -sf "http://${{ secrets.SERVER_HOST }}/api/categorias" \
+          curl -sf "http://${{ secrets.SERVER_HOST }}:3000/api/categorias" \
             && echo "✅ Deploy verificat correctament" \
             || (echo "❌ El servidor no respon després del deploy" && exit 1)
 

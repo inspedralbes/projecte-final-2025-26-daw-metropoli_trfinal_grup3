@@ -1,11 +1,16 @@
 // Crea automàticament els usuaris de test via endpoint de seeding (dev only)
+// En producció, /api/test/seed retorna 404 (bloquejat per NODE_ENV=production)
+// En aquest cas, s'usa l'usuari ja existent via CYPRESS_TEST_EMAIL/PASSWORD
 Cypress.Commands.add("setupTestUsers", () => {
   cy.request({
     method: "POST",
     url: `${Cypress.env("API_URL")}/api/test/seed`,
     failOnStatusCode: false,
   }).then((res) => {
-    if (res.status !== 200) {
+    if (res.status === 404) {
+      // Producció: seed no disponible, usem l'usuari existent (configurat via secrets)
+      cy.log("Seed endpoint no disponible (producció). S'usarà l'usuari de test existent.");
+    } else if (res.status !== 200) {
       throw new Error(`Seed failed: ${res.body?.message || res.status}`);
     }
   });
