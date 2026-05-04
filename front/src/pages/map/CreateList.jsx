@@ -304,8 +304,11 @@ const CreateList = () => {
         optimizedPois = result;
       }
 
+      const savedUser = localStorage.getItem("usuario");
+      const userId = savedUser ? JSON.parse(savedUser).id_usuario : 1;
+
       const listaData = {
-        id_usuario: 1, 
+        id_usuario: userId, 
         nombre: listName,
         descripcion: listDesc,
         visibilidad: listVisibility,
