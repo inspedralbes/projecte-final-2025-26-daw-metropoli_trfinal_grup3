@@ -36,6 +36,10 @@ jobs:
           config: baseUrl=http://${{ secrets.SERVER_HOST }}
           env: API_URL=http://${{ secrets.SERVER_HOST }}
           browser: chrome
+        env:
+          # Credencials de l'usuari de test ja existent a producció
+          CYPRESS_TEST_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          CYPRESS_TEST_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
 
       - name: Upload screenshots on failure
         if: failure()

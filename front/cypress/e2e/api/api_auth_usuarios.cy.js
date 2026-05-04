@@ -5,13 +5,13 @@ const API = () => Cypress.env("API_URL");
 describe("API - Autenticació", () => {
   it("POST /api/auth/login amb credencials vàlides retorna token", () => {
     cy.fixture("usuarios").then((data) => {
+      // En CI/producció s'usen les credencials de GitHub Secrets
+      const email    = Cypress.env("TEST_EMAIL")    || data.usuario_test.email;
+      const password = Cypress.env("TEST_PASSWORD") || data.usuario_test.password;
       cy.request({
         method: "POST",
         url: `${API()}/api/auth/login`,
-        body: {
-          email: data.usuario_test.email,
-          password: data.usuario_test.password,
-        },
+        body: { email, password },
         failOnStatusCode: false,
       }).then((res) => {
         expect(res.status).to.be.oneOf([200, 201]);
@@ -49,10 +49,12 @@ describe("API - Usuaris", () => {
 
   before(() => {
     cy.fixture("usuarios").then((data) => {
+      const email    = Cypress.env("TEST_EMAIL")    || data.usuario_test.email;
+      const password = Cypress.env("TEST_PASSWORD") || data.usuario_test.password;
       cy.request({
         method: "POST",
         url: `${API()}/api/auth/login`,
-        body: { email: data.usuario_test.email, password: data.usuario_test.password },
+        body: { email, password },
         failOnStatusCode: false,
       }).then((res) => {
         if (res.status === 200) token = res.body.data?.token || res.body.token;

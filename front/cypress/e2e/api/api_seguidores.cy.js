@@ -8,11 +8,12 @@ describe("API - Seguidors", () => {
 
   before(() => {
     cy.fixture("usuarios").then((data) => {
-      // Login per obtenir l'ID de l'usuari de test
+      const email    = Cypress.env("TEST_EMAIL")    || data.usuario_test.email;
+      const password = Cypress.env("TEST_PASSWORD") || data.usuario_test.password;
       cy.request({
         method: "POST",
         url: `${API()}/api/auth/login`,
-        body: { email: data.usuario_test.email, password: data.usuario_test.password },
+        body: { email, password },
         failOnStatusCode: false,
       }).then((res) => {
         if (res.status === 200) {
