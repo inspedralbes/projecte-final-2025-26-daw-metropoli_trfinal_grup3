@@ -19,7 +19,7 @@ jobs:
         run: |
           echo "Comprovant que el servidor de producció és accessible..."
           for i in {1..10}; do
-            if curl -sf "http://${{ secrets.SERVER_HOST }}/api/categorias" > /dev/null 2>&1; then
+            if curl -sf "http://${{ secrets.SERVER_HOST }}:3000/api/categorias" > /dev/null 2>&1; then
               echo "Servidor operatiu!"
               break
             fi
@@ -33,8 +33,8 @@ jobs:
         with:
           working-directory: front
           config-file: cypress.api.config.js
-          config: baseUrl=http://${{ secrets.SERVER_HOST }}
-          env: API_URL=http://${{ secrets.SERVER_HOST }}
+          config: baseUrl=http://${{ secrets.SERVER_HOST }}:8080
+          env: API_URL=http://${{ secrets.SERVER_HOST }}:3000
           browser: chrome
         env:
           # Credencials de l'usuari de test ja existent a producció
@@ -75,7 +75,7 @@ jobs:
         run: |
           echo "Verificant que el nou desplegament funciona..."
           sleep 15
-          curl -sf "http://${{ secrets.SERVER_HOST }}/api/categorias" \
+          curl -sf "http://${{ secrets.SERVER_HOST }}:3000/api/categorias" \
             && echo "✅ Deploy verificat correctament" \
             || (echo "❌ El servidor no respon després del deploy" && exit 1)
 
