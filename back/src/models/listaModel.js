@@ -49,10 +49,10 @@ const deleteById = async (id) => {
 };
 
 const update = async (id, data) => {
-    const { nombre, descripcion, visibilidad } = data;
+    const { nombre, descripcion, visibilidad, imagen_url } = data;
     return await query(
-        'UPDATE listas SET nombre = ?, descripcion = ?, visibilidad = ? WHERE id_lista = ?',
-        [nombre, descripcion, visibilidad, id]
+        'UPDATE listas SET nombre = ?, descripcion = ?, visibilidad = ?, imagen_url = ? WHERE id_lista = ?',
+        [nombre, descripcion, visibilidad, imagen_url, id]
     );
 };
 

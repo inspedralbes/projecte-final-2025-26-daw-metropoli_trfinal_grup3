@@ -63,7 +63,19 @@
     "title": "Rutes",
     "search": "Cercar alguna cosa...",
     "nearby": "Destinacions Properes",
-    "viewAll": "Veure Tot"
+    "viewAll": "Veure Tot",
+    "errorLoading": "No s'han pogut carregar les teves col·leccions.",
+    "errorConnection": "Error de connexió amb el servidor.",
+    "noSessionTitle": "Inicia sessió",
+    "noSessionDesc": "Necessites iniciar sessió per veure les teves col·leccions personals.",
+    "emptyTitle": "Sense rutes guardades",
+    "noSearchMatch": "No hi ha rutes que coincideixin amb la teva cerca.",
+    "noLists": "Encara no has creat cap ruta personal.",
+    "editTitle": "Editar Ruta",
+    "visibilityPublic": "Pública",
+    "visibilityPrivate": "Privada",
+    "imageLabel": "Imatge de Portada",
+    "uploadImage": "Escollir de galeria"
   },
   "settings": {
     "title": "Ajustos",

@@ -617,6 +617,20 @@ export const updateLista = async (id, listaData) => {
   }
 };
 
+export const uploadListaImage = async (id, formData) => {
+  try {
+    const response = await fetch(`${API_URL}/api/listas/${id}/imagen`, {
+      method: "POST",
+      body: formData,
+    });
+    if (!response.ok) throw new Error("Failed to upload Lista image");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in uploadListaImage:", error);
+    throw error;
+  }
+};
+
 // ── Seguidores ──
 
 export const followUsuario = async (idSeguidor, idSeguido) => {

@@ -12,6 +12,7 @@ const UPLOAD_DIRS = [
   path.join(PUBLIC_BASE, "images", "usuarios"),
   path.join(PUBLIC_BASE, "images", "comunidad"),
   path.join(PUBLIC_BASE, "images", "pois"),
+  path.join(PUBLIC_BASE, "images", "listas"),
 ];
 
 for (const dir of UPLOAD_DIRS) {
@@ -32,6 +33,8 @@ const storage = multer.diskStorage({
       folder = path.join(PUBLIC_BASE, "images", "comunidad");
     } else if (file.fieldname === "imagenPoi") {
       folder = path.join(PUBLIC_BASE, "images", "pois");
+    } else if (file.fieldname === "imagenLista") {
+      folder = path.join(PUBLIC_BASE, "images", "listas");
     }
 
     cb(null, folder);
@@ -46,6 +49,8 @@ const storage = multer.diskStorage({
       prefix = "publicacion";
     } else if (file.fieldname === "imagenPoi") {
       prefix = "poi";
+    } else if (file.fieldname === "imagenLista") {
+      prefix = "lista";
     }
 
     const fileName = `${prefix}-${Date.now()}${ext}`;

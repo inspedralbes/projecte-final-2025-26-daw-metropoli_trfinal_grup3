@@ -64,7 +64,19 @@
     "title": "Rutas",
     "search": "Buscar algo...",
     "nearby": "Destinos Cercanos",
-    "viewAll": "Ver Todo"
+    "viewAll": "Ver Todo",
+    "errorLoading": "No se pudieron cargar tus colecciones.",
+    "errorConnection": "Error de conexión con el servidor.",
+    "noSessionTitle": "Inicia sesión",
+    "noSessionDesc": "Necesitas iniciar sesión para ver tus colecciones personales.",
+    "emptyTitle": "Sin rutas guardadas",
+    "noSearchMatch": "No hay rutas que coincidan con tu búsqueda.",
+    "noLists": "Aún no has creado ninguna ruta personal.",
+    "editTitle": "Editar Ruta",
+    "visibilityPublic": "Pública",
+    "visibilityPrivate": "Privada",
+    "imageLabel": "Imagen de Portada",
+    "uploadImage": "Escoger de galería"
   },
   "settings": {
     "title": "Ajustes",
