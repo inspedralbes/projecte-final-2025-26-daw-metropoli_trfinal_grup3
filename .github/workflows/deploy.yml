@@ -33,7 +33,8 @@ jobs:
         with:
           working-directory: front
           config-file: cypress.api.config.js
-          config: baseUrl=http://${{ secrets.SERVER_HOST }},env.API_URL=http://${{ secrets.SERVER_HOST }}
+          config: baseUrl=http://${{ secrets.SERVER_HOST }}
+          env: API_URL=http://${{ secrets.SERVER_HOST }}
           browser: chrome
 
       - name: Upload screenshots on failure
