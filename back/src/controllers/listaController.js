@@ -63,7 +63,14 @@ const getUsuarioListas = async (req, res) => {
     try {
         const { id_usuario } = req.params;
         const listas = await listaModel.getByUsuarioId(id_usuario);
-        res.json({ success: true, data: listas });
+        
+        // Adjuntamos los POIs a cada lista
+        const listasConPois = await Promise.all(listas.map(async (lista) => {
+            const pois = await listaModel.getPoisByListaId(lista.id_lista);
+            return { ...lista, pois };
+        }));
+
+        res.json({ success: true, data: listasConPois });
     } catch (error) {
         console.error('Error in getUsuarioListas:', error);
         res.status(500).json({ success: false, message: 'Error al obtener las listas del usuario' });

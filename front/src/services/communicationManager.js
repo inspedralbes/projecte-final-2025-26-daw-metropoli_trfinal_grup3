@@ -686,7 +686,6 @@ export const getSeguidoresCounts = async (userId) => {
     if (!response.ok) throw new Error("Failed to fetch counts");
     return await response.json();
   } catch (error) {
-    console.error("Error in getSeguidoresCounts:", error);
     return { data: { followers: 0, following: 0 } };
   }
 };
