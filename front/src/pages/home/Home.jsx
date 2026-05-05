@@ -4,6 +4,7 @@ import { useTranslation } from "react-i18next";
 import Navbar from "../../layouts/Navbar";
 import Header from "../../layouts/Header";
 import UserAvatar from "../../components/UserAvatar";
+import Mapis from "../../JARVIS/Mapis";
 
 const Home = () => {
   const { t } = useTranslation();
@@ -269,6 +270,9 @@ const Home = () => {
       <div className="h-20"></div>
 
       <Navbar />
+
+      {/* JARVIS Chatbot Mapis */}
+      <Mapis />
     </div>
   );
 };

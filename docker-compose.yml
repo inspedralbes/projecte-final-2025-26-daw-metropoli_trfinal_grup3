@@ -23,7 +23,6 @@ services:
         - action: rebuild
           path: ./back/package.json
     volumes:
-      - ./back:/app
       - /app/node_modules
     command: npm run dev
     depends_on:
@@ -54,7 +53,6 @@ services:
         - action: rebuild
           path: ./front/package.json
     volumes:
-      - ./front:/app
       - /app/node_modules
     depends_on:
       - backend
@@ -96,7 +94,6 @@ services:
         condition: service_healthy
     networks:
       - app-network
-  # ⚠️ Contenedor mongo local ELIMINADO — ahora usamos MongoDB Atlas (ver .env)
 
 networks:
   app-network:
