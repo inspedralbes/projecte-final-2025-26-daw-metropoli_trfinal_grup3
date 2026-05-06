@@ -3,7 +3,7 @@
   "version": "1.0.0",
   "description": "Root package for Metropolis project Automation",
   "scripts": {
-    "dev": "docker compose watch",
+    "dev": "docker compose watch & docker compose down",
     "build": "docker compose build",
     "up": "docker compose up",
     "down": "docker compose down",

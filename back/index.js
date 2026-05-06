@@ -5,7 +5,8 @@ import { createServer } from "http"; // Necesario para envolver el servidor de E
 import path from "path";
 import { fileURLToPath } from "url";
 import routes from "./src/routes/index.js";
-import qrRoutes from "./src/routes/qrRoutes.js"; // IMPORT NEW ROUTE
+import qrRoutes from "./src/routes/qrRoutes.js";
+import jarvisRoutes from "./src/routes/jarvisRoutes.js";
 import "./src/services/weatherService.js";
 import { initSocket } from "./src/config/socket.js"; // Nuestra antena de radio nueva
 
@@ -36,6 +37,8 @@ app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 
 app.use("/api", routes);
 app.use("/api/qr", qrRoutes); // CONFIGURE NEW ROUTE PREFIX
+app.use("/api/jarvis", jarvisRoutes);
+
 app.get("/", (req, res) => {
   res.send("MetroPoli Backend API is running");
 });

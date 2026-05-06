@@ -6,3 +6,8 @@ Dockerfile
 Dockerfile.prod
 dist
 README.md
+android
+ios
+cypress
+.gradle
+.idea
