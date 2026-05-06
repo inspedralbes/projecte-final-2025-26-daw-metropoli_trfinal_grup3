@@ -110,6 +110,49 @@ const updateLista = async (req, res) => {
     }
 };
 
+const toggleLikeLista = async (req, res) => {
+    try {
+        const { id_lista } = req.params;
+        const { id_usuario } = req.body;
+        
+        if (!id_usuario) return res.status(400).json({ success: false, message: 'ID de usuario requerido' });
+
+        const result = await listaModel.toggleLike(id_lista, id_usuario);
+        
+        // Obtenemos la lista actualizada para devolver el conteo de likes
+        const lista = await listaModel.getById(id_lista);
+        
+        res.json({ 
+            success: true, 
+            liked: result.liked, 
+            likes: lista.likes 
+        });
+    } catch (error) {
+        console.error('Error in toggleLikeLista:', error);
+        res.status(500).json({ success: false, message: 'Error al procesar el like' });
+    }
+};
+
+const getFriendsListas = async (req, res) => {
+    try {
+        const { userId } = req.query;
+        if (!userId) return res.status(400).json({ success: false, message: 'ID de usuario requerido' });
+
+        const listas = await listaModel.getFriendsListas(userId);
+        
+        // Adjuntamos los POIs
+        const listasConPois = await Promise.all(listas.map(async (lista) => {
+            const pois = await listaModel.getPoisByListaId(lista.id_lista);
+            return { ...lista, pois };
+        }));
+
+        res.json({ success: true, data: listasConPois });
+    } catch (error) {
+        console.error('Error in getFriendsListas:', error);
+        res.status(500).json({ success: false, message: 'Error al obtener listas de amigos' });
+    }
+};
+
 const uploadListaImage = async (req, res) => {
     try {
         const { id } = req.params;
@@ -144,9 +187,11 @@ const uploadListaImage = async (req, res) => {
 export default {
     createLista,
     getPublicListas,
+    getFriendsListas,
     getListaById,
     getUsuarioListas,
     deleteLista,
     updateLista,
+    toggleLikeLista,
     uploadListaImage
 };

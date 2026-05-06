@@ -115,7 +115,17 @@ CREATE TABLE IF NOT EXISTS listas (
     descripcion TEXT,
     imagen_url VARCHAR(255),
     visibilidad ENUM('public', 'friends', 'private') DEFAULT 'private',
+    likes INTEGER DEFAULT 0,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS lista_likes (
+    id_lista INT NOT NULL,
+    id_usuario INT NOT NULL,
+    fecha_like TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_lista, id_usuario),
+    FOREIGN KEY (id_lista) REFERENCES listas(id_lista) ON DELETE CASCADE,
     FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE
 );
 
@@ -124,8 +134,8 @@ CREATE TABLE IF NOT EXISTS lista_pois (
     id_poi INT NOT NULL,
     orden INT NOT NULL,
     PRIMARY KEY (id_lista, id_poi),
-    FOREIGN KEY (id_lista) REFERENCES listas(id_lista),
-    FOREIGN KEY (id_poi) REFERENCES pois(id_poi)
+    FOREIGN KEY (id_lista) REFERENCES listas(id_lista) ON DELETE CASCADE,
+    FOREIGN KEY (id_poi) REFERENCES pois(id_poi) ON DELETE CASCADE
 );
 
 -- 15. SEGUIDORES (Sistema follow/unfollow unidireccional)

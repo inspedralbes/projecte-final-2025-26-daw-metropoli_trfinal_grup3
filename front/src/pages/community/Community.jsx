@@ -11,7 +11,10 @@ import {
   uploadFotoComunidad,
   getAmigos,
   getActividad,
-  searchUsers
+  searchUsers,
+  getListas,
+  getFriendsListas,
+  toggleLikeLista
 } from "../../services/communicationManager";
 import socket from "../../services/socketManager";
 import ChatModal from "../../components/community/ChatModal";
@@ -202,16 +205,88 @@ const PostCard = ({ pub, onComentarioCreado }) => {
   );
 };
 
+// ─── Sub-componente: Card de una lista ───────────────────────────────────────
+const ListaCard = ({ lista }) => {
+  const navigate = useNavigate();
+  const usuarioInfo = localStorage.getItem("usuario");
+  const usuarioLogged = usuarioInfo ? JSON.parse(usuarioInfo) : null;
+  const [liked, setLiked] = useState(lista.user_liked > 0);
+  const [likesCount, setLikesCount] = useState(lista.likes || 0);
+
+  const handleLike = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!usuarioLogged) { navigate("/login"); return; }
+    
+    const prevLiked = liked;
+    const prevCount = likesCount;
+    setLiked(!prevLiked);
+    setLikesCount(prevLiked ? prevCount - 1 : prevCount + 1);
+
+    try {
+      const res = await toggleLikeLista(lista.id_lista, usuarioLogged.id_usuario);
+      setLikesCount(res.likes);
+      setLiked(res.liked);
+    } catch {
+      setLiked(prevLiked);
+      setLikesCount(prevCount);
+    }
+  };
+
+  return (
+    <div 
+      className="bg-white dark:bg-slate-900 rounded-[2rem] border border-gray-100 dark:border-white/5 overflow-hidden shadow-sm hover:shadow-md transition-all group cursor-pointer mb-6"
+      onClick={() => navigate("/map", { state: { focusedList: lista } })}
+    >
+      <div className="relative h-48 overflow-hidden">
+        <img 
+          src={lista.imagen_url ? `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${lista.imagen_url}` : "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=500&q=80"} 
+          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110" 
+          alt={lista.nombre}
+        />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+        <div className="absolute bottom-4 left-6 right-6 flex items-end justify-between">
+          <div className="flex-1 pr-4">
+            <h3 className="text-white font-bold text-lg leading-tight mb-1 truncate">{lista.nombre}</h3>
+            <div className="flex items-center gap-2">
+              <UserAvatar user={{ foto_perfil: lista.usuario_foto, nombre: lista.usuario_nombre }} className="w-5 h-5 border border-white/20" />
+              <span className="text-white/70 text-[10px] font-medium tracking-tight">Per {lista.usuario_nombre}</span>
+            </div>
+          </div>
+          <button 
+            onClick={handleLike}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md transition-all ${liked ? 'bg-pink-500 text-white' : 'bg-white/20 text-white hover:bg-white/30'}`}
+          >
+            <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: liked ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
+            <span className="text-[10px] font-black">{likesCount}</span>
+          </button>
+        </div>
+      </div>
+      <div className="p-6">
+        <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed line-clamp-2">{lista.descripcion || "Sense descripció disponible per aquesta ruta."}</p>
+        <div className="mt-4 pt-4 border-t border-gray-50 dark:border-white/5 flex items-center justify-between">
+          <div className="flex items-center gap-1 text-slate-400">
+            <span className="material-symbols-outlined text-sm">location_on</span>
+            <span className="text-[10px] font-bold uppercase tracking-widest">{lista.pois?.length || 0} Punts</span>
+          </div>
+          <span className="text-pink-500 text-[10px] font-black uppercase tracking-widest group-hover:translate-x-1 transition-transform">Veure mapa →</span>
+        </div>
+      </div>
+    </div>
+  );
+};
+
 // ─── Componente principal ─────────────────────────────────────────────────────
 const Community = () => {
   const navigate = useNavigate();
   const usuarioInfo = localStorage.getItem("usuario");
   const usuarioLogged = usuarioInfo ? JSON.parse(usuarioInfo) : null;
 
-  const [view, setView] = useState("feed"); // feed, activity, search
+  const [view, setView] = useState("feed"); // feed, activity, search, lists
+  const [subView, setSubView] = useState("public"); // public, friends
   const [publicaciones, setPublicaciones] = useState([]);
   const [actividad, setActividad] = useState([]);
-  const [searchResults, setSearchResults] = useState([]);
+  const [listas, setListas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [amigos, setAmigos] = useState([]);
@@ -238,18 +313,42 @@ const Community = () => {
     } catch (err) { console.error(err); }
   };
 
+  const cargarListas = async () => {
+    setLoading(true);
+    try {
+      let res;
+      if (subView === "public") {
+        res = await getListas(usuarioLogged?.id_usuario);
+      } else {
+        res = await getFriendsListas(usuarioLogged?.id_usuario);
+      }
+      setListas(res.data || []);
+    } catch (err) { console.error(err); }
+    finally { setLoading(false); }
+  };
+
   const handleSearch = async (q) => {
     setSearchQuery(q);
     if (q.length < 2) {
       setSearchResults([]);
       if (view === "search") setView("feed");
+      if (view === "lists") cargarListas();
       return;
     }
-    setView("search");
-    try {
-      const res = await searchUsers(q);
-      if (res.success) setSearchResults(res.data);
-    } catch (err) { console.error(err); }
+
+    if (view === "lists") {
+      const filtered = listas.filter(l => 
+        l.nombre.toLowerCase().includes(q.toLowerCase()) || 
+        l.descripcion?.toLowerCase().includes(q.toLowerCase())
+      );
+      setListas(filtered);
+    } else {
+      setView("search");
+      try {
+        const res = await searchUsers(q);
+        if (res.success) setSearchResults(res.data);
+      } catch (err) { console.error(err); }
+    }
   };
 
   useEffect(() => {
@@ -259,6 +358,10 @@ const Community = () => {
       getAmigos(usuarioLogged.id_usuario).then(r => setAmigos(r.data || []));
     }
 
+    if (view === "lists") {
+      cargarListas();
+    }
+
     socket.on("nueva_publicacion", cargarPublicaciones);
     socket.on("nuevo_comentario", cargarPublicaciones);
 
@@ -266,7 +369,7 @@ const Community = () => {
       socket.off("nueva_publicacion");
       socket.off("nuevo_comentario");
     };
-  }, []);
+  }, [view, subView]);
 
   const handleCreatePost = async () => {
     if (!newPost.texto && !selectedFile) return;
@@ -329,37 +432,46 @@ const Community = () => {
               <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: view === "activity" ? "'FILL' 1" : "'FILL' 0" }}>bolt</span>
               Recents
             </button>
+            <button 
+              onClick={() => setView("lists")}
+              className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium tracking-tight transition-all border ${view === "lists" ? "bg-pink-500 text-white border-transparent shadow-lg shadow-pink-500/20" : "bg-white dark:bg-slate-950 text-slate-400 border-gray-100 dark:border-white/5 hover:border-gray-200"}`}
+            >
+              <span className="material-symbols-outlined text-sm">map</span>
+              Llistes
+            </button>
           </div>
         </div>
       </div>
 
       <div className="max-w-4xl mx-auto px-6 mt-8">
         
-        {/* Friends Horizontal List */}
-        <div className="mb-8">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 ml-1">Amics Online</h3>
-            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-                {amigos.map(amigo => (
-                    <div 
-                        key={amigo.id_usuario} 
-                        className="flex flex-col items-center gap-2 flex-shrink-0 group"
-                    >
-                        <div className="relative">
-                            <Link to={`/profile/${amigo.id_usuario}`}>
-                              <UserAvatar user={amigo} className="w-14 h-14" borderColor="border-primary" />
-                            </Link>
-                            <button 
-                              onClick={() => setSelectedFriend(amigo)}
-                              className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-950 rounded-full cursor-pointer hover:scale-110 transition-transform"
-                            ></button>
-                        </div>
-                        <Link to={`/profile/${amigo.id_usuario}`}>
-                          <span className="text-[10px] font-bold text-slate-500 max-w-[60px] truncate hover:text-primary transition-colors">{amigo.nombre}</span>
-                        </Link>
-                    </div>
-                ))}
-            </div>
-        </div>
+        {/* Friends Horizontal List (Only in feed/lists) */}
+        {(view === "feed" || view === "lists") && (
+          <div className="mb-8">
+              <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 ml-1">Amics Online</h3>
+              <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
+                  {amigos.map(amigo => (
+                      <div 
+                          key={amigo.id_usuario} 
+                          className="flex flex-col items-center gap-2 flex-shrink-0 group"
+                      >
+                          <div className="relative">
+                              <Link to={`/profile/${amigo.id_usuario}`}>
+                                <UserAvatar user={amigo} className="w-14 h-14" borderColor="border-primary" />
+                              </Link>
+                              <button 
+                                onClick={() => setSelectedFriend(amigo)}
+                                className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-950 rounded-full cursor-pointer hover:scale-110 transition-transform"
+                              ></button>
+                          </div>
+                          <Link to={`/profile/${amigo.id_usuario}`}>
+                            <span className="text-[10px] font-bold text-slate-500 max-w-[60px] truncate hover:text-primary transition-colors">{amigo.nombre}</span>
+                          </Link>
+                      </div>
+                  ))}
+              </div>
+          </div>
+        )}
 
         {/* ─── Main Views ─── */}
         <main>
@@ -394,6 +506,38 @@ const Community = () => {
                   <span className="material-symbols-outlined text-indigo-500 opacity-30">bolt</span>
                 </div>
               ))}
+            </div>
+          )}
+
+          {view === "lists" && (
+            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              <div className="flex gap-2 mb-8 bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-gray-100 dark:border-white/5 w-fit">
+                <button 
+                  onClick={() => setSubView("public")}
+                  className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${subView === "public" ? "bg-pink-500 text-white shadow-lg shadow-pink-500/20" : "text-slate-400 hover:text-slate-600"}`}
+                >
+                  Públiques
+                </button>
+                <button 
+                  onClick={() => setSubView("friends")}
+                  className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${subView === "friends" ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/20" : "text-slate-400 hover:text-slate-600"}`}
+                >
+                  Amics
+                </button>
+              </div>
+
+              {loading ? (
+                <div className="text-center py-20 opacity-30 font-bold uppercase tracking-widest text-xs">Carregant llistes...</div>
+              ) : listas.length === 0 ? (
+                <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center border border-dashed border-gray-200 dark:border-white/10">
+                   <span className="material-symbols-outlined text-4xl text-slate-200 mb-4">map</span>
+                   <p className="text-sm font-medium text-slate-400">No s'han trobat llistes en aquesta categoria.</p>
+                </div>
+              ) : (
+                listas.map((lista) => (
+                  <ListaCard key={lista.id_lista} lista={lista} />
+                ))
+              )}
             </div>
           )}
 

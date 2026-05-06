@@ -609,6 +609,32 @@ export const uploadListaImage = async (idLista, file) => {
   }
 };
 
+export const getFriendsListas = async (userId) => {
+  try {
+    const response = await fetch(`${API_URL}/api/listas/friends/all?userId=${userId}`);
+    if (!response.ok) throw new Error("Failed to fetch Friends Listas");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getFriendsListas:", error);
+    throw error;
+  }
+};
+
+export const toggleLikeLista = async (idLista, idUsuario) => {
+  try {
+    const response = await fetch(`${API_URL}/api/listas/${idLista}/like`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_usuario: idUsuario }),
+    });
+    if (!response.ok) throw new Error("Failed to toggle like on Lista");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in toggleLikeLista:", error);
+    throw error;
+  }
+};
+
 // ── Seguidores ──
 
 export const followUsuario = async (idSeguidor, idSeguido) => {
