@@ -128,10 +128,32 @@ const searchUsuarios = async (req, res) => {
     }
 };
 
+const getUsuarioStats = async (req, res) => {
+    try {
+        const stats = await usuarioService.getUsuarioStats(req.params.id);
+        res.json({ success: true, data: stats });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
+const logActividad = async (req, res) => {
+    try {
+        const { id_usuario, tipo, valor, id_referencia } = req.body;
+        await usuarioService.logActividad({ id_usuario, tipo, valor, id_referencia });
+        res.status(201).json({ success: true, message: 'Actividad registrada correctamente' });
+    } catch (error) {
+        res.status(500).json({ success: false, message: error.message });
+    }
+};
+
 export default {
     createUsuario,
     getUsuarios,
     getUsuarioById,
+    getUsuarioStats,
+    logActividad,
     editarPerfil,
     searchUsuarios
 };
+

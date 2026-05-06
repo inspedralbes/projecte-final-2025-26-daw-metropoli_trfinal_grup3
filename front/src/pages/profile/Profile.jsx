@@ -405,7 +405,7 @@ const Profile = () => {
         const response = await getPublicaciones();
         if (response.success && response.data) {
           const myPosts = response.data.filter(
-            (post) => post.id_usuario == displayedUserId
+            (post) => Number(post.id_usuario) === Number(displayedUserId)
           );
           // Sort by newest first
           myPosts.sort((a, b) => new Date(b.creado_en) - new Date(a.creado_en));
@@ -561,27 +561,42 @@ const Profile = () => {
                 {displayedUser.bio || "Urban Explorer & Map Enthusiast"}
               </p>
               {isOwnProfile ? (
-                <Link
-                  to="/profile/edit"
-                  className="flex items-center gap-1.5 px-4 py-1.5 rounded-full border border-primary text-primary text-xs font-bold hover:bg-primary/10 transition-colors"
-                >
-                  <span className="material-symbols-outlined text-base">
-                    edit
-                  </span>
-                  {t("profile.editProfile", "Editar Perfil")}
-                </Link>
+                <div className="flex flex-wrap justify-center gap-2">
+                  <Link
+                    to="/profile/edit"
+                    className="flex items-center gap-1.5 px-5 py-2.5 rounded-full border border-primary text-primary text-xs font-black uppercase tracking-tight hover:bg-primary/10 transition-all active:scale-95 shadow-sm"
+                  >
+                    <span className="material-symbols-outlined text-base font-bold">
+                      edit
+                    </span>
+                    {t("profile.editProfile", "Editar Perfil")}
+                  </Link>
+                  <button
+                    onClick={() => {
+                      localStorage.removeItem("token");
+                      localStorage.removeItem("usuario");
+                      navigate("/login");
+                    }}
+                    className="flex items-center gap-1.5 px-5 py-2.5 rounded-full bg-primary text-primary-text text-xs font-black uppercase tracking-tight hover:opacity-90 transition-all active:scale-95 shadow-lg shadow-primary/20"
+                  >
+                    <span className="material-symbols-outlined text-base font-bold">
+                      logout
+                    </span>
+                    {t("settings.logout", "Log Out")}
+                  </button>
+                </div>
               ) : (
                 /* Botón Seguir / Siguiendo — único botón en perfiles ajenos */
                 <button
                   onClick={handleFollow}
                   disabled={followLoading}
-                  className={`flex items-center gap-1.5 px-5 py-2 rounded-full text-xs font-bold transition-all shadow-sm ${
+                  className={`flex items-center gap-1.5 px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-tight transition-all shadow-sm active:scale-95 ${
                     isFollowing
                       ? "border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-red-400 hover:text-red-400"
                       : "bg-primary text-primary-text hover:opacity-90 shadow-primary/20"
                   }`}
                 >
-                  <span className="material-symbols-outlined text-base">
+                  <span className="material-symbols-outlined text-base font-bold">
                     {isFollowing ? "person_check" : "person_add"}
                   </span>
                   {isFollowing ? t("community.following", "Siguiendo") : t("community.follow", "Seguir")}
@@ -614,19 +629,7 @@ const Profile = () => {
               ))}
             </div>
 
-            {/* Log Out */}
-            {isOwnProfile && (
-              <button
-                onClick={() => {
-                  localStorage.removeItem("token");
-                  localStorage.removeItem("usuario");
-                  navigate("/login");
-                }}
-                className="w-full py-4 text-red-500 font-semibold text-sm rounded-2xl hover:bg-red-50 dark:hover:bg-red-900/10 transition-colors"
-              >
-                {t("settings.logout", "Log Out")}
-              </button>
-            )}
+
           </div>
 
           {/* Columna derecha */}

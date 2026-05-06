@@ -255,7 +255,7 @@ const Collections = () => {
               {/* Bottom Info */}
               <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end">
                 <div className="flex flex-col space-y-1">
-                  <h3 className="text-white text-2xl font-black leading-tight italic uppercase tracking-tighter">
+                  <h3 className="text-white text-2xl font-black leading-tight tracking-tighter">
                     {route.nombre}
                   </h3>
                   <p className="text-white/60 text-xs font-medium line-clamp-1 max-w-[200px]">

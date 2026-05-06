@@ -21,10 +21,20 @@ const searchUsuarios = async (name) => {
     return await usuarioModel.searchByName(name);
 };
 
+const getUsuarioStats = async (id) => {
+    return await usuarioModel.getStats(id);
+};
+
+const logActividad = async (actividadData) => {
+    return await usuarioModel.logActividad(actividadData);
+};
+
 export default {
     registerUsuario,
     getAllUsuarios,
     getUsuarioById,
+    getUsuarioStats,
+    logActividad,
     actualizarPerfil,
     searchUsuarios
 };

@@ -137,3 +137,13 @@ CREATE TABLE IF NOT EXISTS seguidores (
     FOREIGN KEY (id_seguidor) REFERENCES usuario(id_usuario) ON DELETE CASCADE,
     FOREIGN KEY (id_seguido)  REFERENCES usuario(id_usuario) ON DELETE CASCADE
 );
+-- 16. ACTIVIDAD DEL USUARIO (Estadísticas)
+CREATE TABLE IF NOT EXISTS usuario_actividad (
+    id_actividad INTEGER PRIMARY KEY AUTO_INCREMENT,
+    id_usuario INTEGER NOT NULL,
+    tipo VARCHAR(50) NOT NULL, -- 'poi_visitado', 'ruta_completada'
+    valor DECIMAL(10, 2) DEFAULT 0, -- Distancia en KM o puntos
+    id_referencia INTEGER NULL, -- ID del POI o de la lista/ruta
+    fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE
+);

@@ -1,5 +1,7 @@
 import listaModel from '../models/listaModel.js';
 import poiModel from '../models/poiModel.js';
+import fs from 'fs';
+import path from 'path';
 
 const createLista = async (req, res) => {
     try {
@@ -107,6 +109,41 @@ const updateLista = async (req, res) => {
     } catch (error) {
         console.error('Error in updateLista:', error);
         res.status(500).json({ success: false, message: 'Error al actualizar la lista' });
+    }
+};
+
+const uploadListaImage = async (req, res) => {
+    try {
+        const { id } = req.params;
+        
+        if (!req.file) {
+            return res.status(400).json({ success: false, message: 'No se ha subido ninguna imagen' });
+        }
+
+        const listaActual = await listaModel.getById(id);
+        if (!listaActual) {
+            return res.status(404).json({ success: false, message: 'Lista no encontrada' });
+        }
+
+        // Borrar imagen antigua si existe
+        if (listaActual.imagen_url && listaActual.imagen_url.startsWith('/images/listas/')) {
+            const rutaAntigua = path.join('public', listaActual.imagen_url);
+            if (fs.existsSync(rutaAntigua)) {
+                fs.unlinkSync(rutaAntigua);
+            }
+        }
+
+        const rutaImagen = `/images/listas/${req.file.filename}`;
+        await listaModel.updateImageUrl(id, rutaImagen);
+
+        res.json({ 
+            success: true, 
+            message: 'Imagen de la lista actualizada correctamente', 
+            data: { imagen_url: rutaImagen } 
+        });
+    } catch (error) {
+        console.error('Error in uploadListaImage:', error);
+        res.status(500).json({ success: false, message: 'Error al subir la imagen' });
     }
 };
 

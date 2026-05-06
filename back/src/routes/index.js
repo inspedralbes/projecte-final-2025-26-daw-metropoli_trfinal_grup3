@@ -14,6 +14,7 @@ import uploadRoutes from "./uploadRoutes.js";
 import qrRoutes from "./qrRoutes.js";
 import listaRoutes from './listaRoutes.js';
 import seguidorRoutes from './seguidorRoutes.js';
+import searchRoutes from './searchRoutes.js';
 import testRoutes from './testRoutes.js';
 
 const router = express.Router();
@@ -33,6 +34,7 @@ router.use("/qrs", qrRoutes);
 router.use("/upload", uploadRoutes);
 router.use("/listas", listaRoutes);
 router.use("/seguidores", seguidorRoutes);
+router.use("/search", searchRoutes);
 
 // Ruta de test: NOMÉS disponible fora de producció
 if (process.env.NODE_ENV !== 'production') {
