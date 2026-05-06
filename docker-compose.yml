@@ -15,17 +15,15 @@ services:
       - MONGO_URI=${MONGO_URI}
     develop:
       watch:
-        - action: sync
-          path: ./back
-          target: /app
-          ignore:
-            - node_modules/
-            - tiempo.json
         - action: rebuild
           path: ./back/package.json
+    volumes:
+      - ./back:/app
+      - /app/node_modules
+    command: npm run dev
     depends_on:
       db:
-        condition: service_healthy
+        condition: service_healthy # ← espera a que MySQL esté 100% listo
     networks:
       - app-network
 
@@ -40,18 +38,15 @@ services:
     environment:
       - VITE_API_URL=${VITE_API_URL}
       - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
+      - VITE_GIPHY_API_KEY=${VITE_GIPHY_API_KEY}
       - NODE_OPTIONS=--max-old-space-size=4096
     develop:
       watch:
-        - action: sync
-          path: ./front
-          target: /app
-          ignore:
-            - node_modules/
-            - dist/
-            - .git/
         - action: rebuild
           path: ./front/package.json
+    volumes:
+      - ./front:/app
+      - /app/node_modules
     depends_on:
       - backend
     networks:
