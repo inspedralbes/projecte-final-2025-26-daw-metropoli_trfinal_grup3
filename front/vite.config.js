@@ -10,6 +10,7 @@ export default defineConfig({
     watch: {
       usePolling: true, // necesario en Windows + Docker
       interval: 500, // comprueba cambios cada 500ms
+      ignored: ["**/android/**", "**/ios/**", "**/node_modules/**"],
     },
     hmr: {
       clientPort: 5173,
