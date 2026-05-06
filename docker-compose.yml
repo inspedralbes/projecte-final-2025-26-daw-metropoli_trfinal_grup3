@@ -20,14 +20,12 @@ services:
           target: /app
           ignore:
             - node_modules/
+            - tiempo.json
         - action: rebuild
           path: ./back/package.json
-    volumes:
-      - /app/node_modules
-    command: npm run dev
     depends_on:
       db:
-        condition: service_healthy # ← espera a que MySQL esté 100% listo
+        condition: service_healthy
     networks:
       - app-network
 
@@ -50,10 +48,10 @@ services:
           target: /app
           ignore:
             - node_modules/
+            - dist/
+            - .git/
         - action: rebuild
           path: ./front/package.json
-    volumes:
-      - /app/node_modules
     depends_on:
       - backend
     networks:
