@@ -87,7 +87,6 @@ services:
         condition: service_healthy
     networks:
       - app-network
-  # ⚠️ Contenedor mongo local ELIMINADO — ahora usamos MongoDB Atlas (ver .env)
 
 networks:
   app-network:

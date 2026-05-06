@@ -40,7 +40,7 @@ const addFriend = async (userId, friendId) => {
     );
     // Normalmente la amistad es bidireccional en redes sociales simples, 
     // pero si es tipo 'seguidor', solo se inserta una fila.
-    // Para Metrópoli, la haremos bidireccional automática:
+    // Para wemap, la haremos bidireccional automática:
     await query(
         'INSERT IGNORE INTO amigos (id_usuario, id_amigo) VALUES (?, ?)',
         [friendId, userId]
