@@ -6,8 +6,6 @@ import categoriaRoutes from "./categoriaRoutes.js";
 import nodoRoutes from "./nodoRoutes.js";
 import tramoRoutes from "./tramoRoutes.js";
 import poiRoutes from "./poiRoutes.js";
-import multimediaRoutes from "./multimediaRoutes.js";
-import incidenciaRoutes from "./incidenciaRoutes.js";
 import traduccionRoutes from "./traduccionRoutes.js";
 import calculoRutaRoutes from "./calculoRutaRoutes.js";
 import weatherRoutes from "./weatherRoutes.js";
@@ -16,6 +14,7 @@ import uploadRoutes from "./uploadRoutes.js";
 import qrRoutes from "./qrRoutes.js";
 import listaRoutes from './listaRoutes.js';
 import seguidorRoutes from './seguidorRoutes.js';
+import testRoutes from './testRoutes.js';
 
 const router = express.Router();
 
@@ -26,8 +25,6 @@ router.use("/categorias", categoriaRoutes);
 router.use("/nodos", nodoRoutes);
 router.use("/tramos", tramoRoutes);
 router.use("/pois", poiRoutes);
-router.use("/multimedia", multimediaRoutes);
-router.use("/incidencias", incidenciaRoutes);
 router.use("/traducciones", traduccionRoutes);
 router.use("/rutas", calculoRutaRoutes);
 router.use("/tiempo", weatherRoutes);
@@ -36,5 +33,10 @@ router.use("/qrs", qrRoutes);
 router.use("/upload", uploadRoutes);
 router.use("/listas", listaRoutes);
 router.use("/seguidores", seguidorRoutes);
+
+// Ruta de test: NOMÉS disponible fora de producció
+if (process.env.NODE_ENV !== 'production') {
+    router.use("/test", testRoutes);
+}
 
 export default router;

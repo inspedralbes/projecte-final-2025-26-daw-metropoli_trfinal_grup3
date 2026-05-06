@@ -13,7 +13,7 @@ services:
       - DB_PASSWORD=password
       - DB_NAME=metropoli
     volumes:
-      - uploads_data:/app/public/uploads
+      - uploads_data:/app/public
     depends_on:
       - db
     networks:

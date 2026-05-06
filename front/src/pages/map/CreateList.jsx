@@ -1,15 +1,13 @@
-import React, { useState, useEffect, useRef, Fragment } from "react";
+import React, { useState, useEffect, useRef } from "react";
 import {
   MapContainer,
-  Marker,
-  TileLayer,
-  Polyline,
   useMapEvents,
 } from "react-leaflet";
-import { useNavigate } from "react-router-dom";
+import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Navbar from "../../layouts/Navbar";
-import { getPois, getRoute, getCategorias, createLista, createPoi, getNodos, updatePoi, deletePoi, deleteNode, getListas, updateLista } from "../../services/communicationManager";
+import { getPois, getCategorias, getUsuarioListas, getNodos, createLista, updateLista, uploadListaImage, createPoi, getListas } from "../../services/communicationManager";
+import MapLayers from "../../components/MapLayers";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 
@@ -34,6 +32,8 @@ const CreateList = () => {
   const mapRef = useRef(null);
   const navigate = useNavigate();
   const initialCenter = [41.3864, 2.1058];
+  const location = useLocation();
+  const [currentUserId, setCurrentUserId] = useState(null);
 
   // State
   const [pois, setPois] = useState([]);
@@ -50,36 +50,70 @@ const CreateList = () => {
   const [otherLists, setOtherLists] = useState([]);
   const [otherListGeometries, setOtherListGeometries] = useState({});
   const [focusedListId, setFocusedListId] = useState(null);
+  const [userPosition, setUserPosition] = useState(null);
+
   const [editingListId, setEditingListId] = useState(null);
   const [showOtherLists, setShowOtherLists] = useState(true);
   const [currentZoom, setCurrentZoom] = useState(17);
+  const [listImage, setListImage] = useState(null);
+  const [imagePreview, setImagePreview] = useState(null);
+
+  // Ref para tener acceso inmediato al estado dentro de eventos de Leaflet
+  const selectedPoisRef = useRef([]);
+  useEffect(() => {
+    selectedPoisRef.current = selectedPoisForList;
+  }, [selectedPoisForList]);
 
   useEffect(() => {
     const fetchData = async () => {
       try {
+        const userStr = localStorage.getItem("usuario");
+        let userId = null;
+        if (userStr) {
+          const userObj = JSON.parse(userStr);
+          userId = userObj.id_usuario;
+          setCurrentUserId(userId);
+          console.log("DEBUG CreateList: userId detectado:", userId);
+        } else {
+          console.warn("DEBUG CreateList: No hay usuario logueado en localStorage");
+        }
+
         const [poiRes, catRes, nodeRes, listRes] = await Promise.all([
           getPois(),
           getCategorias(),
           getNodos(),
-          getListas()
+          userId ? getUsuarioListas(userId) : Promise.resolve({ success: true, data: [] })
         ]);
+
+        console.log("DEBUG CreateList: Listas recibidas:", listRes.data?.length || 0);
+
         if (poiRes.success) setPois(poiRes.data);
         if (catRes.success) setCategories(catRes.data);
         if (nodeRes.success) setAllNodes(nodeRes.data);
         if (listRes.success) {
-          setOtherLists(listRes.data);
-          // Intentar precargar las geometrías de las otras rutas
-          listRes.data.forEach(async (list) => {
+          let combinedLists = listRes.data || [];
+          if (location.state?.editingList) {
+            const extList = location.state.editingList;
+            if (!combinedLists.find(l => l.id_lista === extList.id_lista)) {
+              combinedLists = [extList, ...combinedLists];
+            }
+          }
+          setOtherLists(combinedLists);
+          console.log("DEBUG CreateList: otherLists actualizado con", combinedLists.length, "listas");
+
+          combinedLists.forEach(async (list) => {
             if (list.pois && list.pois.length >= 2) {
               try {
-                const coords = list.pois.map(p => `${p.longitud},${p.latitud}`).join(";");
+                // Append first POI to end to close loop
+                const closedPois = [...list.pois, list.pois[0]];
+                const coords = closedPois.map(p => `${p.longitud},${p.latitud}`).join(";");
                 const res = await fetch(`https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`);
                 const data = await res.json();
                 if (data.code === "Ok") {
                   const route = data.routes[0];
                   const geom = route.geometry.coordinates.map(c => [c[1], c[0]]);
-                  setOtherListGeometries(prev => ({ 
-                    ...prev, 
+                  setOtherListGeometries(prev => ({
+                    ...prev,
                     [list.id_lista]: {
                       geom,
                       distance: route.distance,
@@ -91,12 +125,48 @@ const CreateList = () => {
             }
           });
         }
-      } catch (error) {
-        console.error("Error fetching data:", error);
+      } catch (err) {
+        console.error("Error in fetchData:", err);
       }
     };
     fetchData();
+
+    // Real-time user position tracking
+    if (navigator.geolocation) {
+      const watchId = navigator.geolocation.watchPosition(
+        (pos) => {
+          const newPos = [pos.coords.latitude, pos.coords.longitude];
+          setUserPosition(newPos);
+        },
+        (err) => console.error(err),
+        { enableHighAccuracy: true, timeout: 5000, maximumAge: 0 }
+      );
+      return () => navigator.geolocation.clearWatch(watchId);
+    }
   }, []);
+
+  useEffect(() => {
+    if (location.state?.editingList) {
+      const list = location.state.editingList;
+      const userStr = localStorage.getItem("usuario");
+      const currentId = userStr ? JSON.parse(userStr).id_usuario : null;
+
+      if (list.id_usuario === currentId) {
+        // Own list: regular edit
+        setSelectedPoisForList(list.pois || []);
+        setListName(list.nombre || "");
+        setListDesc(list.descripcion || "");
+        setListVisibility(list.visibilidad || "public");
+        setEditingListId(list.id_lista);
+      } else {
+        // External list: Template mode
+        setSelectedPoisForList(list.pois || []);
+        setListName(`Copia de ${list.nombre}`);
+        setListDesc(list.descripcion || "");
+        setEditingListId(null); // Clear ID to force creation of a NEW list
+      }
+    }
+  }, [location.state]);
 
   useEffect(() => {
     if (mapRef.current && (pois.length > 0 || allNodes.length > 0)) {
@@ -113,58 +183,72 @@ const CreateList = () => {
   const handleSelectPoi = (poi) => {
     const existingIndex = selectedPoisForList.findIndex(p => p.id_poi === poi.id_poi);
     if (existingIndex === -1) {
+      // Si no está en el itinerario, lo añadimos (lo "unimos")
       const newSelected = [...selectedPoisForList, poi];
       setSelectedPoisForList(newSelected);
       setActivePoiIndex(newSelected.length - 1);
     } else {
-      setActivePoiIndex(existingIndex);
+      // Si ya está, lo quitamos del itinerario para "desunirlo"
+      setSelectedPoisForList(prev => prev.filter(p => p.id_poi !== poi.id_poi));
+      setActivePoiIndex(null);
     }
   };
 
-  const handleMarkNodeAsPoi = async (node) => {
-    try {
-      const poiData = {
-        nombre: `Punto ${selectedPoisForList.length + 1}`,
-        descripcion: "Punto creado por usuario",
-        latitud: node.latitud,
-        longitud: node.longitud,
-        id_categoria: categories[0]?.id_categoria || 1,
-        es_accesible: 1,
-        es_fijo: 0,
-        id_nodo_acceso: node.id_nodo,
-        visibilidad: 'private'
-      };
-      const res = await createPoi(poiData);
-      if (res.success) {
-        handleSelectPoi(res.data);
-      }
-    } catch (err) {
-      console.error("Error marking node as POI:", err);
-    }
+  const handleMarkNodeAsPoi = (node) => {
+    const tempId = `temp-node-${Date.now()}`;
+
+    // Solo añadimos al "pool" de puntos disponibles en el mapa
+    const newPoi = {
+      id_poi: tempId,
+      nombre: `POI Nodo ${node.id_nodo}`,
+      latitud: node.latitud,
+      longitud: node.longitud,
+      id_categoria: categories[0]?.id_categoria || 1,
+      es_accesible: 1,
+      id_nodo_acceso: node.id_nodo,
+      isNew: true
+    };
+
+    setPois(prev => [...prev, newPoi]);
   };
 
-  const handleMapClick = async (latlng) => {
-    try {
-      const poiData = {
-        nombre: `Punto ${selectedPoisForList.length + 1}`,
-        descripcion: "Punto creado por usuario",
-        latitud: latlng.lat,
-        longitud: latlng.lng,
-        id_categoria: categories[0]?.id_categoria || 1,
-        es_accesible: 1,
-        es_fijo: 0,
-        visibilidad: 'private'
-      };
-      const res = await createPoi(poiData);
-      if (res.success) {
-        const newPoi = res.data;
-        setSelectedPoisForList(prev => [...prev, newPoi]);
-        setPois(prev => [...prev, newPoi]);
-        setActivePoiIndex(selectedPoisForList.length); // Seleccionar automáticamente el nuevo punto
-      }
-    } catch (err) {
-      console.error("Error creating POI from map click:", err);
+  const handleMapClick = (latlng) => {
+    const tempId = `temp-${Date.now()}`;
+
+    const newPoi = {
+      id_poi: tempId,
+      nombre: `Punto ${pois.length + 1}`,
+      latitud: latlng.lat,
+      longitud: latlng.lng,
+      id_categoria: categories[0]?.id_categoria || 1,
+      es_accesible: 1,
+      isNew: true
+    };
+
+    // Añadimos a la lista general de puntos disponibles
+    setPois(prev => [...prev, newPoi]);
+  };
+  const handleAddPoiAtLocation = () => {
+    if (!userPosition) {
+      alert("No se ha podido detectar tu ubicación. Asegúrate de dar permisos de geolocalización.");
+      return;
     }
+    
+    const tempId = `temp-${Date.now()}`;
+    const newPoi = {
+      id_poi: tempId,
+      nombre: `Punto en mi ubicación`,
+      latitud: userPosition[0],
+      longitud: userPosition[1],
+      id_categoria: categories[0]?.id_categoria || 1,
+      es_accesible: 1,
+      isNew: true
+    };
+
+    // Añadimos a la lista general de puntos disponibles Y lo seleccionamos para la ruta
+    setPois(prev => [...prev, newPoi]);
+    setSelectedPoisForList(prev => [...prev, newPoi]);
+    setActivePoiIndex(selectedPoisForList.length);
   };
 
   const handleRemovePoi = async (index) => {
@@ -211,48 +295,28 @@ const CreateList = () => {
     }
   };
 
+  // Cálculo de ruta en tiempo real para la lista que se está creando
   useEffect(() => {
-    const updateRoute = async () => {
-      if (selectedPoisForList.length < 2) {
+    const getLiveRoute = async () => {
+      if (selectedPoisForList.length >= 2) {
+        try {
+          // Append first POI to end to close loop
+          const closedPois = [...selectedPoisForList, selectedPoisForList[0]];
+          const coords = closedPois.map(p => `${p.longitud},${p.latitud}`).join(";");
+          const res = await fetch(`https://router.project-osrm.org/route/v1/foot/${coords}?overview=full&geometries=geojson`);
+          const data = await res.json();
+          if (data.code === "Ok") {
+            const geom = data.routes[0].geometry.coordinates.map(c => [c[1], c[0]]);
+            setJoinedRoute(geom);
+            setTotalDistance(data.routes[0].distance);
+          }
+        } catch (e) { console.error("Error calculating live route:", e); }
+      } else {
         setJoinedRoute(null);
         setTotalDistance(0);
-        return;
-      }
-
-      try {
-        const coords = selectedPoisForList
-          .map(p => `${p.longitud},${p.latitud}`)
-          .join(";");
-
-        const response = await fetch(
-          `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`
-        );
-        const data = await response.json();
-
-        if (data.code === "Ok" && data.routes.length > 0) {
-          const route = data.routes[0];
-          const coordinates = route.geometry.coordinates.map(coord => [coord[1], coord[0]]);
-          setJoinedRoute(coordinates);
-          setTotalDistance(route.distance);
-        } else {
-          throw new Error(`OSRM error: ${data.code}`);
-        }
-      } catch (err) {
-        console.error("OSRM error, falling back to straight lines:", err);
-        const straightLines = [];
-        let dist = 0;
-        for (let i = 0; i < selectedPoisForList.length - 1; i++) {
-          const p1 = selectedPoisForList[i];
-          const p2 = selectedPoisForList[i + 1];
-          straightLines.push([parseFloat(p1.latitud), parseFloat(p1.longitud)]);
-          straightLines.push([parseFloat(p2.latitud), parseFloat(p2.longitud)]);
-          dist += L.latLng(p1.latitud, p1.longitud).distanceTo(L.latLng(p2.latitud, p2.longitud));
-        }
-        setJoinedRoute(straightLines);
-        setTotalDistance(dist);
       }
     };
-    updateRoute();
+    getLiveRoute();
   }, [selectedPoisForList]);
 
   const handleFocusList = (list) => {
@@ -272,47 +336,90 @@ const CreateList = () => {
   };
 
   const handleSaveList = async () => {
+    if (selectedPoisForList.length < 2) {
+      alert("No has creado ningún orden manual. Selecciona al menos dos puntos para definir una ruta o secuencia.");
+      return;
+    }
+
     if (!listName) {
       alert(t("createList.errorNoName"));
       return;
     }
 
     try {
-      // --- Lógica de Optimización Automática (Ruta más corta) ---
-      let optimizedPois = [...selectedPoisForList];
+      let finalPois = [...selectedPoisForList];
 
-      if (optimizedPois.length >= 3) {
-        const points = [...optimizedPois];
-        const result = [points.shift()]; 
+      // --- 1. Optimización Automática (Si el usuario quiere) ---
+      if (finalPois.length >= 3) {
+        const confirmOptimize = window.confirm("¿Quieres que el sistema ordene los puntos automáticamente para crear la ruta más corta? (Si cancelas, se mantendrá tu orden manual)");
 
-        while (points.length > 0) {
-          const lastPoint = result[result.length - 1];
-          let nearestIdx = 0;
-          let minDistance = L.latLng(parseFloat(lastPoint.latitud), parseFloat(lastPoint.longitud))
-            .distanceTo(L.latLng(parseFloat(points[0].latitud), parseFloat(points[0].longitud)));
+        if (confirmOptimize) {
+          const points = [...finalPois];
+          const result = [points.shift()];
 
-          for (let i = 1; i < points.length; i++) {
-            const d = L.latLng(parseFloat(lastPoint.latitud), parseFloat(lastPoint.longitud))
-              .distanceTo(L.latLng(parseFloat(points[i].latitud), parseFloat(points[i].longitud)));
-            if (d < minDistance) {
-              minDistance = d;
-              nearestIdx = i;
+          while (points.length > 0) {
+            const lastPoint = result[result.length - 1];
+            let nearestIdx = 0;
+            let minDistance = L.latLng(parseFloat(lastPoint.latitud), parseFloat(lastPoint.longitud))
+              .distanceTo(L.latLng(parseFloat(points[0].latitud), parseFloat(points[0].longitud)));
+
+            for (let i = 1; i < points.length; i++) {
+              const d = L.latLng(parseFloat(lastPoint.latitud), parseFloat(lastPoint.longitud))
+                .distanceTo(L.latLng(parseFloat(points[i].latitud), parseFloat(points[i].longitud)));
+              if (d < minDistance) {
+                minDistance = d;
+                nearestIdx = i;
+              }
             }
+            result.push(points.splice(nearestIdx, 1)[0]);
           }
-          result.push(points.splice(nearestIdx, 1)[0]);
+          finalPois = result;
         }
-        optimizedPois = result;
+      }
+
+      // --- 2. Creación Real de POIs Temporales ---
+      const poiIdsFinales = [];
+      for (const poi of finalPois) {
+        if (poi.isNew) {
+          // Si el punto es nuevo, lo creamos ahora en la DB
+          const resPoi = await createPoi({
+            nombre: poi.nombre,
+            latitud: poi.latitud,
+            longitud: poi.longitud,
+            id_categoria: poi.id_categoria,
+            es_accesible: poi.es_accesible,
+            id_nodo_acceso: poi.id_nodo_acceso
+          });
+
+          if (resPoi.success) {
+            poiIdsFinales.push(resPoi.data.id_poi);
+          } else {
+            throw new Error("Error al crear uno de los puntos intermedios");
+          }
+        } else {
+          // Si ya existía, usamos su ID
+          poiIdsFinales.push(poi.id_poi);
+        }
+      }
+
+      // --- 3. Guardar la Lista ---
+      const user = JSON.parse(localStorage.getItem("usuario"));
+
+      if (!user) {
+        alert("Debes iniciar sesión para crear o guardar listas.");
+        navigate("/login");
+        return;
       }
 
       const savedUser = localStorage.getItem("usuario");
       const userId = savedUser ? JSON.parse(savedUser).id_usuario : 1;
 
       const listaData = {
-        id_usuario: userId, 
+        id_usuario: user.id_usuario,
         nombre: listName,
         descripcion: listDesc,
         visibilidad: listVisibility,
-        pois: optimizedPois.map(p => p.id_poi)
+        pois: poiIdsFinales
       };
 
       let res;
@@ -323,6 +430,16 @@ const CreateList = () => {
       }
 
       if (res.success) {
+        const listId = editingListId || res.data.id_lista;
+
+        if (listImage) {
+          try {
+            await uploadListaImage(listId, listImage);
+          } catch (imgErr) {
+            console.error("Error subiendo la portada:", imgErr);
+          }
+        }
+
         alert(editingListId ? "¡Lista actualizada!" : t("createList.success"));
         navigate("/");
       }
@@ -341,142 +458,62 @@ const CreateList = () => {
           className="w-full h-full"
           zoomControl={false}
         >
-          <TileLayer
-            url={isSatelliteView
-              ? "https://server.arcgisonline.com/ArcGIS/rest/services/World_Imagery/MapServer/tile/{z}/{y}/{x}"
-              : "https://{s}.basemaps.cartocdn.com/light_all/{z}/{x}/{y}{r}.png"
-            }
-          />
-
-          {joinedRoute && <Polyline positions={joinedRoute} color="var(--theme-color, #ec4899)" weight={6} opacity={0.8} />}
-
-          {/* Rendering Other User Lists */}
-          {showOtherLists && otherLists
-            .filter(list => !focusedListId || list.id_lista === focusedListId)
-            .map(list => {
-            if (!list.pois || list.pois.length === 0) return null;
-            
-            const isFocused = focusedListId === list.id_lista;
-
-            // Zoom out logic: Show a single representative marker
-            if (currentZoom < 13 && !isFocused) {
-              const firstPoi = list.pois[0];
-              return (
-                <Marker
-                  key={`list-cluster-${list.id_lista}`}
-                  position={[parseFloat(firstPoi.latitud), parseFloat(firstPoi.longitud)]}
-                  icon={L.divIcon({
-                    className: "list-cluster-marker",
-                    html: `<div class="w-10 h-10 bg-slate-800/90 rounded-full border-2 border-white/50 shadow-2xl flex items-center justify-center text-white scale-75 group transition-all">
-                            <span class="material-symbols-outlined text-lg">format_list_bulleted</span>
-                          </div>`,
-                    iconSize: [40, 40],
-                    iconAnchor: [20, 20]
-                  })}
-                  eventHandlers={{ click: () => handleFocusList(list) }}
-                />
-              );
-            }
-
-            // Zoom in logic: Show individual POIs and a polyline
-            const listData = otherListGeometries[list.id_lista];
-            const geom = listData?.geom || list.pois.map(p => [parseFloat(p.latitud), parseFloat(p.longitud)]);
-            
-            return (
-              <Fragment key={`list-full-${list.id_lista}`}>
-                <Polyline 
-                  positions={geom} 
-                  color={isFocused ? "var(--theme-color, #6366f1)" : "#94a3b8"} 
-                  weight={isFocused ? 4 : 2} 
-                  dashArray={isFocused ? "" : "5, 10"} 
-                  opacity={isFocused ? 1 : 0.5} 
-                  eventHandlers={{ click: () => handleFocusList(list) }}
-                />
-                {list.pois.map((poi, idx) => (
-                  <Marker
-                    key={`other-poi-${list.id_lista}-${poi.id_poi}`}
-                    position={[parseFloat(poi.latitud), parseFloat(poi.longitud)]}
-                    icon={L.divIcon({
-                      className: "other-list-poi",
-                      html: `<div class="w-5 h-5 ${isFocused ? 'bg-indigo-500 scale-125' : 'bg-slate-500'} rounded-full border-2 border-white shadow-md flex items-center justify-center text-[9px] text-white font-bold transition-all">${idx + 1}</div>`,
-                      iconSize: [20, 20],
-                      iconAnchor: [10, 10]
-                    })}
-                    eventHandlers={{ click: () => handleFocusList(list) }}
-                  />
-                ))}
-              </Fragment>
-            );
-          })}
-
-          {pois.filter(p => !selectedPoisForList.find(sp => sp.id_poi === p.id_poi)).map(poi => (
-            <Marker
-              key={`poi-${poi.id_poi}`}
-              position={[parseFloat(poi.latitud), parseFloat(poi.longitud)]}
-              icon={L.divIcon({
-                className: "existing-poi-marker",
-                html: `<div class="w-6 h-6 bg-blue-500 rounded-full border-2 border-white shadow-md flex items-center justify-center text-white text-[8px] font-bold italic">POI</div>`,
-                iconSize: [24, 24],
-                iconAnchor: [12, 12]
-              })}
-              eventHandlers={{ click: () => handleSelectPoi(poi) }}
-            />
-          ))}
-
-          {selectedPoisForList.map((poi, idx) => (
-            <Marker
-              key={`selected-${poi.id_poi}`}
-              position={[parseFloat(poi.latitud), parseFloat(poi.longitud)]}
-              icon={L.divIcon({
-                className: `selected-poi-marker transition-all ${activePoiIndex === idx ? 'scale-125 z-[100]' : ''}`,
-                html: `<div class="w-8 h-8 ${idx === 0 ? 'bg-green-500 text-white border-white' :
-                  activePoiIndex === idx ? 'bg-primary-text text-primary border-primary' :
-                    'bg-primary text-primary-text border-white'
-                  } rounded-full border-4 shadow-lg flex items-center justify-center text-xs font-bold transition-all">
-                  ${idx === 0 ? '<span class="material-symbols-outlined text-[14px]">play_arrow</span>' : idx + 1}
-                </div>`,
-                iconSize: [32, 32],
-                iconAnchor: [16, 16]
-              })}
-              eventHandlers={{ click: () => setActivePoiIndex(idx) }}
-            />
-          ))}
-
           <MapEvents onMapClick={handleMapClick} setCurrentZoom={setCurrentZoom} />
+
+          <MapLayers
+            isSatelliteView={isSatelliteView}
+            currentZoom={currentZoom}
+            userLists={showOtherLists ? otherLists : []}
+            focusedListId={focusedListId}
+            handleFocusList={handleFocusList}
+            otherListGeometries={otherListGeometries}
+            generalMarkers={pois}
+            selectedPoisForList={selectedPoisForList}
+            joinedRoute={joinedRoute}
+            onPoiClick={handleSelectPoi}
+            activePoiIndex={activePoiIndex}
+            setActivePoiIndex={setActivePoiIndex}
+            userPosition={userPosition}
+          />
         </MapContainer>
+      </div>
 
-        {/* Floating Toggle for Map Style - On the right side */}
-        <div className="absolute top-1/2 -translate-y-1/2 right-4 flex flex-col gap-3 z-[1000]">
-          <button
-            onClick={() => setIsSatelliteView(!isSatelliteView)}
-            className="w-12 h-12 bg-white text-black rounded-2xl shadow-2xl flex flex-col items-center justify-center border-2 border-white transition-all hover:scale-110 active:scale-95"
-          >
-            <span className="material-symbols-outlined text-xl">
-              {isSatelliteView ? 'map' : 'layers'}
-            </span>
-            <span className="text-[7px] font-black uppercase tracking-tighter">
-              {isSatelliteView ? t("createList.map") : t("createList.satellite")}
-            </span>
-          </button>
+      {/* Floating Actions Stack (Mismo que en Map.jsx) */}
+      <div className="fixed bottom-24 right-6 z-[110] pointer-events-auto flex flex-col gap-3">
+        {/* ADD POI AT LOCATION BUTTON */}
+        <button
+          onClick={handleAddPoiAtLocation}
+          className="w-16 h-16 bg-pink-500 text-white rounded-full shadow-[0_8px_25px_-5px_rgba(236,72,153,0.5)] flex items-center justify-center hover:bg-pink-600 transition-all hover:scale-110 active:scale-95 border border-pink-400/20"
+          title="Añadir punto en mi ubicación"
+        >
+          <span className="material-symbols-outlined text-3xl">add_location_alt</span>
+        </button>
 
-          <button
-            onClick={handleLocate}
-            className="w-12 h-12 bg-primary text-primary-text rounded-2xl shadow-2xl flex items-center justify-center hover:opacity-90 transition-all hover:scale-110 active:scale-95"
-          >
-            <span className="material-symbols-outlined text-xl">my_location</span>
-          </button>
+        <button
+          onClick={handleLocate}
+          className="w-16 h-16 bg-white text-black rounded-full shadow-xl flex items-center justify-center hover:bg-gray-100 transition-all hover:scale-110 active:scale-95 border border-black/5"
+        >
+          <span className="material-symbols-outlined text-2xl">my_location</span>
+        </button>
 
-          <button
-            onClick={() => setShowOtherLists(!showOtherLists)}
-            className={`w-12 h-12 rounded-2xl shadow-2xl flex flex-col items-center justify-center border-2 transition-all hover:scale-110 active:scale-95 ${
-              showOtherLists ? 'bg-indigo-600 text-white border-indigo-400' : 'bg-white text-indigo-600 border-white'
-            }`}
-            title={t("createList.showOtherLists", "Mostrar/Ocultar Otras Listas")}
-          >
-            <span className="material-symbols-outlined text-xl">explore</span>
-            <span className="text-[7px] font-black uppercase tracking-tighter">{t("createList.other", "Otras")}</span>
-          </button>
-        </div>
+        <button
+          onClick={() => {
+            const newState = !showOtherLists;
+            setShowOtherLists(newState);
+            
+            if (newState && otherLists.length > 0) {
+              // Fit bounds to show all user lists
+              const allPois = otherLists.flatMap(l => l.pois || []);
+              if (allPois.length > 0 && mapRef.current) {
+                const bounds = L.latLngBounds(allPois.map(p => [parseFloat(p.latitud), parseFloat(p.longitud)]));
+                mapRef.current.fitBounds(bounds, { padding: [100, 100] });
+              }
+            }
+          }}
+          className={`w-16 h-16 rounded-full shadow-xl flex items-center justify-center border-2 transition-all hover:scale-110 active:scale-95 ${showOtherLists ? 'bg-indigo-600 text-white border-indigo-400' : 'bg-white text-indigo-600 border-white'}`}
+        >
+          <span className="material-symbols-outlined text-2xl">format_list_bulleted</span>
+        </button>
       </div>
 
       {/* Close button in top right */}
@@ -489,271 +526,167 @@ const CreateList = () => {
         </button>
       </div>
 
-      {/* Sidebar de Creación / Edición / Inspección (Lateral Izquierdo) */}
+      {/* Panel Inferior de Creación / Edición / Inspección (Bottom Sheet) */}
       {(selectedPoisForList.length > 0 || editingListId || focusedListId) && (
-        <div className="absolute top-0 left-0 bottom-0 w-[400px] bg-slate-950/90 backdrop-blur-3xl border-r border-white/10 z-[1001] p-8 overflow-y-auto no-scrollbar animate-slide-right pointer-events-auto shadow-[20px_0_50px_rgba(0,0,0,0.5)]">
-          
-          {/* Caso 1: Creando o Editando mi propia lista */}
-          {!focusedListId && (selectedPoisForList.length > 0 || editingListId) && (
-            <div className="space-y-8 animate-fade-in">
-              <div className="space-y-1">
-                <h2 className="text-2xl font-black text-white tracking-tighter uppercase leading-none italic">
-                  {editingListId ? t("createList.finishTitle", "Finalizar Lista") : t("createList.title", "Crear Lista")}<span className="text-primary">.</span>
-                </h2>
-                <p className="text-[9px] text-white/40 uppercase font-bold tracking-[0.2em]">{t("createList.subtitle", "Selecciona puntos en el mapa para crear tu itinerario personalizado.")}</p>
-              </div>
+        <div className="fixed bottom-0 left-0 right-0 z-[1001] pointer-events-auto animate-slide-up">
+          <div className="bg-slate-950/95 backdrop-blur-3xl border-t border-white/10 rounded-t-[2rem] shadow-[0_-20px_50px_rgba(0,0,0,0.5)] flex flex-col max-h-[35vh]">
 
-              <div className="space-y-6">
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">{t("createList.nameLabel", "Nombre")}</label>
-                  <input
-                    type="text"
-                    placeholder={t("createList.namePlaceholder", "Escribe un título...")}
-                    value={listName}
-                    onChange={(e) => setListName(e.target.value)}
-                    className="w-full bg-white/5 border-2 border-white/10 rounded-2xl px-5 py-4 text-sm text-white placeholder:text-white/20 focus:border-primary/50 focus:bg-primary/5 transition-all outline-none"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">{t("createList.descLabel", "Descripción")}</label>
-                  <textarea
-                    placeholder={t("createList.descPlaceholder", "¿De qué trata esta lista?")}
-                    value={listDesc}
-                    onChange={(e) => setListDesc(e.target.value)}
-                    className="w-full bg-white/5 border-2 border-white/10 rounded-2xl px-5 py-4 text-sm text-white placeholder:text-white/20 focus:border-primary/50 focus:bg-primary/5 transition-all outline-none h-32 resize-none"
-                  />
-                </div>
-
-                <div className="space-y-2">
-                  <label className="text-[10px] font-black uppercase tracking-widest text-primary ml-1">{t("editProfile.dangerZone", "Privacidad")}</label>
-                  <div className="grid grid-cols-3 gap-2">
-                    {['public', 'private', 'friends'].map((v) => (
-                      <button
-                        key={v}
-                        onClick={() => setListVisibility(v)}
-                        className={`py-2 rounded-xl text-[8px] font-black uppercase tracking-widest transition-all border-2 ${
-                          listVisibility === v 
-                          ? 'bg-primary border-primary text-primary-text shadow-lg shadow-primary/20' 
-                          : 'bg-white/5 border-white/10 text-white/40 hover:border-white/20'
-                        }`}
-                      >
-                        {v === 'public' ? t("community.tabs.official", "Pública") : v === 'private' ? t("nav.darkMode", "Privada") : t("community.friends", "Amigos")}
-                      </button>
-                    ))}
-                  </div>
-                </div>
-              </div>
-
-              <div className="space-y-4 pt-4 border-t border-white/10">
-                <div className="flex items-center justify-between">
-                  <h3 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">{t("createList.selection", "Tu Selección")}</h3>
-                  <span className="px-2 py-0.5 bg-primary/20 rounded text-[9px] font-bold text-primary border border-primary/20">{selectedPoisForList.length}</span>
-                </div>
-                
-                <div className="space-y-2 max-h-[200px] overflow-y-auto no-scrollbar pr-2">
-                  {selectedPoisForList.map((poi, idx) => (
-                    <div
-                      key={poi.id_poi}
-                      onClick={() => setActivePoiIndex(idx)}
-                      className={`group flex items-center gap-3 p-3 rounded-2xl border-2 transition-all cursor-pointer ${
-                        activePoiIndex === idx
-                          ? 'bg-primary/20 border-primary shadow-lg'
-                          : 'bg-white/5 border-white/5 text-white/80 hover:bg-white/10 hover:border-white/20'
-                      }`}
-                    >
-                      <div className={`w-6 h-6 rounded-lg flex items-center justify-center text-[10px] font-black ${activePoiIndex === idx ? 'bg-primary text-primary-text' : 'bg-white/10 text-white'}`}>
-                        {idx + 1}
-                      </div>
-                      <span className="text-[11px] font-bold truncate flex-1">{poi.nombre}</span>
-                      
-                      <button
-                        onClick={(e) => { e.stopPropagation(); handleRemovePoi(idx); }}
-                        className="w-5 h-5 rounded-lg bg-red-500/20 text-red-500 flex items-center justify-center opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500 hover:text-white"
-                      >
-                        <span className="material-symbols-outlined text-[12px]">delete</span>
-                      </button>
-                    </div>
-                  ))}
-                </div>
-
-                {totalDistance > 0 && (
-                  <div className="flex items-center justify-between px-4 py-3 bg-primary text-primary-text rounded-2xl shadow-xl shadow-primary/20">
-                    <div className="flex flex-col">
-                      <span className="text-[8px] font-black uppercase tracking-widest opacity-60">{t("createList.distanceTotal", "Distancia Total")}</span>
-                      <span className="text-sm font-black">
-                        {totalDistance > 1000
-                          ? `${(totalDistance / 1000).toFixed(2)} km`
-                          : `${Math.round(totalDistance)} m`}
-                      </span>
-                    </div>
-                    <span className="material-symbols-outlined text-xl opacity-40">route</span>
-                  </div>
-                )}
-              </div>
-
-              <div className="pt-6 space-y-3">
+            {/* Drag Handle & Header */}
+            <div className="flex flex-col items-center py-2.5 cursor-pointer" onClick={() => {
+              if (focusedListId) setFocusedListId(null);
+            }}>
+              <div className="w-10 h-1 bg-white/20 rounded-full mb-1.5"></div>
+              <div className="w-full px-6 flex justify-between items-center">
+                <h3 className="text-[10px] font-black text-white italic tracking-widest uppercase">
+                  {focusedListId ? 'Inspeccionando' : (editingListId ? 'Editando Lista' : 'Nueva Lista')}
+                </h3>
                 <button
-                  onClick={handleSaveList}
-                  disabled={selectedPoisForList.length < 1 || !listName}
-                  className={`w-full py-5 rounded-2xl font-black uppercase tracking-widest shadow-2xl transition-all active:scale-95 flex items-center justify-center gap-3 ${
-                    editingListId ? 'bg-primary text-primary-text shadow-primary/40' : 'bg-white text-black'
-                  } disabled:opacity-20 disabled:grayscale`}
-                >
-                  <span className="material-symbols-outlined">{editingListId ? 'save_as' : 'cloud_upload'}</span>
-                  {editingListId ? t("common.save", "Actualizar Lista") : t("createList.save", "Guardar y Publicar")}
-                </button>
-                
-                {(editingListId || selectedPoisForList.length > 0) && (
-                  <button 
-                    onClick={() => {
+                  onClick={() => {
+                    if (focusedListId) setFocusedListId(null);
+                    else {
                       setEditingListId(null);
                       setSelectedPoisForList([]);
                       setListName("");
                       setListDesc("");
-                    }}
-                    className="w-full text-white/40 text-[10px] font-bold uppercase tracking-widest hover:text-white transition-all py-2"
-                  >
-                    {t("common.cancel", "Descartar cambios")}
-                  </button>
-                )}
-              </div>
-            </div>
-          )}
-
-          {/* Caso 2: Inspeccionando una lista ajena */}
-          {focusedListId && (
-            <div className="space-y-8 animate-fade-in">
-              <div className="flex justify-between items-start">
-                <div className="space-y-1">
-                  <span className="px-2 py-0.5 bg-primary text-[8px] font-black uppercase rounded text-primary-text shadow-lg shadow-primary/20">{t("createList.inspectMode", "Modo Inspección")}</span>
-                  <h3 className="text-2xl font-black text-white italic truncate max-w-[250px] leading-tight">
-                    {otherLists.find(l => l.id_lista === focusedListId)?.nombre}
-                  </h3>
-                </div>
-                <button 
-                  onClick={() => setFocusedListId(null)}
-                  className="w-10 h-10 bg-white/5 text-white rounded-full flex items-center justify-center hover:bg-white/10 transition-all border border-white/10"
+                      setImagePreview(null);
+                    }
+                  }}
+                  className="w-8 h-8 bg-white/5 text-white rounded-full flex items-center justify-center hover:bg-white/10 transition-all border border-white/10"
                 >
-                  <span className="material-symbols-outlined">close</span>
+                  <span className="material-symbols-outlined text-sm">close</span>
                 </button>
               </div>
+            </div>
 
-              <div className="p-4 bg-white/5 rounded-2xl border border-white/10">
-                <p className="text-[11px] text-white/60 leading-relaxed italic">
-                  {otherLists.find(l => l.id_lista === focusedListId)?.descripcion || t("createList.noDesc", "Sin descripción disponible.")}
-                </p>
-              </div>
+            <div className="px-6 pb-6 overflow-y-auto no-scrollbar">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-              <div className="space-y-4">
-                <h4 className="text-[10px] font-black uppercase tracking-[0.2em] text-white/40">{t("createList.suggestedRoute", "Recorrido sugerido")}</h4>
-                <div className="space-y-4 max-h-[300px] overflow-y-auto pr-2 no-scrollbar">
-                  {otherLists.find(l => l.id_lista === focusedListId)?.pois.map((poi, idx, arr) => (
-                    <div key={poi.id_poi} className="relative pl-8">
-                      <div className="absolute left-0 top-0 bottom-0 w-0.5 bg-primary/20 ml-2.5">
-                        {idx === arr.length - 1 && <div className="absolute top-0 bottom-0 w-full bg-slate-950" style={{top: '12px'}} />}
-                      </div>
-                      <div className="absolute left-0 top-0 w-5 h-5 bg-primary rounded-full flex items-center justify-center text-[9px] font-bold text-primary-text border-2 border-slate-950 z-10">
-                        {idx + 1}
-                      </div>
-                      <div className="space-y-1">
-                        <h4 className="text-[11px] font-bold text-white leading-none">{poi.nombre}</h4>
-                        {idx < arr.length - 1 && (
-                          <div className="flex items-center gap-1.5 py-2">
-                            <span className="material-symbols-outlined text-[12px] text-primary">directions_walk</span>
-                            <span className="text-[9px] text-primary font-black uppercase">
-                              {otherListGeometries[focusedListId]?.waypoints?.[idx] 
-                                ? `${Math.round(otherListGeometries[focusedListId].waypoints[idx])} m`
-                                : "..."}
-                            </span>
-                          </div>
-                        )}
-                      </div>
+                {/* Lado Izquierdo: Configuración General */}
+                <div className="space-y-4">
+                  {!focusedListId && (
+                    <div
+                      onClick={() => document.getElementById('list-image-input').click()}
+                      className="relative h-24 w-full bg-white/5 border-2 border-dashed border-white/10 rounded-xl overflow-hidden cursor-pointer hover:border-pink-500/50 transition-all flex flex-col items-center justify-center gap-1 group"
+                    >
+                      {imagePreview || (editingListId && otherLists.find(l => l.id_lista === editingListId)?.imagen_url) ? (
+                        <img
+                          src={imagePreview || `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${otherLists.find(l => l.id_lista === editingListId)?.imagen_url}`}
+                          className="absolute inset-0 w-full h-full object-cover opacity-60"
+                          alt="Preview"
+                        />
+                      ) : (
+                        <span className="text-[8px] font-black uppercase text-white/20">Añadir Portada</span>
+                      )}
+                      <input id="list-image-input" type="file" accept="image/*" className="hidden" onChange={(e) => {
+                        const file = e.target.files[0];
+                        if (file) {
+                          setListImage(file);
+                          setImagePreview(URL.createObjectURL(file));
+                        }
+                      }} />
                     </div>
-                  ))}
-                </div>
-              </div>
+                  )}
 
-              <div className="pt-6 border-t border-white/10 space-y-4">
-                <div className="flex justify-between items-end px-2">
-                  <div className="flex flex-col">
-                    <span className="text-[9px] text-white/40 uppercase font-black tracking-widest">{t("createList.distanceTotal", "Longitud Total")}</span>
-                    <span className="text-3xl font-black text-primary">
-                      {otherListGeometries[focusedListId]?.distance 
-                        ? `${(otherListGeometries[focusedListId].distance / 1000).toFixed(2)} km`
-                        : "..."}
-                    </span>
+                  <div className="space-y-3">
+                    <input
+                      type="text"
+                      placeholder={t("createList.namePlaceholder")}
+                      value={listName}
+                      onChange={(e) => setListName(e.target.value)}
+                      readOnly={!!focusedListId}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-[11px] text-white placeholder:text-white/20 focus:border-pink-500/50 outline-none"
+                    />
+                    <textarea
+                      placeholder="Descripción..."
+                      value={listDesc}
+                      onChange={(e) => setListDesc(e.target.value)}
+                      readOnly={!!focusedListId}
+                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-[10px] text-white placeholder:text-white/20 focus:border-pink-500/50 outline-none h-16 resize-none"
+                    />
+
+                    {!focusedListId && (
+                      <div className="grid grid-cols-3 gap-2">
+                        {['public', 'private', 'friends'].map((v) => (
+                          <button
+                            key={v}
+                            onClick={() => setListVisibility(v)}
+                            className={`py-2 rounded-lg text-[7px] font-black uppercase tracking-widest transition-all border ${listVisibility === v ? 'bg-pink-500 border-pink-500 text-white' : 'bg-white/5 border-white/10 text-white/40'}`}
+                          >
+                            {v}
+                          </button>
+                        ))}
+                      </div>
+                    )}
                   </div>
                 </div>
 
-                <div className="flex gap-3">
-                  <button 
-                    onClick={() => {
-                      const list = otherLists.find(l => l.id_lista === focusedListId);
-                      if (list) {
-                        setSelectedPoisForList(list.pois);
-                        setListName(list.nombre);
-                        setListDesc(list.descripcion || "");
-                        setListVisibility(list.visibilidad || "public");
-                        setEditingListId(list.id_lista);
-                        setFocusedListId(null);
-                      }
-                    }}
-                    className="flex-1 bg-primary hover:opacity-90 text-primary-text py-4 rounded-2xl text-[11px] font-black uppercase transition-all shadow-xl shadow-primary/20 flex items-center justify-center gap-2"
-                  >
-                    <span className="material-symbols-outlined text-sm">edit</span>
-                    {t("common.edit", "Editar")}
-                  </button>
-                  <button 
-                    onClick={() => {
-                      const list = otherLists.find(l => l.id_lista === focusedListId);
-                      if (list) {
-                        setSelectedPoisForList(list.pois);
-                        setListName(`${list.nombre} (Copia)`);
-                        setListDesc(list.descripcion || "");
-                        setEditingListId(null);
-                        setFocusedListId(null);
-                      }
-                    }}
-                    className="flex-1 bg-white/10 hover:bg-white/20 text-white py-4 rounded-2xl text-[11px] font-black uppercase transition-all flex items-center justify-center gap-2"
-                  >
-                    <span className="material-symbols-outlined text-sm">content_copy</span>
-                    {t("common.copy", "Copiar")}
-                  </button>
-                </div>
-              </div>
-            </div>
-          )}
+                {/* Lado Derecho: Itinerario / Puntos */}
+                <div className="space-y-4">
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between px-1">
+                      <h4 className="text-[8px] font-black uppercase text-white/30 tracking-widest italic">Puntos</h4>
+                      <span className="text-[8px] font-bold text-pink-500">{focusedListId ? otherLists.find(l => l.id_lista === focusedListId)?.pois.length : selectedPoisForList.length} total</span>
+                    </div>
 
-          {/* Ficha de detalle de un punto seleccionado (siempre visible en el sidebar si hay punto activo) */}
-          {activePoiIndex !== null && selectedPoisForList[activePoiIndex] && !focusedListId && (
-            <div className="mt-8 pt-8 border-t border-white/10 animate-fade-in">
-              <div className="bg-white/5 rounded-3xl p-5 border border-white/10 relative overflow-hidden group">
-                <div className="absolute top-0 right-0 p-4 opacity-0 group-hover:opacity-100 transition-opacity">
-                  <button 
-                    onClick={() => setActivePoiIndex(null)}
-                    className="text-white/40 hover:text-white"
-                  >
-                    <span className="material-symbols-outlined text-sm">close</span>
-                  </button>
-                </div>
-                
-                <div className="flex items-center gap-3 mb-3">
-                  <div className="w-8 h-8 bg-pink-500 rounded-xl flex items-center justify-center text-xs font-black shadow-lg shadow-pink-500/20">
-                    {activePoiIndex + 1}
+                    <div className="space-y-2 max-h-[120px] overflow-y-auto pr-1 no-scrollbar">
+                      {(focusedListId ? otherLists.find(l => l.id_lista === focusedListId)?.pois : selectedPoisForList).map((poi, idx) => (
+                        <div
+                          key={poi.id_poi}
+                          onClick={() => !focusedListId && setActivePoiIndex(idx)}
+                          className={`group flex items-center gap-3 p-2.5 rounded-xl border transition-all ${!focusedListId ? 'cursor-pointer' : ''} ${!focusedListId && activePoiIndex === idx ? 'bg-pink-500/20 border-pink-500' : 'bg-white/5 border-white/5 text-white/80'}`}
+                        >
+                          <div className={`w-5 h-5 rounded-lg flex items-center justify-center text-[9px] font-black ${!focusedListId && activePoiIndex === idx ? 'bg-pink-500 text-white' : 'bg-white/10 text-white'}`}>
+                            {idx + 1}
+                          </div>
+                          <span className="text-[10px] font-bold truncate flex-1">{poi.nombre}</span>
+                          {!focusedListId && (
+                            <button onClick={(e) => { e.stopPropagation(); handleRemovePoi(idx); }} className="text-red-500/40 hover:text-red-500">
+                              <span className="material-symbols-outlined text-sm">delete</span>
+                            </button>
+                          )}
+                        </div>
+                      ))}
+                    </div>
                   </div>
-                  <h3 className="text-sm font-black text-white">{selectedPoisForList[activePoiIndex].nombre}</h3>
-                </div>
 
-                <textarea
-                  value={selectedPoisForList[activePoiIndex].descripcion || ""}
-                  onChange={(e) => handleUpdatePoiDesc(activePoiIndex, e.target.value)}
-                  placeholder="Nota personal sobre este sitio..."
-                  className="w-full bg-black/20 border-none outline-none rounded-xl p-3 text-[11px] text-white/60 leading-relaxed italic resize-none h-24 no-scrollbar"
-                />
+                  <div className="pt-2 flex gap-3">
+                    {focusedListId ? (
+                      <button
+                        onClick={() => {
+                          const list = otherLists.find(l => l.id_lista === focusedListId);
+                          if (list) {
+                            setSelectedPoisForList(list.pois);
+                            setListName(list.id_usuario === currentUserId ? list.nombre : `Copia de ${list.nombre}`);
+                            setListDesc(list.descripcion || "");
+
+                            // If it's NOT our list, we don't set editingListId, so it saves as a NEW list
+                            if (list.id_usuario === currentUserId) {
+                              setEditingListId(list.id_lista);
+                            } else {
+                              setEditingListId(null);
+                            }
+
+                            setFocusedListId(null);
+                          }
+                        }}
+                        className={`w-full ${otherLists.find(l => l.id_lista === focusedListId)?.id_usuario === currentUserId ? 'bg-indigo-500' : 'bg-pink-600'} text-white py-3.5 rounded-xl text-[9px] font-black uppercase shadow-xl transition-all`}
+                      >
+                        {otherLists.find(l => l.id_lista === focusedListId)?.id_usuario === currentUserId ? 'Editar Ruta' : 'Usar como plantilla'}
+                      </button>
+                    ) : (
+                      <button
+                        onClick={handleSaveList}
+                        disabled={selectedPoisForList.length < 1 || !listName}
+                        className={`w-full py-3.5 rounded-xl font-black uppercase tracking-widest text-[9px] ${editingListId ? 'bg-indigo-600 text-white' : 'bg-white text-black'} disabled:opacity-20`}
+                      >
+                        {editingListId ? "Guardar Cambios" : t("createList.save")}
+                      </button>
+                    )}
+                  </div>
+                </div>
               </div>
             </div>
-          )}
+          </div>
         </div>
       )}
 

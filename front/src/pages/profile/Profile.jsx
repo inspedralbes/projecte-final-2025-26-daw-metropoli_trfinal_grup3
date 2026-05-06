@@ -144,7 +144,7 @@ const ScanQrModal = ({ allUsers, onFollowed, onClose }) => {
 
       const found = allUsers.find((u) => (u.id_usuario || u.id) == targetId);
       if (!found) {
-        setError(t("profile.qr.notFound", "Usuario no encontrado en Metrópoli"));
+        setError("Usuario no encontrado en wemap");
         setScanning(false);
         return;
       }
@@ -153,7 +153,7 @@ const ScanQrModal = ({ allUsers, onFollowed, onClose }) => {
       setScanning(false);
     } catch (err) {
       console.error("Scan error:", err);
-      setError(t("profile.qr.invalid", "Código QR no válido para Metrópoli"));
+      setError("Código QR no válido para Metrópoli");
       setScanning(false);
     }
   };
@@ -317,7 +317,7 @@ const ScanQrModal = ({ allUsers, onFollowed, onClose }) => {
         {/* Footer tip */}
         <div className="bg-slate-50 dark:bg-slate-800/50 p-4 text-center">
           <p className="text-[10px] text-slate-400 dark:text-slate-500 uppercase tracking-widest font-medium">
-            Metrópoli Connectivity • City Routes
+            wemap Connectivity • City Routes
           </p>
         </div>
       </div>

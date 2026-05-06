@@ -141,10 +141,8 @@ const PostCard = ({ pub, onComentarioCreado }) => {
             <span className="text-[10px] text-slate-400 uppercase tracking-widest font-medium">{formatDate(pub.createdAt)}</span>
           </div>
         </div>
-        <span className="px-3 py-1 bg-gray-50 dark:bg-white/5 rounded-full text-[10px] font-bold text-slate-500 uppercase tracking-widest">
-            {pub.tipo_publicacion}
-        </span>
       </div>
+
 
       <div className="px-5 pb-4">
         <p className="text-slate-700 dark:text-slate-200 text-sm leading-relaxed mb-4">{pub.texto}</p>
@@ -448,22 +446,13 @@ const Community = () => {
                 placeholder={t("editProfile.bioPlaceholder", "Explica algo...")} 
                 className="w-full bg-gray-50 dark:bg-white/5 rounded-2xl p-4 text-sm focus:outline-none min-h-[120px] resize-none border border-gray-100 dark:border-white/5"
             />
-            <div className="flex gap-4 mt-4">
+            <div className="mt-4">
                 <button 
                     onClick={() => fileInputRef.current.click()}
-                    className="flex-1 py-3 bg-gray-50 dark:bg-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-gray-50 dark:bg-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
                 >
                     <span className="material-symbols-outlined text-lg">image</span> {t("createList.map", "Imatge")}
                 </button>
-                <select 
-                    value={newPost.tipo_publicacion}
-                    onChange={e => setNewPost({...newPost, tipo_publicacion: e.target.value})}
-                    className="flex-1 py-3 bg-gray-50 dark:bg-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest outline-none px-2"
-                >
-                    <option value="popular">{t("community.tabs.popular", "Popular")}</option>
-                    <option value="oficial">{t("community.tabs.official", "Oficial")}</option>
-                    <option value="fanzone">{t("community.tabs.fanZone", "Fan Zone")}</option>
-                </select>
             </div>
             <input ref={fileInputRef} type="file" className="hidden" onChange={e => {
                 const f = e.target.files[0];

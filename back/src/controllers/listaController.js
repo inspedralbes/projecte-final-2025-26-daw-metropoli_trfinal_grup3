@@ -3,13 +3,13 @@ import poiModel from '../models/poiModel.js';
 
 const createLista = async (req, res) => {
     try {
-        const { id_usuario, nombre, descripcion, visibilidad, pois } = req.body;
+        const { id_usuario, nombre, descripcion, visibilidad, imagen_url, pois } = req.body;
         
         if (!id_usuario || !nombre) {
             return res.status(400).json({ success: false, message: 'Usuario y nombre son requeridos' });
         }
 
-        const newLista = await listaModel.create({ id_usuario, nombre, descripcion, visibilidad });
+        const newLista = await listaModel.create({ id_usuario, nombre, descripcion, visibilidad, imagen_url });
         
         if (pois && Array.isArray(pois)) {
             for (let i = 0; i < pois.length; i++) {
@@ -26,7 +26,8 @@ const createLista = async (req, res) => {
 
 const getPublicListas = async (req, res) => {
     try {
-        const listas = await listaModel.getPublicListas();
+        const { userId } = req.query; // Capturamos el ID del usuario actual si viene en la query
+        const listas = await listaModel.getPublicListas(userId);
         
         // Adjuntamos los POIs a cada lista
         const listasConPois = await Promise.all(listas.map(async (lista) => {
@@ -106,20 +107,6 @@ const updateLista = async (req, res) => {
     } catch (error) {
         console.error('Error in updateLista:', error);
         res.status(500).json({ success: false, message: 'Error al actualizar la lista' });
-    }
-};
-
-const uploadListaImage = async (req, res) => {
-    try {
-        if (!req.file) {
-            return res.status(400).json({ success: false, message: 'No se ha subido ninguna imagen' });
-        }
-        // Devolvemos la ruta relativa para que el front la guarde en imagen_url
-        const relativePath = `/images/listas/${req.file.filename}`;
-        res.json({ success: true, data: { imagen_url: relativePath } });
-    } catch (error) {
-        console.error('Error in uploadListaImage:', error);
-        res.status(500).json({ success: false, message: 'Error al subir la imagen' });
     }
 };
 

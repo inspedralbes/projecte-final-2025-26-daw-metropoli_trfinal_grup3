@@ -187,7 +187,6 @@ const Admin = () => {
       longitud: selectedPosition.lng,
       id_categoria: pointType,
       es_accesible: poiEsAccesible ? 1 : 0,
-      es_fijo: 1,
       imagen_url: null, // La imagen se sube por separado en la siguiente petición
       id_nodo_acceso: targetNodeIdForPoi
     };
@@ -283,7 +282,7 @@ const Admin = () => {
   const handleConvertNodeToPoi = (node) => {
     setActiveTab("map");
     setSelectedPosition({ lat: node.latitud, lng: node.longitud });
-    setPointName(node.descripcion === 'Punto de ruta dibujado' ? "" : node.descripcion);
+    setPointName("");
     setTargetNodeIdForPoi(node.id_nodo);
 
     // Forzamos el scroll después de un pequeño delay para asegurar que el tab está renderizado/visible
@@ -640,7 +639,7 @@ const Admin = () => {
                           <Popup eventHandlers={{ add: () => handleFetchNodeTramos(node.id_nodo) }}>
                             <div className="p-1 w-48 space-y-2">
                               <h4 className="font-bold text-xs text-slate-400 italic">Nodo #{node.id_nodo}</h4>
-                              <p className="text-xs">{node.descripcion || 'Sin descripción'}</p>
+                              <p className="text-xs text-slate-500 italic">Navigation Node</p>
 
                               <div className="border-t pt-2">
                                 <p className="text-[10px] font-bold uppercase text-slate-400 mb-1">Tramos Conectados</p>

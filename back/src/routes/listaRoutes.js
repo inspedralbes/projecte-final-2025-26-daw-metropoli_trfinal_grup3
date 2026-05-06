@@ -7,7 +7,7 @@ const router = express.Router();
 router.get('/usuario/:id_usuario', listaController.getUsuarioListas);
 router.get('/publicas', listaController.getPublicListas);
 router.post('/', listaController.createLista);
-router.get('/:id', listaController.getListaById);
+router.post('/:id/imagen', upload.single('imagenLista'), listaController.uploadListaImage);
 router.put('/:id', listaController.updateLista);
 router.delete('/:id', listaController.deleteLista);
 router.post('/:id/imagen', upload.single('imagenLista'), listaController.uploadListaImage);
