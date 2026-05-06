@@ -217,6 +217,36 @@ const Settings = () => {
           </div>
 
           <div className="space-y-8">
+            {/* Download App */}
+            <div>
+              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">
+                {t("settings.downloadAppTitle", "Descargar App")}
+              </h3>
+              <div className="bg-white dark:bg-[#12080a] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden p-5 flex flex-col items-center text-center">
+                <div className="w-16 h-16 bg-green-50 dark:bg-green-900/30 rounded-full flex items-center justify-center mb-3 text-green-500">
+                  <span className="material-symbols-outlined text-3xl">
+                    android
+                  </span>
+                </div>
+                <h4 className="font-bold text-slate-800 dark:text-white mb-1">
+                  {t("settings.getAndroidApp", "Lleva WeMap en tu móvil")}
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4">
+                  {t("settings.downloadDesc", "Instala la aplicación nativa para una mejor experiencia y notificaciones en tiempo real.")}
+                </p>
+                <a
+                  href="/WeMap.apk"
+                  download="WeMap.apk"
+                  className="w-full py-3 px-4 bg-primary text-primary-text font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all shadow-md shadow-primary/20"
+                >
+                  <span className="material-symbols-outlined text-lg">
+                    download
+                  </span>
+                  {t("settings.downloadAndroid", "Descargar APK Android")}
+                </a>
+              </div>
+            </div>
+
             {/* App Info */}
             <div className="bg-white dark:bg-[#12080a] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5">
               <div className="flex items-center gap-3 mb-4">

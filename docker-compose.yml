@@ -15,11 +15,6 @@ services:
       - MONGO_URI=${MONGO_URI}
     develop:
       watch:
-        - action: sync
-          path: ./back
-          target: /app
-          ignore:
-            - node_modules/
         - action: rebuild
           path: ./back/package.json
     volumes:
@@ -43,14 +38,10 @@ services:
     environment:
       - VITE_API_URL=${VITE_API_URL}
       - VITE_GOOGLE_CLIENT_ID=${VITE_GOOGLE_CLIENT_ID}
+      - VITE_GIPHY_API_KEY=${VITE_GIPHY_API_KEY}
       - NODE_OPTIONS=--max-old-space-size=4096
     develop:
       watch:
-        - action: sync
-          path: ./front
-          target: /app
-          ignore:
-            - node_modules/
         - action: rebuild
           path: ./front/package.json
     volumes:
