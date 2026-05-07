@@ -134,7 +134,25 @@
     "success": "List created successfully!",
     "noDesc": "No description available.",
     "errorMinPoints": "Select at least 2 points to create a list.",
-    "errorNoName": "Please give your list a name."
+    "errorNoName": "Please give your list a name.",
+    "addCover": "Add cover",
+    "addPoiAtLocation": "Add point at my location",
+    "points": "Points",
+    "newList": "New list",
+    "editingList": "Editing list",
+    "inspecting": "Inspecting",
+    "saveChanges": "Save changes",
+    "editRoute": "Edit route",
+    "useAsTemplate": "Use as template",
+    "confirmClose": "Are you sure? The route you are creating will be lost.",
+    "confirmCloseTitle": "Discard route?",
+    "confirmCloseBtn": "Yes, discard",
+    "closePanel": "Close panel",
+    "visibility": {
+      "public": "Public",
+      "private": "Private",
+      "friends": "Friends"
+    }
   },
   "auth": {
     "login": "Log In",

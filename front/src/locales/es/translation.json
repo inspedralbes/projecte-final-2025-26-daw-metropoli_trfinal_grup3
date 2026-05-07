@@ -143,11 +143,29 @@
     "descLabel": "Descripción",
     "descPlaceholder": "¿De qué trata esta lista?",
     "back": "Atrás",
-    "save": "Guardar y Publicar",
+    "save": "Guardar y publicar",
     "success": "¡Lista creada con éxito!",
     "noDesc": "Sin descripción disponible.",
     "errorMinPoints": "Selecciona al menos 2 puntos para crear una lista.",
-    "errorNoName": "Ponle un nombre a tu lista."
+    "errorNoName": "Ponle un nombre a tu lista.",
+    "addCover": "Añadir portada",
+    "addPoiAtLocation": "Añadir punto en mi ubicación",
+    "points": "Puntos",
+    "newList": "Nueva lista",
+    "editingList": "Editando lista",
+    "inspecting": "Inspeccionando",
+    "saveChanges": "Guardar cambios",
+    "editRoute": "Editar ruta",
+    "useAsTemplate": "Usar como plantilla",
+    "confirmClose": "¿Estás seguro? Se perderá la ruta que estás creando.",
+    "confirmCloseTitle": "¿Descartar ruta?",
+    "confirmCloseBtn": "Sí, descartar",
+    "closePanel": "Cerrar panel",
+    "visibility": {
+      "public": "Público",
+      "private": "Privado",
+      "friends": "Amigos"
+    }
   },
   "auth": {
     "login": "Iniciar Sesión",

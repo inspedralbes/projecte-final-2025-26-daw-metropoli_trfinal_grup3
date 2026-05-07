@@ -745,10 +745,10 @@ const Map = () => {
           </div>
 
           <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isSheetExpanded ? 'max-h-[70vh] opacity-100' : 'max-h-0 opacity-0'}`}>
-            <div className="px-6 pb-10 no-scrollbar overflow-y-auto max-h-[60vh]">
+            <div className="px-6 pb-6 no-scrollbar overflow-y-auto max-h-[60vh]">
               {/* My Lists Section */}
-              <section className="mb-10 mt-4">
-                <h2 className="text-[13px] font-black text-black dark:text-white tracking-wide mb-6 px-1 font-display">
+              <section className="mb-4 mt-2">
+                <h2 className="text-[12px] font-black text-black dark:text-white tracking-wide mb-3 px-1 font-display">
                   Mis listas
                 </h2>
                 <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-2 px-2">
@@ -763,8 +763,8 @@ const Map = () => {
               </section>
 
               {/* Discover Section */}
-              <section className="mb-10">
-                <h2 className="text-[13px] font-black text-black dark:text-white tracking-wide mb-6 px-1 font-display">
+              <section className="mb-2">
+                <h2 className="text-[12px] font-black text-black dark:text-white tracking-wide mb-3 px-1 font-display">
                   Listas para descubrir
                 </h2>
                 <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-2 px-2">

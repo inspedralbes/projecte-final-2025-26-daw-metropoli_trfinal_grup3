@@ -10,9 +10,11 @@ import {
   getUsuarioListas, 
   getListas, 
   getUsuarioStats,
-  unifiedSearch
+  unifiedSearch,
+  getAmigos
 } from "../../services/communicationManager";
 import SearchResultsPanel from "../../components/SearchResultsPanel";
+import FriendStatusRow from "../../components/shared/FriendStatusRow";
 
 const Home = () => {
   const { t } = useTranslation();
@@ -24,6 +26,7 @@ const Home = () => {
   const [friendCollections, setFriendCollections] = useState([]);
   const [userStats, setUserStats] = useState({ discovered: 0, completedRoutes: 0, kmWalked: 0 });
   const [weeklyActivity, setWeeklyActivity] = useState([]);
+  const [amigos, setAmigos] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -41,16 +44,16 @@ const Home = () => {
         
         // 1. Fetch Categories
         const catRes = await getCategorias();
-        if (catRes.success) setCategories(catRes.data);
+        if (catRes && catRes.success) setCategories(catRes.data);
 
         // 2. Fetch User Lists (Les teves rutes)
         if (user && user.id_usuario) {
           const userListsRes = await getUsuarioListas(user.id_usuario);
-          if (userListsRes.success) setNearbyPlaces(userListsRes.data);
+          if (userListsRes && userListsRes.success) setNearbyPlaces(userListsRes.data);
 
           // 3. Fetch User Stats
           const statsRes = await getUsuarioStats(user.id_usuario);
-          if (statsRes.success) {
+          if (statsRes && statsRes.success) {
             setUserStats({
               discovered: statsRes.data.discovered,
               completedRoutes: statsRes.data.completedRoutes,
@@ -62,9 +65,14 @@ const Home = () => {
 
         // 4. Fetch Public Lists (Dels teus amics)
         const publicListsRes = await getListas(user?.id_usuario);
-        if (publicListsRes.success) {
-          // Filtramos para no repetir las del usuario si es posible, o simplemente mostramos las públicas
+        if (publicListsRes && publicListsRes.success) {
           setFriendCollections(publicListsRes.data.filter(l => l.id_usuario !== user?.id_usuario));
+        }
+
+        // 5. Fetch Friends (For the status row)
+        if (user && user.id_usuario) {
+          const amigosRes = await getAmigos(user.id_usuario);
+          if (amigosRes && amigosRes.success) setAmigos(amigosRes.data);
         }
 
       } catch (err) {
@@ -159,30 +167,12 @@ const Home = () => {
         />
       </section>
 
-      {/* Categories Horizontal Scroll */}
-      <section className="mt-8 overflow-x-auto no-scrollbar">
-        <div className="flex gap-3 px-6 min-w-max">
-          {categories.length > 0 ? (
-            categories.map((cat, idx) => (
-              <button 
-                key={cat.id_categoria || idx} 
-                onClick={() => setActiveCategory(activeCategory === cat.id_categoria ? null : cat.id_categoria)}
-                className={`flex items-center gap-3 py-1.5 pl-1.5 pr-5 rounded-full transition-all duration-300 border shadow-sm ${
-                  activeCategory === cat.id_categoria 
-                  ? "bg-black text-white dark:bg-white dark:text-black border-transparent" 
-                  : "bg-white text-black border-gray-200 dark:bg-white/5 dark:text-white dark:border-white/10"
-                }`}
-              >
-                <div className="w-8 h-8 rounded-full overflow-hidden border border-white/20">
-                  <img src={cat.icono_url || "https://images.unsplash.com/photo-1514362545857-3bc16c4c7d1b?w=100&q=80"} alt={cat.nombre} className="w-full h-full object-cover" />
-                </div>
-                <span className="text-sm font-bold tracking-tight uppercase">{cat.nombre}</span>
-              </button>
-            ))
-          ) : (
-            <p className="px-6 opacity-40 italic">Carregant categories...</p>
-          )}
-        </div>
+      {/* Friends Horizontal Scroll (Replaces Categories) */}
+      <section className="mt-8 px-6">
+        <FriendStatusRow 
+          friends={amigos} 
+          title={t("profile.friendsList", "Amics Online")}
+        />
       </section>
 
       {/* Nearby Destinations Section */}

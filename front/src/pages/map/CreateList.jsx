@@ -1,4 +1,5 @@
 import React, { useState, useEffect, useRef } from "react";
+import { AnimatePresence, motion } from "framer-motion";
 import {
   MapContainer,
   useMapEvents,
@@ -57,6 +58,8 @@ const CreateList = () => {
   const [currentZoom, setCurrentZoom] = useState(17);
   const [listImage, setListImage] = useState(null);
   const [imagePreview, setImagePreview] = useState(null);
+  const [isSheetMinimized, setIsSheetMinimized] = useState(false);
+  const [showCloseConfirm, setShowCloseConfirm] = useState(false);
 
   // Ref para tener acceso inmediato al estado dentro de eventos de Leaflet
   const selectedPoisRef = useRef([]);
@@ -440,7 +443,14 @@ const CreateList = () => {
           }
         }
 
-        alert(editingListId ? "¡Lista actualizada!" : t("createList.success"));
+        alert(editingListId ? t('createList.saveChanges', 'Guardar cambios') : t("createList.success"));
+        // Reset form state and close sheet
+        setSelectedPoisForList([]);
+        setListName("");
+        setListDesc("");
+        setEditingListId(null);
+        setImagePreview(null);
+        setIsSheetMinimized(false);
         navigate("/");
       }
     } catch (err) {
@@ -483,8 +493,8 @@ const CreateList = () => {
         {/* ADD POI AT LOCATION BUTTON */}
         <button
           onClick={handleAddPoiAtLocation}
-          className="w-16 h-16 bg-pink-500 text-white rounded-full shadow-[0_8px_25px_-5px_rgba(236,72,153,0.5)] flex items-center justify-center hover:bg-pink-600 transition-all hover:scale-110 active:scale-95 border border-pink-400/20"
-          title="Añadir punto en mi ubicación"
+          className="w-16 h-16 bg-primary text-primary-text rounded-full shadow-[0_8px_25px_-5px_rgba(0,0,0,0.3)] flex items-center justify-center hover:opacity-90 transition-all hover:scale-110 active:scale-95 border border-primary/20"
+          title={t('createList.addPoiAtLocation', 'Añadir punto en mi ubicación')}
         >
           <span className="material-symbols-outlined text-3xl">add_location_alt</span>
         </button>
@@ -510,13 +520,13 @@ const CreateList = () => {
               }
             }
           }}
-          className={`w-16 h-16 rounded-full shadow-xl flex items-center justify-center border-2 transition-all hover:scale-110 active:scale-95 ${showOtherLists ? 'bg-indigo-600 text-white border-indigo-400' : 'bg-white text-indigo-600 border-white'}`}
+          className={`w-16 h-16 rounded-full shadow-xl flex items-center justify-center border-2 transition-all hover:scale-110 active:scale-95 ${showOtherLists ? 'bg-primary text-primary-text border-primary/50' : 'bg-white dark:bg-[#111] text-primary border-black/5 dark:border-white/10'}`}
         >
           <span className="material-symbols-outlined text-2xl">format_list_bulleted</span>
         </button>
       </div>
 
-      {/* Close button in top right */}
+      {/* Top-right close button — always visible, goes back to map */}
       <div className="absolute top-6 right-6 z-20 pointer-events-auto">
         <button
           onClick={() => navigate("/")}
@@ -527,164 +537,240 @@ const CreateList = () => {
       </div>
 
       {/* Panel Inferior de Creación / Edición / Inspección (Bottom Sheet) */}
-      {(selectedPoisForList.length > 0 || editingListId || focusedListId) && (
-        <div className="fixed bottom-0 left-0 right-0 z-[1001] pointer-events-auto animate-slide-up">
-          <div className="bg-slate-950/95 backdrop-blur-3xl border-t border-white/10 rounded-t-[2rem] shadow-[0_-20px_50px_rgba(0,0,0,0.5)] flex flex-col max-h-[35vh]">
+      <AnimatePresence>
+        {(selectedPoisForList.length > 0 || editingListId || focusedListId) && (
+          <motion.div
+            initial={{ y: "100%" }}
+            animate={{ y: 0 }}
+            exit={{ y: "100%" }}
+            transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
+            className="fixed bottom-0 left-0 right-0 z-[1001] pointer-events-auto"
+          >
+            <div className="w-full flex flex-col bg-white/95 dark:bg-[#0a0a0a]/95 rounded-t-[2rem] shadow-[0_-20px_60px_rgba(0,0,0,0.3)] backdrop-blur-lg border-t border-white/10 font-display">
 
-            {/* Drag Handle & Header */}
-            <div className="flex flex-col items-center py-2.5 cursor-pointer" onClick={() => {
-              if (focusedListId) setFocusedListId(null);
-            }}>
-              <div className="w-10 h-1 bg-white/20 rounded-full mb-1.5"></div>
-              <div className="w-full px-6 flex justify-between items-center">
-                <h3 className="text-[10px] font-black text-white italic tracking-widest uppercase">
-                  {focusedListId ? 'Inspeccionando' : (editingListId ? 'Editando Lista' : 'Nueva Lista')}
-                </h3>
+
+            {/* Header with title and action buttons */}
+            <div className="flex items-center justify-between px-6 pt-5 pb-3">
+              <h3 className="text-sm font-bold text-black dark:text-white font-display">
+                {focusedListId
+                  ? t('createList.inspecting', 'Inspeccionando')
+                  : editingListId
+                    ? t('createList.editingList', 'Editando lista')
+                    : t('createList.newList', 'Nueva lista')}
+              </h3>
+              <div className="flex items-center gap-2">
+                {/* Minimize / restore toggle */}
                 <button
-                  onClick={() => {
-                    if (focusedListId) setFocusedListId(null);
-                    else {
-                      setEditingListId(null);
-                      setSelectedPoisForList([]);
-                      setListName("");
-                      setListDesc("");
-                      setImagePreview(null);
-                    }
-                  }}
-                  className="w-8 h-8 bg-white/5 text-white rounded-full flex items-center justify-center hover:bg-white/10 transition-all border border-white/10"
+                  onClick={() => setIsSheetMinimized(prev => !prev)}
+                  title={isSheetMinimized ? 'Mostrar panel' : 'Minimizar panel'}
+                  className="w-8 h-8 bg-black/10 dark:bg-white/10 text-black dark:text-white rounded-full flex items-center justify-center hover:bg-black/20 dark:hover:bg-white/20 transition-all border border-black/10 dark:border-white/10"
                 >
-                  <span className="material-symbols-outlined text-sm">close</span>
+                  <span className="material-symbols-outlined text-base">{isSheetMinimized ? 'expand_less' : 'map'}</span>
                 </button>
+                {/* Close — opens confirmation modal */}
+                {!focusedListId && (
+                  <button
+                    onClick={() => setShowCloseConfirm(true)}
+                    title={t('createList.closePanel', 'Cerrar panel')}
+                    className="w-8 h-8 bg-black/10 dark:bg-white/10 text-black dark:text-white rounded-full flex items-center justify-center hover:bg-red-500/20 hover:text-red-500 transition-all border border-black/10 dark:border-white/10"
+                  >
+                    <span className="material-symbols-outlined text-base">close</span>
+                  </button>
+                )}
+                {focusedListId && (
+                  <button
+                    onClick={() => setFocusedListId(null)}
+                    className="w-8 h-8 bg-black/10 dark:bg-white/10 text-black dark:text-white rounded-full flex items-center justify-center hover:bg-black/20 dark:hover:bg-white/20 transition-all border border-black/10 dark:border-white/10"
+                  >
+                    <span className="material-symbols-outlined text-base">close</span>
+                  </button>
+                )}
               </div>
             </div>
 
-            <div className="px-6 pb-6 overflow-y-auto no-scrollbar">
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {/* Scrollable content — animated when minimized/restored */}
+            <AnimatePresence>
+              {!isSheetMinimized && (
+                <motion.div
+                  initial={{ height: 0, opacity: 0 }}
+                  animate={{ height: "auto", opacity: 1 }}
+                  exit={{ height: 0, opacity: 0 }}
+                  transition={{ duration: 0.4, ease: [0.4, 0, 0.2, 1] }}
+                  className="px-6 pb-6 overflow-y-auto max-h-[50vh] no-scrollbar"
+                >
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
 
-                {/* Lado Izquierdo: Configuración General */}
-                <div className="space-y-4">
-                  {!focusedListId && (
-                    <div
-                      onClick={() => document.getElementById('list-image-input').click()}
-                      className="relative h-24 w-full bg-white/5 border-2 border-dashed border-white/10 rounded-xl overflow-hidden cursor-pointer hover:border-pink-500/50 transition-all flex flex-col items-center justify-center gap-1 group"
-                    >
-                      {imagePreview || (editingListId && otherLists.find(l => l.id_lista === editingListId)?.imagen_url) ? (
-                        <img
-                          src={imagePreview || `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${otherLists.find(l => l.id_lista === editingListId)?.imagen_url}`}
-                          className="absolute inset-0 w-full h-full object-cover opacity-60"
-                          alt="Preview"
-                        />
-                      ) : (
-                        <span className="text-[8px] font-black uppercase text-white/20">Añadir Portada</span>
-                      )}
-                      <input id="list-image-input" type="file" accept="image/*" className="hidden" onChange={(e) => {
-                        const file = e.target.files[0];
-                        if (file) {
-                          setListImage(file);
-                          setImagePreview(URL.createObjectURL(file));
-                        }
-                      }} />
-                    </div>
-                  )}
 
-                  <div className="space-y-3">
-                    <input
-                      type="text"
-                      placeholder={t("createList.namePlaceholder")}
-                      value={listName}
-                      onChange={(e) => setListName(e.target.value)}
-                      readOnly={!!focusedListId}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-[11px] text-white placeholder:text-white/20 focus:border-pink-500/50 outline-none"
-                    />
-                    <textarea
-                      placeholder="Descripción..."
-                      value={listDesc}
-                      onChange={(e) => setListDesc(e.target.value)}
-                      readOnly={!!focusedListId}
-                      className="w-full bg-white/5 border border-white/10 rounded-xl px-4 py-3 text-[10px] text-white placeholder:text-white/20 focus:border-pink-500/50 outline-none h-16 resize-none"
-                    />
 
+                  {/* Lado Izquierdo: Configuración General */}
+                  <div className="space-y-4">
                     {!focusedListId && (
-                      <div className="grid grid-cols-3 gap-2">
-                        {['public', 'private', 'friends'].map((v) => (
-                          <button
-                            key={v}
-                            onClick={() => setListVisibility(v)}
-                            className={`py-2 rounded-lg text-[7px] font-black uppercase tracking-widest transition-all border ${listVisibility === v ? 'bg-pink-500 border-pink-500 text-white' : 'bg-white/5 border-white/10 text-white/40'}`}
-                          >
-                            {v}
-                          </button>
-                        ))}
+                      <div
+                        onClick={() => document.getElementById('list-image-input').click()}
+                        className="relative h-24 w-full bg-black/5 dark:bg-white/5 border-2 border-dashed border-black/10 dark:border-white/10 rounded-xl overflow-hidden cursor-pointer hover:border-primary/50 transition-all flex flex-col items-center justify-center gap-1 group"
+                      >
+                        {imagePreview || (editingListId && otherLists.find(l => l.id_lista === editingListId)?.imagen_url) ? (
+                          <img
+                            src={imagePreview || `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${otherLists.find(l => l.id_lista === editingListId)?.imagen_url}`}
+                            className="absolute inset-0 w-full h-full object-cover opacity-60"
+                            alt="Preview"
+                          />
+                        ) : (
+                          <span className="text-xs font-bold text-black/30 dark:text-white/30">{t('createList.addCover', 'Añadir portada')}</span>
+                        )}
+                        <input id="list-image-input" type="file" accept="image/*" className="hidden" onChange={(e) => {
+                          const file = e.target.files[0];
+                          if (file) {
+                            setListImage(file);
+                            setImagePreview(URL.createObjectURL(file));
+                          }
+                        }} />
                       </div>
                     )}
-                  </div>
-                </div>
 
-                {/* Lado Derecho: Itinerario / Puntos */}
-                <div className="space-y-4">
-                  <div className="space-y-2">
-                    <div className="flex items-center justify-between px-1">
-                      <h4 className="text-[8px] font-black uppercase text-white/30 tracking-widest italic">Puntos</h4>
-                      <span className="text-[8px] font-bold text-pink-500">{focusedListId ? otherLists.find(l => l.id_lista === focusedListId)?.pois.length : selectedPoisForList.length} total</span>
-                    </div>
+                    <div className="space-y-3">
+                      <input
+                        type="text"
+                        placeholder={t("createList.namePlaceholder")}
+                        value={listName}
+                        onChange={(e) => setListName(e.target.value)}
+                        readOnly={!!focusedListId}
+                        className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-black dark:text-white placeholder:text-black/30 dark:placeholder:text-white/30 focus:border-primary/50 outline-none font-display"
+                      />
+                      <textarea
+                        placeholder={t("createList.descPlaceholder")}
+                        value={listDesc}
+                        onChange={(e) => setListDesc(e.target.value)}
+                        readOnly={!!focusedListId}
+                        className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-black dark:text-white placeholder:text-black/30 dark:placeholder:text-white/30 focus:border-primary/50 outline-none h-20 resize-none font-display"
+                      />
 
-                    <div className="space-y-2 max-h-[120px] overflow-y-auto pr-1 no-scrollbar">
-                      {(focusedListId ? otherLists.find(l => l.id_lista === focusedListId)?.pois : selectedPoisForList).map((poi, idx) => (
-                        <div
-                          key={poi.id_poi}
-                          onClick={() => !focusedListId && setActivePoiIndex(idx)}
-                          className={`group flex items-center gap-3 p-2.5 rounded-xl border transition-all ${!focusedListId ? 'cursor-pointer' : ''} ${!focusedListId && activePoiIndex === idx ? 'bg-pink-500/20 border-pink-500' : 'bg-white/5 border-white/5 text-white/80'}`}
-                        >
-                          <div className={`w-5 h-5 rounded-lg flex items-center justify-center text-[9px] font-black ${!focusedListId && activePoiIndex === idx ? 'bg-pink-500 text-white' : 'bg-white/10 text-white'}`}>
-                            {idx + 1}
-                          </div>
-                          <span className="text-[10px] font-bold truncate flex-1">{poi.nombre}</span>
-                          {!focusedListId && (
-                            <button onClick={(e) => { e.stopPropagation(); handleRemovePoi(idx); }} className="text-red-500/40 hover:text-red-500">
-                              <span className="material-symbols-outlined text-sm">delete</span>
+                      {!focusedListId && (
+                        <div className="grid grid-cols-3 gap-2">
+                          {['public', 'private', 'friends'].map((v) => (
+                            <button
+                              key={v}
+                              onClick={() => setListVisibility(v)}
+                              className={`py-2 rounded-lg text-xs font-bold transition-all border ${listVisibility === v ? 'bg-primary border-primary text-primary-text' : 'bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-black/50 dark:text-white/40'}`}
+                            >
+                              {t(`createList.visibility.${v}`, v)}
                             </button>
-                          )}
+                          ))}
                         </div>
-                      ))}
+                      )}
                     </div>
                   </div>
 
-                  <div className="pt-2 flex gap-3">
-                    {focusedListId ? (
-                      <button
-                        onClick={() => {
-                          const list = otherLists.find(l => l.id_lista === focusedListId);
-                          if (list) {
-                            setSelectedPoisForList(list.pois);
-                            setListName(list.id_usuario === currentUserId ? list.nombre : `Copia de ${list.nombre}`);
-                            setListDesc(list.descripcion || "");
+                  {/* Lado Derecho: Itinerario / Puntos */}
+                  <div className="space-y-4">
+                    <div className="space-y-2">
+                      <div className="flex items-center justify-between px-1">
+                        <h4 className="text-xs font-bold text-black/50 dark:text-white/50 font-display">{t('createList.points', 'Puntos')}</h4>
+                        <span className="text-xs font-bold text-primary">{focusedListId ? otherLists.find(l => l.id_lista === focusedListId)?.pois.length : selectedPoisForList.length} total</span>
+                      </div>
 
-                            // If it's NOT our list, we don't set editingListId, so it saves as a NEW list
-                            if (list.id_usuario === currentUserId) {
-                              setEditingListId(list.id_lista);
-                            } else {
-                              setEditingListId(null);
+                      <div className="space-y-2 overflow-y-auto pr-1 no-scrollbar">
+                        {(focusedListId ? otherLists.find(l => l.id_lista === focusedListId)?.pois : selectedPoisForList).map((poi, idx) => (
+                          <div
+                            key={poi.id_poi}
+                            onClick={() => !focusedListId && setActivePoiIndex(idx)}
+                            className={`group flex items-center gap-3 p-2.5 rounded-xl border transition-all ${!focusedListId ? 'cursor-pointer' : ''} ${!focusedListId && activePoiIndex === idx ? 'bg-primary/20 border-primary' : 'bg-black/5 dark:bg-white/5 border-black/5 dark:border-white/5 text-black/80 dark:text-white/80'}`}
+                          >
+                            <div className={`w-5 h-5 rounded-lg flex items-center justify-center text-xs font-black ${!focusedListId && activePoiIndex === idx ? 'bg-primary text-primary-text' : 'bg-black/10 dark:bg-white/10 text-black dark:text-white'}`}>
+                              {idx + 1}
+                            </div>
+                            <span className="text-sm font-bold truncate flex-1 font-display">{poi.nombre}</span>
+                            {!focusedListId && (
+                              <button onClick={(e) => { e.stopPropagation(); handleRemovePoi(idx); }} className="text-red-500/40 hover:text-red-500">
+                                <span className="material-symbols-outlined text-sm">delete</span>
+                              </button>
+                            )}
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+
+                    <div className="pt-2 flex gap-3">
+                      {focusedListId ? (
+                        <button
+                          onClick={() => {
+                            const list = otherLists.find(l => l.id_lista === focusedListId);
+                            if (list) {
+                              setSelectedPoisForList(list.pois);
+                              setListName(list.id_usuario === currentUserId ? list.nombre : `Copia de ${list.nombre}`);
+                              setListDesc(list.descripcion || '');
+                              if (list.id_usuario === currentUserId) {
+                                setEditingListId(list.id_lista);
+                              } else {
+                                setEditingListId(null);
+                              }
+                              setFocusedListId(null);
+                              setIsSheetMinimized(false);
                             }
-
-                            setFocusedListId(null);
-                          }
-                        }}
-                        className={`w-full ${otherLists.find(l => l.id_lista === focusedListId)?.id_usuario === currentUserId ? 'bg-indigo-500' : 'bg-pink-600'} text-white py-3.5 rounded-xl text-[9px] font-black uppercase shadow-xl transition-all`}
-                      >
-                        {otherLists.find(l => l.id_lista === focusedListId)?.id_usuario === currentUserId ? 'Editar Ruta' : 'Usar como plantilla'}
-                      </button>
-                    ) : (
-                      <button
-                        onClick={handleSaveList}
-                        disabled={selectedPoisForList.length < 1 || !listName}
-                        className={`w-full py-3.5 rounded-xl font-black uppercase tracking-widest text-[9px] ${editingListId ? 'bg-indigo-600 text-white' : 'bg-white text-black'} disabled:opacity-20`}
-                      >
-                        {editingListId ? "Guardar Cambios" : t("createList.save")}
-                      </button>
-                    )}
+                          }}
+                          className="w-full bg-primary text-primary-text py-3.5 rounded-xl text-sm font-bold shadow-xl transition-all active:scale-95"
+                        >
+                          {otherLists.find(l => l.id_lista === focusedListId)?.id_usuario === currentUserId ? t('createList.editRoute', 'Editar ruta') : t('createList.useAsTemplate', 'Usar como plantilla')}
+                        </button>
+                      ) : (
+                        <button
+                          onClick={handleSaveList}
+                          disabled={selectedPoisForList.length < 1 || !listName}
+                          className={`w-full py-3.5 rounded-xl font-bold text-sm ${editingListId ? 'bg-primary text-primary-text' : 'bg-black dark:bg-white text-white dark:text-black'} disabled:opacity-20 active:scale-95 transition-all`}
+                        >
+                          {editingListId ? t('createList.saveChanges', 'Guardar cambios') : t("createList.save")}
+                        </button>
+                      )}
+                    </div>
                   </div>
                 </div>
-              </div>
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+
+      {/* Confirmation Modal */}
+      {showCloseConfirm && (
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6">
+          {/* Backdrop */}
+          <div
+            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
+            onClick={() => setShowCloseConfirm(false)}
+          />
+          {/* Modal card */}
+          <div className="relative z-10 w-full max-w-xs bg-white dark:bg-[#111] rounded-3xl p-6 shadow-2xl border border-black/5 dark:border-white/10 font-display flex flex-col gap-4">
+            <div className="flex flex-col gap-1">
+              <h2 className="text-base font-bold text-black dark:text-white">
+                {t('createList.confirmCloseTitle', '¿Descartar ruta?')}
+              </h2>
+              <p className="text-sm text-black/50 dark:text-white/50">
+                {t('createList.confirmClose', '¿Estás seguro? Se perderá la ruta que estás creando.')}
+              </p>
+            </div>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowCloseConfirm(false)}
+                className="flex-1 py-3 rounded-2xl text-sm font-bold bg-black/5 dark:bg-white/10 text-black dark:text-white hover:bg-black/10 dark:hover:bg-white/20 transition-all active:scale-95"
+              >
+                {t('common.cancel', 'Cancelar')}
+              </button>
+              <button
+                onClick={() => {
+                  setShowCloseConfirm(false);
+                  setEditingListId(null);
+                  setSelectedPoisForList([]);
+                  setListName('');
+                  setListDesc('');
+                  setImagePreview(null);
+                  setIsSheetMinimized(false);
+                }}
+                className="flex-1 py-3 rounded-2xl text-sm font-bold bg-red-500 text-white hover:bg-red-600 transition-all active:scale-95"
+              >
+                {t('createList.confirmCloseBtn', 'Sí, descartar')}
+              </button>
             </div>
           </div>
         </div>

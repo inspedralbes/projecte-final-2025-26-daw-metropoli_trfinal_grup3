@@ -16,6 +16,7 @@ import {
 import socket from "../../services/socketManager";
 import ChatModal from "../../components/community/ChatModal";
 import UserAvatar from "../../components/UserAvatar";
+import FriendStatusRow from "../../components/shared/FriendStatusRow";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const formatDate = (date) =>
@@ -338,28 +339,10 @@ const Community = () => {
         
         {/* Friends Horizontal List */}
         <div className="mb-8">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 ml-1">{t("profile.friendsList", "Amics Online")}</h3>
-            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-                {amigos.map(amigo => (
-                    <div 
-                        key={amigo.id_usuario} 
-                        className="flex flex-col items-center gap-2 flex-shrink-0 group"
-                    >
-                        <div className="relative">
-                            <Link to={`/profile/${amigo.id_usuario}`}>
-                              <UserAvatar user={amigo} className="w-14 h-14" borderColor="border-primary" />
-                            </Link>
-                            <button 
-                              onClick={() => setSelectedFriend(amigo)}
-                              className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-950 rounded-full cursor-pointer hover:scale-110 transition-transform"
-                            ></button>
-                        </div>
-                        <Link to={`/profile/${amigo.id_usuario}`}>
-                          <span className="text-[10px] font-bold text-slate-500 max-w-[60px] truncate hover:text-primary transition-colors">{amigo.nombre}</span>
-                        </Link>
-                    </div>
-                ))}
-            </div>
+            <FriendStatusRow 
+                friends={amigos} 
+                onFriendClick={setSelectedFriend} 
+            />
         </div>
 
         {/* ─── Main Views ─── */}

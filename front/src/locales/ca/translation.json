@@ -123,6 +123,34 @@
     "errorNameLong": "El nom no pot superar 40 caràcters",
     "errorBioLong": "La biografia no pot superar 100 caràcters"
   },
+  "createList": {
+    "title": "Crear Llista",
+    "subtitle": "Selecciona punts al mapa per crear el teu itinerari personalitzat.",
+    "namePlaceholder": "Escriu un títol...",
+    "descPlaceholder": "De què tracta aquesta llista?",
+    "back": "Enrere",
+    "save": "Desar i publicar",
+    "success": "Llista creada amb èxit!",
+    "errorNoName": "Posa un nom a la teva llista.",
+    "addCover": "Afegir portada",
+    "addPoiAtLocation": "Afegir punt a la meva ubicació",
+    "points": "Punts",
+    "newList": "Nova llista",
+    "editingList": "Editant llista",
+    "inspecting": "Inspeccionant",
+    "saveChanges": "Desar canvis",
+    "editRoute": "Editar ruta",
+    "useAsTemplate": "Usar com a plantilla",
+    "confirmClose": "Ets segur? Es perdrà la ruta que estàs creant.",
+    "confirmCloseTitle": "Descartar ruta?",
+    "confirmCloseBtn": "Sí, descartar",
+    "closePanel": "Tancar panel",
+    "visibility": {
+      "public": "Públic",
+      "private": "Privat",
+      "friends": "Amics"
+    }
+  },
   "auth": {
     "login": "Inicia sessió",
     "signup": "Registra't",
