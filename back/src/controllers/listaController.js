@@ -26,7 +26,9 @@ const createLista = async (req, res) => {
 
 const getPublicListas = async (req, res) => {
     try {
-        const { userId } = req.query; // Capturamos el ID del usuario actual si viene en la query
+        let { userId } = req.query;
+        if (userId === 'undefined' || userId === 'null') userId = null;
+        
         const listas = await listaModel.getPublicListas(userId);
         
         // Adjuntamos los POIs a cada lista
@@ -38,7 +40,7 @@ const getPublicListas = async (req, res) => {
         res.json({ success: true, data: listasConPois });
     } catch (error) {
         console.error('Error in getPublicListas:', error);
-        res.status(500).json({ success: false, message: 'Error al obtener las listas' });
+        res.status(500).json({ success: false, message: 'Error al obtener las listas públicas' });
     }
 };
 
@@ -135,12 +137,13 @@ const toggleLikeLista = async (req, res) => {
 
 const getFriendsListas = async (req, res) => {
     try {
-        const { userId } = req.query;
+        let { userId } = req.query;
+        if (userId === 'undefined' || userId === 'null') userId = null;
+        
         if (!userId) return res.status(400).json({ success: false, message: 'ID de usuario requerido' });
 
         const listas = await listaModel.getFriendsListas(userId);
         
-        // Adjuntamos los POIs
         const listasConPois = await Promise.all(listas.map(async (lista) => {
             const pois = await listaModel.getPoisByListaId(lista.id_lista);
             return { ...lista, pois };
