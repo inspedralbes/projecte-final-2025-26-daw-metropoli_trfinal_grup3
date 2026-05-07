@@ -293,15 +293,15 @@ const Community = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-[#f0f4f9] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display transition-colors duration-300 pb-32">
+    <div className="relative min-h-screen w-full bg-[#f0f4f9] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display transition-colors duration-300 md:pl-20 pb-32">
       
       <Header />
 
       {/* Spacer to avoid overlap with absolute Header */}
-      <div className="pt-24"></div>
+      <div className="pt-5"></div>
 
       <div className="sticky top-0 z-40 px-6 pt-4 pb-4 bg-[#f0f4f9]/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-gray-100 dark:border-white/5">
-        <div className="max-w-4xl mx-auto flex flex-col gap-6">
+        <div className="max-w-4xl mx-auto flex flex-col gap-6 md:ml-48 md:mr-40">
           
           {/* Search Bar */}
           <div className="relative group">

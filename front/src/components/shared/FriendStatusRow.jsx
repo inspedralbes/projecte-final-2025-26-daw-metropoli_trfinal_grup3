@@ -18,8 +18,8 @@ const FriendStatusRow = ({ friends = [], onFriendClick, title }) => {
 
   return (
     <div className="w-full">
-      <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 ml-1">
-        {title || t("profile.friendsList", "Amics Online")}
+      <h3 className="text-[11px] font-bold text-slate-400 dark:text-white mb-4 ml-1 lowercase">
+        {title || t("profile.friendsList", "amics online")}
       </h3>
       <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
         {friends.map((friend) => (

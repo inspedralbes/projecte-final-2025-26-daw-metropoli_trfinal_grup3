@@ -70,7 +70,7 @@ const Settings = () => {
   );
 
   return (
-    <div className="min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-white font-display select-none transition-colors duration-300 md:pl-16">
+    <div className="min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-white font-display select-none transition-colors duration-300 md:pl-20">
       {/* Header */}
       <div className="w-full pt-6 px-5 pb-2 z-20 flex justify-between items-center transition-colors shrink-0 touch-none md:max-w-3xl md:mx-auto">
         <div className="md:hidden flex items-center gap-2">

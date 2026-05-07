@@ -488,7 +488,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display select-none transition-colors duration-300 md:pl-16">
+    <div className="min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display select-none transition-colors duration-300 md:pl-20">
       {/* Modales QR */}
       {showMyQr && (
         <MyQrModal user={currentUser} onClose={() => setShowMyQr(false)} />

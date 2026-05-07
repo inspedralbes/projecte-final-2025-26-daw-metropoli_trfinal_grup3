@@ -552,11 +552,67 @@ const Map = () => {
 
   return (
     <div
-      className="relative h-[100dvh] w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display overflow-hidden select-none transition-colors duration-300 overscroll-none"
+      className="relative h-[100dvh] w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display overflow-hidden select-none md:pl-20 transition-colors duration-300 overscroll-none flex"
       style={{ overscrollBehavior: 'none', touchAction: 'none' }} // Prevent pull-to-refresh / overscroll
     >
-      {/* Background Map */}
-      <div className="absolute inset-0 z-0 map-container-bg w-full h-full">
+      {/* DESKTOP SIDEBAR: EXPLORER (Left side) */}
+      <aside className="hidden md:flex flex-col w-80 bg-white dark:bg-black border-r border-gray-100 dark:border-white/5 pt-24 z-[40] transition-all duration-300">
+        <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-8">
+          <section>
+            <h2 className="text-sm font-bold text-gray-500 dark:text-white mb-4 px-1 lowercase">
+              les meves rutes
+            </h2>
+            <div className="space-y-4">
+              {userLists.length > 0 ? (
+                userLists.map(route => (
+                  <div 
+                    key={route.id_lista}
+                    onClick={() => handleFocusList(route)}
+                    className={`group relative h-28 rounded-3xl overflow-hidden cursor-pointer transition-all ${focusedListId === route.id_lista ? 'ring-2 ring-primary scale-[0.98]' : 'hover:scale-[1.02]'}`}
+                  >
+                    <img 
+                      src={route.imagen_url ? (route.imagen_url.startsWith('http') ? route.imagen_url : `http://localhost:3000${route.imagen_url}`) : 'https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?w=400&q=80'} 
+                      className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                    />
+                    <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-4">
+                      <h4 className="text-white text-sm font-bold truncate">{route.nombre}</h4>
+                    </div>
+                  </div>
+                ))
+              ) : (
+                <p className="text-xs opacity-40 italic">Encara no has creat cap llista.</p>
+              )}
+            </div>
+          </section>
+
+          <section>
+            <h2 className="text-sm font-bold text-gray-500 dark:text-white mb-4 px-1 lowercase">
+              descobrir
+            </h2>
+            <div className="grid grid-cols-2 gap-3">
+              {discoverLists.map(col => (
+                <div 
+                  key={col.id_lista}
+                  onClick={() => handleFocusList(col)}
+                  className={`group relative aspect-square rounded-3xl overflow-hidden cursor-pointer transition-all ${focusedListId === col.id_lista ? 'ring-2 ring-blue-500 scale-[0.98]' : 'hover:scale-[1.02]'}`}
+                >
+                  <img 
+                    src={col.imagen_url ? (col.imagen_url.startsWith('http') ? col.imagen_url : `http://localhost:3000${col.imagen_url}`) : 'https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=400&q=80'} 
+                    className="absolute inset-0 w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0"
+                  />
+                  <div className="absolute inset-0 bg-black/40 p-3 flex flex-col justify-between items-center text-center">
+                    <UserAvatar user={{ avatar: col.foto_perfil, nombre: col.usuario_nombre || col.nombre_usuario }} className="w-8 h-8" />
+                    <h4 className="text-white text-[10px] font-bold leading-tight">{col.nombre}</h4>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </section>
+        </div>
+      </aside>
+
+      {/* Main Map Area */}
+      <div className="relative flex-1 h-full">
         <MapContainer
           ref={mapRef}
           center={initialCenter}
@@ -603,9 +659,100 @@ const Map = () => {
           )}
         </MapContainer>
 
-        {/* Panel Inferior de Detalles de la Ruta (Bottom Sheet) */}
+      {/* DESKTOP ROUTE PANEL (Right side or floating) */}
+      <AnimatePresence>
         {focusedListId && (
-          <div className="fixed bottom-0 left-0 right-0 z-[1002] pointer-events-auto animate-slide-up">
+          <motion.div 
+            initial={{ opacity: 0, x: 20 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: 20 }}
+            className="hidden md:flex fixed top-24 right-6 bottom-24 w-96 z-[1002] pointer-events-none"
+          >
+            <div className="w-full bg-white dark:bg-slate-900/95 backdrop-blur-2xl rounded-[3rem] shadow-2xl border border-gray-100 dark:border-white/5 flex flex-col overflow-hidden pointer-events-auto">
+              <div className="p-8 pb-4 flex justify-between items-center">
+                <h3 className="text-xs font-black uppercase tracking-widest text-primary italic">Detalls de la Ruta</h3>
+                <button 
+                  onClick={() => { setFocusedListId(null); setUserToPoiRoute(null); }}
+                  className="w-10 h-10 rounded-full bg-gray-100 dark:bg-white/5 flex items-center justify-center hover:bg-gray-200 dark:hover:bg-white/10 transition-all"
+                >
+                  <span className="material-symbols-outlined">close</span>
+                </button>
+              </div>
+
+              <div className="flex-1 overflow-y-auto no-scrollbar px-8 pb-8 space-y-6">
+                <div className="space-y-2">
+                  <h2 className="text-3xl font-black italic uppercase tracking-tighter leading-tight">
+                    {userLists.find(l => l.id_lista === focusedListId)?.nombre || discoverLists.find(l => l.id_lista === focusedListId)?.nombre}
+                  </h2>
+                  <p className="text-sm opacity-60 italic">
+                    {userLists.find(l => l.id_lista === focusedListId)?.descripcion || "Explora aquest itinerari seleccionat."}
+                  </p>
+                </div>
+
+                <div className="flex gap-3">
+                  <div className="flex-1 bg-gray-50 dark:bg-white/5 p-4 rounded-3xl border border-gray-100 dark:border-white/5">
+                    <p className="text-[10px] font-bold uppercase opacity-40 mb-1">Distància</p>
+                    <p className="text-xl font-black italic">
+                      {otherListGeometries[focusedListId]?.distance
+                        ? (otherListGeometries[focusedListId].distance / 1000).toFixed(1) + " km"
+                        : "--"}
+                    </p>
+                  </div>
+                  <div className="flex-1 bg-gray-50 dark:bg-white/5 p-4 rounded-3xl border border-gray-100 dark:border-white/5">
+                    <p className="text-[10px] font-bold uppercase opacity-40 mb-1">Punts</p>
+                    <p className="text-xl font-black italic">
+                      {(userLists.find(l => l.id_lista === focusedListId) || discoverLists.find(l => l.id_lista === focusedListId))?.pois.length || 0}
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-4">
+                  <button 
+                    onClick={handleGoToNearestPoi}
+                    className="w-full bg-primary text-primary-text py-5 rounded-[2rem] font-black uppercase italic tracking-widest shadow-xl shadow-primary/20 hover:scale-[1.02] active:scale-95 transition-all flex items-center justify-center gap-3"
+                  >
+                    <span className="material-symbols-outlined">navigation</span>
+                    Començar Ruta
+                  </button>
+                  
+                  {!userLists.find(l => l.id_lista === focusedListId) && (
+                    <button 
+                      onClick={() => handleIncludeInMyLists(discoverLists.find(l => l.id_lista === focusedListId))}
+                      className="w-full bg-white dark:bg-white/5 text-black dark:text-white py-4 rounded-[2rem] font-bold border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 transition-all flex items-center justify-center gap-2"
+                    >
+                      <span className="material-symbols-outlined">add_circle</span>
+                      Guardar a les meves llistes
+                    </button>
+                  )}
+                </div>
+
+                <div className="space-y-4 pt-4 border-t border-gray-100 dark:border-white/5">
+                  <h4 className="text-[10px] font-black uppercase tracking-widest opacity-40 italic">Itinerari</h4>
+                  <div className="space-y-3">
+                    {(userLists.find(l => l.id_lista === focusedListId) || discoverLists.find(l => l.id_lista === focusedListId))?.pois.map((poi, idx) => (
+                      <div 
+                        key={poi.id_poi}
+                        onClick={() => handleGetRouteToPoi(poi)}
+                        className="flex items-center gap-4 p-4 bg-gray-50 dark:bg-white/5 rounded-3xl border border-transparent hover:border-primary/30 cursor-pointer transition-all group"
+                      >
+                        <div className="w-8 h-8 rounded-xl bg-primary text-primary-text flex items-center justify-center text-xs font-black italic">
+                          {idx + 1}
+                        </div>
+                        <span className="flex-1 font-bold text-sm truncate">{poi.nombre}</span>
+                        <span className="material-symbols-outlined text-gray-300 dark:text-white/10 group-hover:text-primary transition-colors">arrow_forward</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              </div>
+            </div>
+          </motion.div>
+        )}
+      </AnimatePresence>
+
+        {/* Panel Inferior de Detalles de la Ruta (Bottom Sheet) - MOBILE ONLY */}
+        {focusedListId && (
+          <div className="md:hidden fixed bottom-0 left-0 right-0 z-[1002] pointer-events-auto animate-slide-up">
             <div className="bg-slate-950/95 backdrop-blur-3xl border-t border-white/10 rounded-t-[2.5rem] shadow-[0_-20px_50px_rgba(0,0,0,0.5)] flex flex-col max-h-[35vh]">
 
               {/* Drag Handle & Header */}
@@ -714,7 +861,23 @@ const Map = () => {
       {/* UI Overlay */}
       <Header />
       
-      <div className="fixed inset-x-0 bottom-[85px] z-[1001] pointer-events-none">
+      {/* DESKTOP CONTROLS: Top corners */}
+      <div className="hidden md:flex fixed top-24 right-6 left-96 z-[1001] pointer-events-none flex-col items-end gap-3">
+        <button
+          onClick={handleLocate}
+          className="pointer-events-auto w-12 h-12 bg-white dark:bg-slate-900 text-black dark:text-white rounded-2xl shadow-2xl border border-gray-100 dark:border-white/5 flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+        >
+          <span className="material-symbols-outlined">my_location</span>
+        </button>
+        <Link
+          to="/create-list"
+          className="pointer-events-auto w-12 h-12 bg-primary text-primary-text rounded-2xl shadow-primary-glow flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+        >
+          <span className="material-symbols-outlined text-2xl font-bold">add</span>
+        </Link>
+      </div>
+
+      <div className="fixed inset-x-0 bottom-[85px] z-[1001] pointer-events-none md:hidden">
         {/* Floating Pill Buttons Centered Above Drawer */}
         {!focusedListId && (
           <div className="flex justify-center gap-2 px-5 mb-4 translate-y-2">

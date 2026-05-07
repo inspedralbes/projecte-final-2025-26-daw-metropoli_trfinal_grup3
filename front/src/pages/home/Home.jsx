@@ -123,7 +123,7 @@ const Home = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-[#f0f4f9] dark:bg-slate-950 text-[#1a1a1a] dark:text-white font-display overflow-x-hidden pb-32 transition-colors duration-300">
+    <div className="relative min-h-screen w-full bg-[#f0f4f9] dark:bg-slate-950 text-[#1a1a1a] dark:text-white font-display overflow-x-hidden md:pl-20 pb-32 transition-colors duration-300">
       
       {loading && (
         <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm">
@@ -140,8 +140,9 @@ const Home = () => {
 
       <Header />
 
-      {/* Search Bar */}
-      <section className="mt-8 px-6 pt-24 relative">
+      <div className="safe-container">
+        {/* Search Bar */}
+        <section className="mt-5 relative md:ml-48 md:mr-40">
         <div className="flex items-center gap-3 border-b border-gray-300 dark:border-white/20 pb-2">
           <span className="material-symbols-outlined text-gray-400">search</span>
           <input 
@@ -167,25 +168,27 @@ const Home = () => {
         />
       </section>
 
-      {/* Friends Horizontal Scroll (Replaces Categories) */}
-      <section className="mt-8 px-6">
+        {/* Friends Horizontal Scroll (Replaces Categories) */}
+        <section className="mt-8">
         <FriendStatusRow 
           friends={amigos} 
           title={t("profile.friendsList", "Amics Online")}
         />
       </section>
 
-      {/* Nearby Destinations Section */}
-      <section className="mt-10 px-6">
-        <div className="flex justify-between items-end mb-6">
-          <h2 className="text-2xl font-medium tracking-tight">{t("nav.collections", "Les teves rutes")}</h2>
-          {user && (
-            <Link to="/profile" className="text-gray-400 dark:text-white/40 text-sm font-medium hover:text-black dark:hover:text-white transition-colors">{t("collections.viewAll", "Veure-ho tot")}</Link>
-          )}
-        </div>
+        {/* Nearby Destinations Section */}
+        <section className="mt-10">
+          <div className="md:grid md:grid-cols-2 md:gap-12 items-start">
+            <div>
+              <div className="flex justify-between items-end mb-6">
+                <h2 className="text-2xl font-medium tracking-tight">{t("nav.collections", "Les teves rutes")}</h2>
+                {user && (
+                  <Link to="/profile" className="text-gray-400 dark:text-white/40 text-sm font-medium hover:text-black dark:hover:text-white transition-colors">{t("collections.viewAll", "Veure-ho tot")}</Link>
+                )}
+              </div>
 
-        {/* Large Featured Card (Carousel/Single for now) */}
-        <div className="relative w-full aspect-[4/5] rounded-[3.5rem] overflow-hidden shadow-2xl group">
+              {/* Large Featured Card (Carousel/Single for now) */}
+              <div className="relative w-full aspect-[4/5] md:aspect-[16/9] rounded-[3.5rem] overflow-hidden shadow-2xl group">
           {nearbyPlaces.length > 0 ? (
             <>
               <img 
@@ -228,110 +231,167 @@ const Home = () => {
               <p className="opacity-40 italic">Encara no tens rutes pròpies</p>
             </div>
           )}
-        </div>
+              </div>
 
-        {/* Map Widget & Community Button */}
-        <div className="mt-8 flex gap-4 h-[160px]">
-          <Link 
-            to="/" 
-            className="flex-[2] relative rounded-[2.5rem] overflow-hidden shadow-xl group active:scale-95 transition-transform"
-          >
-            <img 
-              src="/map_background.jpg" 
-              className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
-            />
-            <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center gap-2">
-              <span className="material-symbols-outlined text-4xl text-white">map</span>
-              <span className="text-lg font-medium tracking-tight text-white">{t("nav.map", "Mapa")}</span>
-            </div>
-          </Link>
-          <Link 
-            to="/community" 
-            className="flex-1 bg-black text-white dark:bg-white dark:text-black rounded-[2.5rem] flex flex-col items-center justify-center gap-2 shadow-xl active:scale-95 transition-transform"
-          >
-            <span className="material-symbols-outlined text-3xl">groups</span>
-            <span className="text-lg font-medium tracking-tight opacity-60">{t("nav.community", "Comunitat")}</span>
-          </Link>
-        </div>
-
-        {/* Friend Collections Carousel */}
-        <div className="mt-12">
-          <h2 className="text-2xl font-medium tracking-tight mb-6">{t("home.groups", "Dels teus amics")}</h2>
-          <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-6 px-6">
-            {friendCollections.length > 0 ? (
-              friendCollections.map((col) => (
-                <Link to={`/collections/${col.id_lista}`} key={col.id_lista} className="min-w-[320px] bg-white dark:bg-white/10 rounded-[2.5rem] p-6 border border-gray-100 dark:border-white/10 shadow-sm transition-colors duration-300 hover:scale-[1.02] transition-transform">
-                  <div className="relative aspect-[16/10] rounded-[1.5rem] overflow-hidden mb-6">
-                    <img src={col.imagen_url || "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=400&q=80"} className="w-full h-full object-cover" />
-                    <div className="absolute top-4 left-4">
-                      <UserAvatar user={{ avatar: col.foto_perfil, nombre: col.nombre_usuario || "Usuari" }} className="w-10 h-10" />
-                    </div>
-                  </div>
-                  <h3 className="font-medium text-lg tracking-tight truncate mb-2">{col.nombre}</h3>
-                  <div className="flex justify-between items-center">
-                    <span className="text-lg font-medium tracking-tight text-gray-400 dark:text-white/40">{col.nombre_usuario || "Amic"}</span>
-                    <span className="text-lg font-medium tracking-tight bg-gray-100 dark:bg-white/10 px-3 py-1 rounded-full">{col.pois?.length || 0} {t("profile.points", "punts")}</span>
+              {/* Map Widget & Community Button */}
+              <div className="mt-8 flex gap-4 h-[160px]">
+                <Link 
+                  to="/" 
+                  className="flex-[2] relative rounded-[2.5rem] overflow-hidden shadow-xl group active:scale-95 transition-transform"
+                >
+                  <img 
+                    src="/map_background.jpg" 
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+                  />
+                  <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center gap-2">
+                    <span className="material-symbols-outlined text-4xl text-white">map</span>
+                    <span className="text-lg font-medium tracking-tight text-white">{t("nav.map", "Mapa")}</span>
                   </div>
                 </Link>
-              ))
-            ) : (
-              <p className="px-6 opacity-40 italic">No hi ha rutes públiques recents</p>
-            )}
-          </div>
-        </div>
-
-        {/* User Stats Section */}
-        <div className="mt-12 bg-white dark:bg-slate-900 text-black dark:text-white rounded-[3rem] p-8 shadow-xl dark:shadow-2xl border border-gray-100 dark:border-white/5 relative overflow-hidden">
-          <div className="absolute top-0 right-0 w-48 h-48 bg-gray-100 dark:bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
-          
-          <div className="flex justify-between items-start mb-10 relative z-10">
-            <div>
-              <h2 className="text-2xl font-medium tracking-tight mb-1">{t("home.impact", "El teu impacte")}</h2>
-              <p className="text-xs opacity-40 uppercase tracking-widest font-bold">{t("home.weeklyActivity", "Activitat setmanal")}</p>
+                <Link 
+                  to="/community" 
+                  className="flex-1 bg-black text-white dark:bg-white dark:text-black rounded-[2.5rem] flex flex-col items-center justify-center gap-2 shadow-xl active:scale-95 transition-transform"
+                >
+                  <span className="material-symbols-outlined text-3xl">groups</span>
+                  <span className="text-lg font-medium tracking-tight opacity-60">{t("nav.community", "Comunitat")}</span>
+                </Link>
+              </div>
             </div>
-            <div className="text-right">
-              <p className="text-4xl font-medium tracking-tight">{userStats.kmWalked}</p>
-              <p className="text-[10px] opacity-40 uppercase font-bold">{t("home.totalKm", "KM totals")}</p>
-            </div>
-          </div>
 
-          {/* Bar Chart */}
-          <div className="flex items-end justify-between h-32 gap-3 mb-10 relative z-10">
-            {weeklyActivity.map((day, idx) => (
-              <div key={idx} className="flex-1 flex flex-col items-center gap-3 group h-full">
-                <div className="relative w-full flex flex-col justify-end h-full bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
-                  <div 
-                    className="w-full bg-black dark:bg-white rounded-full transition-all duration-[1500ms] ease-out"
-                    style={{ height: `${day.value}%` }}
-                  ></div>
+            {/* User Stats Section - Desktop: moved next to Featured Card */}
+            <div className="hidden md:block md:mt-14">
+              <div className="h-full bg-white dark:bg-slate-900 text-black dark:text-white rounded-[3rem] p-8 shadow-xl dark:shadow-2xl border border-gray-100 dark:border-white/5 relative overflow-hidden flex flex-col justify-between">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-gray-100 dark:bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+                
+                <div className="flex justify-between items-start mb-6 relative z-10">
+                  <div>
+                    <h2 className="text-2xl font-medium tracking-tight mb-1">{t("home.impact", "El teu impacte")}</h2>
+                    <p className="text-[10px] opacity-40 lowercase tracking-widest font-bold">{t("home.weeklyActivity", "activitat setmanal")}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-4xl font-medium tracking-tight">{userStats.kmWalked}</p>
+                    <p className="text-[10px] opacity-40 lowercase font-bold">{t("home.totalKm", "km totals")}</p>
+                  </div>
                 </div>
-                <span className="text-[10px] font-bold opacity-40 uppercase">{day.day}</span>
+
+                {/* Bar Chart */}
+                <div className="flex items-end justify-between h-24 gap-3 mb-6 relative z-10">
+                  {weeklyActivity.map((day, idx) => (
+                    <div key={idx} className="flex-1 flex flex-col items-center gap-3 group h-full">
+                      <div className="relative w-full flex flex-col justify-end h-full bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
+                        <div 
+                          className="w-full bg-black dark:bg-white rounded-full transition-all duration-[1500ms] ease-out"
+                          style={{ height: `${day.value}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-[10px] font-bold opacity-40 lowercase">{day.day}</span>
+                    </div>
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 relative z-10">
+                  <div className="bg-gray-50 dark:bg-white/5 rounded-[2rem] p-4 flex items-center gap-4 border border-gray-100 dark:border-transparent">
+                    <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-xl">location_on</span>
+                    </div>
+                    <div>
+                      <p className="text-xl font-medium tracking-tight">{userStats.discovered}</p>
+                      <p className="text-[9px] opacity-40 lowercase font-bold">{t("home.discovered", "llocs descoberts")}</p>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-white/5 rounded-[2rem] p-4 flex items-center gap-4 border border-gray-100 dark:border-transparent">
+                    <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-xl">route</span>
+                    </div>
+                    <div>
+                      <p className="text-xl font-medium tracking-tight">{userStats.completedRoutes}</p>
+                      <p className="text-[9px] opacity-40 lowercase font-bold">{t("home.completedRoutes", "rutes fetes")}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
-            ))}
+            </div>
           </div>
 
-          <div className="grid grid-cols-2 gap-4 relative z-10">
-            <div className="bg-gray-50 dark:bg-white/5 rounded-[2rem] p-4 flex items-center gap-4 border border-gray-100 dark:border-transparent">
-              <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-xl">location_on</span>
-              </div>
+          {/* Friend Collections Carousel */}
+          <div className="mt-12">
+            <h2 className="text-2xl font-medium tracking-tight mb-6">{t("home.groups", "Dels teus amics")}</h2>
+            <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-6 px-6">
+              {friendCollections.length > 0 ? (
+                friendCollections.map((col) => (
+                  <Link to={`/collections/${col.id_lista}`} key={col.id_lista} className="min-w-[320px] bg-white dark:bg-white/10 rounded-[2.5rem] p-6 border border-gray-100 dark:border-white/10 shadow-sm transition-colors duration-300 hover:scale-[1.02] transition-transform">
+                    <div className="relative aspect-[16/10] rounded-[1.5rem] overflow-hidden mb-6">
+                      <img src={col.imagen_url || "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=400&q=80"} className="w-full h-full object-cover" />
+                      <div className="absolute top-4 left-4">
+                        <UserAvatar user={{ avatar: col.foto_perfil, nombre: col.nombre_usuario || "Usuari" }} className="w-10 h-10" />
+                      </div>
+                    </div>
+                    <h3 className="font-medium text-lg tracking-tight truncate mb-2">{col.nombre}</h3>
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-medium tracking-tight text-gray-400 dark:text-white/40">{col.nombre_usuario || "Amic"}</span>
+                      <span className="text-lg font-medium tracking-tight bg-gray-100 dark:bg-white/10 px-3 py-1 rounded-full">{col.pois?.length || 0} {t("profile.points", "punts")}</span>
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <p className="px-6 opacity-40 italic">No hi ha rutes públiques recents</p>
+              )}
+            </div>
+          </div>
+
+          {/* User Stats Section - Mobile ONLY (already shown in desktop grid) */}
+          <div className="md:hidden mt-12 bg-white dark:bg-slate-900 text-black dark:text-white rounded-[3rem] p-8 shadow-xl dark:shadow-2xl border border-gray-100 dark:border-white/5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-gray-100 dark:bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+            
+            <div className="flex justify-between items-start mb-10 relative z-10">
               <div>
-                <p className="text-xl font-medium tracking-tight">{userStats.discovered}</p>
-                <p className="text-[9px] opacity-40 uppercase font-bold">{t("home.discovered", "Llocs descoberts")}</p>
+                <h2 className="text-2xl font-medium tracking-tight mb-1">{t("home.impact", "El teu impacte")}</h2>
+                <p className="text-xs opacity-40 uppercase tracking-widest font-bold">{t("home.weeklyActivity", "Activitat setmanal")}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-4xl font-medium tracking-tight">{userStats.kmWalked}</p>
+                <p className="text-[10px] opacity-40 uppercase font-bold">{t("home.totalKm", "KM totals")}</p>
               </div>
             </div>
-            <div className="bg-gray-50 dark:bg-white/5 rounded-[2rem] p-4 flex items-center gap-4 border border-gray-100 dark:border-transparent">
-              <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center">
-                <span className="material-symbols-outlined text-xl">route</span>
+
+            {/* Bar Chart */}
+            <div className="flex items-end justify-between h-32 gap-3 mb-10 relative z-10">
+              {weeklyActivity.map((day, idx) => (
+                <div key={idx} className="flex-1 flex flex-col items-center gap-3 group h-full">
+                  <div className="relative w-full flex flex-col justify-end h-full bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
+                    <div 
+                      className="w-full bg-black dark:bg-white rounded-full transition-all duration-[1500ms] ease-out"
+                      style={{ height: `${day.value}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-[10px] font-bold opacity-40 uppercase">{day.day}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 relative z-10">
+              <div className="bg-gray-50 dark:bg-white/5 rounded-[2rem] p-4 flex items-center gap-4 border border-gray-100 dark:border-transparent">
+                <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-xl">location_on</span>
+                </div>
+                <div>
+                  <p className="text-xl font-medium tracking-tight">{userStats.discovered}</p>
+                  <p className="text-[9px] opacity-40 uppercase font-bold">{t("home.discovered", "Llocs descoberts")}</p>
+                </div>
               </div>
-              <div>
-                <p className="text-xl font-medium tracking-tight">{userStats.completedRoutes}</p>
-                <p className="text-[9px] opacity-40 uppercase font-bold">{t("home.completedRoutes", "Rutes fetes")}</p>
+              <div className="bg-gray-50 dark:bg-white/5 rounded-[2rem] p-4 flex items-center gap-4 border border-gray-100 dark:border-transparent">
+                <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-xl">route</span>
+                </div>
+                <div>
+                  <p className="text-xl font-medium tracking-tight">{userStats.completedRoutes}</p>
+                  <p className="text-[9px] opacity-40 uppercase font-bold">{t("home.completedRoutes", "Rutes fetes")}</p>
+                </div>
               </div>
             </div>
           </div>
-        </div>
-      </section>
+        </section>
+      </div>
 
       {/* Bottom spacing for Navbar */}
       <div className="h-20"></div>

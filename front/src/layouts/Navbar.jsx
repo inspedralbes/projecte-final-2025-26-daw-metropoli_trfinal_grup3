@@ -2,6 +2,8 @@ import { Link, useLocation } from "react-router-dom";
 import { useState, useEffect } from "react";
 import { useTranslation } from "react-i18next";
 
+import Logo from "../components/shared/Logo";
+
 const navItems = [
   { to: "/home", icon: "home", labelKey: "home" },
   { to: "/", icon: "map", labelKey: "map" },
@@ -41,8 +43,8 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-white/90 dark:bg-black/90 border-t border-gray-100 dark:border-none backdrop-blur-lg flex items-center justify-around px-2 pb-safe transition-colors duration-300"
-        style={{ height: "76px" }}>
+      <nav className="md:hidden fixed bottom-0 left-0 right-0 flex items-center justify-around px-2 pb-safe border-t border-slate-200 dark:border-white/10"
+        style={{ height: "76px", zIndex: 9999, backgroundColor: darkMode ? "#020617" : "#ffffff" }}>
         {navItems.map((item) => {
           const active = isActive(item.to);
           return (
@@ -67,14 +69,10 @@ const Navbar = () => {
       </nav>
 
       {/* ─── DESKTOP: left sidebar ─── */}
-      <nav className="hidden md:flex fixed top-0 left-0 bottom-0 z-[100] w-20 flex-col items-center py-5 gap-4 bg-white/95 dark:bg-black/95 border-r border-gray-100 dark:border-none backdrop-blur-2xl transition-colors duration-300">
+      <nav className="hidden md:flex fixed top-0 left-0 bottom-0 z-[100] w-20 flex-col items-center pt-5 pb-5 gap-4 bg-white/95 dark:bg-black/95 border-r border-gray-100 dark:border-none backdrop-blur-2xl transition-colors duration-300">
         {/* Logo at top */}
-        <Link to="/home" className="mb-4 flex items-center justify-center">
-          <img
-            src="/logo/logo.png"
-            alt="Logo"
-            className="h-10 w-auto object-contain dark:invert"
-          />
+        <Link to="/home" className="mb-8 flex items-center justify-center">
+          <Logo />
         </Link>
 
         {/* Nav items */}
