@@ -14,11 +14,14 @@ import {
   searchUsers,
   getListas,
   getFriendsListas,
-  toggleLikeLista
+  toggleLikeLista,
+  createLista,
+  getUsuarioListas
 } from "../../services/communicationManager";
 import socket from "../../services/socketManager";
 import ChatModal from "../../components/community/ChatModal";
 import UserAvatar from "../../components/UserAvatar";
+import Toast from "../../components/Toast";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const formatDate = (date) =>
@@ -206,12 +209,18 @@ const PostCard = ({ pub, onComentarioCreado }) => {
 };
 
 // ─── Sub-componente: Card de una lista ───────────────────────────────────────
-const ListaCard = ({ lista }) => {
+const ListaCard = ({ lista, userLists = [] }) => {
   const navigate = useNavigate();
   const usuarioInfo = localStorage.getItem("usuario");
   const usuarioLogged = usuarioInfo ? JSON.parse(usuarioInfo) : null;
   const [liked, setLiked] = useState(lista.user_liked > 0);
   const [likesCount, setLikesCount] = useState(lista.likes || 0);
+  const [toast, setToast] = useState(null);
+
+  const isSaved = userLists.some(ul => 
+    ul.nombre === lista.nombre && 
+    (ul.pois?.length || 0) === (lista.pois?.length || 0)
+  );
 
   const handleLike = async (e) => {
     e.preventDefault();
@@ -233,46 +242,86 @@ const ListaCard = ({ lista }) => {
     }
   };
 
+  const handleSaveList = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!usuarioLogged) { navigate("/login"); return; }
+    
+    if (isSaved) {
+      setToast({ message: "Ja tens aquesta llista guardada!", type: "warning" });
+      return;
+    }
+
+    try {
+      const newListData = {
+        id_usuario: usuarioLogged.id_usuario,
+        nombre: lista.nombre,
+        descripcion: lista.descripcion || "Guardada des de la comunitat",
+        visibilidad: "private",
+        pois: lista.pois?.map(p => p.id_poi) || []
+      };
+      const res = await createLista(newListData);
+      if (res.success) {
+        setToast({ message: "Llista guardada a les teves rutes!", type: "success" });
+      }
+    } catch (error) {
+      console.error("Error saving list:", error);
+      setToast({ message: "Error al guardar la llista", type: "error" });
+    }
+  };
+
   return (
-    <div
-      className="bg-white dark:bg-slate-900 rounded-[2rem] border border-gray-100 dark:border-white/5 overflow-hidden shadow-sm hover:shadow-md transition-all group cursor-pointer mb-6"
-      onClick={() => navigate("/map", { state: { focusedList: lista } })}
-    >
-      <div className="relative h-48 overflow-hidden">
-        <img
-          src={lista.imagen_url ? `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${lista.imagen_url}` : "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=500&q=80"}
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          alt={lista.nombre}
-        />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-        <div className="absolute bottom-4 left-6 right-6 flex items-end justify-between">
-          <div className="flex-1 pr-4">
-            <h3 className="text-white font-bold text-lg leading-tight mb-1 truncate">{lista.nombre}</h3>
+    <>
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
+      <div
+        className="bg-white dark:bg-slate-900 rounded-[2rem] border border-gray-100 dark:border-white/5 overflow-hidden shadow-sm hover:shadow-md transition-all group cursor-pointer mb-6"
+        onClick={() => navigate("/map", { state: { focusedList: lista } })}
+      >
+        <div className="relative h-48 overflow-hidden">
+          <img
+            src={lista.imagen_url ? `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${lista.imagen_url}` : "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=500&q=80"}
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            alt={lista.nombre}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+          <div className="absolute bottom-4 left-6 right-6 flex items-end justify-between">
+            <div className="flex-1 pr-4">
+              <h3 className="text-white font-bold text-lg leading-tight mb-1 truncate">{lista.nombre}</h3>
+              <div className="flex items-center gap-2">
+                <UserAvatar user={{ foto_perfil: lista.usuario_foto, nombre: lista.usuario_nombre }} className="w-5 h-5 border border-white/20" />
+                <span className="text-white/70 text-[10px] font-medium tracking-tight">Per {lista.usuario_nombre}</span>
+              </div>
+            </div>
             <div className="flex items-center gap-2">
-              <UserAvatar user={{ foto_perfil: lista.usuario_foto, nombre: lista.usuario_nombre }} className="w-5 h-5 border border-white/20" />
-              <span className="text-white/70 text-[10px] font-medium tracking-tight">Per {lista.usuario_nombre}</span>
+              <button
+                onClick={handleSaveList}
+                className={`flex items-center justify-center w-8 h-8 rounded-full backdrop-blur-md transition-all ${isSaved ? 'bg-amber-500 text-white shadow-lg shadow-amber-500/20' : 'bg-white/20 text-white hover:bg-white/30'}`}
+                title={isSaved ? "Llista ja guardada" : "Guardar a les meves llistes"}
+              >
+                <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: isSaved ? "'FILL' 1" : "'FILL' 0" }}>bookmark</span>
+              </button>
+              <button
+                onClick={handleLike}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md transition-all ${liked ? 'bg-pink-500 text-white' : 'bg-white/20 text-white hover:bg-white/30'}`}
+              >
+                <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: liked ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
+                <span className="text-[10px] font-black">{likesCount}</span>
+              </button>
             </div>
           </div>
-          <button
-            onClick={handleLike}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md transition-all ${liked ? 'bg-pink-500 text-white' : 'bg-white/20 text-white hover:bg-white/30'}`}
-          >
-            <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: liked ? "'FILL' 1" : "'FILL' 0" }}>favorite</span>
-            <span className="text-[10px] font-black">{likesCount}</span>
-          </button>
         </div>
-      </div>
-      <div className="p-6">
-        <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed line-clamp-2">{lista.descripcion || "Sense descripció disponible per aquesta ruta."}</p>
-        <div className="mt-4 pt-4 border-t border-gray-50 dark:border-white/5 flex items-center justify-between">
-          <div className="flex items-center gap-1 text-slate-400">
-            <span className="material-symbols-outlined text-sm">location_on</span>
-            <span className="text-[10px] font-bold uppercase tracking-widest">{lista.pois?.length || 0} Punts</span>
+        <div className="p-6">
+          <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed line-clamp-2">{lista.descripcion || "Sense descripció disponible per aquesta ruta."}</p>
+          <div className="mt-4 pt-4 border-t border-gray-50 dark:border-white/5 flex items-center justify-between">
+            <div className="flex items-center gap-1 text-slate-400">
+              <span className="material-symbols-outlined text-sm">location_on</span>
+              <span className="text-[10px] font-bold uppercase tracking-widest">{lista.pois?.length || 0} Punts</span>
+            </div>
+            <span className="text-pink-500 text-[10px] font-black uppercase tracking-widest group-hover:translate-x-1 transition-transform">Veure mapa →</span>
           </div>
-          <span className="text-pink-500 text-[10px] font-black uppercase tracking-widest group-hover:translate-x-1 transition-transform">Veure mapa →</span>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
@@ -287,6 +336,7 @@ const Community = () => {
   const [publicaciones, setPublicaciones] = useState([]);
   const [actividad, setActividad] = useState([]);
   const [listas, setListas] = useState([]);
+  const [userLists, setUserLists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [amigos, setAmigos] = useState([]);
@@ -369,6 +419,8 @@ const Community = () => {
     cargarActividad();
     if (usuarioLogged) {
       getAmigos(usuarioLogged.id_usuario).then(r => setAmigos(r.data || []));
+      // Cargamos solo las listas propias del usuario para detectar duplicados correctamente
+      getUsuarioListas(usuarioLogged.id_usuario).then(r => setUserLists(r.data || []));
     }
 
     if (view === "lists") {
@@ -548,7 +600,7 @@ const Community = () => {
                 </div>
               ) : (
                 listas.map((lista) => (
-                  <ListaCard key={lista.id_lista} lista={lista} />
+                  <ListaCard key={lista.id_lista} lista={lista} userLists={userLists} />
                 ))
               )}
             </div>

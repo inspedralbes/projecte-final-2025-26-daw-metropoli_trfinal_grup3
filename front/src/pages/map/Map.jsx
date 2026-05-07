@@ -9,6 +9,7 @@ import Header from "../../layouts/Header"; // Import the global header
 import UserAvatar from "../../components/UserAvatar";
 import { getPois, getRoute, getCategorias, getListas, getUsuarioListas, createLista, getUsuarios } from "../../services/communicationManager";
 import socket from "../../services/socketManager";
+import Toast from "../../components/Toast";
 import MapLayers from "../../components/MapLayers";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
@@ -73,6 +74,7 @@ const Map = () => {
   const [otherListGeometries, setOtherListGeometries] = useState({});
   const [userToPoiRoute, setUserToPoiRoute] = useState(null); // Ruta desde usuario a POI
   const [currentZoom, setCurrentZoom] = useState(17);
+  const [toast, setToast] = useState(null);
 
   // eslint-disable-next-line no-unused-vars
   const [imageBounds, setImageBounds] = useState([
@@ -244,13 +246,13 @@ const Map = () => {
       };
       const res = await createLista(newListData);
       if (res.success) {
-        alert("¡Lista añadida a tus listas!");
+        setToast({ message: "¡Lista añadida a tus listas!", type: "success" });
         const userListsRes = await getUsuarioListas(user.id_usuario);
         if (userListsRes.success) setUserLists(userListsRes.data);
       }
     } catch (error) {
       console.error("Error copying list:", error);
-      alert("Hubo un error al guardar la lista.");
+      setToast({ message: "Hubo un error al guardar la lista.", type: "error" });
     }
   };
 
@@ -573,10 +575,19 @@ const Map = () => {
                         </span>
                       </div>
 
-                      <h4 className="text-lg font-black text-white italic mb-1 leading-tight pr-16">{userLists.find(l => l.id_lista === focusedListId)?.nombre}</h4>
-                      <p className="text-[9px] text-white/40 leading-relaxed italic mb-3">
-                        {userLists.find(l => l.id_lista === focusedListId)?.descripcion || "Explora este itinerario."}
-                      </p>
+                      {(() => {
+                        const currentList = userLists.find(l => l.id_lista === focusedListId) 
+                                         || discoverLists.find(l => l.id_lista === focusedListId)
+                                         || (location.state?.focusedList?.id_lista === focusedListId ? location.state.focusedList : null);
+                        return (
+                          <>
+                            <h4 className="text-lg font-black text-white italic mb-1 leading-tight pr-16">{currentList?.nombre}</h4>
+                            <p className="text-[9px] text-white/40 leading-relaxed italic mb-3">
+                              {currentList?.descripcion || "Explora este itinerario."}
+                            </p>
+                          </>
+                        );
+                      })()}
 
                       {userToPoiRoute && (
                         <div className="mt-2 pt-2 border-t border-white/5 flex items-center justify-between">
@@ -603,8 +614,13 @@ const Map = () => {
 
                       {/* Navigation to first POI */}
                       <button
-                        onClick={() => handleGoToFirstPoi(userLists.find(l => l.id_lista === focusedListId) || discoverLists.find(l => l.id_lista === focusedListId))}
-                        className="w-full bg-blue-600 text-white py-3 rounded-xl text-[9px] font-black uppercase shadow-xl flex items-center justify-center gap-2 hover:bg-blue-600 transition-all"
+                        onClick={() => {
+                          const currentList = userLists.find(l => l.id_lista === focusedListId) 
+                                           || discoverLists.find(l => l.id_lista === focusedListId)
+                                           || (location.state?.focusedList?.id_lista === focusedListId ? location.state.focusedList : null);
+                          if (currentList) handleGoToFirstPoi(currentList);
+                        }}
+                        className="w-full bg-blue-600 text-white py-3 rounded-xl text-[9px] font-black uppercase shadow-xl flex items-center justify-center gap-2 hover:bg-blue-700 transition-all"
                       >
                         <span className="material-symbols-outlined text-sm">directions</span>
                         Cómo llegar
@@ -613,7 +629,11 @@ const Map = () => {
                       {/* Include in My Lists (if not already owned) */}
                       {!userLists.find(l => l.id_lista === focusedListId) && (
                         <button
-                          onClick={() => handleIncludeInMyLists(discoverLists.find(l => l.id_lista === focusedListId))}
+                          onClick={() => {
+                            const currentList = discoverLists.find(l => l.id_lista === focusedListId)
+                                             || (location.state?.focusedList?.id_lista === focusedListId ? location.state.focusedList : null);
+                            if (currentList) handleIncludeInMyLists(currentList);
+                          }}
                           className="w-full bg-pink-600 text-white py-3 rounded-xl text-[9px] font-black uppercase shadow-xl flex items-center justify-center gap-2 hover:bg-pink-700 transition-all"
                         >
                           <span className="material-symbols-outlined text-sm">add_circle</span>
@@ -627,20 +647,25 @@ const Map = () => {
                   <div className="space-y-3">
                     <h5 className="text-[8px] font-black uppercase text-white/30 tracking-[0.2em] px-1 italic">Itinerario sugerido</h5>
                     <div className="space-y-2 max-h-[150px] overflow-y-auto pr-2 no-scrollbar">
-                      {userLists.find(l => l.id_lista === focusedListId)?.pois.map((poi, idx) => (
-                        <div
-                          key={poi.id_poi}
-                          className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5 hover:border-pink-500/30 transition-all group cursor-pointer active:scale-95"
-                          onClick={() => handleGetRouteToPoi(poi)}
-                        >
-                          <div className="w-6 h-6 bg-pink-500 rounded-lg flex items-center justify-center text-[10px] font-black text-white">
-                            {idx + 1}
+                      {(() => {
+                        const currentList = userLists.find(l => l.id_lista === focusedListId) 
+                                         || discoverLists.find(l => l.id_lista === focusedListId)
+                                         || (location.state?.focusedList?.id_lista === focusedListId ? location.state.focusedList : null);
+                        return currentList?.pois?.map((poi, idx) => (
+                          <div
+                            key={poi.id_poi}
+                            className="flex items-center gap-3 p-3 bg-white/5 rounded-xl border border-white/5 hover:border-pink-500/30 transition-all group cursor-pointer active:scale-95"
+                            onClick={() => handleGetRouteToPoi(poi)}
+                          >
+                            <div className="w-6 h-6 bg-pink-500 rounded-lg flex items-center justify-center text-[10px] font-black text-white">
+                              {idx + 1}
+                            </div>
+                            <div className="flex-1 min-w-0">
+                              <h6 className="text-[11px] font-bold text-white truncate">{poi.nombre}</h6>
+                            </div>
                           </div>
-                          <div className="flex-1 min-w-0">
-                            <h6 className="text-[11px] font-bold text-white truncate">{poi.nombre}</h6>
-                          </div>
-                        </div>
-                      ))}
+                        ));
+                      })()}
                     </div>
                   </div>
                 </div>
@@ -651,6 +676,7 @@ const Map = () => {
       </div>
 
       {/* UI Overlay */}
+      {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       <Header />
       <div className="absolute inset-0 z-30 pointer-events-none flex flex-col justify-between">
         {/* Top Area — empty, header is handled by fixed Header component */}
