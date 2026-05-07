@@ -50,10 +50,11 @@ const Navbar = () => {
               key={item.to}
               to={item.to}
               className={`flex flex-col items-center justify-center w-16 h-full transition-all duration-200 relative ${
-                active 
-                ? "text-black dark:text-white" 
+                active
+                ? ""
                 : "text-gray-400 dark:text-white/50 hover:text-black dark:hover:text-white"
               }`}
+              style={active ? { color: "var(--theme-color)" } : {}}
             >
               <span
                 className="material-symbols-outlined text-[32px] leading-none transition-all duration-200"
@@ -86,12 +87,13 @@ const Navbar = () => {
               to={item.to}
               title={t(`nav.${item.labelKey}`)}
               className={`relative flex flex-col items-center justify-center w-14 h-14 transition-all duration-200 group ${
-                active 
-                ? "text-black dark:text-white" 
+                active
+                ? ""
                 : "text-gray-400 dark:text-white/50 hover:text-black dark:hover:text-white"
               }`}
+              style={active ? { color: "var(--theme-color)" } : {}}
             >
-              <span 
+              <span
                 className="material-symbols-outlined text-[30px] leading-none transition-all duration-200"
                 style={active ? { fontVariationSettings: "'FILL' 1" } : {}}
               >

@@ -535,14 +535,14 @@ const Community = () => {
           <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
             <button
               onClick={() => setView("feed")}
-              className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium tracking-tight transition-all border ${view === "feed" ? "bg-black dark:bg-white text-white dark:text-black border-transparent shadow-md" : "bg-white dark:bg-slate-950 text-slate-400 border-gray-100 dark:border-white/5 hover:border-gray-200"}`}
+              className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium tracking-tight transition-all border ${view === "feed" ? "bg-primary text-primary-text border-transparent shadow-md shadow-primary/20" : "bg-white dark:bg-slate-950 text-slate-400 border-gray-100 dark:border-white/5 hover:border-gray-200"}`}
             >
               <span className="material-symbols-outlined text-sm">groups</span>
               Comunitat
             </button>
             <button
               onClick={() => setView("activity")}
-              className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium tracking-tight transition-all border ${view === "activity" ? "bg-indigo-500 text-white border-transparent shadow-lg shadow-indigo-500/20" : "bg-white dark:bg-slate-950 text-slate-400 border-gray-100 dark:border-white/5 hover:border-gray-200"}`}
+              className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium tracking-tight transition-all border ${view === "activity" ? "bg-primary text-primary-text border-transparent shadow-md shadow-primary/20" : "bg-white dark:bg-slate-950 text-slate-400 border-gray-100 dark:border-white/5 hover:border-gray-200"}`}
             >
               <span
                 className="material-symbols-outlined text-sm"
@@ -557,7 +557,7 @@ const Community = () => {
             </button>
             <button
               onClick={() => setView("lists")}
-              className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium tracking-tight transition-all border ${view === "lists" ? "bg-pink-500 text-white border-transparent shadow-lg shadow-pink-500/20" : "bg-white dark:bg-slate-950 text-slate-400 border-gray-100 dark:border-white/5 hover:border-gray-200"}`}
+              className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium tracking-tight transition-all border ${view === "lists" ? "bg-primary text-primary-text border-transparent shadow-md shadow-primary/20" : "bg-white dark:bg-slate-950 text-slate-400 border-gray-100 dark:border-white/5 hover:border-gray-200"}`}
             >
               <span className="material-symbols-outlined text-sm">map</span>
               Llistes

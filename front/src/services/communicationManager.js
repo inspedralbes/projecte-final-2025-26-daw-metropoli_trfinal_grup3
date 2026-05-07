@@ -309,10 +309,12 @@ export const createRespuesta = async (id, cid, respuestaData) => {
   }
 };
 
-export const toggleLike = async (id) => {
+export const toggleLike = async (id, { id_usuario } = {}) => {
   try {
     const response = await fetch(`${API_URL}/api/comunidad/${id}/like`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_usuario }),
     });
     if (!response.ok) throw new Error("Failed to toggle Like");
     return await response.json();
