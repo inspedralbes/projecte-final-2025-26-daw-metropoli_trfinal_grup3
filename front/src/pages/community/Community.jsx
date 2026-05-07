@@ -21,6 +21,7 @@ import {
 import socket from "../../services/socketManager";
 import ChatModal from "../../components/community/ChatModal";
 import UserAvatar from "../../components/UserAvatar";
+import FriendStatusRow from "../../components/shared/FriendStatusRow";
 import Toast from "../../components/Toast";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
@@ -387,6 +388,7 @@ const ListaCard = ({ lista, userLists = [] }) => {
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 const Community = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const usuarioInfo = localStorage.getItem("usuario");
   const usuarioLogged = usuarioInfo ? JSON.parse(usuarioInfo) : null;
@@ -551,7 +553,7 @@ const Community = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Busca amics o llistes..."
+              placeholder={t("collections.search", "Busca amics o llistes...")}
               className="w-full bg-white dark:bg-slate-950 border border-gray-100 dark:border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm group-focus-within:shadow-md font-display"
             />
           </div>
@@ -560,25 +562,17 @@ const Community = () => {
           <div className="flex gap-3 overflow-x-auto no-scrollbar pb-1">
             <button
               onClick={() => setView("feed")}
-              className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium tracking-tight transition-all border ${view === "feed" ? "bg-black dark:bg-white text-white dark:text-black border-transparent shadow-md" : "bg-white dark:bg-slate-950 text-slate-400 border-gray-100 dark:border-white/5 hover:border-gray-200"}`}
+              className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium tracking-tight transition-all border ${view === "feed" ? "bg-black dark:bg-primary text-white dark:text-primary-text border-transparent shadow-md" : "bg-white dark:bg-slate-950 text-slate-400 border-gray-100 dark:border-white/5 hover:border-gray-200"}`}
             >
               <span className="material-symbols-outlined text-sm">groups</span>
-              Comunitat
+              {t("nav.community", "Comunitat")}
             </button>
             <button
               onClick={() => setView("activity")}
               className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium tracking-tight transition-all border ${view === "activity" ? "bg-indigo-500 text-white border-transparent shadow-lg shadow-indigo-500/20" : "bg-white dark:bg-slate-950 text-slate-400 border-gray-100 dark:border-white/5 hover:border-gray-200"}`}
             >
-              <span
-                className="material-symbols-outlined text-sm"
-                style={{
-                  fontVariationSettings:
-                    view === "activity" ? "'FILL' 1" : "'FILL' 0",
-                }}
-              >
-                bolt
-              </span>
-              Recents
+              <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: view === "activity" ? "'FILL' 1" : "'FILL' 0" }}>bolt</span>
+              {t("community.tabs.recent", "Recents")}
             </button>
             <button
               onClick={() => setView("lists")}
@@ -592,50 +586,21 @@ const Community = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-6 mt-8">
-        {/* Friends Horizontal List (Only in feed/lists) */}
-        {(view === "feed" || view === "lists") && (
-          <div className="mb-8">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 ml-1">
-              Amics Online
-            </h3>
-            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-              {amigos.map((amigo) => (
-                <div
-                  key={amigo.id_usuario}
-                  className="flex flex-col items-center gap-2 flex-shrink-0 group"
-                >
-                  <div className="relative">
-                    <Link to={`/profile/${amigo.id_usuario}`}>
-                      <UserAvatar
-                        user={amigo}
-                        className="w-14 h-14"
-                        borderColor="border-primary"
-                      />
-                    </Link>
-                    <button
-                      onClick={() => setSelectedFriend(amigo)}
-                      className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-950 rounded-full cursor-pointer hover:scale-110 transition-transform"
-                    ></button>
-                  </div>
-                  <Link to={`/profile/${amigo.id_usuario}`}>
-                    <span className="text-[10px] font-bold text-slate-500 max-w-[60px] truncate hover:text-primary transition-colors">
-                      {amigo.nombre}
-                    </span>
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+
+        {/* Friends Horizontal List */}
+        <div className="mb-8">
+          <FriendStatusRow
+            friends={amigos}
+            onFriendClick={setSelectedFriend}
+          />
+        </div>
 
         {/* ─── Main Views ─── */}
         <main>
           {view === "feed" && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               {loading ? (
-                <div className="text-center py-20 opacity-30 font-bold uppercase tracking-widest text-xs">
-                  Carregant publicacions...
-                </div>
+                <div className="text-center py-20 opacity-30 font-bold uppercase tracking-widest text-xs">{t("common.loading", "Carregant publicacions...")}</div>
               ) : (
                 publicaciones.map((pub, idx) => (
                   <PostCard
@@ -650,9 +615,7 @@ const Community = () => {
 
           {view === "activity" && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-500 space-y-4">
-              <h3 className="text-xl font-bold tracking-tight text-indigo-500 mb-6">
-                Activitat Recent
-              </h3>
+              <h3 className="text-xl font-bold tracking-tight text-indigo-500 mb-6">{t("profile.recentPosts", "Activitat Recent")}</h3>
               {actividad.map((act, i) => (
                 <div
                   key={i}
@@ -667,11 +630,8 @@ const Community = () => {
                   <div className="flex-1">
                     <p className="text-xs text-slate-700 dark:text-slate-200">
                       <Link to={`/profile/${act.id_usuario}`}>
-                        <span className="font-bold hover:text-primary transition-colors">
-                          {act.usuario}
-                        </span>
-                      </Link>{" "}
-                      ha creat una nova publicació
+                        <span className="font-bold hover:text-primary transition-colors">{act.usuario}</span>
+                      </Link> {t("profile.posts", "ha creat una nova publicació")}
                     </p>
                     <p className="text-[10px] text-slate-400 mt-1">
                       {formatDate(act.fecha)}
@@ -725,13 +685,9 @@ const Community = () => {
 
           {view === "search" && (
             <div className="animate-in fade-in zoom-in-95 duration-300 space-y-4">
-              <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">
-                Resultats per a "{searchQuery}"
-              </h3>
+              <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">{t("collections.search", "Resultats")} para "{searchQuery}"</h3>
               {searchResults.length === 0 ? (
-                <div className="text-center py-20 opacity-30">
-                  No s'han trobat usuaris
-                </div>
+                <div className="text-center py-20 opacity-30">{t("community.noFriends", "No s'han trobat usuaris")}</div>
               ) : (
                 searchResults.map((user, idx) => (
                   <Link
@@ -741,16 +697,10 @@ const Community = () => {
                   >
                     <UserAvatar user={user} className="w-12 h-12" />
                     <div className="flex-1">
-                      <h4 className="font-bold text-slate-800 dark:text-white">
-                        {user.nombre}
-                      </h4>
-                      <p className="text-xs text-slate-400 truncate max-w-[200px]">
-                        {user.bio || "Sense biografia"}
-                      </p>
+                      <h4 className="font-bold text-slate-800 dark:text-white">{user.nombre}</h4>
+                      <p className="text-xs text-slate-400 truncate max-w-[200px]">{user.bio || t("editProfile.bioPlaceholder", "Sense biografia")}</p>
                     </div>
-                    <span className="material-symbols-outlined text-slate-300">
-                      chevron_right
-                    </span>
+                    <span className="material-symbols-outlined text-slate-300">chevron_right</span>
                   </Link>
                 ))
               )}
@@ -784,22 +734,13 @@ const Community = () => {
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
-              <h2 className="text-xl font-bold tracking-tight">
-                Nova Publicació
-              </h2>
-              <button
-                onClick={() => setShowPostModal(false)}
-                className="text-slate-400"
-              >
-                <span className="material-symbols-outlined">close</span>
-              </button>
+              <h2 className="text-xl font-bold tracking-tight">{t("community.newPost", "Nova Publicació")}</h2>
+              <button onClick={() => setShowPostModal(false)} className="text-slate-400"><span className="material-symbols-outlined">close</span></button>
             </div>
             <textarea
               value={newPost.texto}
-              onChange={(e) =>
-                setNewPost({ ...newPost, texto: e.target.value })
-              }
-              placeholder="Explica algo..."
+              onChange={e => setNewPost({ ...newPost, texto: e.target.value })}
+              placeholder={t("editProfile.bioPlaceholder", "Explica algo...")}
               className="w-full bg-gray-50 dark:bg-white/5 rounded-2xl p-4 text-sm focus:outline-none min-h-[120px] resize-none border border-gray-100 dark:border-white/5"
             />
             <div className="mt-4">
@@ -807,8 +748,7 @@ const Community = () => {
                 onClick={() => fileInputRef.current.click()}
                 className="w-full py-3 bg-gray-50 dark:bg-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
               >
-                <span className="material-symbols-outlined text-lg">image</span>{" "}
-                Imatge
+                <span className="material-symbols-outlined text-lg">image</span> {t("createList.map", "Imatge")}
               </button>
             </div>
             <input
@@ -839,12 +779,7 @@ const Community = () => {
                 </button>
               </div>
             )}
-            <button
-              onClick={handleCreatePost}
-              className="w-full mt-6 bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/20 active:scale-95 transition-transform"
-            >
-              Publicar
-            </button>
+            <button onClick={handleCreatePost} className="w-full mt-6 bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/20 active:scale-95 transition-transform">{t("community.publish", "Publicar")}</button>
           </div>
         </div>
       )}

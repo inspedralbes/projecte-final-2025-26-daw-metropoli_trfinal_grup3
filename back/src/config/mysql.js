@@ -4,6 +4,7 @@ import mysql from 'mysql2/promise';
 // Usamos un 'pool' para reusar conexiones y no abrir una nueva en cada petición
 const pool = mysql.createPool({
     host: process.env.DB_HOST || 'db',        // Nombre del servicio en Docker o IP
+    port: process.env.DB_PORT || 3306,        // Puerto de la BD
     user: process.env.DB_USER || 'root',      // Usuario de la BD
     password: process.env.DB_PASSWORD || 'password', // Contraseña
     database: process.env.DB_NAME || 'metropoli',    // Nombre de la BD

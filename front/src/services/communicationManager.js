@@ -414,6 +414,32 @@ export const getTramosByNode = async (nodeId) => {
 
 
 
+export const getUsuarioStats = async (id) => {
+  try {
+    const response = await fetch(`${API_URL}/api/usuarios/${id}/stats`);
+    if (!response.ok) throw new Error("Failed to fetch Usuario Stats");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getUsuarioStats:", error);
+    throw error;
+  }
+};
+
+export const unifiedSearch = async (query, categoryId = null) => {
+  try {
+    const url = new URL(`${API_URL}/api/search`);
+    url.searchParams.append("q", query);
+    if (categoryId) url.searchParams.append("cat", categoryId);
+    
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Failed to fetch Search results");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in unifiedSearch:", error);
+    throw error;
+  }
+};
+
 // ── Usuarios ──
 
 export const getUsuario = async (id) => {
@@ -517,7 +543,7 @@ export const removeAmigo = async (userId, friendId) => {
 
 export const getListas = async (userId = null) => {
   try {
-    const url = userId ? `${API_URL}/api/listas?userId=${userId}` : `${API_URL}/api/listas`;
+    const url = userId ? `${API_URL}/api/listas/publicas?userId=${userId}` : `${API_URL}/api/listas/publicas`;
     const response = await fetch(url);
     if (!response.ok) throw new Error("Failed to fetch Listas");
     return await response.json();

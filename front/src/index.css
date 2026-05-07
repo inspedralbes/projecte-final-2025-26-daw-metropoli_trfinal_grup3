@@ -71,6 +71,10 @@ html.dark body {
     0 10px 10px -5px rgba(238, 43, 75, 0.4);
 }
 
+.shadow-primary-glow {
+  box-shadow: 0 8px 25px -5px color-mix(in srgb, var(--theme-color) 50%, transparent);
+}
+
 /* Leaflet Overrides for Dark Mode */
 .leaflet-container {
   background: transparent !important;

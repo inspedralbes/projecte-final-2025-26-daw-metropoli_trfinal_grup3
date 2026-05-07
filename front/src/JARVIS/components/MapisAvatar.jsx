@@ -20,7 +20,7 @@ const MapisAvatar = ({ onClick, isChatOpen }) => {
       onClick={onClick}
     >
       {/* Glow effect */}
-      <div className="absolute inset-0 bg-blue-400/20 blur-2xl rounded-full scale-150 animate-pulse" />
+      <div className="absolute inset-0 bg-primary/20 blur-2xl rounded-full scale-150 animate-pulse" />
       
       <img
         src={mapisImg}

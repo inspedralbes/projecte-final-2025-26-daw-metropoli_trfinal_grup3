@@ -4,13 +4,13 @@ import upload from '../middleware/uploadMiddleware.js';
 
 const router = express.Router();
 
-router.get('/', listaController.getPublicListas);
-router.get('/:id', listaController.getListaById);
 router.get('/usuario/:id_usuario', listaController.getUsuarioListas);
+router.get('/publicas', listaController.getPublicListas);
 router.post('/', listaController.createLista);
 router.post('/:id/imagen', upload.single('imagenLista'), listaController.uploadListaImage);
 router.put('/:id', listaController.updateLista);
 router.delete('/:id', listaController.deleteLista);
+router.post('/:id/imagen', upload.single('imagenLista'), listaController.uploadListaImage);
 
 router.get('/friends/all', listaController.getFriendsListas);
 router.post('/:id_lista/like', listaController.toggleLikeLista);

@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from "react";
+import { useTranslation } from "react-i18next";
 import {
   MapContainer,
   Circle,
@@ -14,6 +15,7 @@ import MapLayers from "../../components/MapLayers";
 import "leaflet/dist/leaflet.css";
 import L from "leaflet";
 import { useMapEvents } from "react-leaflet";
+import { motion, AnimatePresence } from "framer-motion";
 
 const MapEvents = ({ setCurrentZoom }) => {
   useMapEvents({
@@ -61,6 +63,7 @@ const UserIcon = L.divIcon({
 });
 
 const Map = () => {
+  const { t } = useTranslation();
   const mapRef = useRef(null);
   const initialCenter = [41.3864, 2.1058];
   const [userPosition, setUserPosition] = useState(null);
@@ -226,6 +229,23 @@ const Map = () => {
       socket.off('mapa_actualizado');
     };
   }, []);
+
+  // Handle POI focusing from URL search params
+  useEffect(() => {
+    const queryParams = new URLSearchParams(location.search);
+    const poiId = queryParams.get('poi');
+    
+    if (poiId && markers.length > 0) {
+      const poi = markers.find(m => m.id === parseInt(poiId));
+      if (poi && mapRef.current) {
+        setTimeout(() => {
+          mapRef.current.flyTo(poi.position, 18, { animate: true, duration: 1.5 });
+          // Optionally show details
+          setSelectedFeature(poi);
+        }, 600);
+      }
+    }
+  }, [location.search, markers]);
 
   const handleIncludeInMyLists = async (list) => {
     const userStr = localStorage.getItem("usuario");
@@ -482,9 +502,50 @@ const Map = () => {
 
   useEffect(() => { }, []);
 
+  // Mini Components for the Drawer
+  const MiniRouteCard = ({ route, onFocus }) => (
+    <div 
+      className={`relative min-w-[280px] h-32 rounded-3xl overflow-hidden shadow-md group cursor-pointer active:scale-95 transition-all ${focusedListId === route.id_lista ? 'ring-2 ring-primary' : ''}`}
+      onClick={() => onFocus(route)}
+    >
+      <img 
+        src={route.imagen_url ? (route.imagen_url.startsWith('http') ? route.imagen_url : `http://localhost:3000${route.imagen_url}`) : 'https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?w=400&q=80'} 
+        alt={route.nombre} 
+        className="absolute inset-0 w-full h-full object-cover transition-transform group-hover:scale-110"
+      />
+      <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent flex flex-col justify-end p-3">
+        <div className="flex justify-between items-end">
+          <h4 className="text-white text-xs font-black truncate pr-2 font-display">{route.nombre}</h4>
+          <div className="w-8 h-8 bg-white rounded-xl flex items-center justify-center shadow-lg border border-primary/20 group-hover:border-primary transition-colors">
+            <span className="material-symbols-outlined text-black text-[18px] font-bold">arrow_forward</span>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  const MiniDiscoverCard = ({ col, onFocus }) => (
+    <div 
+      className={`relative min-w-[140px] h-40 rounded-[3rem] overflow-hidden shadow-md group cursor-pointer active:scale-95 transition-all ${focusedListId === col.id_lista ? 'ring-2 ring-blue-500' : ''}`}
+      onClick={() => onFocus(col)}
+    >
+      <img 
+        src={col.imagen_url ? (col.imagen_url.startsWith('http') ? col.imagen_url : `http://localhost:3000${col.imagen_url}`) : 'https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=400&q=80'} 
+        className="absolute inset-0 w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all" 
+      />
+      <div className="absolute inset-0 bg-black/50 p-4 flex flex-col justify-between items-center text-center">
+        <UserAvatar user={{ avatar: col.foto_perfil, nombre: col.usuario_nombre || col.nombre_usuario || "Comunidad" }} className="w-10 h-10 ring-2 ring-white/20" />
+        <div>
+          <h4 className="text-white text-[10px] font-bold leading-tight font-display">{col.nombre}</h4>
+          <p className="text-[8px] text-white/40 font-display mt-0.5">por {col.usuario_nombre || col.nombre_usuario || "Comunidad"}</p>
+        </div>
+      </div>
+    </div>
+  );
+
   const legendItems = [
-    { color: "bg-primary", label: "Grandstands" },
-    { color: "bg-indigo-500", label: "Fan Zone" },
+    { color: "bg-primary", label: t("home.dining", "Bares") },
+    { color: "bg-indigo-500", label: t("home.fanZone", "Esdeveniments") },
     { color: "bg-slate-500", label: "WC" },
     { color: "bg-orange-400", label: "Food" },
     { color: "bg-blue-500", label: "You" },
@@ -678,126 +739,70 @@ const Map = () => {
       {/* UI Overlay */}
       {toast && <Toast message={toast.message} type={toast.type} onClose={() => setToast(null)} />}
       <Header />
-      <div className="absolute inset-0 z-30 pointer-events-none flex flex-col justify-between">
-        {/* Top Area — empty, header is handled by fixed Header component */}
-        <div className="w-full pt-32 px-5 pointer-events-auto flex flex-col items-center gap-4">
-        </div>
-        {/* Bottom Area */}
-        <div className="w-full pointer-events-auto flex flex-col items-center">
-
-          {/* Floating Actions Stack */}
-          <div className="fixed bottom-24 right-6 z-[110] pointer-events-auto flex flex-col gap-3">
-            {/* "centrar" button moved above + */}
+      
+      <div className="fixed inset-x-0 bottom-[85px] z-[1001] pointer-events-none">
+        {/* Floating Pill Buttons Centered Above Drawer */}
+        {!focusedListId && (
+          <div className="flex justify-center gap-2 px-5 mb-4 translate-y-2">
             <button
               onClick={handleLocate}
-              className="w-16 h-16 bg-white text-black rounded-full shadow-xl flex items-center justify-center hover:bg-gray-100 transition-all hover:scale-110 active:scale-95 border border-black/5"
+              className="pointer-events-auto flex items-center gap-2 bg-white dark:bg-slate-900 text-black dark:text-white px-5 py-2.5 rounded-full shadow-2xl border border-black/5 dark:border-white/5 active:scale-95 transition-transform"
             >
-              <span className="material-symbols-outlined text-2xl">my_location</span>
+              <span className="material-symbols-outlined text-xl">my_location</span>
+              <span className="text-[11px] font-black tracking-wider font-display">centrar</span>
             </button>
-
-            {/* Create List Button */}
             <Link
               to="/create-list"
-              className="w-16 h-16 rounded-full flex items-center justify-center bg-pink-500 text-white shadow-[0_8px_25px_-5px_rgba(236,72,153,0.5)] hover:bg-pink-600 transition-all hover:scale-110 active:scale-95"
+              className="pointer-events-auto w-12 h-12 bg-primary text-primary-text rounded-full shadow-primary-glow flex items-center justify-center active:scale-95 transition-transform"
             >
-              <span className="material-symbols-outlined text-4xl">add</span>
+              <span className="material-symbols-outlined text-2xl font-bold">add</span>
             </Link>
           </div>
+        )}
 
+        {/* Drawer Content */}
+        <div className="w-full bg-white/90 dark:bg-black/90 rounded-[3rem] shadow-[0_-20px_60px_rgba(0,0,0,0.2)] backdrop-blur-lg border border-white/10 overflow-hidden font-display pointer-events-auto mx-auto max-w-[95%]">
+          {/* Drag Handle (Now click handle) */}
+          <div 
+            className="w-full flex justify-center py-4 cursor-pointer"
+            onClick={() => setIsSheetExpanded(!isSheetExpanded)}
+          >
+            <div className="w-12 h-1.5 bg-gray-200 dark:bg-white/40 rounded-full"></div>
+          </div>
 
-          {/* Bottom Sheet Modal */}
-          <div className="w-full bg-white/90 dark:bg-black/90 rounded-t-[2rem] pt-1 pb-24 px-5 shadow-[0_-10px_40px_rgba(0,0,0,0.15)] relative backdrop-blur-lg">
-
-            {/* Drag Handle */}
-            <div
-              className="w-full flex justify-center cursor-pointer py-1.5"
-              onClick={() => setIsSheetExpanded(!isSheetExpanded)}
-            >
-              <div className="w-10 h-1 bg-gray-300 dark:bg-white/30 rounded-full"></div>
-            </div>
-
-            <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isSheetExpanded ? 'max-h-[800px] opacity-100' : 'max-h-0 opacity-0'}`}>
-
+          <div className={`transition-all duration-500 ease-in-out overflow-hidden ${isSheetExpanded ? 'max-h-[70vh] opacity-100' : 'max-h-0 opacity-0'}`}>
+            <div className="px-6 pb-6 no-scrollbar overflow-y-auto max-h-[60vh]">
               {/* My Lists Section */}
-              <div className="mb-8">
-                <h2 className="text-black dark:text-white font-bold text-lg mb-4 tracking-tight uppercase italic text-[11px]">Mis Listas</h2>
-                <div className="w-full overflow-x-auto no-scrollbar -mx-5 px-5">
-                  <div className="flex gap-4 min-w-max">
-                    {userLists.length > 0 ? userLists.map(c => (
-                      <div
-                        key={c.id_lista}
-                        className={`relative w-36 h-48 rounded-2xl overflow-hidden shadow-sm bg-slate-100 dark:bg-slate-800 cursor-pointer transition-transform hover:scale-105 active:scale-95 ${focusedListId === c.id_lista ? 'ring-4 ring-pink-500 shadow-xl scale-105' : ''}`}
-                        onClick={() => handleFocusList(c)}
-                      >
-                        <img
-                          src={c.imagen_url ? `http://localhost:3000${c.imagen_url}` : 'https://images.unsplash.com/photo-1498855926480-d98e83099315?w=300&q=80'}
-                          alt={c.nombre}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent flex flex-col justify-end p-3">
-                          <span className="text-white font-bold text-[14px] leading-tight">{c.nombre}</span>
-                        </div>
-                      </div>
-                    )) : (
-                      <div className="w-full text-center py-10 text-slate-400 text-sm italic">
-                        No has creado ninguna lista todavía.
-                      </div>
-                    )}
-                  </div>
+              <section className="mb-4 mt-2">
+                <h2 className="text-[12px] font-black text-black dark:text-white tracking-wide mb-3 px-1 font-display">
+                  Mis listas
+                </h2>
+                <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-2 px-2">
+                  {userLists.length > 0 ? (
+                    userLists.map(route => (
+                      <MiniRouteCard key={route.id_lista} route={route} onFocus={handleFocusList} />
+                    ))
+                  ) : (
+                    <p className="text-sm opacity-40 italic py-4 font-display">No has creado ninguna lista todavía.</p>
+                  )}
                 </div>
-              </div>
+              </section>
 
-              {/* Discover Lists Section */}
-              <div className="mb-8">
-                <h2 className="text-black dark:text-white font-bold text-lg mb-4 tracking-tight uppercase italic text-[11px]">Listas para descubrir</h2>
-                <div className="w-full overflow-x-auto no-scrollbar -mx-5 px-5">
-                  <div className="flex gap-4 min-w-max">
-                    {discoverLists.length > 0 ? discoverLists.map(c => (
-                      <div
-                        key={c.id_lista}
-                        className={`relative w-36 h-48 rounded-2xl overflow-hidden shadow-sm bg-slate-100 dark:bg-slate-800 cursor-pointer transition-transform hover:scale-105 active:scale-95 ${focusedListId === c.id_lista ? 'ring-4 ring-blue-500 shadow-xl scale-105' : ''}`}
-                        onClick={() => handleFocusList(c)}
-                      >
-                        <img
-                          src={c.imagen_url ? `http://localhost:3000${c.imagen_url}` : 'https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=300&q=80'}
-                          alt={c.nombre}
-                          className="w-full h-full object-cover"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/10 to-transparent flex flex-col justify-end p-3">
-                          <span className="text-white text-[10px] font-medium opacity-70">by {c.usuario_nombre || 'comunidad'}</span>
-                          <span className="text-white font-bold text-[14px] leading-tight mt-0.5">{c.nombre}</span>
-                        </div>
-                      </div>
-                    )) : (
-                      <div className="w-full text-center py-10 text-slate-400 text-sm italic">
-                        No hay listas públicas todavía.
-                      </div>
-                    )}
-                  </div>
+              {/* Discover Section */}
+              <section className="mb-2">
+                <h2 className="text-[12px] font-black text-black dark:text-white tracking-wide mb-3 px-1 font-display">
+                  Listas para descubrir
+                </h2>
+                <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-2 px-2">
+                  {discoverLists.length > 0 ? (
+                    discoverLists.map(col => (
+                      <MiniDiscoverCard key={col.id_lista} col={col} onFocus={handleFocusList} />
+                    ))
+                  ) : (
+                    <p className="text-sm opacity-40 italic py-4 font-display">No hay listas públicas todavía.</p>
+                  )}
                 </div>
-              </div>
-
-              {/* Curators Section */}
-              <div>
-                <h2 className="text-black dark:text-white font-bold text-lg mb-4 tracking-tight uppercase italic text-[11px]">Usuarios para descubrir</h2>
-                <div className="w-full overflow-x-auto no-scrollbar -mx-5 px-5">
-                  <div className="flex gap-6 min-w-max">
-                    {realCurators.map(c => (
-                      <div key={c.id_usuario} className="flex flex-col items-center gap-2 w-16">
-                        <div className="relative">
-                          <UserAvatar user={{ 
-                            foto_perfil: c.foto_perfil, 
-                            nombre: c.nombre 
-                          }} className="w-16 h-16" />
-                        </div>
-                        <span className="text-black dark:text-white text-[10px] font-bold mt-1 text-center truncate w-full uppercase italic">
-                          {c.nombre}
-                        </span>
-                      </div>
-                    ))}
-                  </div>
-                </div>
-              </div>
+              </section>
             </div>
           </div>
         </div>
