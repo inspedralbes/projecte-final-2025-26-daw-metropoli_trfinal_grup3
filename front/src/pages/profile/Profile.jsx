@@ -4,7 +4,7 @@ import { useTranslation } from "react-i18next";
 import { QRCodeSVG } from "qrcode.react";
 import Navbar from "../../layouts/Navbar";
 import { useFriends } from "../../context/FriendsContext";
-import { getPublicaciones, getUsuario, followUsuario, unfollowUsuario, checkIsFollowing, getSeguidoresCounts, getSeguidores, getSiguiendo } from "../../services/communicationManager";
+import { getPublicaciones, getUsuario, followUsuario, unfollowUsuario, checkIsFollowing, getSeguidoresCounts, getSeguidores, getSiguiendo, getUsuarioListas } from "../../services/communicationManager";
 import UserAvatar from "../../components/UserAvatar";
 
 // Lazy load del escáner (pesa bastante, solo se carga cuando se necesita)
@@ -366,6 +366,7 @@ const ScanQrModal = ({ allUsers, onFollowed, onClose }) => {
 const Profile = () => {
   const { t } = useTranslation();
   const { id } = useParams();
+  const navigate = useNavigate();
   const currentUser = useMemo(() => {
     const storedUser = localStorage.getItem("usuario");
     return storedUser ? JSON.parse(storedUser) : null;
@@ -405,6 +406,8 @@ const Profile = () => {
   const [isFollowing, setIsFollowing] = useState(false);
   const [followLoading, setFollowLoading] = useState(false);
   const [socialTab, setSocialTab] = useState("followers");
+  const [userRoutes, setUserRoutes] = useState([]);
+  const [loadingRoutes, setLoadingRoutes] = useState(true);
 
   useEffect(() => {
     if (!id || id === "undefined" || isOwnProfile) {
@@ -454,6 +457,24 @@ const Profile = () => {
       }
     };
     fetchUserPosts();
+  }, [displayedUserId]);
+
+  useEffect(() => {
+    if (!displayedUserId) return;
+    const fetchUserRoutes = async () => {
+      try {
+        setLoadingRoutes(true);
+        const response = await getUsuarioListas(displayedUserId);
+        if (response.success && response.data) {
+          setUserRoutes(response.data);
+        }
+      } catch (err) {
+        console.error("Error fetching user routes:", err);
+      } finally {
+        setLoadingRoutes(false);
+      }
+    };
+    fetchUserRoutes();
   }, [displayedUserId]);
 
   const handleFollowedViaQr = (user) => {
@@ -524,7 +545,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display select-none transition-colors duration-300 md:pl-16">
+    <div className="min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display select-none transition-colors duration-300 md:pl-16 pb-32">
       {/* Modales QR */}
       {showMyQr && (
         <MyQrModal user={currentUser} onClose={() => setShowMyQr(false)} />
@@ -576,7 +597,7 @@ const Profile = () => {
       </div>
 
       {/* Contenido */}
-      <div className="overflow-y-auto no-scrollbar pb-24 md:pb-10 px-5 md:max-w-6xl md:mx-auto">
+      <div className="px-5 md:max-w-6xl md:mx-auto">
         <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-10 lg:items-start">
           {/* Columna izquierda — sticky en desktop */}
           <div className="flex flex-col gap-5 lg:sticky lg:top-6">
@@ -626,26 +647,24 @@ const Profile = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-3 gap-3">
+            <div className="grid grid-cols-4 gap-2">
               {[
                 { key: "posts", count: userPosts.length, label: t("profile.posts") },
+                { key: "routes", count: userRoutes.length, label: "Rutas" },
                 { key: "followers", count: followersCount, label: "Seguidores" },
                 { key: "following", count: followingCount, label: "Siguiendo" },
               ].map(({ key, count, label }) => (
-                <button
+                <div
                   key={key}
-                  onClick={() => setActiveTab(key === "followers" || key === "following" ? "friends" : key)}
-                  className={`p-3 rounded-2xl border shadow-sm flex flex-col items-center justify-center text-center transition-all duration-300 ${
-                    activeTab === key ? "bg-primary border-primary text-primary-text scale-105" : "bg-white dark:bg-[#12080a] border-slate-100 dark:border-slate-800"
-                  }`}
+                  className="p-2.5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-[#12080a] shadow-sm flex flex-col items-center justify-center text-center transition-all duration-300"
                 >
-                  <span className={`text-lg font-bold ${activeTab === key ? "text-primary-text" : "text-primary"}`}>
+                  <span className="text-base font-bold text-primary">
                     {count}
                   </span>
-                  <span className={`text-[10px] uppercase font-bold tracking-wider ${activeTab === key ? "text-primary-text opacity-90" : "text-slate-400"}`}>
+                  <span className="text-[9px] uppercase font-bold tracking-tight text-slate-400">
                     {label}
                   </span>
-                </button>
+                </div>
               ))}
             </div>
 
@@ -666,8 +685,8 @@ const Profile = () => {
 
           {/* Columna derecha */}
           <div className="mt-5 lg:mt-0 min-h-[200px]">
-            {/* Tab pills — solo desktop */}
-            <div className="hidden lg:flex gap-2 mb-6">
+            {/* Tab pills — visible en todo tipo de pantallas */}
+            <div className="flex gap-2 mb-6 overflow-x-auto no-scrollbar pb-1">
               {[
                 { key: "posts", label: t("profile.posts"), icon: "grid_view" },
                 { key: "friends", label: t("profile.friends"), icon: "group" },
@@ -676,7 +695,7 @@ const Profile = () => {
                 <button
                   key={key}
                   onClick={() => setActiveTab(key)}
-                  className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-bold transition-all ${activeTab === key ? "bg-primary text-primary-text shadow-lg shadow-primary/20" : "bg-white dark:bg-[#12080a] text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800 hover:border-primary/40"}`}
+                  className={`flex items-center gap-2 px-5 py-2.5 rounded-full text-xs font-bold transition-all whitespace-nowrap ${activeTab === key ? "bg-primary text-primary-text shadow-lg shadow-primary/20" : "bg-white dark:bg-[#12080a] text-slate-500 dark:text-slate-400 border border-slate-100 dark:border-slate-800 hover:border-primary/40"}`}
                 >
                   <span className="material-symbols-outlined text-base">
                     {icon}
@@ -809,11 +828,13 @@ const Profile = () => {
                         className="bg-white dark:bg-[#12080a] rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden"
                       >
                         {post.foto && (
-                          <img
-                            src={getFullPostImageUrl(post.foto)}
-                            alt="Post"
-                            className="w-full h-48 object-cover"
-                          />
+                          <div className="bg-black/5 dark:bg-white/5">
+                            <img
+                              src={getFullPostImageUrl(post.foto)}
+                              alt="Post"
+                              className="w-full max-h-[500px] object-contain"
+                            />
+                          </div>
                         )}
                         <div className="p-4">
                           <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">
@@ -843,27 +864,91 @@ const Profile = () => {
 
             {/* ── Tab Rutas ── */}
             {activeTab === "routes" && (
-              <div className="space-y-4 animate-fade-in">
-                <h3 className="text-lg font-bold text-slate-800 dark:text-white mb-2 lg:hidden">
-                  {t("profile.myRoutes", "Mis Rutas")}
-                </h3>
-                <div className="flex flex-col items-center justify-center py-12 text-slate-400 dark:text-slate-500 bg-white dark:bg-[#12080a] rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm text-center px-4">
-                  <span className="material-symbols-outlined text-5xl mb-3 text-slate-300 dark:text-slate-700">
-                    map
-                  </span>
-                  <p className="font-bold text-slate-700 dark:text-slate-300 mb-1">
-                    Aún no has guardado ninguna ruta
-                  </p>
-                  <p className="text-sm max-w-[250px] mx-auto">
-                    Explora el mapa y guarda lugares para que aparezcan aquí.
-                  </p>
-                  <Link
-                    to="/map"
-                    className="mt-5 px-5 py-2 bg-primary/10 text-primary font-bold rounded-full hover:bg-primary/20 transition-colors"
-                  >
-                    Ir al Mapa
-                  </Link>
+              <div className="space-y-6 animate-fade-in">
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-lg font-bold text-slate-800 dark:text-white">
+                    {isOwnProfile ? t("profile.myRoutes", "Mis Rutas") : `Rutas de ${displayedUser.nombre}`}
+                  </h3>
+                  {isOwnProfile && (
+                    <Link
+                      to="/create-list"
+                      className="flex items-center gap-1.5 text-primary text-sm font-bold hover:underline"
+                    >
+                      <span className="material-symbols-outlined text-base">add_circle</span>
+                      Crear Nueva
+                    </Link>
+                  )}
                 </div>
+
+                {loadingRoutes ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-slate-400">
+                    <span className="material-symbols-outlined animate-spin text-3xl mb-2">progress_activity</span>
+                    <p className="text-sm font-medium">Cargando rutas...</p>
+                  </div>
+                ) : userRoutes.length === 0 ? (
+                  <div className="flex flex-col items-center justify-center py-12 text-slate-400 dark:text-slate-500 bg-white dark:bg-[#12080a] rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm text-center px-4">
+                    <span className="material-symbols-outlined text-5xl mb-3 text-slate-300 dark:text-slate-700">
+                      map
+                    </span>
+                    <p className="font-bold text-slate-700 dark:text-slate-300 mb-1">
+                      {isOwnProfile ? "Aún no has guardado ninguna ruta" : "Este usuario no tiene rutas públicas"}
+                    </p>
+                    <p className="text-sm max-w-[250px] mx-auto">
+                      {isOwnProfile ? "Explora el mapa y guarda lugares para que aparezcan aquí." : "Vuelve más tarde para ver sus descubrimientos."}
+                    </p>
+                    {isOwnProfile && (
+                      <Link
+                        to="/"
+                        className="mt-5 px-5 py-2 bg-primary/10 text-primary font-bold rounded-full hover:bg-primary/20 transition-colors"
+                      >
+                        Ir al Mapa
+                      </Link>
+                    )}
+                  </div>
+                ) : (
+                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    {userRoutes.map((route) => (
+                      <div
+                        key={route.id_lista}
+                        onClick={() => navigate("/", { state: { focusedList: route } })}
+                        className="group relative h-48 rounded-[24px] overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                      >
+                        {/* Background Image with Gradient Overlay */}
+                        <img
+                          src={route.imagen_url ? `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${route.imagen_url}` : "https://images.unsplash.com/photo-1498855926480-d98e83099315?w=500&q=80"}
+                          alt={route.nombre}
+                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+                        />
+                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
+
+                        {/* Route Content */}
+                        <div className="absolute inset-0 p-5 flex flex-col justify-end">
+                          <div className="flex items-center gap-2 mb-1">
+                            <span className="bg-primary/90 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
+                              {route.pois ? route.pois.length : 0} POIs
+                            </span>
+                            {route.visibilidad === 'friends' && (
+                              <span className="bg-blue-500/90 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
+                                <span className="material-symbols-outlined text-[10px]">group</span> Amigos
+                              </span>
+                            )}
+                          </div>
+                          <h4 className="text-white font-bold text-lg leading-tight group-hover:text-primary transition-colors">
+                            {route.nombre}
+                          </h4>
+                          <p className="text-white/60 text-xs line-clamp-1 mt-0.5">
+                            {route.descripcion || "Sin descripción"}
+                          </p>
+                          
+                          {/* Navigation Icon */}
+                          <div className="absolute top-4 right-4 w-8 h-8 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
+                            <span className="material-symbols-outlined text-white text-sm">navigation</span>
+                          </div>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                )}
               </div>
             )}
           </div>
