@@ -76,16 +76,22 @@ const PostCard = ({ pub, onComentarioCreado }) => {
   const [likesCount, setLikesCount] = useState(pub.likes ?? 0);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [textoComentario, setTextoComentario] = useState("");
+  const interactedRef = React.useRef(false); // evita que el useEffect sobreescriba el estado local tras interacción
 
   const navigate = useNavigate();
   const usuarioInfo = localStorage.getItem("usuario");
   const usuarioLogged = usuarioInfo ? JSON.parse(usuarioInfo) : null;
 
   useEffect(() => {
-    if (usuarioLogged && pub.likes_usuarios) {
+    // Solo sincronizar desde el servidor si el usuario NO ha interactuado todavía
+    if (!interactedRef.current && usuarioLogged && pub.likes_usuarios) {
       setLiked(pub.likes_usuarios.includes(String(usuarioLogged.id_usuario)));
     }
-  }, [pub, usuarioLogged]);
+    // Siempre actualizar el conteo desde el servidor (si no hay interacción activa)
+    if (!interactedRef.current) {
+      setLikesCount(pub.likes ?? 0);
+    }
+  }, [pub]);
 
   const handleLike = async () => {
     if (!usuarioLogged) {
@@ -93,6 +99,7 @@ const PostCard = ({ pub, onComentarioCreado }) => {
       return;
     }
     if (isLikeLoading) return;
+    interactedRef.current = true; // marcar que el usuario ha interactuado
     const prevLiked = liked;
     const prevCount = likesCount;
     setIsLikeLoading(true);

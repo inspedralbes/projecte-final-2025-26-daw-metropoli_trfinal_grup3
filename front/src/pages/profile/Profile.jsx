@@ -524,7 +524,7 @@ const Profile = () => {
   }
 
   return (
-    <div className="min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display select-none transition-colors duration-300 md:pl-16">
+    <div className="min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display select-none transition-colors duration-300 md:pl-16 pb-32">
       {/* Modales QR */}
       {showMyQr && (
         <MyQrModal user={currentUser} onClose={() => setShowMyQr(false)} />
@@ -576,7 +576,7 @@ const Profile = () => {
       </div>
 
       {/* Contenido */}
-      <div className="overflow-y-auto no-scrollbar pb-24 md:pb-10 px-5 md:max-w-6xl md:mx-auto">
+      <div className="px-5 md:max-w-6xl md:mx-auto">
         <div className="lg:grid lg:grid-cols-[300px_1fr] lg:gap-10 lg:items-start">
           {/* Columna izquierda — sticky en desktop */}
           <div className="flex flex-col gap-5 lg:sticky lg:top-6">
@@ -809,11 +809,13 @@ const Profile = () => {
                         className="bg-white dark:bg-[#12080a] rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden"
                       >
                         {post.foto && (
-                          <img
-                            src={getFullPostImageUrl(post.foto)}
-                            alt="Post"
-                            className="w-full h-48 object-cover"
-                          />
+                          <div className="bg-black/5 dark:bg-white/5">
+                            <img
+                              src={getFullPostImageUrl(post.foto)}
+                              alt="Post"
+                              className="w-full max-h-[500px] object-contain"
+                            />
+                          </div>
                         )}
                         <div className="p-4">
                           <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">
