@@ -33,10 +33,6 @@ const updateImageUrl = async (id, imagenUrl) => {
     return await query('UPDATE pois SET imagen_url = ? WHERE id_poi = ?', [imagenUrl, id]);
 };
 
-const update = async (id, { nombre, descripcion }) => {
-    return await query('UPDATE pois SET nombre = ?, descripcion = ? WHERE id_poi = ?', [nombre, descripcion, id]);
-};
-
 const nullifyNodeReference = async (nodeId) => {
     return await query('UPDATE pois SET id_nodo_acceso = NULL WHERE id_nodo_acceso = ?', [nodeId]);
 };
@@ -48,6 +44,5 @@ export default {
     deleteById,
     nullifyNodeReference,
     updateImageUrl,
-    update,
     getByUsuarioId
 };

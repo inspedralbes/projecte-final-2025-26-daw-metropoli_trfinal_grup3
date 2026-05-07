@@ -29,8 +29,7 @@ CREATE TABLE IF NOT EXISTS categoria (
 CREATE TABLE IF NOT EXISTS nodos_navegacion (
     id_nodo INTEGER PRIMARY KEY AUTO_INCREMENT,
     latitud DECIMAL(10, 8) NOT NULL,
-    longitud DECIMAL(11, 8) NOT NULL,
-    descripcion VARCHAR(100)
+    longitud DECIMAL(11, 8) NOT NULL
 );
 
 -- 5. RUTAS/TRAMOS (Depende de Nodos)
@@ -54,40 +53,14 @@ CREATE TABLE IF NOT EXISTS pois (
     longitud DECIMAL(11, 8) NOT NULL,
     id_categoria INTEGER NOT NULL,
     es_accesible BOOLEAN DEFAULT 0,
-    es_fijo BOOLEAN DEFAULT 1,
     imagen_url VARCHAR(255),
     id_nodo_acceso INTEGER,
     id_usuario INTEGER NULL,
-    visibilidad ENUM('public', 'friends', 'private') DEFAULT 'public',
     FOREIGN KEY (id_nodo_acceso) REFERENCES nodos_navegacion(id_nodo) ON DELETE SET NULL,
     FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria) ON DELETE CASCADE,
     FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE
 );
 
-
--- 9. MULTIMEDIA (Depende de Pois)
-CREATE TABLE IF NOT EXISTS poi_multimedia (
-    id_media INTEGER PRIMARY KEY AUTO_INCREMENT,
-    id_poi INTEGER NOT NULL,
-    url_archivo VARCHAR(255) NOT NULL,
-    tipo VARCHAR(20) DEFAULT 'imagen',
-    titulo VARCHAR(100),
-    orden INTEGER DEFAULT 0,
-    FOREIGN KEY (id_poi) REFERENCES pois(id_poi) ON DELETE CASCADE
-);
-
--- 10. INCIDENCIAS (Depende de Pois y Usuarios)
-CREATE TABLE IF NOT EXISTS incidencias (
-    id_incidencia INTEGER PRIMARY KEY AUTO_INCREMENT,
-    id_poi INTEGER NOT NULL,
-    id_usuario_reporta INTEGER,
-    tipo VARCHAR(50) NOT NULL,
-    descripcion TEXT,
-    fecha_reporte DATETIME DEFAULT CURRENT_TIMESTAMP,
-    estado VARCHAR(20) DEFAULT 'activa',
-    FOREIGN KEY (id_poi) REFERENCES pois(id_poi) ON DELETE CASCADE,
-    FOREIGN KEY (id_usuario_reporta) REFERENCES usuario(id_usuario) ON DELETE CASCADE
-);
 
 -- 11. TRADUCCIONES (Independiente lógicamente, referencialmente débil)
 CREATE TABLE IF NOT EXISTS traducciones (
@@ -135,16 +108,24 @@ CREATE TABLE IF NOT EXISTS qr_codes (
 );
 
 -- 14. LISTAS DE USUARIOS
--- Eliminamos la tabla multimedia duplicada si existía y usamos poi_multimedia
--- (ya incluida arriba)
-
 CREATE TABLE IF NOT EXISTS listas (
     id_lista INT AUTO_INCREMENT PRIMARY KEY,
     id_usuario INT NOT NULL,
     nombre VARCHAR(255) NOT NULL,
     descripcion TEXT,
+    imagen_url VARCHAR(255),
     visibilidad ENUM('public', 'friends', 'private') DEFAULT 'private',
+    likes INTEGER DEFAULT 0,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS lista_likes (
+    id_lista INT NOT NULL,
+    id_usuario INT NOT NULL,
+    fecha_like TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_lista, id_usuario),
+    FOREIGN KEY (id_lista) REFERENCES listas(id_lista) ON DELETE CASCADE,
     FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE
 );
 
@@ -153,8 +134,8 @@ CREATE TABLE IF NOT EXISTS lista_pois (
     id_poi INT NOT NULL,
     orden INT NOT NULL,
     PRIMARY KEY (id_lista, id_poi),
-    FOREIGN KEY (id_lista) REFERENCES listas(id_lista),
-    FOREIGN KEY (id_poi) REFERENCES pois(id_poi)
+    FOREIGN KEY (id_lista) REFERENCES listas(id_lista) ON DELETE CASCADE,
+    FOREIGN KEY (id_poi) REFERENCES pois(id_poi) ON DELETE CASCADE
 );
 
 -- 15. SEGUIDORES (Sistema follow/unfollow unidireccional)

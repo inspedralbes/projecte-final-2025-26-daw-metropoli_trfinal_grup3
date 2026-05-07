@@ -6,7 +6,6 @@ const router = express.Router();
 
 // Creación de POIs
 router.post('/', poiController.createPoiSimple);
-router.post('/completo', poiController.createPoiCompleto);
 
 // Obtener todos los POIs
 router.get('/', poiController.getPois);
