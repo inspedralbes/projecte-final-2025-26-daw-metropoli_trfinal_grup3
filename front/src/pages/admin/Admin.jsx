@@ -384,7 +384,7 @@ const Admin = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display select-none transition-colors duration-300 md:pl-16">
+    <div className="relative min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display select-none transition-colors duration-300 md:pl-20">
       {/* Top Bar */}
       <div className="w-full pt-6 px-5 pb-4 bg-gray-50 dark:bg-slate-950 z-20 transition-colors duration-300 border-b border-slate-200 dark:border-slate-800 md:max-w-6xl md:mx-auto">
         <div className="flex justify-between items-center">

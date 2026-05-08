@@ -172,6 +172,19 @@ html.dark body {
 html.dark .modern-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
 }
-.modern-scrollbar::-webkit-scrollbar-thumb:hover {
-  background: var(--primary-color);
+/* Responsive Container Utility */
+.safe-container {
+  @apply w-full mx-auto px-6;
+}
+
+@media (min-width: 768px) {
+  .safe-container {
+    @apply max-w-[1440px] px-12;
+  }
+}
+
+@media (min-width: 1536px) {
+  .safe-container {
+    @apply px-20;
+  }
 }

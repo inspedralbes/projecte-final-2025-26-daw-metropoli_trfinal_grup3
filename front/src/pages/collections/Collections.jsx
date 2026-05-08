@@ -172,13 +172,12 @@ const Collections = () => {
   };
 
   return (
-    <div className="relative min-h-screen bg-[#f0f4f9] dark:bg-slate-950 text-[#1a1a1a] dark:text-white font-display p-4 md:pl-20 pb-24 transition-colors duration-300">
+    <div className="relative min-h-screen bg-[#f0f4f9] dark:bg-slate-950 text-[#1a1a1a] dark:text-white font-display md:pl-20 pb-24 transition-colors duration-300">
       <Header />
-      {/* Top spacing for header */}
-      <div className="pt-28">
+      <div className="safe-container pt-5">
 
       {/* Search Bar */}
-      <div className="relative mb-6">
+      <div className="relative mb-6 md:ml-48 md:mr-40">
         <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
           search
         </span>
@@ -206,7 +205,7 @@ const Collections = () => {
       </div>
 
       {/* Route Cards List / Loading / Empty / No Session */}
-      <div className="flex flex-col gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         {!user ? (
           <div className="flex flex-col items-center justify-center py-20 text-center space-y-6 animate-fade-in">
             <div className="w-24 h-24 bg-white/50 dark:bg-white/5 rounded-full flex items-center justify-center border border-slate-200 dark:border-white/10 shadow-xl">
@@ -239,7 +238,7 @@ const Collections = () => {
           filteredRoutes.map(route => (
             <div 
               key={route.id_lista} 
-              className="relative w-full h-64 md:h-72 rounded-[32px] overflow-hidden shadow-lg group cursor-pointer"
+              className="relative w-full h-64 rounded-[32px] overflow-hidden shadow-lg group cursor-pointer"
             >
               {/* Background Image (Using placeholder or real image if exists) */}
               <img 
@@ -313,7 +312,7 @@ const Collections = () => {
             onClick={() => setIsEditModalOpen(false)}
           ></div>
           
-          <div className="relative w-full max-w-lg bg-black rounded-[40px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 border border-white/20 font-display">
+          <div className="relative w-full max-w-lg md:max-w-2xl bg-black rounded-[40px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 border border-white/20 font-display">
             {/* Header */}
             <div className="p-8 pb-4 flex justify-between items-center">
               <h2 className="text-2xl font-black italic uppercase tracking-tighter text-white">

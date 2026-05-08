@@ -4,7 +4,17 @@ import { useTranslation } from "react-i18next";
 import { QRCodeSVG } from "qrcode.react";
 import Navbar from "../../layouts/Navbar";
 import { useFriends } from "../../context/FriendsContext";
-import { getPublicaciones, getUsuario, followUsuario, unfollowUsuario, checkIsFollowing, getSeguidoresCounts, getSeguidores, getSiguiendo, getUsuarioListas } from "../../services/communicationManager";
+import {
+  getPublicaciones,
+  getUsuario,
+  followUsuario,
+  unfollowUsuario,
+  checkIsFollowing,
+  getSeguidoresCounts,
+  getSeguidores,
+  getSiguiendo,
+  getUsuarioListas,
+} from "../../services/communicationManager";
 import UserAvatar from "../../components/UserAvatar";
 
 // Lazy load del escáner (pesa bastante, solo se carga cuando se necesita)
@@ -15,7 +25,6 @@ const GuestProfileView = () => {
   const { t } = useTranslation();
   return (
     <div className="min-h-screen w-full bg-[#f0f4f9] dark:bg-slate-950 flex flex-col items-center justify-center p-6 md:pl-16 transition-colors duration-300 font-display">
-
       {/* Top Bar / Header Mimic */}
       <div className="fixed top-0 left-0 right-0 z-[60] flex items-center justify-between px-5 pt-10 pb-3 md:pl-24">
         <Link
@@ -29,12 +38,13 @@ const GuestProfileView = () => {
           to="/settings"
           className="w-11 h-11 flex items-center justify-center bg-white/80 dark:bg-white/10 backdrop-blur-md rounded-full text-slate-700 dark:text-white shadow-sm border border-slate-200 dark:border-white/10 hover:bg-slate-100 dark:hover:bg-white/20 transition-all active:scale-95"
         >
-          <span className="material-symbols-outlined text-[24px]">settings</span>
+          <span className="material-symbols-outlined text-[24px]">
+            settings
+          </span>
         </Link>
       </div>
 
       <div className="w-full max-w-sm flex flex-col items-center text-center animate-in fade-in zoom-in duration-700">
-
         {/* Large Location Icon */}
         <div className="w-32 h-32 bg-primary/10 rounded-full flex items-center justify-center mb-8 shadow-2xl shadow-primary/20 relative">
           <div className="absolute inset-0 bg-primary/20 rounded-full blur-2xl animate-pulse"></div>
@@ -107,7 +117,10 @@ const MyQrModal = ({ user, onClose }) => {
               {user.nombre}
             </p>
             <p className="text-xs text-slate-400 dark:text-slate-500 mt-1">
-              {t("profile.qr.myDesc", "Deja que otro usuario escanee este QR para añadirte como amigo")}
+              {t(
+                "profile.qr.myDesc",
+                "Deja que otro usuario escanee este QR para añadirte como amigo",
+              )}
             </p>
           </div>
         </div>
@@ -140,7 +153,8 @@ const ScanQrModal = ({ allUsers, onFollowed, onClose }) => {
         }
       }
 
-      if (!targetId || targetId === "undefined") throw new Error("Invalid QR data");
+      if (!targetId || targetId === "undefined")
+        throw new Error("Invalid QR data");
 
       const found = allUsers.find((u) => (u.id_usuario || u.id) == targetId);
       if (!found) {
@@ -164,7 +178,9 @@ const ScanQrModal = ({ allUsers, onFollowed, onClose }) => {
     try {
       const currentUser = JSON.parse(localStorage.getItem("usuario") || "null");
       if (!currentUser) {
-        setError(t("auth.errorLogin", "Debes iniciar sesión para seguir a alguien"));
+        setError(
+          t("auth.errorLogin", "Debes iniciar sesión para seguir a alguien"),
+        );
         return;
       }
       const myId = currentUser.id_usuario || currentUser.id;
@@ -175,7 +191,8 @@ const ScanQrModal = ({ allUsers, onFollowed, onClose }) => {
         return;
       }
 
-      const { followUsuario } = await import("../../services/communicationManager");
+      const { followUsuario } =
+        await import("../../services/communicationManager");
       await followUsuario(myId, targetId);
       onFollowed(result);
       onClose();
@@ -194,11 +211,16 @@ const ScanQrModal = ({ allUsers, onFollowed, onClose }) => {
         <div className="flex items-center justify-between px-6 pt-8 pb-4">
           <div>
             <h2 className="text-xl font-bold text-slate-800 dark:text-white leading-tight">
-              {result ? t("profile.qr.userFound", "Usuario Encontrado") : t("profile.qr.scanTitle", "Escanear para Seguir")}
+              {result
+                ? t("profile.qr.userFound", "Usuario Encontrado")
+                : t("profile.qr.scanTitle", "Escanear para Seguir")}
             </h2>
             <p className="text-xs text-slate-500 dark:text-slate-400 mt-1">
               {result
-                ? t("profile.qr.confirm", "Confirma que quieres seguir a esta persona")
+                ? t(
+                    "profile.qr.confirm",
+                    "Confirma que quieres seguir a esta persona",
+                  )
                 : t("profile.qr.point", "Apunta con la cámara al código QR")}
             </p>
           </div>
@@ -221,7 +243,9 @@ const ScanQrModal = ({ allUsers, onFollowed, onClose }) => {
                     <span className="material-symbols-outlined animate-spin text-3xl">
                       progress_activity
                     </span>
-                    <p className="text-sm font-medium">{t("profile.qr.starting", "Iniciando cámara...")}</p>
+                    <p className="text-sm font-medium">
+                      {t("profile.qr.starting", "Iniciando cámara...")}
+                    </p>
                   </div>
                 }
               >
@@ -280,7 +304,9 @@ const ScanQrModal = ({ allUsers, onFollowed, onClose }) => {
                   disabled={loading}
                   className="flex-[2] py-3 px-4 rounded-2xl bg-primary text-primary-text font-bold text-sm shadow-lg shadow-primary/20 hover:opacity-90 transition-all transform active:scale-95 disabled:opacity-60"
                 >
-                  {loading ? t("community.following", "Siguiendo...") : t("community.follow", "Seguir")}
+                  {loading
+                    ? t("community.following", "Siguiendo...")
+                    : t("community.follow", "Seguir")}
                 </button>
               </div>
             </div>
@@ -296,7 +322,11 @@ const ScanQrModal = ({ allUsers, onFollowed, onClose }) => {
                 {t("profile.qr.error", "Error al escanear")}
               </h3>
               <p className="text-sm text-slate-500 dark:text-slate-400 mb-8 max-w-[200px]">
-                {error || t("profile.qr.invalid", "No se ha podido detectar un código válido.")}
+                {error ||
+                  t(
+                    "profile.qr.invalid",
+                    "No se ha podido detectar un código válido.",
+                  )}
               </p>
               <button
                 onClick={() => {
@@ -339,7 +369,10 @@ const Profile = () => {
   const [targetUser, setTargetUser] = useState(null);
   const [loadingUser, setLoadingUser] = useState(!!id && id !== "undefined");
 
-  const isOwnProfile = !id || id === "undefined" || (currentUser && (id == currentUser.id || id == currentUser.id_usuario));
+  const isOwnProfile =
+    !id ||
+    id === "undefined" ||
+    (currentUser && (id == currentUser.id || id == currentUser.id_usuario));
   const displayedUser = isOwnProfile ? currentUser : targetUser;
   const displayedUserId = displayedUser?.id_usuario || displayedUser?.id;
 
@@ -408,7 +441,7 @@ const Profile = () => {
         const response = await getPublicaciones();
         if (response.success && response.data) {
           const myPosts = response.data.filter(
-            (post) => Number(post.id_usuario) === Number(displayedUserId)
+            (post) => Number(post.id_usuario) === Number(displayedUserId),
           );
           // Sort by newest first
           myPosts.sort((a, b) => new Date(b.creado_en) - new Date(a.creado_en));
@@ -463,7 +496,10 @@ const Profile = () => {
       if (res?.data) setFollowingList(res.data);
     });
     if (!isOwnProfile && currentUser) {
-      checkIsFollowing(currentUser.id_usuario || currentUser.id, displayedUserId).then((res) => {
+      checkIsFollowing(
+        currentUser.id_usuario || currentUser.id,
+        displayedUserId,
+      ).then((res) => {
         setIsFollowing(res?.isFollowing ?? false);
       });
     }
@@ -493,7 +529,9 @@ const Profile = () => {
   if (loadingUser) {
     return (
       <div className="min-h-screen w-full flex items-center justify-center bg-gray-50 dark:bg-slate-950">
-        <span className="material-symbols-outlined animate-spin text-4xl text-primary">progress_activity</span>
+        <span className="material-symbols-outlined animate-spin text-4xl text-primary">
+          progress_activity
+        </span>
       </div>
     );
   }
@@ -501,9 +539,16 @@ const Profile = () => {
   if (!displayedUser && !isOwnProfile) {
     return (
       <div className="min-h-screen w-full flex flex-col items-center justify-center bg-gray-50 dark:bg-slate-950 text-slate-500">
-        <span className="material-symbols-outlined text-6xl mb-4">person_off</span>
+        <span className="material-symbols-outlined text-6xl mb-4">
+          person_off
+        </span>
         <h2 className="text-xl font-bold">Usuario no encontrado</h2>
-        <Link to="/community" className="mt-4 text-primary font-bold hover:underline">Volver a Comunidad</Link>
+        <Link
+          to="/community"
+          className="mt-4 text-primary font-bold hover:underline"
+        >
+          Volver a Comunidad
+        </Link>
       </div>
     );
   }
@@ -541,14 +586,14 @@ const Profile = () => {
               to="/"
               className="w-10 h-10 flex items-center justify-center bg-white dark:bg-[#12080a] rounded-full text-slate-700 dark:text-white shadow-sm border border-slate-200 dark:border-slate-800 hover:bg-slate-100 dark:hover:bg-slate-800 transition-colors shrink-0"
             >
-              <span className="material-symbols-outlined text-[22px]">home</span>
+              <span className="material-symbols-outlined text-[22px]">
+                home
+              </span>
             </Link>
           </div>
           <h1 className="hidden md:block text-2xl font-black italic uppercase tracking-tighter text-slate-800 dark:text-white">
             {t("profile.my", "Mi")}{" "}
-            <span className="text-primary">
-              {t("nav.profile", "Perfil")}
-            </span>
+            <span className="text-primary">{t("nav.profile", "Perfil")}</span>
           </h1>
           <Link
             to="/settings"
@@ -611,27 +656,45 @@ const Profile = () => {
                 <button
                   onClick={handleFollow}
                   disabled={followLoading}
-                  className={`flex items-center gap-1.5 px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-tight transition-all shadow-sm active:scale-95 ${isFollowing
+                  className={`flex items-center gap-1.5 px-6 py-2.5 rounded-full text-xs font-black uppercase tracking-tight transition-all shadow-sm active:scale-95 ${
+                    isFollowing
                       ? "border border-slate-300 dark:border-slate-600 text-slate-600 dark:text-slate-300 hover:border-red-400 hover:text-red-400"
                       : "bg-primary text-primary-text hover:opacity-90 shadow-primary/20"
-                    }`}
+                  }`}
                 >
                   <span className="material-symbols-outlined text-base font-bold">
                     {isFollowing ? "person_check" : "person_add"}
                   </span>
-                  {isFollowing ? t("community.following", "Siguiendo") : t("community.follow", "Seguir")}
+                  {isFollowing
+                    ? t("community.following", "Siguiendo")
+                    : t("community.follow", "Seguir")}
                 </button>
               )}
-
             </div>
 
             {/* Stats */}
             <div className="grid grid-cols-4 gap-2">
               {[
-                { key: "posts", count: userPosts.length, label: t("profile.posts", "Publicaciones") },
-                { key: "posts", count: userPosts.length, label: t("profile.lists", "Listas") },
-                { key: "followers", count: followersCount, label: t("profile.followers", "Seguidores") },
-                { key: "following", count: followingCount, label: t("profile.following", "Siguiendo") },
+                {
+                  key: "posts",
+                  count: userPosts.length,
+                  label: t("profile.posts", "Publicaciones"),
+                },
+                {
+                  key: "posts",
+                  count: userPosts.length,
+                  label: t("profile.lists", "Listas"),
+                },
+                {
+                  key: "followers",
+                  count: followersCount,
+                  label: t("profile.followers", "Seguidores"),
+                },
+                {
+                  key: "following",
+                  count: followingCount,
+                  label: t("profile.following", "Siguiendo"),
+                },
               ].map(({ key, count, label }) => (
                 <div
                   key={key}
@@ -646,8 +709,6 @@ const Profile = () => {
                 </div>
               ))}
             </div>
-
-
           </div>
 
           {/* Columna derecha */}
@@ -655,9 +716,21 @@ const Profile = () => {
             {/* Tab pills — visible en todo tipo de pantallas */}
             <div className="flex gap-2 mb-6 overflow-x-auto no-scrollbar pb-1">
               {[
-                { key: "posts", label: t("profile.posts", "Publicaciones"), icon: "grid_view" },
-                { key: "friends", label: t("profile.friends", "Amigos"), icon: "group" },
-                { key: "routes", label: t("profile.routes", "Rutas"), icon: "route" },
+                {
+                  key: "posts",
+                  label: t("profile.posts", "Publicaciones"),
+                  icon: "grid_view",
+                },
+                {
+                  key: "friends",
+                  label: t("profile.friends", "Amigos"),
+                  icon: "group",
+                },
+                {
+                  key: "routes",
+                  label: t("profile.routes", "Rutas"),
+                  icon: "route",
+                },
               ].map(({ key, label, icon }) => (
                 <button
                   key={key}
@@ -680,19 +753,21 @@ const Profile = () => {
                   <div className="flex gap-1 bg-slate-100 dark:bg-slate-800 p-1 rounded-xl">
                     <button
                       onClick={() => setSocialTab("followers")}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${socialTab === "followers"
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        socialTab === "followers"
                           ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm"
                           : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                        }`}
+                      }`}
                     >
                       {t("profile.followers", "Seguidores")} ({followersCount})
                     </button>
                     <button
                       onClick={() => setSocialTab("following")}
-                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${socialTab === "following"
+                      className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-all ${
+                        socialTab === "following"
                           ? "bg-white dark:bg-slate-700 text-slate-800 dark:text-white shadow-sm"
                           : "text-slate-400 hover:text-slate-600 dark:hover:text-slate-300"
-                        }`}
+                      }`}
                     >
                       {t("profile.following", "Siguiendo")} ({followingCount})
                     </button>
@@ -703,14 +778,18 @@ const Profile = () => {
                         onClick={() => setShowMyQr(true)}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-white dark:bg-[#12080a] border border-slate-200 dark:border-slate-700 text-slate-600 dark:text-slate-300 text-xs font-bold hover:border-primary hover:text-primary transition-colors"
                       >
-                        <span className="material-symbols-outlined text-base">qr_code_2</span>
+                        <span className="material-symbols-outlined text-base">
+                          qr_code_2
+                        </span>
                         {t("profile.qr.myTitle", "Mi QR")}
                       </button>
                       <button
                         onClick={() => setShowScanQr(true)}
                         className="flex items-center gap-1.5 px-3 py-1.5 rounded-full bg-primary text-primary-text text-xs font-bold hover:opacity-90 transition-colors shadow-lg shadow-primary/20"
                       >
-                        <span className="material-symbols-outlined text-base">qr_code_scanner</span>
+                        <span className="material-symbols-outlined text-base">
+                          qr_code_scanner
+                        </span>
                         {t("community.follow", "Seguir")}
                       </button>
                     </div>
@@ -718,25 +797,41 @@ const Profile = () => {
                 </div>
 
                 {/* Lista de seguidores o seguidos */}
-                {(socialTab === "followers" ? followersList : followingList).length === 0 ? (
+                {(socialTab === "followers" ? followersList : followingList)
+                  .length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-slate-400 dark:text-slate-500 gap-3">
-                    <span className="material-symbols-outlined text-5xl">group_off</span>
+                    <span className="material-symbols-outlined text-5xl">
+                      group_off
+                    </span>
                     <p className="text-sm font-medium">
-                      {socialTab === "followers" ? t("profile.noFollowers", "Aún nadie sigue este perfil") : t("profile.noFollowing", "No sigue a nadie todavía")}
+                      {socialTab === "followers"
+                        ? t(
+                            "profile.noFollowers",
+                            "Aún nadie sigue este perfil",
+                          )
+                        : t("profile.noFollowing", "No sigue a nadie todavía")}
                     </p>
                     {isOwnProfile && socialTab === "followers" && (
                       <button
                         onClick={() => setShowScanQr(true)}
                         className="flex items-center gap-1.5 text-primary text-sm font-bold hover:underline"
                       >
-                        <span className="material-symbols-outlined text-base">qr_code_scanner</span>
-                        {t("profile.qr.scanHelp", "Escanea el QR de alguien para seguirlo")}
+                        <span className="material-symbols-outlined text-base">
+                          qr_code_scanner
+                        </span>
+                        {t(
+                          "profile.qr.scanHelp",
+                          "Escanea el QR de alguien para seguirlo",
+                        )}
                       </button>
                     )}
                   </div>
                 ) : (
                   <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-                    {(socialTab === "followers" ? followersList : followingList).map((person) => (
+                    {(socialTab === "followers"
+                      ? followersList
+                      : followingList
+                    ).map((person) => (
                       <a
                         key={person.id_usuario}
                         href={`/profile/${person.id_usuario}`}
@@ -751,7 +846,9 @@ const Profile = () => {
                             {person.bio || "City Explorer"}
                           </p>
                         </div>
-                        <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-base">chevron_right</span>
+                        <span className="material-symbols-outlined text-slate-300 dark:text-slate-600 text-base">
+                          chevron_right
+                        </span>
                       </a>
                     ))}
                   </div>
@@ -763,8 +860,13 @@ const Profile = () => {
                     onClick={() => setShowScanQr(true)}
                     className="w-full mt-2 py-3 rounded-2xl border-2 border-dashed border-slate-200 dark:border-slate-700 text-slate-400 dark:text-slate-500 text-sm font-semibold hover:border-primary hover:text-primary transition-colors flex items-center justify-center gap-2"
                   >
-                    <span className="material-symbols-outlined text-lg">qr_code_scanner</span>
-                    {t("profile.qr.scanHelp", "Escanear QR para seguir a alguien")}
+                    <span className="material-symbols-outlined text-lg">
+                      qr_code_scanner
+                    </span>
+                    {t(
+                      "profile.qr.scanHelp",
+                      "Escanear QR para seguir a alguien",
+                    )}
                   </button>
                 )}
               </div>
@@ -779,8 +881,12 @@ const Profile = () => {
                 <div className="flex flex-col gap-4">
                   {loadingPosts ? (
                     <div className="col-span-2 text-center py-10 text-slate-500">
-                      <span className="material-symbols-outlined animate-spin text-2xl mb-2">progress_activity</span>
-                      <p>{t("profile.loadingPosts", "Cargando publicaciones...")}</p>
+                      <span className="material-symbols-outlined animate-spin text-2xl mb-2">
+                        progress_activity
+                      </span>
+                      <p>
+                        {t("profile.loadingPosts", "Cargando publicaciones...")}
+                      </p>
                     </div>
                   ) : userPosts.length === 0 ? (
                     <div className="col-span-2 text-center py-10 text-slate-500 bg-white dark:bg-[#12080a] rounded-2xl border border-slate-100 dark:border-slate-800">
@@ -832,14 +938,18 @@ const Profile = () => {
               <div className="space-y-6 animate-fade-in">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-lg font-bold text-slate-800 dark:text-white">
-                    {isOwnProfile ? t("profile.myRoutes", "Mis Rutas") : `Rutas de ${displayedUser.nombre}`}
+                    {isOwnProfile
+                      ? t("profile.myRoutes", "Mis Rutas")
+                      : `Rutas de ${displayedUser.nombre}`}
                   </h3>
                   {isOwnProfile && (
                     <Link
                       to="/create-list"
                       className="flex items-center gap-1.5 text-primary text-sm font-bold hover:underline"
                     >
-                      <span className="material-symbols-outlined text-base">add_circle</span>
+                      <span className="material-symbols-outlined text-base">
+                        add_circle
+                      </span>
                       Crear Nueva
                     </Link>
                   )}
@@ -847,7 +957,9 @@ const Profile = () => {
 
                 {loadingRoutes ? (
                   <div className="flex flex-col items-center justify-center py-12 text-slate-400">
-                    <span className="material-symbols-outlined animate-spin text-3xl mb-2">progress_activity</span>
+                    <span className="material-symbols-outlined animate-spin text-3xl mb-2">
+                      progress_activity
+                    </span>
                     <p className="text-sm font-medium">Cargando rutas...</p>
                   </div>
                 ) : userRoutes.length === 0 ? (
@@ -856,10 +968,14 @@ const Profile = () => {
                       map
                     </span>
                     <p className="font-bold text-slate-700 dark:text-slate-300 mb-1">
-                      {isOwnProfile ? "Aún no has guardado ninguna ruta" : "Este usuario no tiene rutas públicas"}
+                      {isOwnProfile
+                        ? "Aún no has guardado ninguna ruta"
+                        : "Este usuario no tiene rutas públicas"}
                     </p>
                     <p className="text-sm max-w-[250px] mx-auto">
-                      {isOwnProfile ? "Explora el mapa y guarda lugares para que aparezcan aquí." : "Vuelve más tarde para ver sus descubrimientos."}
+                      {isOwnProfile
+                        ? "Explora el mapa y guarda lugares para que aparezcan aquí."
+                        : "Vuelve más tarde para ver sus descubrimientos."}
                     </p>
                     {isOwnProfile && (
                       <Link
@@ -875,12 +991,18 @@ const Profile = () => {
                     {userRoutes.map((route) => (
                       <div
                         key={route.id_lista}
-                        onClick={() => navigate("/", { state: { focusedList: route } })}
+                        onClick={() =>
+                          navigate("/", { state: { focusedList: route } })
+                        }
                         className="group relative h-48 rounded-[24px] overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
                       >
                         {/* Background Image with Gradient Overlay */}
                         <img
-                          src={route.imagen_url ? `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${route.imagen_url}` : "https://images.unsplash.com/photo-1498855926480-d98e83099315?w=500&q=80"}
+                          src={
+                            route.imagen_url
+                              ? `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${route.imagen_url}`
+                              : "https://images.unsplash.com/photo-1498855926480-d98e83099315?w=500&q=80"
+                          }
                           alt={route.nombre}
                           className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
                         />
@@ -892,9 +1014,12 @@ const Profile = () => {
                             <span className="bg-primary/90 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
                               {route.pois ? route.pois.length : 0} POIs
                             </span>
-                            {route.visibilidad === 'friends' && (
+                            {route.visibilidad === "friends" && (
                               <span className="bg-blue-500/90 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
-                                <span className="material-symbols-outlined text-[10px]">group</span> Amigos
+                                <span className="material-symbols-outlined text-[10px]">
+                                  group
+                                </span>{" "}
+                                Amigos
                               </span>
                             )}
                           </div>
@@ -907,7 +1032,9 @@ const Profile = () => {
 
                           {/* Navigation Icon */}
                           <div className="absolute top-4 right-4 w-8 h-8 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-                            <span className="material-symbols-outlined text-white text-sm">navigation</span>
+                            <span className="material-symbols-outlined text-white text-sm">
+                              navigation
+                            </span>
                           </div>
                         </div>
                       </div>

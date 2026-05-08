@@ -597,7 +597,7 @@ const Community = () => {
       <Header />
 
       {/* Spacer to avoid overlap with absolute Header */}
-      <div className="pt-24"></div>
+      <div className="pt-5"></div>
 
       <div className="sticky top-0 z-40 px-6 pt-4 pb-4 bg-[#f0f4f9]/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-gray-100 dark:border-white/5">
         <div className="max-w-4xl mx-auto flex flex-col gap-6">

@@ -459,7 +459,7 @@ const CreateList = () => {
   };
 
   return (
-    <div className="relative h-screen w-full bg-slate-950 text-white font-display overflow-hidden select-none">
+    <div className="relative h-screen w-full bg-slate-950 text-white font-display overflow-hidden select-none md:pl-20">
       <div className="absolute inset-0 z-0">
         <MapContainer
           ref={mapRef}
@@ -544,7 +544,7 @@ const CreateList = () => {
             animate={{ y: 0 }}
             exit={{ y: "100%" }}
             transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-            className="fixed bottom-0 left-0 right-0 z-[1001] pointer-events-auto"
+            className="fixed bottom-0 left-0 md:left-20 right-0 z-[1001] pointer-events-auto"
           >
             <div className="w-full flex flex-col bg-white/95 dark:bg-[#0a0a0a]/95 rounded-t-[2rem] shadow-[0_-20px_60px_rgba(0,0,0,0.3)] backdrop-blur-lg border-t border-white/10 font-display">
 
