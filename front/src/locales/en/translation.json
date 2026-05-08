@@ -25,8 +25,7 @@
     "wind": "Wind",
     "quickAccess": "Quick Access",
     "trackConditions": "City Status",
-    "openCircuitMap": "Metropoli Map",
-    "communityFeed": "Community Feed"
+    "openCircuitMap": "Metropoli Map"
   },
   "community": {
     "yourGroup": "Your Group",
@@ -69,18 +68,22 @@
   },
   "settings": {
     "title": "Settings",
+    "app": "App",
     "language": "Language",
     "appLanguage": "Language",
     "appPreferences": "App Preferences",
     "pushNotifications": "Push Notifications",
     "locationServices": "Location Services",
     "darkMode": "Dark Mode",
+    "themeColor": "Theme Color",
+    "accentColor": "Accent Color",
     "account": "Account",
     "personalDetails": "Personal Details",
     "paymentMethods": "Payment Methods",
     "helpSupport": "Help & Support",
     "logout": "Log Out",
-    "footerApp": "Application"
+    "footerApp": "Metrópoli Application",
+    "footerVersion": "Stable Version"
   },
   "profile": {
     "my": "My",
@@ -131,6 +134,150 @@
     "success": "List created successfully!",
     "noDesc": "No description available.",
     "errorMinPoints": "Select at least 2 points to create a list.",
-    "errorNoName": "Please give your list a name."
+    "errorNoName": "Please give your list a name.",
+    "addCover": "Add cover",
+    "addPoiAtLocation": "Add point at my location",
+    "points": "Points",
+    "newList": "New list",
+    "editingList": "Editing list",
+    "inspecting": "Inspecting",
+    "saveChanges": "Save changes",
+    "editRoute": "Edit route",
+    "useAsTemplate": "Use as template",
+    "confirmClose": "Are you sure? The route you are creating will be lost.",
+    "confirmCloseTitle": "Discard route?",
+    "confirmCloseBtn": "Yes, discard",
+    "closePanel": "Close panel",
+    "visibility": {
+      "public": "Public",
+      "private": "Private",
+      "friends": "Friends"
+    }
+  },
+  "auth": {
+    "login": "Log In",
+    "signup": "Sign Up",
+    "tagline": "Log in to continue exploring",
+    "email": "Email address",
+    "password": "Password",
+    "confirmPassword": "Confirm password",
+    "name": "Full name",
+    "backToHome": "Back to home",
+    "backToLogin": "Back to login",
+    "noAccount": "Don't have an account?",
+    "hasAccount": "Already have an account?",
+    "registerFree": "Register for free",
+    "orContinueWith": "Or continue with",
+    "orRegisterWith": "Or register with",
+    "google": "Google",
+    "createAccount": "Create your account",
+    "communityTag": "Join the community of urban explorers",
+    "checkEmail": "Check your email",
+    "checkEmailSub": "We've sent you a 6-digit code to activate your account",
+    "verifyCode": "Verify code",
+    "accountActivated": "Account activated!",
+    "readyToExplore": "You can now log in and start exploring the city.",
+    "goToLogin": "Go to Login",
+    "invalidCode": "Invalid code.",
+    "errorAuth": "Authentication error.",
+    "errorConnect": "Connection error with server.",
+    "errorRegister": "Registration error.",
+    "passwordsNoMatch": "Passwords do not match.",
+    "passwordTooShort": "Password must be at least 6 characters long.",
+    "verifyEmail": "You must verify your email before entering.",
+    "credentialsIncorrect": "Incorrect credentials.",
+    "newPassword": "New password",
+    "completeRegistration": "Complete registration",
+    "hello": "Hello"
+  },
+  "admin": {
+    "title": "Control Panel",
+    "networkMode": "Network Mode: Click on the asphalt to create new paths or click on nodes/POIs to connect them.",
+    "poiLabel": "POI",
+    "qr": {
+      "selectNode": "Select a node from the circuit...",
+      "noNodes": "No navigation nodes available",
+      "fileNote": "By default it will be saved as zona-sin-definir.png. This text will be used as the filename on the server."
+    }
+  },
+  "common": {
+    "loading": "Loading...",
+    "save": "Save",
+    "cancel": "Cancel",
+    "edit": "Edit",
+    "delete": "Delete",
+    "back": "Back",
+    "version": "Version",
+    "build": "Build"
+  },
+  "map_extra": {
+    "youAreHere": "You are here"
+  },
+  "weather": {
+    "title": "METRÓPOLI WEATHER",
+    "temperature": "Temperature",
+    "humidity": "Humidity",
+    "wind": "Wind",
+    "condition": "Condition"
+  },
+  "community": {
+    "tabs": {
+      "recent": "Recent",
+      "popular": "Popular",
+      "official": "Official",
+      "fanZone": "Fan Zone"
+    },
+    "friends": "Friends",
+    "noFriends": "No users found",
+    "newPost": "New Post",
+    "publish": "Publish",
+    "follow": "Follow",
+    "following": "Following"
+  },
+  "profile": {
+    "my": "My",
+    "editProfile": "Edit Profile",
+    "posts": "Posts",
+    "followers": "Followers",
+    "following": "Following",
+    "friends": "Friends",
+    "routes": "Routes",
+    "points": "points",
+    "friendsList": "Friends Online",
+    "loadingPosts": "Loading posts...",
+    "recentPosts": "Recent Activity",
+    "noPosts": "You don't have any posts yet.",
+    "nowFollowing": "Now following",
+    "noFollowers": "No followers yet",
+    "noFollowing": "Not following anyone yet",
+    "qr": {
+      "myTitle": "My QR Code",
+      "myDesc": "Let another user scan this QR to add you as a friend",
+      "scanTitle": "Scan to Follow",
+      "scanHelp": "Scan someone's QR to follow them",
+      "point": "Point the camera at the QR code",
+      "confirm": "Confirm you want to follow this person",
+      "userFound": "User Found",
+      "notFound": "User not found in Metrópoli",
+      "invalid": "Invalid QR code for Metrópoli",
+      "starting": "Starting camera...",
+      "searching": "Searching QR...",
+      "error": "Scan error",
+      "errorSelf": "You cannot follow yourself",
+      "errorFollow": "Could not follow the user"
+    },
+    "home": {
+      "impact": "Your impact",
+      "weeklyActivity": "Weekly activity",
+      "totalKm": "Total KM",
+      "discovered": "Places discovered",
+      "completedRoutes": "Routes completed",
+      "groups": "From your friends",
+      "dining": "Bars",
+      "experience": "Second hand",
+      "orderFood": "Cafes",
+      "fanZone": "Culture",
+      "trackConditions": "Your impact"
+    }
   }
 }

@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
+import { useTranslation } from "react-i18next";
 
 const API_BASE = import.meta.env.VITE_API_URL
   ? `${import.meta.env.VITE_API_URL}/api`
   : "http://localhost:3000/api";
 
 const SignUp = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirm, setShowConfirm] = useState(false);
@@ -25,7 +27,7 @@ const SignUp = () => {
       handleGoogleAuth(tokenResponse.access_token);
     },
     onError: () => {
-      setError("L'autenticació amb Google ha fallat.");
+      setError(t("auth.errorAuth", "L'autenticació amb Google ha fallat."));
     },
   });
 
@@ -41,7 +43,7 @@ const SignUp = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || "Error en l'autenticació.");
+        setError(data.message || t("auth.errorAuth", "Error en l'autenticació."));
         return;
       }
 
@@ -59,7 +61,7 @@ const SignUp = () => {
       localStorage.setItem("usuario", JSON.stringify(data.data.usuario));
       navigate("/home");
     } catch (err) {
-      setError("Error de connexió amb el servidor.");
+      setError(t("auth.errorConnect", "Error de connexió amb el servidor."));
     } finally {
       setLoading(false);
     }
@@ -71,12 +73,12 @@ const SignUp = () => {
     const confirm = e.target.confirm.value;
 
     if (password !== confirm) {
-      setError("Les contrasenyes no coincideixen.");
+      setError(t("auth.passwordsNoMatch", "Les contrasenyes no coincideixen."));
       return;
     }
 
     if (password.length < 6) {
-      setError("La contrasenya ha de tenir almenys 6 caràcters.");
+      setError(t("auth.passwordTooShort", "La contrasenya ha de tenir almenys 6 caràcters."));
       return;
     }
 
@@ -93,7 +95,7 @@ const SignUp = () => {
     const confirm = e.target.confirm.value;
 
     if (password !== confirm) {
-      setError("Les contrasenyes no coincideixen.");
+      setError(t("auth.passwordsNoMatch", "Les contrasenyes no coincideixen."));
       return;
     }
 
@@ -107,13 +109,13 @@ const SignUp = () => {
       const data = await res.json();
 
       if (!res.ok) {
-        setError(data.message || "Error al registrar.");
+        setError(data.message || t("auth.errorRegister", "Error al registrar."));
         return;
       }
 
       setStep("check-email");
     } catch {
-      setError("Error de connexió amb el servidor.");
+      setError(t("auth.errorConnect", "Error de connexió amb el servidor."));
     } finally {
       setLoading(false);
     }
@@ -136,11 +138,11 @@ const SignUp = () => {
         setVerifyStatus("success");
       } else {
         setVerifyStatus("error");
-        setVerifyError(data.message || "Codi invàlid.");
+        setVerifyError(data.message || t("auth.invalidCode", "Codi invàlid."));
       }
     } catch (err) {
       setVerifyStatus("error");
-      setVerifyError("Error de connexió.");
+      setVerifyError(t("auth.errorConnect", "Error de connexió."));
     } finally {
       setVerifyLoading(false);
     }
@@ -155,17 +157,17 @@ const SignUp = () => {
       </div>
 
       {showBack && (
-        <Link to="/login" className="absolute top-8 left-8 z-50 flex items-center gap-2 text-sm font-medium opacity-40 hover:opacity-100 transition-opacity">
+        <Link to="/login" className="absolute top-8 left-8 z-50 flex items-center gap-2 text-sm font-medium opacity-40 hover:opacity-100 transition-opacity hover:text-primary transition-colors">
           <span className="material-symbols-outlined text-lg">west</span>
-          Tornar al login
+          {t("auth.backToLogin", "Tornar al login")}
         </Link>
       )}
 
       <div className="w-full max-w-[420px] z-10 space-y-8">
         <div className="flex flex-col items-center text-center space-y-4">
-          <i className="fa-solid fa-location-dot text-5xl opacity-20" style={{ color: 'rgb(254, 254, 254)' }}></i>
+          <i className="fa-solid fa-location-dot text-5xl opacity-20" style={{ color: 'var(--theme-color, #ffffff)' }}></i>
           <div className="space-y-1">
-            <h1 className="text-3xl font-medium tracking-tighter">{title}</h1>
+            <h1 className="text-3xl font-medium tracking-tighter text-black dark:text-primary">{title}</h1>
             <p className="text-gray-400 font-medium tracking-tight text-sm">{subtitle}</p>
           </div>
         </div>
@@ -176,7 +178,7 @@ const SignUp = () => {
 
   if (step === "google-password") {
     return (
-      <AuthLayout title={`Hola, ${googleData?.nombre.split(" ")[0]}`} subtitle="Crea una contrasenya per acabar de configurar el teu compte">
+      <AuthLayout title={`${t("auth.hello", "Hola")}, ${googleData?.nombre.split(" ")[0]}`} subtitle={t("auth.newPassword", "Crea una contrasenya per acabar de configurar el teu compte")}>
         <div className="bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-white dark:border-white/10 rounded-[2.5rem] p-8 shadow-2xl space-y-6">
           <form onSubmit={handleGooglePasswordSubmit} className="space-y-4">
             {error && (
@@ -186,13 +188,13 @@ const SignUp = () => {
               </div>
             )}
             <div className="space-y-1 relative">
-              <input name="password" type={showPassword ? "text" : "password"} placeholder="Nova contrasenya" className="w-full bg-white dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-white/20 rounded-2xl py-4 px-6 text-sm font-medium placeholder-gray-400 outline-none transition-all" required />
+              <input name="password" type={showPassword ? "text" : "password"} placeholder={t("auth.newPassword", "Nova contrasenya")} className="w-full bg-white dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-primary/20 rounded-2xl py-4 px-6 text-sm font-medium placeholder-gray-400 outline-none transition-all" required />
             </div>
             <div className="space-y-1 relative">
-              <input name="confirm" type={showConfirm ? "text" : "password"} placeholder="Confirmar contrasenya" className="w-full bg-white dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-white/20 rounded-2xl py-4 px-6 text-sm font-medium placeholder-gray-400 outline-none transition-all" required />
+              <input name="confirm" type={showConfirm ? "text" : "password"} placeholder={t("auth.confirmPassword", "Confirmar contrasenya")} className="w-full bg-white dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-primary/20 rounded-2xl py-4 px-6 text-sm font-medium placeholder-gray-400 outline-none transition-all" required />
             </div>
-            <button type="submit" disabled={loading} className="w-full bg-black text-white dark:bg-white dark:text-black font-medium tracking-tight py-4 rounded-2xl shadow-xl active:scale-[0.98] transition-all disabled:opacity-50 mt-4">
-              {loading ? <span className="material-symbols-outlined animate-spin">progress_activity</span> : "Completar registre"}
+            <button type="submit" disabled={loading} className="w-full bg-black text-white dark:bg-primary dark:text-primary-text font-medium tracking-tight py-4 rounded-2xl shadow-xl active:scale-[0.98] transition-all disabled:opacity-50 mt-4">
+              {loading ? <span className="material-symbols-outlined animate-spin">progress_activity</span> : t("auth.completeRegistration", "Completar registre")}
             </button>
           </form>
         </div>
@@ -202,25 +204,25 @@ const SignUp = () => {
 
   if (step === "check-email") {
     return (
-      <AuthLayout title="Revisa el teu correu" subtitle="T'hem enviat un codi de 6 dígits per activar el teu compte" showBack={false}>
+      <AuthLayout title={t("auth.checkEmail", "Revisa el teu correu")} subtitle={t("auth.checkEmailSub", "T'hem enviat un codi de 6 dígits per activar el teu compte")} showBack={false}>
         <div className="bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-white dark:border-white/10 rounded-[2.5rem] p-8 shadow-2xl space-y-6 text-center">
           {verifyStatus === "success" ? (
             <div className="space-y-6 py-4">
               <span className="material-symbols-outlined text-6xl text-green-500">verified</span>
-              <h2 className="text-xl font-bold">Compte activat!</h2>
-              <p className="text-gray-400 text-sm">Ja pots iniciar sessió i començar a explorar la ciutat.</p>
-              <Link to="/login" className="block w-full bg-black text-white dark:bg-white dark:text-black font-medium py-4 rounded-2xl shadow-xl active:scale-[0.98] transition-all">Anar al Login</Link>
+              <h2 className="text-xl font-bold">{t("auth.accountActivated", "Compte activat!")}</h2>
+              <p className="text-gray-400 text-sm">{t("auth.readyToExplore", "Ja pots iniciar sessió i començar a explorar la ciutat.")}</p>
+              <Link to="/login" className="block w-full bg-black text-white dark:bg-primary dark:text-primary-text font-medium py-4 rounded-2xl shadow-xl active:scale-[0.98] transition-all">{t("auth.goToLogin", "Anar al Login")}</Link>
             </div>
           ) : (
             <>
               <form onSubmit={handleVerifyCode} className="space-y-6">
                 <input type="text" maxLength="6" value={verifyCode} onChange={(e) => setVerifyCode(e.target.value.replace(/\D/g, ""))} placeholder="000000" className="w-full text-center text-4xl font-bold tracking-[0.4em] py-5 bg-white dark:bg-white/5 border border-transparent rounded-2xl text-black dark:text-white outline-none focus:ring-2 focus:ring-black/5 dark:focus:ring-white/10 transition-all" required />
                 {verifyError && <p className="text-red-500 text-xs font-bold">{verifyError}</p>}
-                <button type="submit" disabled={verifyLoading || verifyCode.length < 6} className="w-full bg-black text-white dark:bg-white dark:text-black font-medium py-4 rounded-2xl shadow-xl active:scale-[0.98] transition-all disabled:opacity-50">
-                  {verifyLoading ? <span className="material-symbols-outlined animate-spin">progress_activity</span> : "Verificar codi"}
+                <button type="submit" disabled={verifyLoading || verifyCode.length < 6} className="w-full bg-black text-white dark:bg-primary dark:text-primary-text font-medium py-4 rounded-2xl shadow-xl active:scale-[0.98] transition-all disabled:opacity-50">
+                  {verifyLoading ? <span className="material-symbols-outlined animate-spin">progress_activity</span> : t("auth.verifyCode", "Verificar codi")}
                 </button>
               </form>
-              <button onClick={() => setStep("form")} className="text-xs font-bold text-gray-400 hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest">Tornar al registre</button>
+              <button onClick={() => setStep("form")} className="text-xs font-bold text-gray-400 hover:text-black dark:hover:text-white transition-colors uppercase tracking-widest">{t("auth.backToLogin", "Tornar al registre")}</button>
             </>
           )}
         </div>
@@ -229,7 +231,7 @@ const SignUp = () => {
   }
 
   return (
-    <AuthLayout title="Crea el teu compte" subtitle="Uneix-te a la comunitat d'exploradors urbans">
+    <AuthLayout title={t("auth.createAccount", "Crea el teu compte")} subtitle={t("auth.communityTag", "Uneix-te a la comunitat d'exploradors urbans")}>
       <div className="bg-white/40 dark:bg-white/5 backdrop-blur-xl border border-white dark:border-white/10 rounded-[2.5rem] p-8 shadow-2xl space-y-6">
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
@@ -238,20 +240,20 @@ const SignUp = () => {
               {error}
             </div>
           )}
-          <input name="name" type="text" placeholder="Nom complet" className="w-full bg-white dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-white/20 rounded-2xl py-4 px-6 text-sm font-medium placeholder-gray-400 outline-none transition-all" required />
-          <input name="email" type="email" placeholder="Correu electrònic" className="w-full bg-white dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-white/20 rounded-2xl py-4 px-6 text-sm font-medium placeholder-gray-400 outline-none transition-all" required />
+          <input name="name" type="text" placeholder={t("auth.name", "Nom complet")} className="w-full bg-white dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-primary/20 rounded-2xl py-4 px-6 text-sm font-medium placeholder-gray-400 outline-none transition-all" required />
+          <input name="email" type="email" placeholder={t("auth.email", "Correu electrònic")} className="w-full bg-white dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-primary/20 rounded-2xl py-4 px-6 text-sm font-medium placeholder-gray-400 outline-none transition-all" required />
           <div className="grid grid-cols-2 gap-3">
-            <input name="password" type={showPassword ? "text" : "password"} placeholder="Contrasenya" className="w-full bg-white dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-white/20 rounded-2xl py-4 px-6 text-xs font-medium placeholder-gray-400 outline-none transition-all" required />
-            <input name="confirm" type={showConfirm ? "text" : "password"} placeholder="Confirmar" className="w-full bg-white dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-white/20 rounded-2xl py-4 px-6 text-xs font-medium placeholder-gray-400 outline-none transition-all" required />
+            <input name="password" type={showPassword ? "text" : "password"} placeholder={t("auth.password", "Contrasenya")} className="w-full bg-white dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-primary/20 rounded-2xl py-4 px-6 text-xs font-medium placeholder-gray-400 outline-none transition-all" required />
+            <input name="confirm" type={showConfirm ? "text" : "password"} placeholder={t("auth.confirmPassword", "Confirmar")} className="w-full bg-white dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-primary/20 rounded-2xl py-4 px-6 text-xs font-medium placeholder-gray-400 outline-none transition-all" required />
           </div>
-          <button type="submit" disabled={loading} className="w-full bg-black text-white dark:bg-white dark:text-black font-medium tracking-tight py-4 rounded-2xl shadow-xl active:scale-[0.98] transition-all disabled:opacity-50 mt-2">
-            {loading ? <span className="material-symbols-outlined animate-spin">progress_activity</span> : "Registra't"}
+          <button type="submit" disabled={loading} className="w-full bg-black text-white dark:bg-primary dark:text-primary-text font-medium tracking-tight py-4 rounded-2xl shadow-xl active:scale-[0.98] transition-all disabled:opacity-50 mt-2">
+            {loading ? <span className="material-symbols-outlined animate-spin">progress_activity</span> : t("auth.signup", "Registra't")}
           </button>
         </form>
 
         <div className="relative flex items-center justify-center py-2">
           <div className="absolute inset-0 flex items-center"><div className="w-full border-t border-black/5 dark:border-white/10"></div></div>
-          <span className="relative px-4 bg-transparent text-[10px] font-bold uppercase tracking-widest text-gray-400">O registra't amb</span>
+          <span className="relative px-4 bg-transparent text-[10px] font-bold uppercase tracking-widest text-gray-400">{t("auth.orRegisterWith", "O registra't amb")}</span>
         </div>
 
         <button onClick={() => loginWithGoogle()} className="w-full bg-white dark:bg-white/5 border border-gray-100 dark:border-white/10 text-sm font-bold py-4 rounded-2xl flex items-center justify-center gap-3 hover:bg-gray-50 dark:hover:bg-white/10 transition-all shadow-sm">
@@ -261,13 +263,13 @@ const SignUp = () => {
             <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
             <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
           </svg>
-          Google
+          {t("auth.google", "Google")}
         </button>
       </div>
 
       <p className="text-center text-sm font-medium text-gray-400">
-        Ja tens compte?{" "}
-        <Link to="/login" className="text-black dark:text-white font-bold hover:underline underline-offset-4 ml-1 transition-all">Inicia sessió</Link>
+        {t("auth.hasAccount", "Ja tens compte?")}{" "}
+        <Link to="/login" className="text-black dark:text-primary font-bold hover:underline underline-offset-4 ml-1 transition-all">{t("auth.login", "Inicia sessió")}</Link>
       </p>
     </AuthLayout>
   );

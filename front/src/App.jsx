@@ -67,7 +67,9 @@ function App() {
           <Route path="/escaneo" element={<QRScanner />} />
           <Route path="/create-list" element={<CreateList />} />
           <Route path="/colections" element={<Collections />} />
+          <Route path="/colections/:id" element={<Collections />} />
           <Route path="/collections" element={<Collections />} />
+          <Route path="/collections/:id" element={<Collections />} />
         </Routes>
       </div>
     </FriendsProvider>

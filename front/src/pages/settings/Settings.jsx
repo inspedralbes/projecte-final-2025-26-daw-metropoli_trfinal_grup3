@@ -74,10 +74,11 @@ const Settings = () => {
       {/* Header */}
       <div className="w-full pt-6 px-5 pb-2 z-20 flex justify-between items-center transition-colors shrink-0 touch-none md:max-w-3xl md:mx-auto">
         <div className="md:hidden flex items-center gap-2">
-          <Link to="/home" className="flex items-center">
-            <span className="text-2xl font-black italic tracking-tighter text-slate-900 dark:text-white">
-              Aplicación
-            </span>
+          <Link 
+            to="/" 
+            className="w-10 h-10 flex items-center justify-center bg-white dark:bg-primary rounded-full text-slate-700 dark:text-primary-text shadow-sm border border-slate-200 dark:border-transparent hover:bg-slate-100 dark:hover:bg-primary-dark transition-colors shrink-0"
+          >
+            <i className="fa-solid fa-house text-base"></i>
           </Link>
         </div>
         <h1 className="hidden md:block text-2xl font-black italic uppercase tracking-tighter text-slate-800 dark:text-white">
@@ -110,10 +111,8 @@ const Settings = () => {
               </h3>
               <div className="bg-white dark:bg-[#12080a] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden p-4 flex justify-between items-center">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-orange-50 dark:bg-orange-900/30 text-orange-500 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-lg">
-                      language
-                    </span>
+                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                    <i className="fa-solid fa-globe text-sm"></i>
                   </div>
                   <span className="text-slate-700 dark:text-slate-200 font-semibold text-sm">
                     {t("settings.appLanguage")}
@@ -131,38 +130,33 @@ const Settings = () => {
               <div className="bg-white dark:bg-[#12080a] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden">
                 {[
                   {
-                    icon: "notifications",
+                    icon: "fa-bell",
                     label: t("settings.pushNotifications"),
                     value: notifications,
                     onChange: setNotifications,
-                    color: "bg-blue-50 dark:bg-blue-900/30 text-blue-500",
                   },
                   {
-                    icon: "location_on",
+                    icon: "fa-location-dot",
                     label: t("settings.locationServices"),
                     value: location,
                     onChange: setLocation,
-                    color: "bg-green-50 dark:bg-green-900/30 text-green-500",
                   },
                   {
-                    icon: "dark_mode",
+                    icon: "fa-moon",
                     label: t("settings.darkMode"),
                     value: darkMode,
                     onChange: setDarkMode,
-                    color: "bg-purple-50 dark:bg-purple-900/30 text-purple-500",
                   },
-                ].map(({ icon, label, value, onChange, color }) => (
+                ].map(({ icon, label, value, onChange }) => (
                   <div
                     key={icon}
                     className="w-full flex items-center justify-between p-4 border-b border-slate-50 dark:border-slate-800 last:border-0"
                   >
                     <div className="flex items-center gap-3">
                       <div
-                        className={`w-8 h-8 rounded-full ${color} flex items-center justify-center`}
+                        className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center"
                       >
-                        <span className="material-symbols-outlined text-lg">
-                          {icon}
-                        </span>
+                        <i className={`fa-solid ${icon} text-xs`}></i>
                       </div>
                       <span className="text-slate-700 dark:text-slate-200 font-semibold text-sm">
                         {label}
@@ -181,10 +175,8 @@ const Settings = () => {
               </h3>
               <div className="bg-white dark:bg-[#12080a] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden p-4 flex justify-between items-center">
                 <div className="flex items-center gap-3">
-                  <div className="w-8 h-8 rounded-full bg-pink-50 dark:bg-pink-900/30 text-pink-500 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-lg">
-                      palette
-                    </span>
+                  <div className="w-8 h-8 rounded-full bg-primary/10 text-primary flex items-center justify-center">
+                    <i className="fa-solid fa-palette text-sm"></i>
                   </div>
                   <span className="text-slate-700 dark:text-slate-200 font-semibold text-sm">
                     {t("settings.accentColor", "Accent Color")}
@@ -205,9 +197,7 @@ const Settings = () => {
                       className={`w-8 h-8 rounded-full ${color.bg} flex items-center justify-center transition-transform ${themeColor === color.id ? 'scale-110 ring-2 ring-offset-2 ring-offset-white dark:ring-offset-[#12080a] ring-primary' : 'hover:scale-105'}`}
                     >
                       {themeColor === color.id && (
-                        <span className={`material-symbols-outlined text-sm font-bold ${color.id === 'default' ? 'text-white dark:text-black' : 'text-white'}`}>
-                          check
-                        </span>
+                        <i className={`fa-solid fa-check text-[10px] ${color.id === 'default' ? 'text-white dark:text-black' : 'text-white'}`}></i>
                       )}
                     </button>
                   ))}
@@ -239,9 +229,7 @@ const Settings = () => {
                   download="WeMap.apk"
                   className="w-full py-3 px-4 bg-primary text-primary-text font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all shadow-md shadow-primary/20"
                 >
-                  <span className="material-symbols-outlined text-lg">
-                    download
-                  </span>
+                  <i className="fa-solid fa-download text-sm"></i>
                   {t("settings.downloadAndroid", "Descargar APK Android")}
                 </a>
               </div>
@@ -251,23 +239,21 @@ const Settings = () => {
             <div className="bg-white dark:bg-[#12080a] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5">
               <div className="flex items-center gap-3 mb-4">
                 <div className="flex items-center justify-center w-10 h-10 rounded-full bg-primary/10 text-primary">
-                  <span className="material-symbols-outlined text-2xl font-black">
-                    map
-                  </span>
+                  <i className="fa-solid fa-map text-lg"></i>
                 </div>
                 <div>
                   <p className="font-bold text-slate-800 dark:text-white text-sm">
-                    {t("settings.footerApp")}
+                    {t("settings.footerApp", "Aplicación Metrópoli")}
                   </p>
                   <p className="text-xs text-slate-400">
-                    {t("settings.footerVersion")}
+                    {t("settings.footerVersion", "Versión Estable")}
                   </p>
                 </div>
               </div>
               <div className="flex gap-2">
                 <div className="flex-1 text-center p-2 rounded-xl bg-slate-50 dark:bg-white/5">
                   <p className="text-[10px] font-bold uppercase text-slate-400">
-                    Version
+                    {t("common.version", "Version")}
                   </p>
                   <p className="text-sm font-bold text-slate-700 dark:text-white">
                     1.0.0
@@ -275,7 +261,7 @@ const Settings = () => {
                 </div>
                 <div className="flex-1 text-center p-2 rounded-xl bg-slate-50 dark:bg-white/5">
                   <p className="text-[10px] font-bold uppercase text-slate-400">
-                    Build
+                    {t("common.build", "Build")}
                   </p>
                   <p className="text-sm font-bold text-slate-700 dark:text-white">
                     2026

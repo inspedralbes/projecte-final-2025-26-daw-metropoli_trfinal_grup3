@@ -41,8 +41,10 @@ const Navbar = () => {
 
   return (
     <>
-      <nav className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-white/90 dark:bg-black/90 border-t border-gray-100 dark:border-none backdrop-blur-lg flex items-center justify-around px-2 pb-safe transition-colors duration-300"
-        style={{ height: "76px" }}>
+      <nav
+        className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-white/90 dark:bg-black/90 border-t border-gray-100 dark:border-none backdrop-blur-lg flex items-center justify-around px-2 pb-safe transition-colors duration-300"
+        style={{ height: "76px" }}
+      >
         {navItems.map((item) => {
           const active = isActive(item.to);
           return (
@@ -51,8 +53,8 @@ const Navbar = () => {
               to={item.to}
               className={`flex flex-col items-center justify-center w-16 h-full transition-all duration-200 relative ${
                 active
-                ? ""
-                : "text-gray-400 dark:text-white/50 hover:text-black dark:hover:text-white"
+                  ? "text-black dark:text-primary"
+                  : "text-gray-400 dark:text-white/50 hover:text-black dark:hover:text-primary"
               }`}
               style={active ? { color: "var(--theme-color)" } : {}}
             >
@@ -88,8 +90,8 @@ const Navbar = () => {
               title={t(`nav.${item.labelKey}`)}
               className={`relative flex flex-col items-center justify-center w-14 h-14 transition-all duration-200 group ${
                 active
-                ? ""
-                : "text-gray-400 dark:text-white/50 hover:text-black dark:hover:text-white"
+                  ? "text-black dark:text-primary"
+                  : "text-gray-400 dark:text-white/50 hover:text-black dark:hover:text-primary"
               }`}
               style={active ? { color: "var(--theme-color)" } : {}}
             >
@@ -108,9 +110,9 @@ const Navbar = () => {
           <button
             onClick={toggleDark}
             title={darkMode ? t("nav.lightMode") : t("nav.darkMode")}
-            className="relative flex flex-col items-center justify-center w-14 h-14 transition-all duration-200 group text-gray-400 dark:text-white/50 hover:text-black dark:hover:text-white"
+            className="relative flex flex-col items-center justify-center w-14 h-14 transition-all duration-200 group text-gray-400 dark:text-white/50 hover:text-black dark:hover:text-primary"
           >
-            <span 
+            <span
               className="material-symbols-outlined text-[30px] leading-none transition-all duration-300"
               style={darkMode ? { fontVariationSettings: "'FILL' 1" } : {}}
             >

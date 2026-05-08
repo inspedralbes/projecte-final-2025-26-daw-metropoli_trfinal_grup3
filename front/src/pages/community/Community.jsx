@@ -15,10 +15,14 @@ import {
   getListas,
   getFriendsListas,
   toggleLikeLista,
+  createLista,
+  getUsuarioListas,
 } from "../../services/communicationManager";
 import socket from "../../services/socketManager";
 import ChatModal from "../../components/community/ChatModal";
 import UserAvatar from "../../components/UserAvatar";
+import FriendStatusRow from "../../components/shared/FriendStatusRow";
+import Toast from "../../components/Toast";
 
 // ─── Helpers ─────────────────────────────────────────────────────────────────
 const formatDate = (date) =>
@@ -260,12 +264,19 @@ const PostCard = ({ pub, onComentarioCreado }) => {
 };
 
 // ─── Sub-componente: Card de una lista ───────────────────────────────────────
-const ListaCard = ({ lista }) => {
+const ListaCard = ({ lista, userLists = [] }) => {
   const navigate = useNavigate();
   const usuarioInfo = localStorage.getItem("usuario");
   const usuarioLogged = usuarioInfo ? JSON.parse(usuarioInfo) : null;
   const [liked, setLiked] = useState(lista.user_liked > 0);
   const [likesCount, setLikesCount] = useState(lista.likes || 0);
+  const [toast, setToast] = useState(null);
+
+  const isSaved = userLists.some(
+    (ul) =>
+      ul.nombre === lista.nombre &&
+      (ul.pois?.length || 0) === (lista.pois?.length || 0),
+  );
 
   const handleLike = async (e) => {
     e.preventDefault();
@@ -293,78 +304,146 @@ const ListaCard = ({ lista }) => {
     }
   };
 
+  const handleSaveList = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    if (!usuarioLogged) {
+      navigate("/login");
+      return;
+    }
+
+    if (isSaved) {
+      setToast({
+        message: "Ja tens aquesta llista guardada!",
+        type: "warning",
+      });
+      return;
+    }
+
+    try {
+      const newListData = {
+        id_usuario: usuarioLogged.id_usuario,
+        nombre: lista.nombre,
+        descripcion: lista.descripcion || "Guardada des de la comunitat",
+        visibilidad: "private",
+        pois: lista.pois?.map((p) => p.id_poi) || [],
+      };
+      const res = await createLista(newListData);
+      if (res.success) {
+        setToast({
+          message: "Llista guardada a les teves rutes!",
+          type: "success",
+        });
+      }
+    } catch (error) {
+      console.error("Error saving list:", error);
+      setToast({ message: "Error al guardar la llista", type: "error" });
+    }
+  };
+
   return (
-    <div
-      className="bg-white dark:bg-slate-900 rounded-[2rem] border border-gray-100 dark:border-white/5 overflow-hidden shadow-sm hover:shadow-md transition-all group cursor-pointer mb-6"
-      onClick={() => navigate("/map", { state: { focusedList: lista } })}
-    >
-      <div className="relative h-48 overflow-hidden">
-        <img
-          src={
-            lista.imagen_url
-              ? `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${lista.imagen_url}`
-              : "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=500&q=80"
-          }
-          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-          alt={lista.nombre}
+    <>
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
         />
-        <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
-        <div className="absolute bottom-4 left-6 right-6 flex items-end justify-between">
-          <div className="flex-1 pr-4">
-            <h3 className="text-white font-bold text-lg leading-tight mb-1 truncate">
-              {lista.nombre}
-            </h3>
+      )}
+      <div
+        className="bg-white dark:bg-slate-900 rounded-[2rem] border border-gray-100 dark:border-white/5 overflow-hidden shadow-sm hover:shadow-md transition-all group cursor-pointer mb-6"
+        onClick={() => navigate("/map", { state: { focusedList: lista } })}
+      >
+        <div className="relative h-48 overflow-hidden">
+          <img
+            src={
+              lista.imagen_url
+                ? `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${lista.imagen_url}`
+                : "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=500&q=80"
+            }
+            className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
+            alt={lista.nombre}
+          />
+          <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent" />
+          <div className="absolute bottom-4 left-6 right-6 flex items-end justify-between">
+            <div className="flex-1 pr-4">
+              <h3 className="text-white font-bold text-lg leading-tight mb-1 truncate">
+                {lista.nombre}
+              </h3>
+              <div className="flex items-center gap-2">
+                <UserAvatar
+                  user={{
+                    foto_perfil: lista.usuario_foto,
+                    nombre: lista.usuario_nombre,
+                  }}
+                  className="w-5 h-5 border border-white/20"
+                />
+                <span className="text-white/70 text-[10px] font-medium tracking-tight">
+                  Per {lista.usuario_nombre}
+                </span>
+              </div>
+            </div>
             <div className="flex items-center gap-2">
-              <UserAvatar
-                user={{
-                  foto_perfil: lista.usuario_foto,
-                  nombre: lista.usuario_nombre,
-                }}
-                className="w-5 h-5 border border-white/20"
-              />
-              <span className="text-white/70 text-[10px] font-medium tracking-tight">
-                Per {lista.usuario_nombre}
-              </span>
+              <button
+                onClick={handleSaveList}
+                className={`flex items-center justify-center w-8 h-8 rounded-full backdrop-blur-md transition-all ${isSaved ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20" : "bg-white/20 text-white hover:bg-white/30"}`}
+                title={
+                  isSaved ? "Llista ja guardada" : "Guardar a les meves llistes"
+                }
+              >
+                <span
+                  className="material-symbols-outlined text-sm"
+                  style={{
+                    fontVariationSettings: isSaved ? "'FILL' 1" : "'FILL' 0",
+                  }}
+                >
+                  bookmark
+                </span>
+              </button>
+              <button
+                onClick={handleLike}
+                className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md transition-all ${liked ? "bg-pink-500 text-white" : "bg-white/20 text-white hover:bg-white/30"}`}
+              >
+                <span
+                  className="material-symbols-outlined text-sm"
+                  style={{
+                    fontVariationSettings: liked ? "'FILL' 1" : "'FILL' 0",
+                  }}
+                >
+                  favorite
+                </span>
+                <span className="text-[10px] font-black">{likesCount}</span>
+              </button>
             </div>
           </div>
-          <button
-            onClick={handleLike}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md transition-all ${liked ? "bg-pink-500 text-white" : "bg-white/20 text-white hover:bg-white/30"}`}
-          >
-            <span
-              className="material-symbols-outlined text-sm"
-              style={{ fontVariationSettings: liked ? "'FILL' 1" : "'FILL' 0" }}
-            >
-              favorite
-            </span>
-            <span className="text-[10px] font-black">{likesCount}</span>
-          </button>
         </div>
-      </div>
-      <div className="p-6">
-        <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed line-clamp-2">
-          {lista.descripcion || "Sense descripció disponible per aquesta ruta."}
-        </p>
-        <div className="mt-4 pt-4 border-t border-gray-50 dark:border-white/5 flex items-center justify-between">
-          <div className="flex items-center gap-1 text-slate-400">
-            <span className="material-symbols-outlined text-sm">
-              location_on
-            </span>
-            <span className="text-[10px] font-bold uppercase tracking-widest">
-              {lista.pois?.length || 0} Punts
+        <div className="p-6">
+          <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed line-clamp-2">
+            {lista.descripcion ||
+              "Sense descripció disponible per aquesta ruta."}
+          </p>
+          <div className="mt-4 pt-4 border-t border-gray-50 dark:border-white/5 flex items-center justify-between">
+            <div className="flex items-center gap-1 text-slate-400">
+              <span className="material-symbols-outlined text-sm">
+                location_on
+              </span>
+              <span className="text-[10px] font-bold uppercase tracking-widest">
+                {lista.pois?.length || 0} Punts
+              </span>
+            </div>
+            <span className="text-pink-500 text-[10px] font-black uppercase tracking-widest group-hover:translate-x-1 transition-transform">
+              Veure mapa →
             </span>
           </div>
-          <span className="text-pink-500 text-[10px] font-black uppercase tracking-widest group-hover:translate-x-1 transition-transform">
-            Veure mapa →
-          </span>
         </div>
       </div>
-    </div>
+    </>
   );
 };
 
 // ─── Componente principal ─────────────────────────────────────────────────────
 const Community = () => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const usuarioInfo = localStorage.getItem("usuario");
   const usuarioLogged = usuarioInfo ? JSON.parse(usuarioInfo) : null;
@@ -374,6 +453,7 @@ const Community = () => {
   const [publicaciones, setPublicaciones] = useState([]);
   const [actividad, setActividad] = useState([]);
   const [listas, setListas] = useState([]);
+  const [userLists, setUserLists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
   const [amigos, setAmigos] = useState([]);
@@ -467,6 +547,10 @@ const Community = () => {
     cargarActividad();
     if (usuarioLogged) {
       getAmigos(usuarioLogged.id_usuario).then((r) => setAmigos(r.data || []));
+      // Cargamos solo las listas propias del usuario para detectar duplicados correctamente
+      getUsuarioListas(usuarioLogged.id_usuario).then((r) =>
+        setUserLists(r.data || []),
+      );
     }
 
     if (view === "lists") {
@@ -526,7 +610,7 @@ const Community = () => {
               type="text"
               value={searchQuery}
               onChange={(e) => handleSearch(e.target.value)}
-              placeholder="Busca amics o llistes..."
+              placeholder={t("collections.search", "Busca amics o llistes...")}
               className="w-full bg-white dark:bg-slate-950 border border-gray-100 dark:border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm group-focus-within:shadow-md font-display"
             />
           </div>
@@ -538,7 +622,7 @@ const Community = () => {
               className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium tracking-tight transition-all border ${view === "feed" ? "bg-primary text-primary-text border-transparent shadow-md shadow-primary/20" : "bg-white dark:bg-slate-950 text-slate-400 border-gray-100 dark:border-white/5 hover:border-gray-200"}`}
             >
               <span className="material-symbols-outlined text-sm">groups</span>
-              Comunitat
+              {t("nav.community", "Comunitat")}
             </button>
             <button
               onClick={() => setView("activity")}
@@ -553,7 +637,7 @@ const Community = () => {
               >
                 bolt
               </span>
-              Recents
+              {t("community.tabs.recent", "Recents")}
             </button>
             <button
               onClick={() => setView("lists")}
@@ -567,41 +651,10 @@ const Community = () => {
       </div>
 
       <div className="max-w-4xl mx-auto px-6 mt-8">
-        {/* Friends Horizontal List (Only in feed/lists) */}
-        {(view === "feed" || view === "lists") && (
-          <div className="mb-8">
-            <h3 className="text-[10px] font-black uppercase tracking-widest text-slate-400 mb-4 ml-1">
-              Amics Online
-            </h3>
-            <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2">
-              {amigos.map((amigo) => (
-                <div
-                  key={amigo.id_usuario}
-                  className="flex flex-col items-center gap-2 flex-shrink-0 group"
-                >
-                  <div className="relative">
-                    <Link to={`/profile/${amigo.id_usuario}`}>
-                      <UserAvatar
-                        user={amigo}
-                        className="w-14 h-14"
-                        borderColor="border-primary"
-                      />
-                    </Link>
-                    <button
-                      onClick={() => setSelectedFriend(amigo)}
-                      className="absolute bottom-0 right-0 w-3.5 h-3.5 bg-emerald-500 border-2 border-white dark:border-slate-950 rounded-full cursor-pointer hover:scale-110 transition-transform"
-                    ></button>
-                  </div>
-                  <Link to={`/profile/${amigo.id_usuario}`}>
-                    <span className="text-[10px] font-bold text-slate-500 max-w-[60px] truncate hover:text-primary transition-colors">
-                      {amigo.nombre}
-                    </span>
-                  </Link>
-                </div>
-              ))}
-            </div>
-          </div>
-        )}
+        {/* Friends Horizontal List */}
+        <div className="mb-8">
+          <FriendStatusRow friends={amigos} onFriendClick={setSelectedFriend} />
+        </div>
 
         {/* ─── Main Views ─── */}
         <main>
@@ -609,7 +662,7 @@ const Community = () => {
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
               {loading ? (
                 <div className="text-center py-20 opacity-30 font-bold uppercase tracking-widest text-xs">
-                  Carregant publicacions...
+                  {t("common.loading", "Carregant publicacions...")}
                 </div>
               ) : (
                 publicaciones.map((pub, idx) => (
@@ -626,7 +679,7 @@ const Community = () => {
           {view === "activity" && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-500 space-y-4">
               <h3 className="text-xl font-bold tracking-tight text-indigo-500 mb-6">
-                Activitat Recent
+                {t("profile.recentPosts", "Activitat Recent")}
               </h3>
               {actividad.map((act, i) => (
                 <div
@@ -646,7 +699,7 @@ const Community = () => {
                           {act.usuario}
                         </span>
                       </Link>{" "}
-                      ha creat una nova publicació
+                      {t("profile.posts", "ha creat una nova publicació")}
                     </p>
                     <p className="text-[10px] text-slate-400 mt-1">
                       {formatDate(act.fecha)}
@@ -692,7 +745,11 @@ const Community = () => {
                 </div>
               ) : (
                 listas.map((lista) => (
-                  <ListaCard key={lista.id_lista} lista={lista} />
+                  <ListaCard
+                    key={lista.id_lista}
+                    lista={lista}
+                    userLists={userLists}
+                  />
                 ))
               )}
             </div>
@@ -701,11 +758,11 @@ const Community = () => {
           {view === "search" && (
             <div className="animate-in fade-in zoom-in-95 duration-300 space-y-4">
               <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">
-                Resultats per a "{searchQuery}"
+                {t("collections.search", "Resultats")} para "{searchQuery}"
               </h3>
               {searchResults.length === 0 ? (
                 <div className="text-center py-20 opacity-30">
-                  No s'han trobat usuaris
+                  {t("community.noFriends", "No s'han trobat usuaris")}
                 </div>
               ) : (
                 searchResults.map((user, idx) => (
@@ -720,7 +777,8 @@ const Community = () => {
                         {user.nombre}
                       </h4>
                       <p className="text-xs text-slate-400 truncate max-w-[200px]">
-                        {user.bio || "Sense biografia"}
+                        {user.bio ||
+                          t("editProfile.bioPlaceholder", "Sense biografia")}
                       </p>
                     </div>
                     <span className="material-symbols-outlined text-slate-300">
@@ -760,7 +818,7 @@ const Community = () => {
           >
             <div className="flex justify-between items-center mb-6">
               <h2 className="text-xl font-bold tracking-tight">
-                Nova Publicació
+                {t("community.newPost", "Nova Publicació")}
               </h2>
               <button
                 onClick={() => setShowPostModal(false)}
@@ -774,7 +832,7 @@ const Community = () => {
               onChange={(e) =>
                 setNewPost({ ...newPost, texto: e.target.value })
               }
-              placeholder="Explica algo..."
+              placeholder={t("editProfile.bioPlaceholder", "Explica algo...")}
               className="w-full bg-gray-50 dark:bg-white/5 rounded-2xl p-4 text-sm focus:outline-none min-h-[120px] resize-none border border-gray-100 dark:border-white/5"
             />
             <div className="mt-4">
@@ -783,7 +841,7 @@ const Community = () => {
                 className="w-full py-3 bg-gray-50 dark:bg-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
               >
                 <span className="material-symbols-outlined text-lg">image</span>{" "}
-                Imatge
+                {t("createList.map", "Imatge")}
               </button>
             </div>
             <input
@@ -818,7 +876,7 @@ const Community = () => {
               onClick={handleCreatePost}
               className="w-full mt-6 bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/20 active:scale-95 transition-transform"
             >
-              Publicar
+              {t("community.publish", "Publicar")}
             </button>
           </div>
         </div>

@@ -25,8 +25,7 @@
     "wind": "Vent",
     "quickAccess": "Accès Rapide",
     "trackConditions": "Guide de la Ville",
-    "openCircuitMap": "Carte Interactive",
-    "communityFeed": "Communauté"
+    "openCircuitMap": "Carte Interactive"
   },
   "community": {
     "yourGroup": "Votre Groupe",
@@ -108,5 +107,41 @@
     "errorName": "Le nom ne peut pas être vide",
     "errorNameLong": "Le nom ne peut pas dépasser 40 caractères",
     "errorBioLong": "La biographie ne peut pas dépasser 100 caractères"
+  },
+  "auth": {
+    "login": "Se connecter",
+    "signup": "S'inscrire",
+    "tagline": "Connectez-vous pour continuer l'exploration",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "name": "Nom complet",
+    "backToHome": "Retour à l'accueil",
+    "backToLogin": "Retour à la connexion",
+    "noAccount": "Vous n'avez pas de compte ?",
+    "hasAccount": "Vous avez déjà un compte ?",
+    "registerFree": "Inscrivez-vous gratuitement",
+    "orContinueWith": "Ou continuez avec",
+    "orRegisterWith": "Ou inscrivez-vous avec",
+    "google": "Google",
+    "createAccount": "Créez votre compte",
+    "communityTag": "Rejoignez la communauté des explorateurs urbains",
+    "checkEmail": "Vérifiez vos e-mails",
+    "checkEmailSub": "Nous vous avons envoyé un code à 6 chiffres pour activer votre compte",
+    "verifyCode": "Vérifier le code",
+    "accountActivated": "Compte activé !",
+    "readyToExplore": "Vous pouvez maintenant vous connecter et commencer à explorer la ville.",
+    "goToLogin": "Aller à la connexion",
+    "invalidCode": "Code invalide.",
+    "errorAuth": "Erreur d'authentification.",
+    "errorConnect": "Erreur de connexion au serveur.",
+    "errorRegister": "Erreur lors de l'inscription.",
+    "passwordsNoMatch": "Les mots de passe ne correspondent pas.",
+    "passwordTooShort": "Le mot de passe doit comporter au moins 6 caractères.",
+    "verifyEmail": "Vous devez vérifier votre e-mail avant d'entrer.",
+    "credentialsIncorrect": "Identifiants incorrects.",
+    "newPassword": "Nouveau mot de passe",
+    "completeRegistration": "Terminer l'inscription",
+    "hello": "Bonjour"
   }
 }

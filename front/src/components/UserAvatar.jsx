@@ -9,7 +9,7 @@ const UserAvatar = ({
   className = "w-12 h-12", 
   alt = "", 
   size = 128,
-  borderColor = "border-slate-100 dark:border-slate-800"
+  borderColor = "border-slate-100 dark:border-primary/20"
 }) => {
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
   

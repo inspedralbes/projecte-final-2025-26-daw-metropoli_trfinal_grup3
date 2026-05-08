@@ -1,12 +1,14 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useGoogleLogin } from "@react-oauth/google";
+import { useTranslation } from "react-i18next";
 
 const API_BASE = import.meta.env.VITE_API_URL
   ? `${import.meta.env.VITE_API_URL}/api`
   : "http://localhost:3000/api";
 
 const Login = () => {
+  const { t } = useTranslation();
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -28,7 +30,7 @@ const Login = () => {
         const data = await res.json();
 
         if (!res.ok) {
-          setError(data.message || "Error al iniciar sessió amb Google.");
+          setError(data.message || t("auth.errorAuth", "Error al iniciar sessió amb Google."));
           return;
         }
 
@@ -36,13 +38,13 @@ const Login = () => {
         localStorage.setItem("usuario", JSON.stringify(data.data.usuario));
         navigate("/home");
       } catch (err) {
-        setError("No es va poder connectar amb el servidor.");
+        setError(t("auth.errorConnect", "No es va poder connectar amb el servidor."));
       } finally {
         setLoading(false);
       }
     },
     onError: () => {
-      setError("L'inici de sessió amb Google ha fallat.");
+      setError(t("auth.errorAuth", "L'inici de sessió amb Google ha fallat."));
     },
   });
 
@@ -63,9 +65,9 @@ const Login = () => {
 
       if (!res.ok) {
         if (data.error_code === "EMAIL_NOT_VERIFIED") {
-          setError("Has de verificar el teu correu abans d'entrar.");
+          setError(t("auth.verifyEmail", "Has de verificar el teu correu abans d'entrar."));
         } else {
-          setError(data.message || "Credencials incorrectes.");
+          setError(data.message || t("auth.credentialsIncorrect", "Credencials incorrectes."));
         }
         return;
       }
@@ -74,7 +76,7 @@ const Login = () => {
       localStorage.setItem("usuario", JSON.stringify(data.data.usuario));
       navigate("/home");
     } catch {
-      setError("Error de connexió amb el servidor.");
+      setError(t("auth.errorConnect", "Error de connexió amb el servidor."));
     } finally {
       setLoading(false);
     }
@@ -95,16 +97,16 @@ const Login = () => {
         className="absolute top-8 left-8 z-50 flex items-center gap-2 text-sm font-medium opacity-40 hover:opacity-100 transition-opacity"
       >
         <span className="material-symbols-outlined text-lg">west</span>
-        Tornar a l'inici
+        {t("auth.backToHome", "Tornar a l'inici")}
       </Link>
 
       <div className="w-full max-w-[400px] z-10 space-y-10">
         {/* Header */}
         <div className="flex flex-col items-center text-center space-y-4">
-          <i className="fa-solid fa-location-dot text-5xl opacity-20" style={{ color: 'rgb(254, 254, 254)' }}></i>
+          <i className="fa-solid fa-location-dot text-5xl opacity-20" style={{ color: 'var(--theme-color, #ffffff)' }}></i>
           <div className="space-y-1">
-            <h1 className="text-4xl font-medium tracking-tighter">wemap</h1>
-            <p className="text-gray-400 font-medium tracking-tight">Entra per continuar explorant</p>
+            <h1 className="text-4xl font-medium tracking-tighter text-black dark:text-primary">wemap</h1>
+            <p className="text-gray-400 font-medium tracking-tight">{t("auth.tagline", "Entra per continuar explorant")}</p>
           </div>
         </div>
 
@@ -123,8 +125,8 @@ const Login = () => {
                 id="email"
                 name="email"
                 type="email"
-                placeholder="Correu electrònic"
-                className="w-full bg-white dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-white/20 rounded-2xl py-4 px-6 text-sm font-medium placeholder-gray-400 outline-none transition-all"
+                placeholder={t("auth.email", "Correu electrònic")}
+                className="w-full bg-white dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-primary/20 rounded-2xl py-4 px-6 text-sm font-medium placeholder-gray-400 outline-none transition-all"
                 required
               />
             </div>
@@ -134,14 +136,14 @@ const Login = () => {
                 id="password"
                 name="password"
                 type={showPassword ? "text" : "password"}
-                placeholder="Contrasenya"
-                className="w-full bg-white dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-white/20 rounded-2xl py-4 px-6 text-sm font-medium placeholder-gray-400 outline-none transition-all"
+                placeholder={t("auth.password", "Contrasenya")}
+                className="w-full bg-white dark:bg-white/5 border border-transparent focus:border-black/10 dark:focus:border-primary/20 rounded-2xl py-4 px-6 text-sm font-medium placeholder-gray-400 outline-none transition-all"
                 required
               />
               <button
                 type="button"
                 onClick={() => setShowPassword(!showPassword)}
-                className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black dark:hover:text-white transition-colors"
+                className="absolute right-5 top-1/2 -translate-y-1/2 text-gray-400 hover:text-black dark:hover:text-primary transition-colors"
               >
                 <span className="material-symbols-outlined text-xl">
                   {showPassword ? "visibility_off" : "visibility"}
@@ -152,12 +154,12 @@ const Login = () => {
             <button
               type="submit"
               disabled={loading}
-              className="w-full bg-black text-white dark:bg-white dark:text-black font-medium tracking-tight py-4 rounded-2xl shadow-xl active:scale-[0.98] transition-all disabled:opacity-50 mt-4 flex items-center justify-center gap-2"
+              className="w-full bg-black text-white dark:bg-primary dark:text-primary-text font-medium tracking-tight py-4 rounded-2xl shadow-xl active:scale-[0.98] transition-all disabled:opacity-50 mt-4 flex items-center justify-center gap-2"
             >
               {loading ? (
                 <span className="material-symbols-outlined animate-spin">progress_activity</span>
               ) : (
-                "Iniciar sessió"
+                t("auth.login", "Iniciar sessió")
               )}
             </button>
           </form>
@@ -166,7 +168,7 @@ const Login = () => {
             <div className="absolute inset-0 flex items-center">
               <div className="w-full border-t border-black/5 dark:border-white/10"></div>
             </div>
-            <span className="relative px-4 bg-transparent text-[10px] font-bold uppercase tracking-widest text-gray-400">O continua amb</span>
+            <span className="relative px-4 bg-transparent text-[10px] font-bold uppercase tracking-widest text-gray-400">{t("auth.orContinueWith", "O continua amb")}</span>
           </div>
 
           <button
@@ -179,15 +181,15 @@ const Login = () => {
               <path fill="#FBBC05" d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l3.66-2.84z" />
               <path fill="#EA4335" d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" />
             </svg>
-            Google
+            {t("auth.google", "Google")}
           </button>
         </div>
 
         {/* Footer Link */}
         <p className="text-center text-sm font-medium text-gray-400">
-          No tens compte?{" "}
-          <Link to="/signup" className="text-black dark:text-white font-bold hover:underline underline-offset-4 ml-1 transition-all">
-            Registra't gratis
+          {t("auth.noAccount", "No tens compte?")}{" "}
+          <Link to="/signup" className="text-black dark:text-primary font-bold hover:underline underline-offset-4 ml-1 transition-all">
+            {t("auth.registerFree", "Registra't gratis")}
           </Link>
         </p>
       </div>
