@@ -192,7 +192,7 @@ const Collections = () => {
 
       {/* Pills (Static for design matching) */}
       <div className="flex gap-3 overflow-x-auto pb-4 mb-4 scrollbar-hide">
-        <button className="flex items-center gap-2 bg-black dark:bg-primary text-white dark:text-primary-text px-4 py-2 rounded-full whitespace-nowrap">
+        <button className="flex items-center gap-2 bg-primary text-primary-text px-4 py-2 rounded-full whitespace-nowrap">
           <img src="https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=100" alt="Gràcia" className="w-6 h-6 rounded-full object-cover" />
           Gràcia
         </button>
@@ -219,7 +219,7 @@ const Collections = () => {
             </div>
             <Link 
               to="/login"
-              className="bg-black dark:bg-primary text-white dark:text-primary-text px-8 py-3 rounded-2xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all"
+              className="bg-primary text-primary-text px-8 py-3 rounded-2xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all"
             >
               {t("auth.login", "Iniciar sessió")}
             </Link>
@@ -268,7 +268,7 @@ const Collections = () => {
                     e.stopPropagation();
                     handleEditClick(route);
                   }}
-                  className="bg-white dark:bg-primary text-black dark:text-primary-text w-12 h-12 rounded-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-xl"
+                  className="bg-primary text-primary-text w-12 h-12 rounded-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-xl"
                   aria-label="Edit route"
                 >
                   <span className="material-symbols-outlined text-[22px]">
@@ -294,7 +294,7 @@ const Collections = () => {
             {!searchQuery && (
               <Link 
                 to="/create-list"
-                className="bg-black dark:bg-primary text-white dark:text-primary-text px-8 py-3 rounded-2xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all"
+                className="bg-primary text-primary-text px-8 py-3 rounded-2xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all"
               >
                 {t("createList.title", "Crear llista")}
               </Link>
