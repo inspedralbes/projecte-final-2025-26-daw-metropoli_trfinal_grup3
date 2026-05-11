@@ -24,11 +24,16 @@ const MapLayers = ({
   onPoiClick = null,
   activePoiIndex = null,
   setActivePoiIndex = null,
+  currentUser = null,
+  t = null,
 }) => {
   const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
   return (
     <Fragment>
+      {/* ... previous content ... */}
+      {/* (I will only replace the user position marker part below) */}
+
       <TileLayer
         key={isSatelliteView ? "satellite" : "standard"}
         url={isSatelliteView
@@ -209,11 +214,21 @@ const MapLayers = ({
       {userPosition && (
         <Marker
           position={userPosition}
+          zIndexOffset={5000}
           icon={L.divIcon({
             className: "user-position-marker",
-            html: `<div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-lg pulse-animation"></div>`,
-            iconSize: [16, 16],
-            iconAnchor: [8, 8]
+            html: currentUser?.foto_perfil 
+              ? `<div class="flex flex-col items-center justify-center" style="width: 100px; margin-left: -50px; margin-top: -20px;">
+                  <div class="w-10 h-10 rounded-full border-2 border-primary shadow-lg overflow-hidden bg-white flex-shrink-0 animate-pulse">
+                    <img src="${API_URL}${currentUser.foto_perfil}" class="w-full h-full object-cover" />
+                  </div>
+                  <div class="mt-1 bg-primary/90 backdrop-blur-sm px-2 py-0.5 rounded-lg text-white text-[9px] font-black uppercase tracking-tight text-center leading-tight shadow-xl border border-white/20 whitespace-nowrap">
+                    ${t?.('map.you', 'Tú') || 'Tú'}
+                  </div>
+                </div>`
+              : `<div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-lg animate-pulse"></div>`,
+            iconSize: currentUser?.foto_perfil ? [0, 0] : [16, 16],
+            iconAnchor: currentUser?.foto_perfil ? [0, 0] : [8, 8]
           })}
         >
           <Popup><span className="text-black font-bold">Estás aquí</span></Popup>

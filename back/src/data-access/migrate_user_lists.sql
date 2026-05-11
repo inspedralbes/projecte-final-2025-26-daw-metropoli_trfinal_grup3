@@ -22,6 +22,7 @@ CREATE TABLE IF NOT EXISTS lista_pois (
 -- Nota: Usamos IF NOT EXISTS o verificamos manualmente si ya existen para evitar errores si se ejecuta varias veces
 ALTER TABLE pois ADD COLUMN IF NOT EXISTS id_usuario INT;
 ALTER TABLE pois ADD COLUMN IF NOT EXISTS visibilidad ENUM('public', 'friends', 'private') DEFAULT 'public';
+ALTER TABLE pois ADD COLUMN IF NOT EXISTS es_fijo BOOLEAN DEFAULT 0;
 
 -- Añadir clave foránea para id_usuario en pois si no existe
 -- (En MySQL 8.0.19+ se puede usar CONSTRAINT IF NOT EXISTS, o simplemente manejar el error)

@@ -13,7 +13,9 @@ CREATE TABLE IF NOT EXISTS listas (
     id_usuario INT NOT NULL,
     nombre VARCHAR(255) NOT NULL,
     descripcion TEXT,
+    imagen_url VARCHAR(255),
     visibilidad ENUM('public', 'friends', 'private') DEFAULT 'private',
+    likes INTEGER DEFAULT 0,
     fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE
 );

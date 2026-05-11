@@ -22,7 +22,11 @@ const createLista = async (req, res) => {
         res.status(201).json({ success: true, data: newLista });
     } catch (error) {
         console.error('Error in createLista:', error);
-        res.status(500).json({ success: false, message: 'Error al crear la lista' });
+        res.status(500).json({ 
+            success: false, 
+            message: 'Error al crear la lista',
+            error: error.message 
+        });
     }
 };
 

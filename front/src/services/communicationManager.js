@@ -584,7 +584,10 @@ export const createLista = async (listaData) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(listaData),
     });
-    if (!response.ok) throw new Error("Failed to create Lista");
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || errorData.message || "Failed to create Lista");
+    }
     return await response.json();
   } catch (error) {
     console.error("Error in createLista:", error);

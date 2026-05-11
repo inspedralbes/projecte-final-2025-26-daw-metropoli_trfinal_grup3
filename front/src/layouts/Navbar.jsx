@@ -44,7 +44,7 @@ const Navbar = () => {
   return (
     <>
       <nav
-        className="md:hidden fixed bottom-0 left-0 right-0 z-[100] bg-white/90 dark:bg-black/90 border-t border-gray-100 dark:border-none backdrop-blur-lg flex items-center justify-around px-2 pb-safe transition-colors duration-300"
+        className="md:hidden fixed bottom-0 left-0 right-0 z-[2000] bg-white/90 dark:bg-black/90 border-t border-gray-100 dark:border-none backdrop-blur-lg flex items-center justify-around px-2 pb-safe transition-colors duration-300"
         style={{ height: "76px" }}
       >
         {navItems.map((item) => {

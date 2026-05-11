@@ -85,6 +85,7 @@ const Map = () => {
   const [userToPoiRoute, setUserToPoiRoute] = useState(null); // Ruta desde usuario a POI
   const [currentZoom, setCurrentZoom] = useState(17);
   const [toast, setToast] = useState(null);
+  const [currentUser, setCurrentUser] = useState(null);
 
   // eslint-disable-next-line no-unused-vars
   const [imageBounds, setImageBounds] = useState([
@@ -106,6 +107,11 @@ const Map = () => {
   const location = useLocation();
 
   useEffect(() => {
+    const userStr = localStorage.getItem("usuario");
+    if (userStr) {
+      setCurrentUser(JSON.parse(userStr));
+    }
+
     const fetchPois = async () => {
       try {
         // 1. Obtenemos las categorias de la base de datos
@@ -772,6 +778,8 @@ const Map = () => {
             handleGetRouteToPoi={handleGetRouteToPoi}
             userToPoiRoute={userToPoiRoute}
             onPoiClick={(marker) => navigate(`/poi/${marker.id}`)}
+            currentUser={currentUser}
+            t={t}
           />
 
           {/* Location Focus Circle */}
@@ -928,7 +936,7 @@ const Map = () => {
               animate={{ y: 0 }}
               exit={{ y: "100%" }}
               transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
-              className="md:hidden fixed bottom-[76px] left-0 right-0 z-[1001] pointer-events-auto"
+              className="md:hidden fixed bottom-[76px] left-0 right-0 z-[1900] pointer-events-auto"
             >
               <div className="w-full flex flex-col bg-white/95 dark:bg-[#0a0a0a]/95 rounded-t-[2rem] shadow-[0_-20px_60px_rgba(0,0,0,0.3)] backdrop-blur-lg border-t border-white/10 font-display">
                 {/* Drag Handle & Header */}
@@ -1149,7 +1157,7 @@ const Map = () => {
         </Link>
       </div>
 
-      <div className="fixed inset-x-0 bottom-[76px] z-[1001] pointer-events-auto md:hidden">
+      <div className="fixed inset-x-0 bottom-[76px] z-[1900] pointer-events-auto md:hidden">
         {/* Floating Pill Buttons Centered Above Drawer */}
         {!focusedListId && !isSheetExpanded && (
           <div className="flex justify-center gap-2 px-5 mb-4 translate-y-2">
