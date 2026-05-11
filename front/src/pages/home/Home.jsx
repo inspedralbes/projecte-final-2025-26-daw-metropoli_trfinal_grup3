@@ -188,26 +188,34 @@ const Home = () => {
               </div>
 
               {/* Large Featured Card (Carousel/Single for now) */}
-              <div className="relative w-full aspect-[4/5] md:aspect-[16/9] rounded-[3.5rem] overflow-hidden shadow-2xl group">
+              <div className="relative w-full aspect-[4/5] md:aspect-[16/9] rounded-[3.5rem] overflow-hidden shadow-2xl">
           {nearbyPlaces.length > 0 ? (
             <>
-              <img 
-                key={nearbyPlaces[currentPlaceIndex].id_lista}
-                src={nearbyPlaces[currentPlaceIndex].imagen_url || "https://images.unsplash.com/photo-1583997052301-0042b33fc598?w=800&q=80"} 
-                alt={nearbyPlaces[currentPlaceIndex].nombre} 
-                className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 animate-in fade-in zoom-in duration-500"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-              
-              {/* Card Content */}
-              <div className="absolute inset-0 p-10 flex flex-col justify-between pointer-events-none">
-                <div className="space-y-1">
-                  <p className="text-white/70 text-lg uppercase tracking-widest font-light">Barcelona</p>
-                  <h3 className="text-white text-6xl font-medium tracking-tighter leading-none -ml-1">
-                    {nearbyPlaces[currentPlaceIndex].nombre}
-                  </h3>
+              <Link 
+                to={`/map?route=${nearbyPlaces[currentPlaceIndex].id_lista}`}
+                className="absolute inset-0 block group cursor-pointer"
+              >
+                <img 
+                  key={nearbyPlaces[currentPlaceIndex].id_lista}
+                  src={nearbyPlaces[currentPlaceIndex].imagen_url || "https://images.unsplash.com/photo-1583997052301-0042b33fc598?w=800&q=80"} 
+                  alt={nearbyPlaces[currentPlaceIndex].nombre} 
+                  className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 animate-in fade-in zoom-in duration-500"
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent transition-opacity group-hover:opacity-90"></div>
+                
+                {/* Card Content */}
+                <div className="absolute inset-0 p-10 flex flex-col justify-between">
+                  <div className="space-y-1">
+                    <p className="text-white/70 text-lg uppercase tracking-widest font-light">Barcelona</p>
+                    <h3 className="text-white text-6xl font-medium tracking-tighter leading-none -ml-1">
+                      {nearbyPlaces[currentPlaceIndex].nombre}
+                    </h3>
+                  </div>
                 </div>
+              </Link>
 
+              {/* Controls (Separate from Link to allow button clicks) */}
+              <div className="absolute inset-0 p-10 flex flex-col justify-end pointer-events-none">
                 <div className="flex justify-end items-end w-full">
                   <div className="flex gap-2 pointer-events-auto translate-x-1">
                     <button 

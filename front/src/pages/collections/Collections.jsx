@@ -49,6 +49,7 @@ const Collections = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
   const [user, setUser] = useState(null);
+  const [visibilityFilter, setVisibilityFilter] = useState("all"); // "all", "public", "private"
 
   // Edit Modal State
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
@@ -90,10 +91,19 @@ const Collections = () => {
     }
   };
 
-  const filteredRoutes = listas.filter(route =>
-    route.nombre.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (route.descripcion && route.descripcion.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredRoutes = listas.filter(route => {
+    const matchesSearch = route.nombre.toLowerCase().includes(searchQuery.toLowerCase()) || 
+                          (route.descripcion && route.descripcion.toLowerCase().includes(searchQuery.toLowerCase()));
+    
+    if (visibilityFilter === "all") return matchesSearch;
+    
+    // visibilidad: 0 = private, 1 = public (en la DB) o string "private"/"public"
+    const isPublic = route.visibilidad === 1 || route.visibilidad === "public";
+    if (visibilityFilter === "public") return matchesSearch && isPublic;
+    if (visibilityFilter === "private") return matchesSearch && !isPublic;
+    
+    return matchesSearch;
+  });
 
   const handleEditClick = (route) => {
     setSelectedRoute(route);
@@ -190,17 +200,29 @@ const Collections = () => {
         />
       </div>
 
-      {/* Pills (Static for design matching) */}
-      <div className="flex gap-3 overflow-x-auto pb-4 mb-4 scrollbar-hide">
-        <button className="flex items-center gap-2 bg-black dark:bg-primary text-white dark:text-primary-text px-4 py-2 rounded-full whitespace-nowrap">
-          <img src="https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=100" alt="Gràcia" className="w-6 h-6 rounded-full object-cover" />
-          Gràcia
+      {/* Visibility Filters (Pills) */}
+      <div className="flex gap-3 pb-6 mb-2">
+        <button 
+          onClick={() => setVisibilityFilter(visibilityFilter === "public" ? "all" : "public")}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-full whitespace-nowrap transition-all border font-bold text-sm ${
+            visibilityFilter === "public" 
+            ? 'bg-black dark:bg-primary text-white dark:text-primary-text border-black dark:border-primary shadow-lg scale-105' 
+            : 'bg-white dark:bg-slate-900 text-black dark:text-white border-gray-200 dark:border-white/10 hover:border-black dark:hover:border-white/40'
+          }`}
+        >
+          <span className="material-symbols-outlined text-lg">public</span>
+          {t("collections.visibilityPublic", "Públicas")}
         </button>
-        <button className="bg-gray-100 dark:bg-gray-800 text-black dark:text-white px-6 py-2 rounded-full whitespace-nowrap border border-gray-200 dark:border-gray-700">
-          Gòtic
-        </button>
-        <button className="bg-gray-100 dark:bg-gray-800 text-black dark:text-white px-6 py-2 rounded-full whitespace-nowrap border border-gray-200 dark:border-gray-700">
-          Poblenou
+        <button 
+          onClick={() => setVisibilityFilter(visibilityFilter === "private" ? "all" : "private")}
+          className={`flex items-center gap-2 px-6 py-2.5 rounded-full whitespace-nowrap transition-all border font-bold text-sm ${
+            visibilityFilter === "private" 
+            ? 'bg-black dark:bg-primary text-white dark:text-primary-text border-black dark:border-primary shadow-lg scale-105' 
+            : 'bg-white dark:bg-slate-900 text-black dark:text-white border-gray-200 dark:border-white/10 hover:border-black dark:hover:border-white/40'
+          }`}
+        >
+          <span className="material-symbols-outlined text-lg">lock</span>
+          {t("collections.visibilityPrivate", "Privadas")}
         </button>
       </div>
 

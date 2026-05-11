@@ -228,20 +228,25 @@ const Map = () => {
     };
   }, []);
 
-  // Handle POI focusing from URL search params
+  // Handle POI and Route focusing from URL search params
   useEffect(() => {
     const queryParams = new URLSearchParams(location.search);
     const poiId = queryParams.get('poi');
+    const routeId = queryParams.get('route');
     
     if (poiId && markers.length > 0) {
       const poi = markers.find(m => m.id === parseInt(poiId));
       if (poi && mapRef.current) {
         setTimeout(() => {
           mapRef.current.flyTo(poi.position, 18, { animate: true, duration: 1.5 });
-          // Optionally show details
           setSelectedFeature(poi);
         }, 600);
       }
+    }
+
+    if (routeId) {
+      setFocusedListId(parseInt(routeId));
+      setIsSheetExpanded(false); // Collapse explorer when a route is focused
     }
   }, [location.search, markers]);
 
