@@ -54,8 +54,11 @@ const Header = () => {
   // Don't render if no matching route
   if (!title) return null;
 
+  const isMapRoute = pathname === "/" || pathname === "/map";
+  const headerPosition = isMapRoute ? "absolute" : "relative md:absolute";
+
   return (
-    <div className="absolute top-0 left-0 right-0 z-[60] flex items-center justify-between px-5 pt-5 pb-3 pointer-events-none md:pl-24">
+    <div className={`${headerPosition} top-0 left-0 right-0 z-[60] flex items-center justify-between px-5 pt-5 pb-3 pointer-events-none md:pl-24`}>
       {/* Left: Title */}
       <div className="pointer-events-auto">
         {title}

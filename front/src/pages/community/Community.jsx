@@ -596,9 +596,6 @@ const Community = () => {
     <div className="relative min-h-screen w-full bg-[#f0f4f9] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display transition-colors duration-300 pb-32">
       <Header />
 
-      {/* Spacer to avoid overlap with absolute Header */}
-      <div className="pt-5"></div>
-
       <div className="sticky top-0 z-40 px-6 pt-4 pb-4 bg-[#f0f4f9]/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-gray-100 dark:border-white/5">
         <div className="max-w-4xl mx-auto flex flex-col gap-6">
           {/* Search Bar */}
@@ -809,11 +806,11 @@ const Community = () => {
       {/* New Post Modal */}
       {showPostModal && (
         <div
-          className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+          className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
           onClick={() => setShowPostModal(false)}
         >
           <div
-            className="w-full md:max-w-lg bg-white dark:bg-slate-950 rounded-[2.5rem] p-8 animate-in slide-in-from-bottom duration-300"
+            className="w-full md:max-w-lg bg-white dark:bg-slate-950 rounded-[2.5rem] p-8 animate-in zoom-in duration-300"
             onClick={(e) => e.stopPropagation()}
           >
             <div className="flex justify-between items-center mb-6">
@@ -833,15 +830,15 @@ const Community = () => {
                 setNewPost({ ...newPost, texto: e.target.value })
               }
               placeholder={t("editProfile.bioPlaceholder", "Explica algo...")}
-              className="w-full bg-gray-50 dark:bg-white/5 rounded-2xl p-4 text-sm focus:outline-none min-h-[120px] resize-none border border-gray-100 dark:border-white/5"
+              className="w-full bg-gray-50 dark:bg-white/5 rounded-2xl p-4 text-sm focus:outline-none min-h-[280px] resize-none border border-gray-100 dark:border-white/5"
             />
             <div className="mt-4">
               <button
                 onClick={() => fileInputRef.current.click()}
-                className="w-full py-3 bg-gray-50 dark:bg-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
+                className="w-full py-3 bg-gray-100 dark:bg-white/10 text-slate-500 dark:text-slate-400 rounded-xl text-[10px] font-display font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-white/20 transition-all"
               >
                 <span className="material-symbols-outlined text-lg">image</span>{" "}
-                {t("createList.map", "Imatge")}
+                {t("community.photo", "Photo")}
               </button>
             </div>
             <input
@@ -874,7 +871,7 @@ const Community = () => {
             )}
             <button
               onClick={handleCreatePost}
-              className="w-full mt-6 bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/20 active:scale-95 transition-transform"
+              className="w-full mt-6 bg-primary text-white dark:text-black py-4 rounded-2xl font-display font-semibold shadow-xl shadow-primary/20 active:scale-95 transition-transform"
             >
               {t("community.publish", "Publicar")}
             </button>

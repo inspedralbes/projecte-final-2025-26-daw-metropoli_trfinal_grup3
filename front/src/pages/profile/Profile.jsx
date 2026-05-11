@@ -14,6 +14,7 @@ import {
   getSeguidores,
   getSiguiendo,
   getUsuarioListas,
+  deleteLista,
 } from "../../services/communicationManager";
 import UserAvatar from "../../components/UserAvatar";
 
@@ -505,6 +506,42 @@ const Profile = () => {
     }
   }, [displayedUserId, isOwnProfile, currentUser]);
 
+  useEffect(() => {
+    if (!displayedUserId) return;
+    const fetchUserRoutes = async () => {
+      try {
+        setLoadingRoutes(true);
+        const res = await getUsuarioListas(displayedUserId);
+        if (res && res.success) {
+          setUserRoutes(res.data);
+        }
+      } catch (err) {
+        console.error("Error fetching user routes:", err);
+      } finally {
+        setLoadingRoutes(false);
+      }
+    };
+    fetchUserRoutes();
+  }, [displayedUserId]);
+
+  const handleDeleteRoute = async (id_lista) => {
+    if (
+      !window.confirm(
+        t(
+          "profile.confirmDeleteRoute",
+          "¿Estás seguro de que quieres eliminar esta ruta?",
+        ),
+      )
+    )
+      return;
+    try {
+      await deleteLista(id_lista);
+      setUserRoutes((prev) => prev.filter((r) => r.id_lista !== id_lista));
+    } catch (err) {
+      console.error("Error deleting route:", err);
+    }
+  };
+
   const handleFollow = async () => {
     if (!currentUser || followLoading) return;
     setFollowLoading(true);
@@ -670,44 +707,6 @@ const Profile = () => {
                     : t("community.follow", "Seguir")}
                 </button>
               )}
-            </div>
-
-            {/* Stats */}
-            <div className="grid grid-cols-4 gap-2">
-              {[
-                {
-                  key: "posts",
-                  count: userPosts.length,
-                  label: t("profile.posts", "Publicaciones"),
-                },
-                {
-                  key: "posts",
-                  count: userPosts.length,
-                  label: t("profile.lists", "Listas"),
-                },
-                {
-                  key: "followers",
-                  count: followersCount,
-                  label: t("profile.followers", "Seguidores"),
-                },
-                {
-                  key: "following",
-                  count: followingCount,
-                  label: t("profile.following", "Siguiendo"),
-                },
-              ].map(({ key, count, label }) => (
-                <div
-                  key={key}
-                  className="p-2.5 rounded-2xl border border-slate-100 dark:border-slate-800 bg-white dark:bg-[#12080a] shadow-sm flex flex-col items-center justify-center text-center transition-all duration-300"
-                >
-                  <span className="text-base font-bold text-primary">
-                    {count}
-                  </span>
-                  <span className="text-[9px] uppercase font-bold tracking-tight text-slate-400">
-                    {label}
-                  </span>
-                </div>
-              ))}
             </div>
           </div>
 
@@ -935,24 +934,16 @@ const Profile = () => {
 
             {/* ── Tab Rutas ── */}
             {activeTab === "routes" && (
-              <div className="space-y-6 animate-fade-in">
+              <div className="space-y-4 animate-fade-in">
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-lg font-bold text-slate-800 dark:text-white">
                     {isOwnProfile
                       ? t("profile.myRoutes", "Mis Rutas")
-                      : `Rutas de ${displayedUser.nombre}`}
+                      : t("profile.userRoutes", "Rutas del usuario")}
                   </h3>
-                  {isOwnProfile && (
-                    <Link
-                      to="/create-list"
-                      className="flex items-center gap-1.5 text-primary text-sm font-bold hover:underline"
-                    >
-                      <span className="material-symbols-outlined text-base">
-                        add_circle
-                      </span>
-                      Crear Nueva
-                    </Link>
-                  )}
+                  <span className="bg-primary/10 text-primary px-3 py-1 rounded-full text-xs font-bold">
+                    {userRoutes.length}
+                  </span>
                 </div>
 
                 {loadingRoutes ? (
@@ -960,7 +951,9 @@ const Profile = () => {
                     <span className="material-symbols-outlined animate-spin text-3xl mb-2">
                       progress_activity
                     </span>
-                    <p className="text-sm font-medium">Cargando rutas...</p>
+                    <p className="text-sm font-medium">
+                      {t("common.loading", "Cargando...")}
+                    </p>
                   </div>
                 ) : userRoutes.length === 0 ? (
                   <div className="flex flex-col items-center justify-center py-12 text-slate-400 dark:text-slate-500 bg-white dark:bg-[#12080a] rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm text-center px-4">
@@ -969,73 +962,81 @@ const Profile = () => {
                     </span>
                     <p className="font-bold text-slate-700 dark:text-slate-300 mb-1">
                       {isOwnProfile
-                        ? "Aún no has guardado ninguna ruta"
-                        : "Este usuario no tiene rutas públicas"}
-                    </p>
-                    <p className="text-sm max-w-[250px] mx-auto">
-                      {isOwnProfile
-                        ? "Explora el mapa y guarda lugares para que aparezcan aquí."
-                        : "Vuelve más tarde para ver sus descubrimientos."}
+                        ? t(
+                            "profile.noRoutesSelf",
+                            "Aún no has guardado ninguna ruta",
+                          )
+                        : t(
+                            "profile.noRoutesUser",
+                            "Este usuario no tiene rutas públicas",
+                          )}
                     </p>
                     {isOwnProfile && (
-                      <Link
-                        to="/"
-                        className="mt-5 px-5 py-2 bg-primary/10 text-primary font-bold rounded-full hover:bg-primary/20 transition-colors"
-                      >
-                        Ir al Mapa
-                      </Link>
+                      <>
+                        <p className="text-sm max-w-[250px] mx-auto mb-5">
+                          {t(
+                            "profile.noRoutesDesc",
+                            "Explora el mapa y crea itinerarios para que aparezcan aquí.",
+                          )}
+                        </p>
+                        <Link
+                          to="/map"
+                          className="px-6 py-2.5 bg-primary text-primary-text font-bold rounded-full shadow-lg shadow-primary/20 hover:opacity-90 transition-all active:scale-95"
+                        >
+                          {t("profile.goToMap", "Ir al Mapa")}
+                        </Link>
+                      </>
                     )}
                   </div>
                 ) : (
-                  <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 gap-4">
                     {userRoutes.map((route) => (
                       <div
                         key={route.id_lista}
-                        onClick={() =>
-                          navigate("/", { state: { focusedList: route } })
-                        }
-                        className="group relative h-48 rounded-[24px] overflow-hidden cursor-pointer shadow-sm hover:shadow-xl transition-all duration-300 hover:-translate-y-1"
+                        className="bg-white dark:bg-[#12080a] p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex items-center gap-4 group"
                       >
-                        {/* Background Image with Gradient Overlay */}
-                        <img
-                          src={
-                            route.imagen_url
-                              ? `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${route.imagen_url}`
-                              : "https://images.unsplash.com/photo-1498855926480-d98e83099315?w=500&q=80"
-                          }
-                          alt={route.nombre}
-                          className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
-                        />
-                        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent"></div>
-
-                        {/* Route Content */}
-                        <div className="absolute inset-0 p-5 flex flex-col justify-end">
-                          <div className="flex items-center gap-2 mb-1">
-                            <span className="bg-primary/90 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider">
-                              {route.pois ? route.pois.length : 0} POIs
-                            </span>
-                            {route.visibilidad === "friends" && (
-                              <span className="bg-blue-500/90 text-white text-[10px] font-black px-2 py-0.5 rounded-full uppercase tracking-wider flex items-center gap-1">
-                                <span className="material-symbols-outlined text-[10px]">
-                                  group
-                                </span>{" "}
-                                Amigos
-                              </span>
-                            )}
-                          </div>
-                          <h4 className="text-white font-bold text-lg leading-tight group-hover:text-primary transition-colors">
+                        <div className="w-16 h-16 bg-primary/5 rounded-xl flex items-center justify-center shrink-0 border border-primary/10">
+                          <span className="material-symbols-outlined text-3xl text-primary">
+                            route
+                          </span>
+                        </div>
+                        <div className="flex-1 min-w-0">
+                          <h4 className="font-bold text-slate-800 dark:text-white truncate uppercase italic tracking-tighter">
                             {route.nombre}
                           </h4>
-                          <p className="text-white/60 text-xs line-clamp-1 mt-0.5">
+                          <p className="text-xs text-slate-500 dark:text-slate-400 truncate mb-2">
                             {route.descripcion || "Sin descripción"}
                           </p>
-
-                          {/* Navigation Icon */}
-                          <div className="absolute top-4 right-4 w-8 h-8 bg-white/10 backdrop-blur-md rounded-full flex items-center justify-center border border-white/20 opacity-0 group-hover:opacity-100 transition-all transform translate-y-2 group-hover:translate-y-0">
-                            <span className="material-symbols-outlined text-white text-sm">
-                              navigation
+                          <div className="flex items-center gap-3">
+                            <span className="flex items-center gap-1 text-[10px] font-bold text-slate-400">
+                              <span className="material-symbols-outlined text-xs">
+                                location_on
+                              </span>
+                              {route.pois?.length || 0} punts
                             </span>
                           </div>
+                        </div>
+                        <div className="flex flex-col gap-2">
+                          <Link
+                            to={`/map?route=${route.id_lista}`}
+                            className="w-10 h-10 flex items-center justify-center bg-slate-50 dark:bg-slate-800 rounded-full text-slate-600 dark:text-slate-300 hover:bg-primary hover:text-primary-text transition-all active:scale-90"
+                            title={t("profile.viewOnMap", "Ver en mapa")}
+                          >
+                            <span className="material-symbols-outlined text-xl">
+                              map
+                            </span>
+                          </Link>
+                          {isOwnProfile && (
+                            <button
+                              onClick={() => handleDeleteRoute(route.id_lista)}
+                              className="w-10 h-10 flex items-center justify-center bg-slate-50 dark:bg-slate-800 rounded-full text-slate-400 hover:bg-red-500 hover:text-white transition-all active:scale-90"
+                              title={t("common.delete", "Eliminar")}
+                            >
+                              <span className="material-symbols-outlined text-xl">
+                                delete
+                              </span>
+                            </button>
+                          )}
                         </div>
                       </div>
                     ))}
