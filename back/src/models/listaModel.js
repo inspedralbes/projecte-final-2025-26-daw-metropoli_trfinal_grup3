@@ -4,7 +4,7 @@ const create = async (lista) => {
     const { id_usuario, nombre, descripcion, visibilidad, imagen_url } = lista;
     const [result] = await query(
         'INSERT INTO listas (id_usuario, nombre, descripcion, visibilidad, imagen_url) VALUES (?, ?, ?, ?, ?)',
-        [id_usuario, nombre, descripcion, visibilidad, imagen_url]
+        [id_usuario, nombre, descripcion || null, visibilidad || 'private', imagen_url || null]
     );
     return { id_lista: result.insertId, ...lista };
 };

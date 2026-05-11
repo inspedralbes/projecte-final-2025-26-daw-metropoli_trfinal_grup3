@@ -53,9 +53,11 @@ CREATE TABLE IF NOT EXISTS pois (
     longitud DECIMAL(11, 8) NOT NULL,
     id_categoria INTEGER NOT NULL,
     es_accesible BOOLEAN DEFAULT 0,
+    es_fijo BOOLEAN DEFAULT 0,
     imagen_url VARCHAR(255),
     id_nodo_acceso INTEGER,
     id_usuario INTEGER NULL,
+    visibilidad ENUM('public', 'friends', 'private') DEFAULT 'public',
     FOREIGN KEY (id_nodo_acceso) REFERENCES nodos_navegacion(id_nodo) ON DELETE SET NULL,
     FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria) ON DELETE CASCADE,
     FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE

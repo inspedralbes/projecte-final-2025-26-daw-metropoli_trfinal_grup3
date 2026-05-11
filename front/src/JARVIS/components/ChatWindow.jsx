@@ -137,11 +137,11 @@ const ChatWindow = ({ isOpen, onClose, messages, sendMessage, isLoading, clearCh
                 <div
                   className={`max-w-[85%] px-4 py-3 rounded-2xl text-[15px] leading-relaxed shadow-sm ${
                     msg.role === "user"
-                      ? "bg-gradient-to-br from-primary to-primary-dark text-primary-text rounded-br-[4px]"
-                      : "bg-white dark:bg-gray-800 text-gray-800 dark:text-white rounded-bl-[4px] border border-gray-100 dark:border-gray-700"
+                      ? "bg-primary dark:bg-slate-100 text-white dark:text-black rounded-br-[4px]"
+                      : "bg-white dark:bg-slate-800 text-gray-800 dark:text-slate-100 rounded-bl-[4px] border border-gray-100 dark:border-white/10"
                   } custom-chat-message`}
                 >
-                  <div className={`prose prose-sm max-w-none font-display ${msg.role === "user" ? "text-white" : "dark:text-white"}`}>
+                  <div className={`prose prose-sm max-w-none font-display ${msg.role === "user" ? "text-white dark:text-black" : "text-gray-800 dark:text-slate-100"}`}>
                     <ReactMarkdown>{msg.content}</ReactMarkdown>
                   </div>
                 </div>
@@ -173,7 +173,7 @@ const ChatWindow = ({ isOpen, onClose, messages, sendMessage, isLoading, clearCh
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
                 placeholder="Pregunta sobre wemap..."
-                className="w-full bg-white dark:bg-slate-900 border border-gray-300 dark:border-white/10 text-[#1a1a1a] dark:text-white rounded-full py-3.5 pl-5 pr-14 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm placeholder:text-gray-400 font-display"
+                className="w-full bg-white dark:bg-gray-100 border border-gray-300 dark:border-white/20 text-gray-900 rounded-full py-3.5 pl-5 pr-14 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm placeholder:text-gray-400 font-display"
               />
               <button
                 type="submit"
