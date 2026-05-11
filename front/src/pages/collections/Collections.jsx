@@ -174,7 +174,7 @@ const Collections = () => {
   return (
     <div className="relative min-h-screen bg-[#f0f4f9] dark:bg-slate-950 text-[#1a1a1a] dark:text-white font-display md:pl-20 pb-24 transition-colors duration-300">
       <Header />
-      <div className="safe-container pt-5">
+      <div className="safe-container">
 
       {/* Search Bar */}
       <div className="relative mb-6 md:ml-48 md:mr-40">

@@ -297,9 +297,6 @@ const Community = () => {
       
       <Header />
 
-      {/* Spacer to avoid overlap with absolute Header */}
-      <div className="pt-5"></div>
-
       <div className="sticky top-0 z-40 px-6 pt-4 pb-4 bg-[#f0f4f9]/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-gray-100 dark:border-white/5">
         <div className="max-w-4xl mx-auto flex flex-col gap-6 md:ml-48 md:mr-40">
           
@@ -417,8 +414,8 @@ const Community = () => {
 
       {/* New Post Modal */}
       {showPostModal && (
-        <div className="fixed inset-0 z-[100] flex items-end md:items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowPostModal(false)}>
-          <div className="w-full md:max-w-lg bg-white dark:bg-slate-950 rounded-[2.5rem] p-8 animate-in slide-in-from-bottom duration-300" onClick={e => e.stopPropagation()}>
+        <div className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4" onClick={() => setShowPostModal(false)}>
+          <div className="w-full md:max-w-lg bg-white dark:bg-slate-950 rounded-[2.5rem] p-8 animate-in zoom-in duration-300" onClick={e => e.stopPropagation()}>
             <div className="flex justify-between items-center mb-6">
                 <h2 className="text-xl font-bold tracking-tight">{t("community.newPost", "Nova Publicació")}</h2>
                 <button onClick={() => setShowPostModal(false)} className="text-slate-400"><span className="material-symbols-outlined">close</span></button>
@@ -427,14 +424,14 @@ const Community = () => {
                 value={newPost.texto}
                 onChange={e => setNewPost({...newPost, texto: e.target.value})}
                 placeholder={t("editProfile.bioPlaceholder", "Explica algo...")} 
-                className="w-full bg-gray-50 dark:bg-white/5 rounded-2xl p-4 text-sm focus:outline-none min-h-[120px] resize-none border border-gray-100 dark:border-white/5"
+                className="w-full bg-gray-50 dark:bg-white/5 rounded-2xl p-4 text-sm focus:outline-none min-h-[280px] resize-none border border-gray-100 dark:border-white/5"
             />
             <div className="mt-4">
                 <button 
                     onClick={() => fileInputRef.current.click()}
-                    className="w-full py-3 bg-gray-50 dark:bg-white/5 rounded-xl text-[10px] font-black uppercase tracking-widest flex items-center justify-center gap-2"
+                    className="w-full py-3 bg-gray-100 dark:bg-white/10 text-slate-500 dark:text-slate-400 rounded-xl text-[10px] font-display font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-white/20 transition-all"
                 >
-                    <span className="material-symbols-outlined text-lg">image</span> {t("createList.map", "Imatge")}
+                    <span className="material-symbols-outlined text-lg">image</span> {t("community.photo", "Photo")}
                 </button>
             </div>
             <input ref={fileInputRef} type="file" className="hidden" onChange={e => {
@@ -447,7 +444,7 @@ const Community = () => {
                     <button onClick={() => {setSelectedFile(null); setPreviewUrl("");}} className="absolute top-2 right-2 bg-black/50 text-white w-6 h-6 rounded-full flex items-center justify-center"><span className="material-symbols-outlined text-sm">close</span></button>
                 </div>
             )}
-            <button onClick={handleCreatePost} className="w-full mt-6 bg-primary text-white py-4 rounded-2xl font-black uppercase tracking-[0.2em] shadow-xl shadow-primary/20 active:scale-95 transition-transform">{t("community.publish", "Publicar")}</button>
+            <button onClick={handleCreatePost} className="w-full mt-6 bg-primary text-white dark:text-black py-4 rounded-2xl font-display font-semibold shadow-xl shadow-primary/20 active:scale-95 transition-transform">{t("community.publish", "Publicar")}</button>
           </div>
         </div>
       )}
