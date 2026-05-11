@@ -243,7 +243,7 @@ const Collections = () => {
               {/* Background Image (Using placeholder or real image if exists) */}
               <img 
                 src={route.imagen_url 
-                  ? (route.imagen_url.startsWith('http') ? route.imagen_url : `http://localhost:3000${route.imagen_url}`) 
+                  ? (route.imagen_url.startsWith('http') ? route.imagen_url : `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${route.imagen_url}`) 
                   : (route.image || `https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?w=800&q=80`)} 
                 alt={route.nombre} 
                 className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
@@ -361,7 +361,7 @@ const Collections = () => {
                     {editForm.imagen_url ? (
                       <div className="relative rounded-2xl overflow-hidden h-40 border border-white/10 group">
                         <img 
-                          src={editForm.imagen_url.startsWith('http') ? editForm.imagen_url : `http://localhost:3000${editForm.imagen_url}`} 
+                          src={editForm.imagen_url.startsWith('http') ? editForm.imagen_url : `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${editForm.imagen_url}`} 
                           alt="Preview" 
                           className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
                         />

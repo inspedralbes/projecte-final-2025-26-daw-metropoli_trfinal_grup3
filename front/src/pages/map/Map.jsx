@@ -567,6 +567,8 @@ const Map = () => {
 
   useEffect(() => {}, []);
 
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+
   // Mini Components for the Drawer
   const MiniRouteCard = ({ route, onFocus }) => (
     <div
@@ -578,7 +580,7 @@ const Map = () => {
           route.imagen_url
             ? route.imagen_url.startsWith("http")
               ? route.imagen_url
-              : `http://localhost:3000${route.imagen_url}`
+              : `${API_URL}${route.imagen_url}`
             : "https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?w=400&q=80"
         }
         alt={route.nombre}
@@ -609,7 +611,7 @@ const Map = () => {
           col.imagen_url
             ? col.imagen_url.startsWith("http")
               ? col.imagen_url
-              : `http://localhost:3000${col.imagen_url}`
+              : `${API_URL}${col.imagen_url}`
             : "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=400&q=80"
         }
         className="absolute inset-0 w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0 transition-all"
@@ -667,7 +669,7 @@ const Map = () => {
                         route.imagen_url
                           ? route.imagen_url.startsWith("http")
                             ? route.imagen_url
-                            : `http://localhost:3000${route.imagen_url}`
+                            : `${API_URL}${route.imagen_url}`
                           : "https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?w=400&q=80"
                       }
                       className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-110"
@@ -703,7 +705,7 @@ const Map = () => {
                       col.imagen_url
                         ? col.imagen_url.startsWith("http")
                           ? col.imagen_url
-                          : `http://localhost:3000${col.imagen_url}`
+                          : `${API_URL}${col.imagen_url}`
                         : "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=400&q=80"
                     }
                     className="absolute inset-0 w-full h-full object-cover grayscale-[0.2] group-hover:grayscale-0"
