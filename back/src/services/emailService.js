@@ -28,26 +28,26 @@ export const sendVerificationEmail = async (toEmail, token) => {
     const verifyLink  = `${frontendUrl}/verify-email?token=${token}`;
 
     await transporter.sendMail({
-        from: `"Circuit Metropoli" <${process.env.EMAIL_USER}>`,
+        from: `"WeMap" <${process.env.EMAIL_USER}>`,
         to: toEmail,
-        subject: '🔐 Tu código de verificación — Circuit Metropoli',
+        subject: '🔐 Tu código de verificación — WeMap',
         html: `
-            <div style="font-family:sans-serif;max-width:520px;margin:auto;background:#121011;color:#e2e8f0;padding:32px;border-radius:16px;border:1px solid rgba(238,43,75,0.2)">
-                <h1 style="color:#ee2b4b;margin:0 0 8px">Circuit Metropoli</h1>
-                <p style="margin:0 0 24px;color:#94a3b8">Utiliza el siguiente código para activar tu cuenta:</p>
+            <div style="font-family:sans-serif;max-width:520px;margin:auto;background:#ffffff;color:#000000;padding:40px;border-radius:16px;border:1px solid #e2e8f0;box-shadow:0 4px 6px -1px rgba(0,0,0,0.1)">
+                <h1 style="color:#000000;margin:0 0 8px;font-size:28px;font-weight:800;letter-spacing:-0.5px">WeMap</h1>
+                <p style="margin:0 0 24px;color:#4b5563;font-size:16px">Utiliza el siguiente código para activar tu cuenta:</p>
                 
-                <div style="background:rgba(238,43,75,0.1); border:1px solid rgba(238,43,75,0.3); padding:20px; border-radius:12px; text-align:center; margin-bottom:24px">
-                    <span style="font-size:32px; font-weight:bold; letter-spacing:8px; color:#ee2b4b">${token}</span>
+                <div style="background:#f8fafc; border:2px solid #000000; padding:24px; border-radius:12px; text-align:center; margin-bottom:24px">
+                    <span style="font-size:36px; font-weight:800; letter-spacing:10px; color:#000000; font-family:monospace">${token}</span>
                 </div>
 
                 <a href="${verifyLink}"
-                   style="display:inline-block;background:#ee2b4b;color:#fff;text-decoration:none;font-weight:bold;padding:14px 32px;border-radius:10px;letter-spacing:.5px;width:100%;text-align:center;box-sizing:border-box">
+                   style="display:inline-block;background:#000000;color:#ffffff;text-decoration:none;font-weight:bold;padding:16px 32px;border-radius:12px;letter-spacing:1px;width:100%;text-align:center;box-sizing:border-box;font-size:14px;text-transform:uppercase">
                     VERIFICAR MI CORREO
                 </a>
                 
-                <p style="margin:24px 0 0;font-size:13px;color:#64748b;text-align:center">
+                <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;text-align:center;line-height:1.5">
                     Este código caduca en <strong>24 horas</strong>.<br>
-                    Si no creaste una cuenta, ignora este mensaje.
+                    Si no creaste una cuenta, ignora este mensaje de seguridad.
                 </p>
             </div>
         `,
