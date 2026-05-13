@@ -235,6 +235,43 @@ const Settings = () => {
               </div>
             </div>
 
+            {/* WeMap Extension */}
+            <div>
+              <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3">
+                {t("settings.extensionTitle", "Extensión de Navegador")}
+              </h3>
+              <div className="bg-white dark:bg-[#12080a] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm overflow-hidden p-5 flex flex-col items-center text-center transition-all hover:border-primary/30 group">
+                <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-3 text-primary group-hover:scale-110 transition-transform">
+                  <i className="fa-solid fa-puzzle-piece text-3xl"></i>
+                </div>
+                <h4 className="font-bold text-slate-800 dark:text-white mb-1">
+                  {t("settings.chromeExtension", "WeMap Premium Extension")}
+                </h4>
+                <p className="text-xs text-slate-500 dark:text-slate-400 mb-4 px-2">
+                  {t("settings.extensionDesc", "Accede a tus mapas, comunidad y perfil instantáneamente desde cualquier pestaña.")}
+                </p>
+                <a
+                  href="/wemap-extension.zip"
+                  download="wemap-extension.zip"
+                  className="w-full py-3 px-4 bg-primary text-primary-text font-bold rounded-xl flex items-center justify-center gap-2 hover:opacity-90 active:scale-95 transition-all shadow-md shadow-primary/20"
+                >
+                  <i className="fa-solid fa-download text-sm"></i>
+                  {t("settings.downloadExtension", "Instalar Extensión")}
+                </a>
+                <div className="mt-4 p-3 bg-slate-50 dark:bg-white/5 rounded-xl text-left w-full">
+                  <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 flex items-center gap-1">
+                    <i className="fa-solid fa-circle-info"></i> Pasos para instalar:
+                  </p>
+                  <ol className="text-[10px] text-slate-400 space-y-1 list-decimal ml-3">
+                    <li>Descarga y descomprime el archivo ZIP.</li>
+                    <li>Ve a <code className="bg-slate-200 dark:bg-slate-800 px-1 rounded">chrome://extensions</code></li>
+                    <li>Activa el <b>"Modo desarrollador"</b> (arriba a la derecha).</li>
+                    <li>Haz clic en <b>"Cargar descomprimida"</b> y selecciona la carpeta.</li>
+                  </ol>
+                </div>
+              </div>
+            </div>
+
             {/* App Info */}
             <div className="bg-white dark:bg-[#12080a] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5">
               <div className="flex items-center gap-3 mb-4">
@@ -243,7 +280,7 @@ const Settings = () => {
                 </div>
                 <div>
                   <p className="font-bold text-slate-800 dark:text-white text-sm">
-                    {t("settings.footerApp", "Aplicación Metrópoli")}
+                    {t("settings.footerApp", "Aplicación WeMap")}
                   </p>
                   <p className="text-xs text-slate-400">
                     {t("settings.footerVersion", "Versión Estable")}

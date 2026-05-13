@@ -95,8 +95,12 @@
     "privacySecurity": "Privacidad y Seguridad",
     "helpSupport": "Ayuda y Soporte",
     "logout": "Cerrar Sesión",
-    "footerApp": "Aplicación Metrópoli",
-    "footerVersion": "Versión Estable"
+    "footerApp": "Aplicación WeMap",
+    "footerVersion": "Versión Estable",
+    "extensionTitle": "Extensión de Navegador",
+    "chromeExtension": "WeMap Premium Extension",
+    "extensionDesc": "Accede a tus mapas, comunidad y perfil al instante desde cualquier pestaña.",
+    "downloadExtension": "Instalar Extensión"
   },
   "profile": {
     "my": "Mi",

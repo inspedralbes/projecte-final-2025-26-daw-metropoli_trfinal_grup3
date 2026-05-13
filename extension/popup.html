@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>WeMap Extension</title>
+    <link rel="stylesheet" href="popup.css">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Outfit:wght@300;400;600;800&display=swap" rel="stylesheet">
+</head>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <header>
+            <div class="logo-area">
+                <img src="logo.png" alt="Logo" class="logo">
+                <div class="brand-text">
+                    <h1>WEMAP</h1>
+                    <span class="tagline">Mapas con amigos</span>
+                </div>
+            </div>
+            <button id="goToWeb" class="glass-btn" title="Ir a la web">
+                <span class="icon">🚀</span>
+            </button>
+        </header>
+
+        <!-- Live Map Preview -->
+        <section class="map-preview-container" id="openMap">
+            <div class="map-card">
+                <img src="map_preview.png" alt="Map Preview" class="map-img">
+                <div class="map-overlay">
+                    <span class="status-indicator">En vivo</span>
+                    <div class="map-info">
+                        <h3>Explora tu entorno</h3>
+                        <p>Toca para abrir el mapa interactivo</p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Quick Access Grid -->
+        <section class="quick-access">
+            <h2>Accesos Rápidos</h2>
+            <div class="grid">
+                <button class="nav-item" data-route="map">
+                    <div class="nav-icon">🗺️</div>
+                    <span>Mapa</span>
+                </button>
+                <button class="nav-item" data-route="community">
+                    <div class="nav-icon">👥</div>
+                    <span>Comunidad</span>
+                </button>
+                <button class="nav-item" data-route="collections">
+                    <div class="nav-icon">🎒</div>
+                    <span>Colecciones</span>
+                </button>
+                <button class="nav-item" data-route="profile">
+                    <div class="nav-icon">👤</div>
+                    <span>Mi Perfil</span>
+                </button>
+            </div>
+        </section>
+
+        <!-- Footer -->
+        <footer>
+            <div class="connection-status">
+                <span class="dot"></span>
+                <span class="status-text">Conectado a WeMap Cloud</span>
+            </div>
+        </footer>
+    </div>
+    <script src="popup.js"></script>
+</body>
+</html>
+

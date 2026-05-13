@@ -82,8 +82,12 @@
     "paymentMethods": "Payment Methods",
     "helpSupport": "Help & Support",
     "logout": "Log Out",
-    "footerApp": "Metrópoli Application",
-    "footerVersion": "Stable Version"
+    "footerApp": "WeMap Application",
+    "footerVersion": "Stable Version",
+    "extensionTitle": "Browser Extension",
+    "chromeExtension": "WeMap Premium Extension",
+    "extensionDesc": "Access your maps, community, and profile instantly from any tab.",
+    "downloadExtension": "Install Extension"
   },
   "profile": {
     "my": "My",
