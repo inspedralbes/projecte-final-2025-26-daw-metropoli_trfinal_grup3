@@ -24,9 +24,6 @@ const transporter = nodemailer.createTransport({
 
 // ── sendVerificationEmail ─────────────────────────────────────────────────────
 export const sendVerificationEmail = async (toEmail, token) => {
-    const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
-    const verifyLink  = `${frontendUrl}/verify-email?token=${token}`;
-
     await transporter.sendMail({
         from: `"WeMap" <${process.env.EMAIL_USER}>`,
         to: toEmail,
@@ -39,11 +36,6 @@ export const sendVerificationEmail = async (toEmail, token) => {
                 <div style="background:#f8fafc; border:2px solid #000000; padding:24px; border-radius:12px; text-align:center; margin-bottom:24px">
                     <span style="font-size:36px; font-weight:800; letter-spacing:10px; color:#000000; font-family:monospace">${token}</span>
                 </div>
-
-                <a href="${verifyLink}"
-                   style="display:inline-block;background:#000000;color:#ffffff;text-decoration:none;font-weight:bold;padding:16px 32px;border-radius:12px;letter-spacing:1px;width:100%;text-align:center;box-sizing:border-box;font-size:14px;text-transform:uppercase">
-                    VERIFICAR MI CORREO
-                </a>
                 
                 <p style="margin:24px 0 0;font-size:12px;color:#9ca3af;text-align:center;line-height:1.5">
                     Este código caduca en <strong>24 horas</strong>.<br>
