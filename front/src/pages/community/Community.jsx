@@ -458,6 +458,7 @@ const Community = () => {
   const [searchQuery, setSearchQuery] = useState("");
   const [amigos, setAmigos] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState(null);
+  const [toast, setToast] = useState(null);
 
   const [showPostModal, setShowPostModal] = useState(false);
   const [newPost, setNewPost] = useState({
@@ -568,6 +569,27 @@ const Community = () => {
 
   const handleCreatePost = async () => {
     if (!newPost.texto && !selectedFile) return;
+
+    // --- FILTRO DE PALABRAS RESTRINGIDAS ---
+    const restrictedWords = [
+      "mierda", "puta", "puto", "gilipollas", "cabron", "cabrón", "cojones", "joder", "hostia", "follar",
+      "pendejo", "zorra", "maricon", "maricón", "idiota", "estupido", "estúpido", "imbecil", "imbécil",
+      "basura", "asco", "fuck", "shit", "bitch"
+    ];
+
+    const foundWord = restrictedWords.find(word => 
+      newPost.texto.toLowerCase().includes(word.toLowerCase())
+    );
+
+    if (foundWord) {
+      setToast({
+        message: `Opa! El teu missatge conté paraules no permeses (ex: "${foundWord}"). Per favor, mantingues el respecte a la comunitat.`,
+        type: "warning"
+      });
+      return;
+    }
+    // ----------------------------------------
+
     try {
       let fotoUrl = "";
       if (selectedFile) {
@@ -595,6 +617,14 @@ const Community = () => {
   return (
     <div className="relative min-h-screen w-full bg-[#f0f4f9] dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display transition-colors duration-300 pb-32">
       <Header />
+      
+      {toast && (
+        <Toast
+          message={toast.message}
+          type={toast.type}
+          onClose={() => setToast(null)}
+        />
+      )}
 
       <div className="sticky top-0 z-40 px-6 pt-4 pb-4 bg-[#f0f4f9]/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-gray-100 dark:border-white/5">
         <div className="max-w-4xl mx-auto flex flex-col gap-6">
@@ -886,6 +916,19 @@ const Community = () => {
           user={usuarioLogged}
           onClose={() => setSelectedFriend(null)}
         />
+      )}
+
+      {/* Alertas con diseño (Toast) con z-index superior al modal */}
+      {toast && (
+        <div className="fixed inset-0 z-[11000] pointer-events-none flex items-end justify-center pb-24">
+          <div className="pointer-events-auto">
+            <Toast
+              message={toast.message}
+              type={toast.type}
+              onClose={() => setToast(null)}
+            />
+          </div>
+        </div>
       )}
 
       <Navbar />
