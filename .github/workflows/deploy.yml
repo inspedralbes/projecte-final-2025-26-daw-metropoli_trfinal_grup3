@@ -33,7 +33,7 @@ jobs:
         with:
           working-directory: front
           config-file: cypress.api.config.js
-          config: baseUrl=http://${{ secrets.SERVER_HOST }}:8080
+          config: baseUrl=http://${{ secrets.SERVER_HOST }}:3000
           env: API_URL=http://${{ secrets.SERVER_HOST }}:3000
           browser: chrome
         env:
