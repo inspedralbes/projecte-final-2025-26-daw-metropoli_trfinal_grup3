@@ -17,27 +17,22 @@ jobs:
 
       - name: Wait for production server to be ready
         run: |
-          echo "Comprovant que el servidor de producció és accessible..."
-          for i in {1..10}; do
-            if curl -sf "http://${{ secrets.SERVER_HOST }}:3000/api/categorias" > /dev/null 2>&1; then
-              echo "Servidor operatiu!"
-              break
-            fi
-            echo "Intent $i: servidor no disponible, esperant 10s..."
-            sleep 10
-          done
+          echo "Comprovant accessibilitat a http://${{ secrets.SERVER_HOST }}:3000/api/categorias"
+          curl -vI "http://${{ secrets.SERVER_HOST }}:3000/api/categorias" || echo "No se pudo conectar con curl"
 
       - name: Run Cypress API Tests (against current production)
-        # L'action gestiona sola: npm ci + instal·lació del binari de Cypress
         uses: cypress-io/github-action@v6
         with:
           working-directory: front
           config-file: cypress.api.config.js
+          # Sobreescribimos la baseUrl para que apunte al host real de producción
           config: baseUrl=http://${{ secrets.SERVER_HOST }}:3000
           env: API_URL=http://${{ secrets.SERVER_HOST }}:3000
           browser: chrome
+          # Forzamos a Cypress a esperar a que el endpoint de la API responda antes de empezar
+          wait-on: 'http://${{ secrets.SERVER_HOST }}:3000/api/categorias'
+          wait-on-timeout: 60
         env:
-          # Credencials de l'usuari de test ja existent a producció
           CYPRESS_TEST_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
           CYPRESS_TEST_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
 
