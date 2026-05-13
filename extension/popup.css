@@ -68,7 +68,7 @@ header {
 .glass-btn {
     background: var(--glass);
     border: 1px solid var(--glass-border);
-    color: var(--text-white);
+    color: var(--primary);
     width: 40px;
     height: 40px;
     border-radius: 12px;
@@ -78,7 +78,9 @@ header {
     align-items: center;
     justify-content: center;
     backdrop-filter: blur(8px);
+    font-size: 16px;
 }
+
 
 .glass-btn:hover {
     background: var(--surface-light);
@@ -180,7 +182,9 @@ header {
 }
 
 .nav-icon {
-    font-size: 24px;
+    font-size: 20px;
+    color: var(--primary);
+    filter: drop-shadow(0 0 8px var(--primary-glow));
 }
 
 .nav-item span {
@@ -188,6 +192,7 @@ header {
     font-weight: 600;
     color: var(--text-white);
 }
+
 
 /* Footer */
 footer {
