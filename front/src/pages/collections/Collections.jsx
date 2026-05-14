@@ -45,6 +45,7 @@ const mockRoutes = [
 const Collections = () => {
   const { t } = useTranslation();
   const [searchQuery, setSearchQuery] = useState("");
+  const [filterType, setFilterType] = useState("all");
   const [listas, setListas] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -90,10 +91,12 @@ const Collections = () => {
     }
   };
 
-  const filteredRoutes = listas.filter(route =>
-    route.nombre.toLowerCase().includes(searchQuery.toLowerCase()) || 
-    (route.descripcion && route.descripcion.toLowerCase().includes(searchQuery.toLowerCase()))
-  );
+  const filteredRoutes = listas.filter(route => {
+    const matchesSearch = route.nombre.toLowerCase().includes(searchQuery.toLowerCase()) || 
+      (route.descripcion && route.descripcion.toLowerCase().includes(searchQuery.toLowerCase()));
+    const matchesFilter = filterType === 'all' || route.visibilidad === filterType;
+    return matchesSearch && matchesFilter;
+  });
 
   const handleEditClick = (route) => {
     setSelectedRoute(route);
@@ -190,17 +193,25 @@ const Collections = () => {
         />
       </div>
 
-      {/* Pills (Static for design matching) */}
+      {/* Filter Pills */}
       <div className="flex gap-3 overflow-x-auto pb-4 mb-4 scrollbar-hide">
-        <button className="flex items-center gap-2 bg-primary text-primary-text px-4 py-2 rounded-full whitespace-nowrap">
-          <img src="https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=100" alt="Gràcia" className="w-6 h-6 rounded-full object-cover" />
-          Gràcia
+        <button 
+          onClick={() => setFilterType('all')}
+          className={`px-6 py-2 rounded-full whitespace-nowrap border font-medium transition-colors ${filterType === 'all' ? 'bg-primary text-primary-text border-primary' : 'bg-gray-100 dark:bg-gray-800 text-black dark:text-white border-gray-200 dark:border-gray-700'}`}
+        >
+          {t("collections.filterAll", "Tots")}
         </button>
-        <button className="bg-gray-100 dark:bg-gray-800 text-black dark:text-white px-6 py-2 rounded-full whitespace-nowrap border border-gray-200 dark:border-gray-700">
-          Gòtic
+        <button 
+          onClick={() => setFilterType('public')}
+          className={`px-6 py-2 rounded-full whitespace-nowrap border font-medium transition-colors ${filterType === 'public' ? 'bg-primary text-primary-text border-primary' : 'bg-gray-100 dark:bg-gray-800 text-black dark:text-white border-gray-200 dark:border-gray-700'}`}
+        >
+          {t("collections.filterPublic", "Públic")}
         </button>
-        <button className="bg-gray-100 dark:bg-gray-800 text-black dark:text-white px-6 py-2 rounded-full whitespace-nowrap border border-gray-200 dark:border-gray-700">
-          Poblenou
+        <button 
+          onClick={() => setFilterType('private')}
+          className={`px-6 py-2 rounded-full whitespace-nowrap border font-medium transition-colors ${filterType === 'private' ? 'bg-primary text-primary-text border-primary' : 'bg-gray-100 dark:bg-gray-800 text-black dark:text-white border-gray-200 dark:border-gray-700'}`}
+        >
+          {t("collections.filterPrivate", "Privat")}
         </button>
       </div>
 

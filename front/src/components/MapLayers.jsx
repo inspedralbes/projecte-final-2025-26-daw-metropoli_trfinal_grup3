@@ -163,14 +163,15 @@ const MapLayers = ({
             <Marker
               key={`poi-general-${mId || index}`}
               position={pos}
+              interactive={!!onPoiClick}
               icon={L.divIcon({
                 className: "existing-poi-marker",
-                html: `<div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-sm flex items-center justify-center text-[8px] text-white font-bold opacity-80"></div>`,
+                html: `<div class="w-4 h-4 bg-blue-500 rounded-full border-2 border-white shadow-sm flex items-center justify-center text-[8px] text-white font-bold opacity-80 ${!onPoiClick ? 'pointer-events-none' : ''}"></div>`,
                 iconSize: [16, 16],
                 iconAnchor: [8, 8]
               })}
               eventHandlers={{
-                click: onPoiClick ? () => onPoiClick(marker) : () => { }
+                click: onPoiClick ? () => onPoiClick(marker) : undefined
               }}
             />
           );
