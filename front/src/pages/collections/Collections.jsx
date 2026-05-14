@@ -3,11 +3,11 @@ import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
 import Header from '../../layouts/Header';
 import Navbar from '../../layouts/Navbar';
-import { 
-  getUsuarioListas, 
-  deleteLista, 
+import {
+  getUsuarioListas,
+  deleteLista,
   updateLista,
-  uploadListaImage 
+  uploadListaImage
 } from '../../services/communicationManager';
 
 // Mock data
@@ -92,7 +92,7 @@ const Collections = () => {
   };
 
   const filteredRoutes = listas.filter(route => {
-    const matchesSearch = route.nombre.toLowerCase().includes(searchQuery.toLowerCase()) || 
+    const matchesSearch = route.nombre.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (route.descripcion && route.descripcion.toLowerCase().includes(searchQuery.toLowerCase()));
     const matchesFilter = filterType === 'all' || route.visibilidad === filterType;
     return matchesSearch && matchesFilter;
@@ -123,11 +123,8 @@ const Collections = () => {
 
     try {
       setIsSaving(true);
-      const formData = new FormData();
-      formData.append('imagenLista', file);
-
-      // Usamos el ID de la ruta seleccionada para la subida
-      const res = await uploadListaImage(selectedRoute.id_lista, formData);
+      // uploadListaImage wraps the file in FormData internally — pass the raw File
+      const res = await uploadListaImage(selectedRoute.id_lista, file);
       if (res.success) {
         setEditForm(prev => ({ ...prev, imagen_url: res.data.imagen_url }));
       }
@@ -140,7 +137,7 @@ const Collections = () => {
 
   const handleUpdateRoute = async () => {
     if (!editForm.nombre.trim()) return;
-    
+
     try {
       setIsSaving(true);
       // Auditoría de datos: Enviamos el objeto mapeado
@@ -153,20 +150,20 @@ const Collections = () => {
       };
 
       const res = await updateLista(selectedRoute.id_lista, updateData);
-      
+
       if (res.success) {
         // Actualizamos estado local
-        const updatedListas = listas.map(l => 
-          l.id_lista === selectedRoute.id_lista 
-          ? { ...l, ...editForm } 
-          : l
+        const updatedListas = listas.map(l =>
+          l.id_lista === selectedRoute.id_lista
+            ? { ...l, ...editForm }
+            : l
         );
         setListas(updatedListas);
         setIsEditModalOpen(false);
       } else {
         throw new Error(res.message || "Error al actualizar");
       }
-      
+
     } catch (err) {
       console.error("Error updating route:", err);
     } finally {
@@ -179,157 +176,157 @@ const Collections = () => {
       <Header />
       <div className="safe-container">
 
-      {/* Search Bar */}
-      <div className="relative mb-6 md:ml-48 md:mr-40">
-        <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
-          search
-        </span>
-        <input 
-          type="text" 
-          placeholder={t("collections.search")}
-          value={searchQuery}
-          onChange={(e) => setSearchQuery(e.target.value)}
-          className="w-full bg-transparent border border-gray-300 dark:border-gray-700 rounded-full py-3 pl-12 pr-4 focus:outline-none focus:border-black dark:focus:border-white transition-colors"
-        />
-      </div>
+        {/* Search Bar */}
+        <div className="relative mb-6 md:ml-48 md:mr-40">
+          <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
+            search
+          </span>
+          <input
+            type="text"
+            placeholder={t("collections.search")}
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            className="w-full bg-transparent border border-gray-300 dark:border-gray-700 rounded-full py-3 pl-12 pr-4 focus:outline-none focus:border-black dark:focus:border-white transition-colors"
+          />
+        </div>
 
-      {/* Filter Pills */}
-      <div className="flex gap-3 overflow-x-auto pb-4 mb-4 scrollbar-hide">
-        <button 
-          onClick={() => setFilterType('all')}
-          className={`px-6 py-2 rounded-full whitespace-nowrap border font-medium transition-colors ${filterType === 'all' ? 'bg-primary text-primary-text border-primary' : 'bg-gray-100 dark:bg-gray-800 text-black dark:text-white border-gray-200 dark:border-gray-700'}`}
-        >
-          {t("collections.filterAll", "Tots")}
-        </button>
-        <button 
-          onClick={() => setFilterType('public')}
-          className={`px-6 py-2 rounded-full whitespace-nowrap border font-medium transition-colors ${filterType === 'public' ? 'bg-primary text-primary-text border-primary' : 'bg-gray-100 dark:bg-gray-800 text-black dark:text-white border-gray-200 dark:border-gray-700'}`}
-        >
-          {t("collections.filterPublic", "Públic")}
-        </button>
-        <button 
-          onClick={() => setFilterType('private')}
-          className={`px-6 py-2 rounded-full whitespace-nowrap border font-medium transition-colors ${filterType === 'private' ? 'bg-primary text-primary-text border-primary' : 'bg-gray-100 dark:bg-gray-800 text-black dark:text-white border-gray-200 dark:border-gray-700'}`}
-        >
-          {t("collections.filterPrivate", "Privat")}
-        </button>
-      </div>
+        {/* Filter Pills */}
+        <div className="flex gap-3 overflow-x-auto pb-4 mb-4 scrollbar-hide">
+          <button
+            onClick={() => setFilterType('all')}
+            className={`px-6 py-2 rounded-full whitespace-nowrap border font-medium transition-colors ${filterType === 'all' ? 'bg-primary text-primary-text border-primary' : 'bg-gray-100 dark:bg-gray-800 text-black dark:text-white border-gray-200 dark:border-gray-700'}`}
+          >
+            {t("collections.filterAll", "Tots")}
+          </button>
+          <button
+            onClick={() => setFilterType('public')}
+            className={`px-6 py-2 rounded-full whitespace-nowrap border font-medium transition-colors ${filterType === 'public' ? 'bg-primary text-primary-text border-primary' : 'bg-gray-100 dark:bg-gray-800 text-black dark:text-white border-gray-200 dark:border-gray-700'}`}
+          >
+            {t("collections.filterPublic", "Públic")}
+          </button>
+          <button
+            onClick={() => setFilterType('private')}
+            className={`px-6 py-2 rounded-full whitespace-nowrap border font-medium transition-colors ${filterType === 'private' ? 'bg-primary text-primary-text border-primary' : 'bg-gray-100 dark:bg-gray-800 text-black dark:text-white border-gray-200 dark:border-gray-700'}`}
+          >
+            {t("collections.filterPrivate", "Privat")}
+          </button>
+        </div>
 
-      {/* Route Cards List / Loading / Empty / No Session */}
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        {!user ? (
-          <div className="flex flex-col items-center justify-center py-20 text-center space-y-6 animate-fade-in">
-            <div className="w-24 h-24 bg-white/50 dark:bg-white/5 rounded-full flex items-center justify-center border border-slate-200 dark:border-white/10 shadow-xl">
-              <span className="material-symbols-outlined text-4xl opacity-40">lock</span>
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-xl font-bold">{t("collections.noSessionTitle", "Inicia sesión")}</h3>
-              <p className="text-sm text-gray-500 max-w-[250px] mx-auto">
-                {t("collections.noSessionDesc", "Necessites iniciar sessió per veure les teves col·leccions personals.")}
-              </p>
-            </div>
-            <Link 
-              to="/login"
-              className="bg-primary text-primary-text px-8 py-3 rounded-2xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all"
-            >
-              {t("auth.login", "Iniciar sessió")}
-            </Link>
-          </div>
-        ) : loading ? (
-          <div className="flex flex-col items-center justify-center py-20 space-y-4">
-            <span className="material-symbols-outlined animate-spin text-4xl text-primary">progress_activity</span>
-            <p className="text-xs font-bold uppercase tracking-widest opacity-40">{t("common.loading", "Carregant...")}</p>
-          </div>
-        ) : error ? (
-          <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-6 rounded-3xl text-center">
-            <span className="material-symbols-outlined text-3xl mb-2">error</span>
-            <p className="text-sm font-bold">{error}</p>
-          </div>
-        ) : filteredRoutes.length > 0 ? (
-          filteredRoutes.map(route => (
-            <div 
-              key={route.id_lista} 
-              className="relative w-full h-64 rounded-[32px] overflow-hidden shadow-lg group cursor-pointer"
-            >
-              {/* Background Image (Using placeholder or real image if exists) */}
-              <img 
-                src={route.imagen_url 
-                  ? (route.imagen_url.startsWith('http') ? route.imagen_url : `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${route.imagen_url}`) 
-                  : (route.image || `https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?w=800&q=80`)} 
-                alt={route.nombre} 
-                className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
-              />
-              {/* Dark Gradient Overlay */}
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
-              
-              {/* Bottom Info */}
-              <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end">
-                <div className="flex flex-col space-y-1">
-                  <h3 className="text-white text-2xl font-black leading-tight tracking-tighter">
-                    {route.nombre}
-                  </h3>
-                  <p className="text-white/60 text-xs font-medium line-clamp-1 max-w-[200px]">
-                    {route.descripcion || t("createList.noDesc", "Sense descripció")}
-                  </p>
-                </div>
-                
-                {/* Pencil Button (Non-functional as requested) */}
-                <button 
-                  onClick={(e) => {
-                    e.stopPropagation();
-                    handleEditClick(route);
-                  }}
-                  className="bg-primary text-primary-text w-12 h-12 rounded-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-xl"
-                  aria-label="Edit route"
-                >
-                  <span className="material-symbols-outlined text-[22px]">
-                    edit
-                  </span>
-                </button>
+        {/* Route Cards List / Loading / Empty / No Session */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          {!user ? (
+            <div className="flex flex-col items-center justify-center py-20 text-center space-y-6 animate-fade-in">
+              <div className="w-24 h-24 bg-white/50 dark:bg-white/5 rounded-full flex items-center justify-center border border-slate-200 dark:border-white/10 shadow-xl">
+                <span className="material-symbols-outlined text-4xl opacity-40">lock</span>
               </div>
-            </div>
-          ))
-        ) : (
-          <div className="flex flex-col items-center justify-center py-20 text-center space-y-6 animate-fade-in">
-             <div className="w-24 h-24 bg-white/50 dark:bg-white/5 rounded-full flex items-center justify-center border border-slate-200 dark:border-white/10 shadow-xl">
-              <span className="material-symbols-outlined text-4xl opacity-40">map</span>
-            </div>
-            <div className="space-y-2">
-              <h3 className="text-xl font-bold">{t("collections.emptyTitle", "Cap ruta trobada")}</h3>
-              <p className="text-sm text-gray-500 max-w-[250px] mx-auto">
-                {searchQuery 
-                  ? t("collections.noSearchMatch", "No hi ha rutes que coincideixin amb la teva cerca.")
-                  : t("collections.noLists", "Encara no has creat cap ruta personal.")}
-              </p>
-            </div>
-            {!searchQuery && (
-              <Link 
-                to="/create-list"
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold">{t("collections.noSessionTitle", "Inicia sesión")}</h3>
+                <p className="text-sm text-gray-500 max-w-[250px] mx-auto">
+                  {t("collections.noSessionDesc", "Necessites iniciar sessió per veure les teves col·leccions personals.")}
+                </p>
+              </div>
+              <Link
+                to="/login"
                 className="bg-primary text-primary-text px-8 py-3 rounded-2xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all"
               >
-                {t("createList.title", "Crear llista")}
+                {t("auth.login", "Iniciar sessió")}
               </Link>
-            )}
-          </div>
-        )}
-      </div>{/* end cards */}
+            </div>
+          ) : loading ? (
+            <div className="flex flex-col items-center justify-center py-20 space-y-4">
+              <span className="material-symbols-outlined animate-spin text-4xl text-primary">progress_activity</span>
+              <p className="text-xs font-bold uppercase tracking-widest opacity-40">{t("common.loading", "Carregant...")}</p>
+            </div>
+          ) : error ? (
+            <div className="bg-red-500/10 border border-red-500/20 text-red-500 p-6 rounded-3xl text-center">
+              <span className="material-symbols-outlined text-3xl mb-2">error</span>
+              <p className="text-sm font-bold">{error}</p>
+            </div>
+          ) : filteredRoutes.length > 0 ? (
+            filteredRoutes.map(route => (
+              <div
+                key={route.id_lista}
+                className="relative w-full h-64 rounded-[32px] overflow-hidden shadow-lg group cursor-pointer"
+              >
+                {/* Background Image (Using placeholder or real image if exists) */}
+                <img
+                  src={route.imagen_url
+                    ? (route.imagen_url.startsWith('http') ? route.imagen_url : `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${route.imagen_url}`)
+                    : (route.image || `https://images.unsplash.com/photo-1523531294919-4bcd7c65e216?w=800&q=80`)}
+                  alt={route.nombre}
+                  className="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                />
+                {/* Dark Gradient Overlay */}
+                <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent"></div>
+
+                {/* Bottom Info */}
+                <div className="absolute bottom-6 left-6 right-6 flex justify-between items-end">
+                  <div className="flex flex-col space-y-1">
+                    <h3 className="text-white text-2xl font-black leading-tight tracking-tighter">
+                      {route.nombre}
+                    </h3>
+                    <p className="text-white/60 text-xs font-medium line-clamp-1 max-w-[200px]">
+                      {route.descripcion || t("createList.noDesc", "Sense descripció")}
+                    </p>
+                  </div>
+
+                  {/* Pencil Button (Non-functional as requested) */}
+                  <button
+                    onClick={(e) => {
+                      e.stopPropagation();
+                      handleEditClick(route);
+                    }}
+                    className="bg-primary text-primary-text w-12 h-12 rounded-2xl flex items-center justify-center hover:scale-110 active:scale-95 transition-all shadow-xl"
+                    aria-label="Edit route"
+                  >
+                    <span className="material-symbols-outlined text-[22px]">
+                      edit
+                    </span>
+                  </button>
+                </div>
+              </div>
+            ))
+          ) : (
+            <div className="flex flex-col items-center justify-center py-20 text-center space-y-6 animate-fade-in">
+              <div className="w-24 h-24 bg-white/50 dark:bg-white/5 rounded-full flex items-center justify-center border border-slate-200 dark:border-white/10 shadow-xl">
+                <span className="material-symbols-outlined text-4xl opacity-40">map</span>
+              </div>
+              <div className="space-y-2">
+                <h3 className="text-xl font-bold">{t("collections.emptyTitle", "Cap ruta trobada")}</h3>
+                <p className="text-sm text-gray-500 max-w-[250px] mx-auto">
+                  {searchQuery
+                    ? t("collections.noSearchMatch", "No hi ha rutes que coincideixin amb la teva cerca.")
+                    : t("collections.noLists", "Encara no has creat cap ruta personal.")}
+                </p>
+              </div>
+              {!searchQuery && (
+                <Link
+                  to="/create-list"
+                  className="bg-primary text-primary-text px-8 py-3 rounded-2xl font-bold shadow-lg hover:scale-105 active:scale-95 transition-all"
+                >
+                  {t("createList.title", "Crear llista")}
+                </Link>
+              )}
+            </div>
+          )}
+        </div>{/* end cards */}
       </div>{/* end pt-28 */}
 
       {/* Edit Modal */}
       {isEditModalOpen && (
         <div className="fixed inset-0 z-[100] flex items-center justify-center p-4">
-          <div 
+          <div
             className="absolute inset-0 bg-black/80 backdrop-blur-md"
             onClick={() => setIsEditModalOpen(false)}
           ></div>
-          
+
           <div className="relative w-full max-w-lg md:max-w-2xl bg-black rounded-[40px] shadow-2xl overflow-hidden animate-in fade-in zoom-in duration-300 border border-white/20 font-display">
             {/* Header */}
             <div className="p-8 pb-4 flex justify-between items-center">
               <h2 className="text-2xl font-black italic uppercase tracking-tighter text-white">
                 {t("collections.editTitle", "Editar Ruta")}
               </h2>
-              <button 
+              <button
                 onClick={() => setIsEditModalOpen(false)}
                 className="w-10 h-10 rounded-full bg-white/10 flex items-center justify-center text-white"
               >
@@ -344,10 +341,10 @@ const Collections = () => {
                   <label className="text-[10px] font-bold uppercase tracking-widest text-white/40 px-1">
                     {t("createList.nameLabel", "Nombre")}
                   </label>
-                  <input 
+                  <input
                     type="text"
                     value={editForm.nombre}
-                    onChange={(e) => setEditForm({...editForm, nombre: e.target.value})}
+                    onChange={(e) => setEditForm({ ...editForm, nombre: e.target.value })}
                     className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-white transition-colors font-medium text-white"
                     placeholder="Nombre de la ruta..."
                   />
@@ -356,9 +353,9 @@ const Collections = () => {
                   <label className="text-[10px] font-bold uppercase tracking-widest text-white/40 px-1">
                     {t("createList.descLabel", "Descripción")}
                   </label>
-                  <textarea 
+                  <textarea
                     value={editForm.descripcion}
-                    onChange={(e) => setEditForm({...editForm, descripcion: e.target.value})}
+                    onChange={(e) => setEditForm({ ...editForm, descripcion: e.target.value })}
                     className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-white transition-colors font-medium min-h-[100px] resize-none text-white"
                     placeholder="Añade una descripción..."
                   />
@@ -367,22 +364,22 @@ const Collections = () => {
                   <label className="text-[10px] font-bold uppercase tracking-widest text-white/40 px-1">
                     {t("collections.imageLabel", "Imagen de Portada")}
                   </label>
-                  
+
                   <div className="relative group">
                     {editForm.imagen_url ? (
                       <div className="relative rounded-2xl overflow-hidden h-40 border border-white/10 group">
-                        <img 
-                          src={editForm.imagen_url.startsWith('http') ? editForm.imagen_url : `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${editForm.imagen_url}`} 
-                          alt="Preview" 
-                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105" 
+                        <img
+                          src={editForm.imagen_url.startsWith('http') ? editForm.imagen_url : `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${editForm.imagen_url}`}
+                          alt="Preview"
+                          className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
                         />
                         <div className="absolute inset-0 bg-black/40 opacity-0 group-hover:opacity-100 transition-opacity flex items-center justify-center gap-4">
                           <label className="cursor-pointer bg-white text-black p-3 rounded-full hover:scale-110 transition-transform">
                             <span className="material-symbols-outlined">add_a_photo</span>
                             <input type="file" className="hidden" accept="image/*" onChange={handleImageChange} />
                           </label>
-                          <button 
-                            onClick={() => setEditForm({...editForm, imagen_url: ""})}
+                          <button
+                            onClick={() => setEditForm({ ...editForm, imagen_url: "" })}
                             className="bg-red-500 text-white p-3 rounded-full hover:scale-110 transition-transform"
                           >
                             <span className="material-symbols-outlined">delete</span>
@@ -413,12 +410,11 @@ const Collections = () => {
                   {['public', 'private'].map((v) => (
                     <button
                       key={v}
-                      onClick={() => setEditForm({...editForm, visibilidad: v})}
-                      className={`flex-1 py-3 rounded-2xl font-bold text-sm transition-all border ${
-                        editForm.visibilidad === v 
-                        ? 'bg-white border-white text-black' 
-                        : 'bg-transparent border-white/10 text-white opacity-60'
-                      }`}
+                      onClick={() => setEditForm({ ...editForm, visibilidad: v })}
+                      className={`flex-1 py-3 rounded-2xl font-bold text-sm transition-all border ${editForm.visibilidad === v
+                          ? 'bg-white border-white text-black'
+                          : 'bg-transparent border-white/10 text-white opacity-60'
+                        }`}
                     >
                       {v === 'public' ? t("collections.visibilityPublic", "Pública") : t("collections.visibilityPrivate", "Privada")}
                     </button>
@@ -442,7 +438,7 @@ const Collections = () => {
                           </div>
                           <span className="font-bold text-sm">{poi.nombre}</span>
                         </div>
-                        <button 
+                        <button
                           onClick={() => handleRemovePoi(poi.id_poi)}
                           className="text-red-500 hover:bg-red-500/10 p-2 rounded-xl transition-colors"
                         >
@@ -461,13 +457,13 @@ const Collections = () => {
 
             {/* Footer Buttons */}
             <div className="p-8 pt-4 flex gap-4">
-              <button 
+              <button
                 onClick={() => setIsEditModalOpen(false)}
                 className="flex-1 py-4 rounded-2xl font-bold bg-white/5 hover:bg-white/10 text-white transition-colors"
               >
                 {t("common.cancel", "Cancelar")}
               </button>
-              <button 
+              <button
                 onClick={handleUpdateRoute}
                 disabled={isSaving || !editForm.nombre.trim()}
                 className="flex-[2] py-4 rounded-2xl font-bold bg-white text-black shadow-lg shadow-white/10 hover:scale-[1.02] active:scale-[0.98] transition-all disabled:opacity-50 disabled:scale-100"
