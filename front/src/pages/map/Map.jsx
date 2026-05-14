@@ -12,6 +12,7 @@ import {
   getListas,
   getUsuarioListas,
   createLista,
+  updateLista,
   getUsuarios,
 } from "../../services/communicationManager";
 import socket from "../../services/socketManager";
@@ -262,6 +263,49 @@ const Map = () => {
       }
     }
   }, [location.search, markers]);
+
+  const handleShareToCommunity = async (list) => {
+    const userStr = localStorage.getItem("usuario");
+    if (!userStr) {
+      navigate("/login");
+      return;
+    }
+    const user = JSON.parse(userStr);
+
+    // Only the owner can share/unshare
+    if (list.id_usuario !== user.id_usuario) {
+      setToast({ message: "Només pots compartir les teves pròpies llistes.", type: "warning" });
+      return;
+    }
+
+    const newVisibility = list.visibilidad === "public" ? "private" : "public";
+    try {
+      await updateLista(list.id_lista, {
+        nombre: list.nombre,
+        descripcion: list.descripcion,
+        visibilidad: newVisibility,
+        pois: list.pois?.map((p) => ({ id_poi: p.id_poi })) || [],
+      });
+
+      // Update local state so button reflects change immediately
+      setUserLists((prev) =>
+        prev.map((l) =>
+          l.id_lista === list.id_lista ? { ...l, visibilidad: newVisibility } : l
+        )
+      );
+
+      setToast({
+        message:
+          newVisibility === "public"
+            ? "Ruta compartida a la Comunitat! Ara és pública."
+            : "Ruta retirada de la Comunitat. Ara és privada.",
+        type: newVisibility === "public" ? "success" : "info",
+      });
+    } catch (error) {
+      console.error("Error sharing list:", error);
+      setToast({ message: "Error al compartir la ruta.", type: "error" });
+    }
+  };
 
   const handleIncludeInMyLists = async (list) => {
     const userStr = localStorage.getItem("usuario");
@@ -878,6 +922,27 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
                       Començar Ruta
                     </button>
 
+                    {/* Share to Community (only for owned lists) */}
+                    {userLists.find((l) => l.id_lista === focusedListId) && (() => {
+                      const focusedList = userLists.find((l) => l.id_lista === focusedListId);
+                      const isPublic = focusedList?.visibilidad === "public";
+                      return (
+                        <button
+                          onClick={() => handleShareToCommunity(focusedList)}
+                          className={`w-full py-4 rounded-[2rem] font-bold border transition-all flex items-center justify-center gap-2 ${
+                            isPublic
+                              ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/30"
+                              : "bg-white dark:bg-white/5 text-black dark:text-white border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10"
+                          }`}
+                        >
+                          <span className="material-symbols-outlined" style={{ fontVariationSettings: isPublic ? "'FILL' 1" : "'FILL' 0" }}>
+                            {isPublic ? "public" : "share"}
+                          </span>
+                          {isPublic ? "Compartida a la Comunitat ✓" : "Compartir a la Comunitat"}
+                        </button>
+                      );
+                    })()}
+
                     {!userLists.find((l) => l.id_lista === focusedListId) && (
                       <button
                         onClick={() =>
@@ -1070,6 +1135,27 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
                           </span>
                           {t("map.howToGet", "Cómo llegar")}
                         </button>
+
+                        {/* Share to Community (only for owned lists) */}
+                        {userLists.find((l) => l.id_lista === focusedListId) && (() => {
+                          const focusedList = userLists.find((l) => l.id_lista === focusedListId);
+                          const isPublic = focusedList?.visibilidad === "public";
+                          return (
+                            <button
+                              onClick={() => handleShareToCommunity(focusedList)}
+                              className={`w-full py-3 rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-2 transition-all border ${
+                                isPublic
+                                  ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700"
+                                  : "bg-white dark:bg-white/5 text-black dark:text-white border-black/10 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10"
+                              }`}
+                            >
+                              <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: isPublic ? "'FILL' 1" : "'FILL' 0" }}>
+                                {isPublic ? "public" : "share"}
+                              </span>
+                              {isPublic ? "Compartida ✓" : t("map.shareToCommunity", "Compartir a Comunitat")}
+                            </button>
+                          );
+                        })()}
 
                         {/* Include in My Lists (if not already owned) */}
                         {!userLists.find(

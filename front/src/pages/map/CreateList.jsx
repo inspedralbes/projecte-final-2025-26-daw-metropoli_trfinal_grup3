@@ -44,7 +44,7 @@ const CreateList = () => {
   const [listName, setListName] = useState("");
   const [listDesc, setListDesc] = useState("");
   const [activePoiIndex, setActivePoiIndex] = useState(null);
-  const [listVisibility, setListVisibility] = useState("public");
+  const [listVisibility, setListVisibility] = useState("private");
   const [joinedRoute, setJoinedRoute] = useState(null);
   const [totalDistance, setTotalDistance] = useState(0);
   const [isSatelliteView, setIsSatelliteView] = useState(false);
@@ -648,16 +648,31 @@ const CreateList = () => {
                       />
 
                       {!focusedListId && (
-                        <div className="grid grid-cols-3 gap-2">
-                          {['public', 'private', 'friends'].map((v) => (
-                            <button
-                              key={v}
-                              onClick={() => setListVisibility(v)}
-                              className={`py-2 rounded-lg text-xs font-bold transition-all border ${listVisibility === v ? 'bg-primary border-primary text-primary-text' : 'bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-black/50 dark:text-white/40'}`}
-                            >
-                              {t(`createList.visibility.${v}`, v)}
-                            </button>
-                          ))}
+                        <div className="space-y-2">
+                          <div className="grid grid-cols-3 gap-2">
+                            {[
+                              { v: 'public', icon: 'public', label: t('createList.visibility.public', 'Pública') },
+                              { v: 'private', icon: 'lock', label: t('createList.visibility.private', 'Privada') },
+                              { v: 'friends', icon: 'group', label: t('createList.visibility.friends', 'Amics') },
+                            ].map(({ v, icon, label }) => (
+                              <button
+                                key={v}
+                                onClick={() => setListVisibility(v)}
+                                className={`py-2 rounded-lg text-xs font-bold transition-all border flex flex-col items-center gap-1 ${listVisibility === v ? 'bg-primary border-primary text-primary-text' : 'bg-black/5 dark:bg-white/5 border-black/10 dark:border-white/10 text-black/50 dark:text-white/40'}`}
+                              >
+                                <span className="material-symbols-outlined text-sm">{icon}</span>
+                                {label}
+                              </button>
+                            ))}
+                          </div>
+                          {listVisibility === 'public' && (
+                            <div className="flex items-center gap-1.5 px-2 py-1.5 bg-emerald-50 dark:bg-emerald-900/20 rounded-lg border border-emerald-200 dark:border-emerald-700/40">
+                              <span className="material-symbols-outlined text-emerald-500 text-sm">info</span>
+                              <p className="text-[10px] text-emerald-600 dark:text-emerald-400 font-medium">
+                                Aquesta ruta apareixerà a la Comunitat
+                              </p>
+                            </div>
+                          )}
                         </div>
                       )}
                     </div>
