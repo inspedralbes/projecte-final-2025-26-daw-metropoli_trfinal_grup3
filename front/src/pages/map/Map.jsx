@@ -310,7 +310,7 @@ const Map = () => {
   const handleIncludeInMyLists = async (list) => {
     const userStr = localStorage.getItem("usuario");
     if (!userStr) {
-      alert("Debes iniciar sesión para guardar listas.");
+    setToast({ message: "Has d'iniciar sessió per guardar llistes.", type: "warning" });
       navigate("/login");
       return;
     }
@@ -341,7 +341,7 @@ const Map = () => {
 
   const handleGoToFirstPoi = (list) => {
     if (!userPosition || !list || !list.pois || list.pois.length === 0) {
-      alert("Necesitamos tu ubicación y una lista con puntos.");
+      setToast({ message: "Necessitem la teva ubicació i una llista amb punts.", type: "warning" });
       return;
     }
     handleGoToPoi(list.pois[0]);
@@ -391,7 +391,7 @@ const Map = () => {
 
   const handleGoToNearestPoi = () => {
     if (!userPosition || !focusedListId) {
-      alert("Necesitamos tu ubicación y una ruta seleccionada.");
+      setToast({ message: "Necessitem la teva ubicació i una ruta seleccionada.", type: "warning" });
       return;
     }
 
@@ -418,7 +418,7 @@ const Map = () => {
 
   const handleGetRouteToPoi = async (poi) => {
     if (!userPosition) {
-      alert("Necesitamos tu ubicación para calcular la ruta.");
+      setToast({ message: "Necessitem la teva ubicació per calcular la ruta.", type: "warning" });
       return;
     }
 
@@ -557,7 +557,7 @@ const Map = () => {
 
   const startWatchingLocation = () => {
     if (!navigator.geolocation) {
-      alert("La geolocalización no es compatible con este navegador.");
+      setToast({ message: "La geolocalització no és compatible amb aquest navegador.", type: "error" });
       return;
     }
 
@@ -576,9 +576,7 @@ const Map = () => {
       (error) => {
         console.error("Error de geolocalización:", error);
         if (error.code === 1) {
-          alert(
-            "Permiso de ubicación denegado. Por favor, habilita la ubicación en tu navegador para usar el seguimiento en tiempo real y la navegación.",
-          );
+          setToast({ message: "Permís d'ubicació denegat. Activa la ubicació al teu navegador.", type: "warning" });
         }
       },
       {
@@ -922,26 +920,6 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
                       Començar Ruta
                     </button>
 
-                    {/* Share to Community (only for owned lists) */}
-                    {userLists.find((l) => l.id_lista === focusedListId) && (() => {
-                      const focusedList = userLists.find((l) => l.id_lista === focusedListId);
-                      const isPublic = focusedList?.visibilidad === "public";
-                      return (
-                        <button
-                          onClick={() => handleShareToCommunity(focusedList)}
-                          className={`w-full py-4 rounded-[2rem] font-bold border transition-all flex items-center justify-center gap-2 ${
-                            isPublic
-                              ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700 hover:bg-emerald-100 dark:hover:bg-emerald-900/30"
-                              : "bg-white dark:bg-white/5 text-black dark:text-white border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10"
-                          }`}
-                        >
-                          <span className="material-symbols-outlined" style={{ fontVariationSettings: isPublic ? "'FILL' 1" : "'FILL' 0" }}>
-                            {isPublic ? "public" : "share"}
-                          </span>
-                          {isPublic ? "Compartida a la Comunitat ✓" : "Compartir a la Comunitat"}
-                        </button>
-                      );
-                    })()}
 
                     {!userLists.find((l) => l.id_lista === focusedListId) && (
                       <button
@@ -1137,25 +1115,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
                         </button>
 
                         {/* Share to Community (only for owned lists) */}
-                        {userLists.find((l) => l.id_lista === focusedListId) && (() => {
-                          const focusedList = userLists.find((l) => l.id_lista === focusedListId);
-                          const isPublic = focusedList?.visibilidad === "public";
-                          return (
-                            <button
-                              onClick={() => handleShareToCommunity(focusedList)}
-                              className={`w-full py-3 rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-2 transition-all border ${
-                                isPublic
-                                  ? "bg-emerald-50 dark:bg-emerald-900/20 text-emerald-600 dark:text-emerald-400 border-emerald-200 dark:border-emerald-700"
-                                  : "bg-white dark:bg-white/5 text-black dark:text-white border-black/10 dark:border-white/10 hover:bg-slate-50 dark:hover:bg-white/10"
-                              }`}
-                            >
-                              <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: isPublic ? "'FILL' 1" : "'FILL' 0" }}>
-                                {isPublic ? "public" : "share"}
-                              </span>
-                              {isPublic ? "Compartida ✓" : t("map.shareToCommunity", "Compartir a Comunitat")}
-                            </button>
-                          );
-                        })()}
+
 
                         {/* Include in My Lists (if not already owned) */}
                         {!userLists.find(

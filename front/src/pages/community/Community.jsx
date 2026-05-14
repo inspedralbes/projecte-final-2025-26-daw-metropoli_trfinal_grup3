@@ -6,12 +6,17 @@ import Header from "../../layouts/Header";
 import {
   getPublicaciones,
   createPublicacion,
+  createComentario,
+  toggleLike,
   uploadFotoComunidad,
   getAmigos,
   getActividad,
   searchUsers,
   updateLista,
   getUsuarioListas,
+  getListaById,
+  createLista,
+  toggleLikeLista,
 } from "../../services/communicationManager";
 import socket from "../../services/socketManager";
 import ChatModal from "../../components/community/ChatModal";
@@ -72,45 +77,54 @@ const compressImage = (file, maxPx = 1024, quality = 0.8) =>
   });
 
 // ─── Sub-componente: Card de una publicación ─────────────────────────────────
-const PostCard = ({ pub, onComentarioCreado }) => {
+const PostCard = ({ pub, onComentarioCreado, userLists = [] }) => {
   const [showComments, setShowComments] = useState(false);
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(pub.likes ?? 0);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [textoComentario, setTextoComentario] = useState("");
-  const interactedRef = React.useRef(false); // evita que el useEffect sobreescriba el estado local tras interacción
+  const [attachedLista, setAttachedLista] = useState(null);
+  const [routeSaving, setRouteSaving] = useState(false);
+  const [routeSaved, setRouteSaved] = useState(false);
+  const interactedRef = React.useRef(false);
 
   const navigate = useNavigate();
   const usuarioInfo = localStorage.getItem("usuario");
   const usuarioLogged = usuarioInfo ? JSON.parse(usuarioInfo) : null;
 
+  // Parse [lista:ID] marker from the post text
+  const listaMarkerMatch = pub.texto?.match(/\[lista:(\d+)\]/);
+  const listaId = listaMarkerMatch ? listaMarkerMatch[1] : null;
+  const displayText = pub.texto?.replace(/\s*\[lista:\d+\]/, "").trim();
+
   useEffect(() => {
-    // Solo sincronizar desde el servidor si el usuario NO ha interactuado todavía
+    if (listaId) {
+      getListaById(listaId)
+        .then((res) => setAttachedLista(res.data || res))
+        .catch(() => {});
+    }
+  }, [listaId]);
+
+  useEffect(() => {
     if (!interactedRef.current && usuarioLogged && pub.likes_usuarios) {
       setLiked(pub.likes_usuarios.includes(String(usuarioLogged.id_usuario)));
     }
-    // Siempre actualizar el conteo desde el servidor (si no hay interacción activa)
     if (!interactedRef.current) {
       setLikesCount(pub.likes ?? 0);
     }
   }, [pub]);
 
   const handleLike = async () => {
-    if (!usuarioLogged) {
-      navigate("/login");
-      return;
-    }
+    if (!usuarioLogged) { navigate("/login"); return; }
     if (isLikeLoading) return;
-    interactedRef.current = true; // marcar que el usuario ha interactuado
+    interactedRef.current = true;
     const prevLiked = liked;
     const prevCount = likesCount;
     setIsLikeLoading(true);
     setLiked(!prevLiked);
     setLikesCount(prevLiked ? prevCount - 1 : prevCount + 1);
     try {
-      const res = await toggleLike(pub._id, {
-        id_usuario: usuarioLogged.id_usuario,
-      });
+      const res = await toggleLike(pub._id, { id_usuario: usuarioLogged.id_usuario });
       setLikesCount(res.likes);
     } catch {
       setLiked(prevLiked);
@@ -122,10 +136,7 @@ const PostCard = ({ pub, onComentarioCreado }) => {
 
   const handleComentario = async (e) => {
     e.preventDefault();
-    if (!usuarioLogged) {
-      navigate("/login");
-      return;
-    }
+    if (!usuarioLogged) { navigate("/login"); return; }
     if (!textoComentario.trim()) return;
     try {
       await createComentario(pub._id, {
@@ -149,10 +160,7 @@ const PostCard = ({ pub, onComentarioCreado }) => {
         <div className="flex items-center gap-3">
           <Link to={`/profile/${pub.id_usuario}`}>
             <UserAvatar
-              user={{
-                foto_perfil: pub.foto_perfil,
-                nombre: pub.nombre_usuario,
-              }}
+              user={{ foto_perfil: pub.foto_perfil, nombre: pub.nombre_usuario }}
               className="w-10 h-10"
             />
           </Link>
@@ -170,19 +178,106 @@ const PostCard = ({ pub, onComentarioCreado }) => {
       </div>
 
       <div className="px-5 pb-4">
-        <p className="text-slate-700 dark:text-slate-200 text-sm leading-relaxed mb-4">
-          {pub.texto}
-        </p>
+        {displayText && (
+          <p className="text-slate-700 dark:text-slate-200 text-sm leading-relaxed mb-4">
+            {displayText}
+          </p>
+        )}
         {hasImage && (
           <div className="rounded-2xl overflow-hidden border border-gray-50 dark:border-white/5 bg-black/5 dark:bg-white/5">
             <img
               src={pub.foto}
               className="w-full max-h-[500px] object-contain"
-              onError={(e) =>
-                (e.target.src =
-                  "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2069&auto=format&fit=crop")
-              }
+              onError={(e) => (e.target.src = "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2069&auto=format&fit=crop")}
             />
+          </div>
+        )}
+
+        {/* Attached route card — compact inline preview */}
+        {attachedLista && (() => {
+          const API = import.meta.env.VITE_API_URL || "http://localhost:3000";
+          const imgSrc = attachedLista.imagen_url
+            ? (attachedLista.imagen_url.startsWith("http") ? attachedLista.imagen_url : `${API}${attachedLista.imagen_url}`)
+            : "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600&q=80";
+          const isOwner = usuarioLogged && String(attachedLista.id_usuario) === String(usuarioLogged?.id_usuario);
+          const alreadySaved = routeSaved || userLists.some((ul) => ul.id_lista === attachedLista.id_lista);
+
+          const handleSaveRoute = async (e) => {
+            e.stopPropagation();
+            if (!usuarioLogged) { navigate("/login"); return; }
+            if (alreadySaved) return;
+            setRouteSaving(true);
+            try {
+              await createLista({
+                id_usuario: usuarioLogged.id_usuario,
+                nombre: attachedLista.nombre,
+                descripcion: attachedLista.descripcion || "Guardada des de la comunitat",
+                visibilidad: "private",
+                pois: (attachedLista.pois || []).map((p) => p.id_poi),
+              });
+              setRouteSaved(true);
+            } catch (err) { console.error(err); }
+            finally { setRouteSaving(false); }
+          };
+
+          return (
+            <div
+              className="mt-3 rounded-2xl overflow-hidden border border-gray-100 dark:border-white/10 cursor-pointer group"
+              onClick={() => navigate("/map", { state: { focusedList: attachedLista } })}
+            >
+              {/* Cover image */}
+              <div className="relative h-40 overflow-hidden">
+                <img
+                  src={imgSrc}
+                  alt={attachedLista.nombre}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  onError={(e) => (e.target.src = "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600&q=80")}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+                <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between">
+                  <div className="flex-1 min-w-0 pr-2">
+                    <p className="text-white font-bold text-sm leading-tight truncate">{attachedLista.nombre}</p>
+                    <p className="text-white/60 text-[10px] mt-0.5">
+                      {attachedLista.pois?.length || 0} punts
+                      {attachedLista.usuario_nombre ? ` · ${attachedLista.usuario_nombre}` : ""}
+                    </p>
+                  </div>
+                  {!isOwner && (
+                    <button
+                      onClick={handleSaveRoute}
+                      disabled={alreadySaved || routeSaving}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold transition-all ${
+                        alreadySaved ? "bg-amber-500 text-white" : "bg-white/20 backdrop-blur-sm text-white hover:bg-white/30"
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: alreadySaved ? "'FILL' 1" : "'FILL' 0" }}>
+                        bookmark
+                      </span>
+                      {alreadySaved ? "Guardada" : routeSaving ? "..." : "Guardar"}
+                    </button>
+                  )}
+                  {isOwner && (
+                    <span className="bg-emerald-500/80 backdrop-blur-sm text-white text-[9px] font-black uppercase px-2 py-1 rounded-full">
+                      La teva ruta
+                    </span>
+                  )}
+                </div>
+              </div>
+              {/* Footer */}
+              <div className="px-4 py-2.5 bg-white dark:bg-slate-900 flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>route</span>
+                <span className="text-[10px] text-slate-400 font-medium">Toca per veure la ruta al mapa</span>
+                <span className="material-symbols-outlined text-slate-300 text-sm ml-auto">chevron_right</span>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Loading placeholder while route loads */}
+        {listaId && !attachedLista && (
+          <div className="mt-3 bg-gray-50 dark:bg-white/5 rounded-2xl h-36 flex items-center justify-center gap-3 border border-gray-100 dark:border-white/10 animate-pulse">
+            <span className="material-symbols-outlined text-slate-300">route</span>
+            <span className="text-xs text-slate-400">Carregant ruta...</span>
           </div>
         )}
       </div>
@@ -192,10 +287,7 @@ const PostCard = ({ pub, onComentarioCreado }) => {
           onClick={handleLike}
           className={`flex items-center gap-2 transition-colors ${liked ? "text-primary" : "text-slate-400"}`}
         >
-          <span
-            className="material-symbols-outlined text-xl"
-            style={{ fontVariationSettings: liked ? "'FILL' 1" : "'FILL' 0" }}
-          >
+          <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: liked ? "'FILL' 1" : "'FILL' 0" }}>
             favorite
           </span>
           <span className="text-xs font-bold">{likesCount}</span>
@@ -205,9 +297,7 @@ const PostCard = ({ pub, onComentarioCreado }) => {
           className="flex items-center gap-2 text-slate-400"
         >
           <span className="material-symbols-outlined text-xl">chat_bubble</span>
-          <span className="text-xs font-bold">
-            {pub.comentarios?.length || 0}
-          </span>
+          <span className="text-xs font-bold">{pub.comentarios?.length || 0}</span>
         </button>
       </div>
 
@@ -217,23 +307,13 @@ const PostCard = ({ pub, onComentarioCreado }) => {
             {pub.comentarios?.map((com) => (
               <div key={com._id} className="flex gap-2">
                 <Link to={`/profile/${com.id_usuario}`}>
-                  <UserAvatar
-                    user={{
-                      foto_perfil: com.foto_perfil,
-                      nombre: com.nombre_usuario,
-                    }}
-                    className="w-6 h-6"
-                  />
+                  <UserAvatar user={{ foto_perfil: com.foto_perfil, nombre: com.nombre_usuario }} className="w-6 h-6" />
                 </Link>
                 <div className="bg-white dark:bg-slate-800 px-3 py-2 rounded-2xl rounded-tl-none border border-gray-100 dark:border-white/5">
                   <Link to={`/profile/${com.id_usuario}`}>
-                    <p className="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors">
-                      {com.nombre_usuario}
-                    </p>
+                    <p className="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors">{com.nombre_usuario}</p>
                   </Link>
-                  <p className="text-xs text-slate-700 dark:text-slate-200">
-                    {com.texto}
-                  </p>
+                  <p className="text-xs text-slate-700 dark:text-slate-200">{com.texto}</p>
                 </div>
               </div>
             ))}
@@ -245,10 +325,7 @@ const PostCard = ({ pub, onComentarioCreado }) => {
               placeholder="Escriu un comentari..."
               className="flex-1 bg-white dark:bg-slate-800 text-xs rounded-xl px-4 py-2 focus:outline-none border border-gray-200 dark:border-white/5 shadow-sm"
             />
-            <button
-              type="submit"
-              className="w-8 h-8 bg-primary text-white rounded-xl flex items-center justify-center shadow-md"
-            >
+            <button type="submit" className="w-8 h-8 bg-primary text-white rounded-xl flex items-center justify-center shadow-md">
               <span className="material-symbols-outlined text-sm">send</span>
             </button>
           </form>
@@ -559,7 +636,8 @@ const Community = () => {
 
 
   const handleCreatePost = async () => {
-    if (!newPost.texto && !selectedFile) return;
+    // Need at least text, photo, or attached route
+    if (!newPost.texto && !selectedFile && !postAttachedRoute) return;
 
     // --- FILTRO DE PALABRAS RESTRINGIDAS ---
     const restrictedWords = [
@@ -568,7 +646,7 @@ const Community = () => {
       "basura", "asco", "fuck", "shit", "bitch"
     ];
 
-    const foundWord = restrictedWords.find(word => 
+    const foundWord = restrictedWords.find(word =>
       newPost.texto.toLowerCase().includes(word.toLowerCase())
     );
 
@@ -588,23 +666,36 @@ const Community = () => {
         const uploadRes = await uploadFotoComunidad(fileToUpload);
         fotoUrl = `${import.meta.env.VITE_API_URL || ""}${uploadRes.url}`;
       }
-      // If a route is attached, make it public first
+
+      // If a route is attached, fetch its full data (with POIs) then make it public
       if (postAttachedRoute) {
-        await updateLista(postAttachedRoute.id_lista, {
-          nombre: postAttachedRoute.nombre,
-          descripcion: postAttachedRoute.descripcion,
-          visibilidad: "public",
-          pois: postAttachedRoute.pois?.map((p) => ({ id_poi: p.id_poi })) || [],
-        });
-        setUserLists((prev) =>
-          prev.map((l) =>
-            l.id_lista === postAttachedRoute.id_lista ? { ...l, visibilidad: "public" } : l
-          )
-        );
+        try {
+          const fullLista = await getListaById(postAttachedRoute.id_lista);
+          const listaData = fullLista.data || fullLista;
+          await updateLista(postAttachedRoute.id_lista, {
+            nombre: listaData.nombre,
+            descripcion: listaData.descripcion,
+            visibilidad: "public",
+            imagen_url: listaData.imagen_url || null,
+            pois: (listaData.pois || []).map((p) => ({ id_poi: p.id_poi || p.id })),
+          });
+          setUserLists((prev) =>
+            prev.map((l) =>
+              l.id_lista === postAttachedRoute.id_lista ? { ...l, visibilidad: "public" } : l
+            )
+          );
+        } catch (routeErr) {
+          console.error("Error making route public:", routeErr);
+          setToast({ message: "Error al compartir la ruta. Intenta-ho de nou.", type: "error" });
+          return;
+        }
       }
 
-      const finalText = newPost.texto ||
-        (postAttachedRoute ? `He compartit la ruta "${postAttachedRoute.nombre}" a la comunitat! 🗺️` : "");
+      const finalText = [
+        newPost.texto,
+        postAttachedRoute ? `[lista:${postAttachedRoute.id_lista}]` : "",
+      ].filter(Boolean).join(" ") ||
+        (postAttachedRoute ? `He compartit la ruta "${postAttachedRoute.nombre}" a la comunitat! 🗺️ [lista:${postAttachedRoute.id_lista}]` : "");
 
       await createPublicacion({
         id_usuario: usuarioLogged.id_usuario,
@@ -614,16 +705,20 @@ const Community = () => {
         foto: fotoUrl,
         tipo_publicacion: newPost.tipo_publicacion,
       });
+
+      const routeName = postAttachedRoute?.nombre;
       setNewPost({ texto: "", tipo_publicacion: "popular" });
       setSelectedFile(null);
       setPreviewUrl("");
       setPostAttachedRoute(null);
       setShowPostModal(false);
-      if (postAttachedRoute) {
-        setToast({ message: `Ruta "${postAttachedRoute.nombre}" compartida a la Comunitat!`, type: "success" });
+
+      if (routeName) {
+        setToast({ message: `Ruta "${routeName}" compartida a la Comunitat! 🎉`, type: "success" });
       }
     } catch (err) {
       console.error(err);
+      setToast({ message: "Error al publicar. Intenta-ho de nou.", type: "error" });
     }
   };
 
@@ -704,6 +799,7 @@ const Community = () => {
                     key={pub.id_publicacion || pub._id || pub.id || idx}
                     pub={pub}
                     onComentarioCreado={cargarPublicaciones}
+                    userLists={userLists}
                   />
                 ))
               )}
@@ -846,29 +942,35 @@ const Community = () => {
 
             {/* Action buttons row */}
             <div className="mt-4 flex gap-2">
-              <button
-                onClick={() => fileInputRef.current.click()}
-                className="flex-1 py-3 bg-gray-100 dark:bg-white/10 text-slate-500 dark:text-slate-400 rounded-xl text-[10px] font-display font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-white/20 transition-all"
-              >
-                <span className="material-symbols-outlined text-lg">image</span>
-                {t("community.photo", "Foto")}
-              </button>
+              {/* Photo button — hidden when a route is attached */}
+              {!postAttachedRoute && (
+                <button
+                  onClick={() => fileInputRef.current.click()}
+                  className={`flex-1 py-3 rounded-xl text-[10px] font-display font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+                    selectedFile
+                      ? "bg-primary/10 text-primary border border-primary/30"
+                      : "bg-gray-100 dark:bg-white/10 text-slate-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-white/20"
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-lg">image</span>
+                  {selectedFile ? "Foto adjunta" : t("community.photo", "Foto")}
+                </button>
+              )}
 
-              {/* Attach route button */}
-              {usuarioLogged && (
+              {/* Route button — hidden when a photo is selected */}
+              {!selectedFile && usuarioLogged && (
                 <button
                   onClick={() => {
-                    // open a mini picker — toggle dropdown
                     document.getElementById("route-picker-dropdown").classList.toggle("hidden");
                   }}
                   className={`flex-1 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
                     postAttachedRoute
-                      ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400"
+                      ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700"
                       : "bg-gray-100 dark:bg-white/10 text-slate-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-white/20"
                   }`}
                 >
                   <span className="material-symbols-outlined text-lg">route</span>
-                  {postAttachedRoute ? "Ruta adjunta" : "Adjuntar Ruta"}
+                  {postAttachedRoute ? "Ruta adjunta ✓" : "Adjuntar Ruta"}
                 </button>
               )}
             </div>
