@@ -85,6 +85,33 @@ const getPois = async (req, res) => {
     }
 };
 
+const getPoiById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const poi = await poiModel.getById(id);
+        
+        if (!poi) {
+            return res.status(404).json({
+                success: false,
+                message: 'POI no encontrado',
+                error_code: 'NOT_FOUND'
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'POI recuperado',
+            data: poi
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+            error_code: 'ERROR_INTERNO'
+        });
+    }
+};
+
 const deletePoi = async (req, res) => {
     try {
         const { id } = req.params;
@@ -253,5 +280,6 @@ export default {
     deletePoi,
     getPoisCercanos,
     uploadPoiImage,
-    updatePoi
+    updatePoi,
+    getPoiById
 };
