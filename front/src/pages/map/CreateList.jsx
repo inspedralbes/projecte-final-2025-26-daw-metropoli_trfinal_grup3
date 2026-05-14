@@ -422,7 +422,8 @@ const CreateList = () => {
 
     if (categories.length === 0) {
       setToast({
-        message: "Error: No hi ha categories a la base de dades. Contacta a l'administrador.",
+        message:
+          "Error: No hi ha categories a la base de dades. Contacta a l'administrador.",
         type: "error",
       });
       return;
@@ -981,7 +982,7 @@ const CreateList = () => {
 
       {/* Optimize Confirm Modal */}
       {showOptimizeConfirm && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
+        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6">
           <div
             className="absolute inset-0 bg-black/60 backdrop-blur-sm"
             onClick={() => setShowOptimizeConfirm(false)}
@@ -1054,9 +1055,9 @@ const CreateList = () => {
                   setPendingSavePois(null);
                   await _doSave(result);
                 }}
-                className="flex-[2] py-3 rounded-2xl text-sm font-bold bg-primary text-white shadow-lg shadow-primary/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                className="flex-[2] py-3 rounded-2xl text-sm font-bold bg-primary text-primary-text shadow-lg shadow-primary/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
               >
-                Sí, optimitzar 🚀
+                Sí, optimitzar
               </button>
             </div>
           </div>
