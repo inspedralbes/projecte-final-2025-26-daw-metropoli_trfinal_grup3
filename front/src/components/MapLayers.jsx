@@ -136,6 +136,9 @@ const MapLayers = ({
 
       {/* 2. POIs Generales */}
       {(() => {
+        // Ocultar POIs generales si no hay onPoiClick (ej. en el mapa principal)
+        if (!onPoiClick) return null;
+
         if (focusedListId) console.log("DEBUG MapLayers: Ocultando POIs generales por focusedListId:", focusedListId);
 
         const filtered = generalMarkers?.filter(marker => {
