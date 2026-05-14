@@ -1,15 +1,19 @@
 import { io } from "socket.io-client";
-// Creamos la antena receptora para el frontend.
-// Se conecta automáticamente a la dirección de tu backend (o a localhost de base).
-const URL_DEL_SERVIDOR =
-  import.meta.env.VITE_API_URL || "http://localhost:3000";
-console.log("WS URL Configurada:", URL_DEL_SERVIDOR);
+
+// In production the frontend is served by Nginx which proxies /socket.io/ → backend:3000.
+// So we must connect to the SAME origin (empty string), NOT to http://localhost:3000.
+// In local dev (localhost) we keep the explicit backend URL so it works without Nginx.
+const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
+const isLocalhost = API_URL.includes("localhost") || API_URL.includes("127.0.0.1");
+const URL_DEL_SERVIDOR = isLocalhost ? API_URL : "";
+
+console.log("WS URL Configurada:", URL_DEL_SERVIDOR || window.location.origin + " (same-origin via Nginx)");
 
 const socket = io(URL_DEL_SERVIDOR, {
-  // Empezamos con polling (funciona sobre HTTP/HTTPS normal, atraviesa cualquier proxy)
-  // y si el servidor soporta WebSocket, socket.io hará upgrade automáticamente.
-  reconnectionDelayMax: 10000,
+  // polling first (works over HTTP/HTTPS), then upgrades to WebSocket automatically
   transports: ["polling", "websocket"],
+  reconnectionDelayMax: 10000,
+  path: "/socket.io/",
 });
 
 export default socket;
