@@ -451,9 +451,11 @@ const CreateList = () => {
             nombre: poi.nombre,
             latitud: poi.latitud,
             longitud: poi.longitud,
-            id_categoria: poi.id_categoria,
-            es_accesible: poi.es_accesible,
-            id_nodo_acceso: poi.id_nodo_acceso,
+            id_categoria: poi.id_categoria || 1,
+            es_accesible: poi.es_accesible ?? 1,
+            // User-created points have no nav node — pass null to avoid FK violation
+            id_nodo_acceso: null,
+            visibilidad: "public",
           });
           if (resPoi.success) {
             poiIdsFinales.push(resPoi.data.id_poi);
