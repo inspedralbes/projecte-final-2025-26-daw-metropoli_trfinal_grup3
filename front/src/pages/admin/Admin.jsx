@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { getEventos, createEvento, updateEvento, getPois, createPoi, deletePoi, getCategorias, createCategoria, getTramos, createTramosBulk, getNodos, createPath, deleteNode, deleteTramo, getTramosByNode, uploadPoiImage } from "../../services/communicationManager";
+import { getPois, createPoi, deletePoi, getCategorias, createCategoria, getTramos, createTramosBulk, getNodos, createPath, deleteNode, deleteTramo, getTramosByNode, uploadPoiImage } from "../../services/communicationManager";
 import {
   MapContainer,
   TileLayer,
@@ -107,29 +107,8 @@ const Admin = () => {
   const [newCatName, setNewCatName] = useState("");
   const [newCatIcon, setNewCatIcon] = useState("fa-solid fa-flag");
   const [newCatColor, setNewCatColor] = useState("#3b82f6");
-  const [eventNombre, setEventNombre] = useState("");
-  const [eventDescripcion, setEventDescripcion] = useState("");
-  const [eventFoto, setEventFoto] = useState("");
-  const [eventFotoFile, setEventFotoFile] = useState(null);
-  const [eventFotoPreview, setEventFotoPreview] = useState("");
-  const [eventFechaInicio, setEventFechaInicio] = useState(null);
-  const [eventFechaFin, setEventFechaFin] = useState(null);
-  const [eventEstado, setEventEstado] = useState("activo");
-  const [savedEvents, setSavedEvents] = useState([]);
-  const [editingEventId, setEditingEventId] = useState(null);
-  const [activeTab, setActiveTab] = useState("events"); // 'map' or 'events'
+  const [activeTab, setActiveTab] = useState("map"); // 'map' or 'qrs'
 
-  // Cargar eventos del backend
-  const fetchEvents = () => {
-    getEventos()
-      .then(res => {
-        if (res.success && res.data) {
-          // Filtrar eventos cancelados o inactivos para que no se muestren en la lista
-          setSavedEvents(res.data.filter(e => e.estado !== 'cancelado'));
-        }
-      })
-      .catch(err => console.error("Error fetching eventos:", err));
-  };
 
   // Cargar POIs del backend
   const fetchPois = () => {
@@ -170,7 +149,6 @@ const Admin = () => {
   };
 
   useEffect(() => {
-    fetchEvents();
     fetchPois();
     fetchCategories();
 
@@ -186,26 +164,6 @@ const Admin = () => {
       socket.off('mapa_actualizado');
     };
   }, []);
-  const handleEditEvent = (event) => {
-    setEditingEventId(event.id_evento);
-    setEventNombre(event.nombre);
-    setEventDescripcion(event.descripcion || "");
-    setEventFoto(event.foto || "");
-    setEventFotoFile(null);
-    setEventFotoPreview(event.foto ? `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${event.foto}` : "");
-    setEventFechaInicio(new Date(event.fecha_inicio));
-    setEventFechaFin(new Date(event.fecha_fin));
-    setEventEstado(event.estado || "activo");
-    setActiveTab("events");
-  };
-
-  const handleDeleteEvent = (id) => {
-    if (window.confirm("¿Seguro que quieres borrar (ocultar) este evento?")) {
-      updateEvento(id, { estado: 'cancelado' })
-        .then(() => fetchEvents())
-        .catch(err => console.error("Error deleting event:", err));
-    }
-  };
 
   // Funció per guardar un punt al mapa
   const handleSavePoint = async () => {
@@ -229,7 +187,6 @@ const Admin = () => {
       longitud: selectedPosition.lng,
       id_categoria: pointType,
       es_accesible: poiEsAccesible ? 1 : 0,
-      es_fijo: 1,
       imagen_url: null, // La imagen se sube por separado en la siguiente petición
       id_nodo_acceso: targetNodeIdForPoi
     };
@@ -287,60 +244,6 @@ const Admin = () => {
     }).catch(err => console.error("Error creating category:", err));
   };
 
-  // Funció per guardar un esdeveniment
-  const handleSaveEvent = () => {
-    if (!eventNombre || !eventFechaInicio || !eventFechaFin) return;
-
-    let requestData;
-    if (eventFotoFile) {
-      // Usamos FormData para enviar el archivo
-      requestData = new FormData();
-      requestData.append("nombre", eventNombre);
-      requestData.append("descripcion", eventDescripcion);
-      requestData.append("fecha_inicio", eventFechaInicio.toISOString());
-      requestData.append("fecha_fin", eventFechaFin.toISOString());
-      requestData.append("estado", eventEstado);
-      requestData.append("imagen", eventFotoFile);
-    } else {
-      // Envío estándar en JSON si no se cambia la foto
-      requestData = {
-        nombre: eventNombre,
-        descripcion: eventDescripcion,
-        foto: eventFoto, // mandamos el path antiguo para no perderlo
-        fecha_inicio: eventFechaInicio.toISOString(),
-        fecha_fin: eventFechaFin.toISOString(),
-        estado: eventEstado,
-      };
-    }
-
-    if (editingEventId) {
-      updateEvento(editingEventId, requestData)
-        .then(() => {
-          fetchEvents();
-          resetEventForm();
-        })
-        .catch(err => console.error("Error al actualizar: ", err));
-    } else {
-      createEvento(requestData)
-        .then(() => {
-          fetchEvents();
-          resetEventForm();
-        })
-        .catch(err => console.error("Error al crear: ", err));
-    }
-  };
-
-  const resetEventForm = () => {
-    setEditingEventId(null);
-    setEventNombre("");
-    setEventDescripcion("");
-    setEventFoto("");
-    setEventFotoFile(null);
-    setEventFotoPreview("");
-    setEventFechaInicio(null);
-    setEventFechaFin(null);
-    setEventEstado("activo");
-  };
 
   // --- Lógica de Modo Red (Dibujo Unificado) ---
   const toggleNetworkMode = () => {
@@ -379,7 +282,7 @@ const Admin = () => {
   const handleConvertNodeToPoi = (node) => {
     setActiveTab("map");
     setSelectedPosition({ lat: node.latitud, lng: node.longitud });
-    setPointName(node.descripcion === 'Punto de ruta dibujado' ? "" : node.descripcion);
+    setPointName("");
     setTargetNodeIdForPoi(node.id_nodo);
 
     // Forzamos el scroll después de un pequeño delay para asegurar que el tab está renderizado/visible
@@ -481,18 +384,17 @@ const Admin = () => {
   };
 
   return (
-    <div className="relative min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display select-none transition-colors duration-300 md:pl-16">
+    <div className="relative min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display select-none transition-colors duration-300 md:pl-20">
       {/* Top Bar */}
       <div className="w-full pt-6 px-5 pb-4 bg-gray-50 dark:bg-slate-950 z-20 transition-colors duration-300 border-b border-slate-200 dark:border-slate-800 md:max-w-6xl md:mx-auto">
         <div className="flex justify-between items-center">
           <div className="flex items-center gap-3">
-            <img src="/logo/logo.png" alt="Circuit Logo" className="h-10 w-auto object-contain block dark:hidden" />
-            <img src="/logo/logo1.png" alt="Circuit Logo" className="h-10 w-auto object-contain hidden dark:block" />
+            <img src="/logo/logo.png" alt="Metropoli Logo" className="h-10 w-auto object-contain dark:invert transition-all" />
             <div>
               <h1 className="text-xl font-black italic uppercase tracking-tighter text-slate-800 dark:text-white leading-none">
                 Admin <span className="text-primary">Panel</span>
               </h1>
-              <p className="text-xs text-slate-400 font-medium">Circuit de Catalunya</p>
+              <p className="text-xs text-slate-400 font-medium">Metropoli App</p>
             </div>
           </div>
           <Link
@@ -509,13 +411,7 @@ const Admin = () => {
 
         {/* Tabs Navigation */}
         <div className="flex p-1 bg-slate-200/50 dark:bg-[#12080a] rounded-2xl mb-6 shadow-inner w-full custom-tabs mx-auto lg:max-w-2xl">
-          <button
-            onClick={() => setActiveTab('events')}
-            className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 ${activeTab === 'events' ? 'bg-white dark:bg-slate-800 text-primary shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
-          >
-            <span className="material-symbols-outlined text-lg">event</span>
-            Eventos
-          </button>
+
           <button
             onClick={() => setActiveTab('map')}
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 ${activeTab === 'map' ? 'bg-white dark:bg-slate-800 text-primary shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
@@ -547,7 +443,7 @@ const Admin = () => {
                     onClick={toggleNetworkMode}
                     className={`px-3 py-1.5 rounded-lg text-xs font-bold transition-colors flex items-center gap-1 border ${isDrawMode
                       ? 'bg-red-50 text-red-600 border-red-200 hover:bg-red-100'
-                      : 'bg-indigo-50 text-indigo-600 border-indigo-200 hover:bg-indigo-100'
+                      : 'bg-primary/10 text-primary border-primary/20 hover:bg-primary/20'
                       }`}
                   >
                     <span className="material-symbols-outlined text-[16px]">
@@ -580,8 +476,8 @@ const Admin = () => {
               </div>
 
               {isDrawMode && (
-                <div className="bg-indigo-50 border border-indigo-200 text-indigo-800 text-xs px-3 py-2 rounded-xl mb-3 flex items-start gap-2">
-                  <span className="material-symbols-outlined text-indigo-500 text-sm mt-0.5">info</span>
+                <div className="bg-primary/10 border border-primary/20 text-primary text-xs px-3 py-2 rounded-xl mb-3 flex items-start gap-2">
+                  <span className="material-symbols-outlined text-primary text-sm mt-0.5">info</span>
                   <p><strong>Modo Red:</strong> Pincha en el asfalto para crear caminos nuevos o pulsa en los nodos/POIs para conectarlos entre sí.</p>
                 </div>
               )}
@@ -643,7 +539,7 @@ const Admin = () => {
                   {currentPathCoords.length >= 2 && (
                     <Polyline
                       positions={currentPathCoords}
-                      color="#6366f1" // Indigo 500
+                      color="var(--theme-color, #6366f1)" // Primary Glow
                       weight={5}
                     />
                   )}
@@ -655,7 +551,7 @@ const Admin = () => {
                       position={coord}
                       icon={L.divIcon({
                         className: "path-dot",
-                        html: `<div class="w-3 h-3 bg-indigo-600 rounded-full border-2 border-white shadow-sm"></div>`,
+                        html: `<div class="w-3 h-3 bg-primary rounded-full border-2 border-white shadow-sm"></div>`,
                         iconSize: [12, 12],
                         iconAnchor: [6, 6]
                       })}
@@ -743,7 +639,7 @@ const Admin = () => {
                           <Popup eventHandlers={{ add: () => handleFetchNodeTramos(node.id_nodo) }}>
                             <div className="p-1 w-48 space-y-2">
                               <h4 className="font-bold text-xs text-slate-400 italic">Nodo #{node.id_nodo}</h4>
-                              <p className="text-xs">{node.descripcion || 'Sin descripción'}</p>
+                              <p className="text-xs text-slate-500 italic">Navigation Node</p>
 
                               <div className="border-t pt-2">
                                 <p className="text-[10px] font-bold uppercase text-slate-400 mb-1">Tramos Conectados</p>
@@ -1019,273 +915,7 @@ const Admin = () => {
                     Create Category
                   </button>
                 </div>
-              </div>
-            </div>
-          )}
-
-          {/* Section 2: Event Management */}
-          {activeTab === 'events' && (
-            <div className="animate-fade-in lg:grid lg:grid-cols-2 lg:gap-8 lg:items-start space-y-8 lg:space-y-0">
-
-              {/* Left Column: List */}
-              <div className="order-2 lg:order-1">
-                <div className="mt-6 lg:mt-0">
-                  <h3 className="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3 ml-1 lg:mb-3">
-                    Eventos Creados
-                  </h3>
-                  {savedEvents.length > 0 ? (
-                    <div className="space-y-3">
-                      {savedEvents.map((event) => (
-                        <div
-                          key={event.id_evento || event.id}
-                          className="bg-white dark:bg-[#12080a] p-4 rounded-2xl border border-slate-100 dark:border-slate-800 shadow-sm flex justify-between items-center group"
-                        >
-                          <div className="flex items-center gap-4">
-                            {event.foto ? (
-                              <img
-                                src={`${import.meta.env.VITE_API_URL || "http://localhost:3000"}${event.foto}`}
-                                alt={event.nombre}
-                                className="w-10 h-10 rounded-full object-cover"
-                              />
-                            ) : (
-                              <div className="w-10 h-10 rounded-full bg-primary/10 text-primary flex items-center justify-center">
-                                <span className="material-symbols-outlined">
-                                  event
-                                </span>
-                              </div>
-                            )}
-                            <div>
-                              <div className="flex items-center gap-2">
-                                <p className="font-bold text-slate-800 dark:text-white text-sm">
-                                  {event.nombre}
-                                </p>
-                                <span
-                                  className={`text-[10px] font-bold px-2 py-0.5 rounded-full ${event.estado === "activo"
-                                    ? "bg-emerald-100 text-emerald-600"
-                                    : event.estado === "cancelado"
-                                      ? "bg-red-100 text-red-500"
-                                      : "bg-slate-100 text-slate-500"
-                                    }`}
-                                >
-                                  {event.estado}
-                                </span>
-                              </div>
-                              <p className="text-xs text-slate-500 dark:text-slate-400 font-medium">
-                                {new Date(event.fecha_inicio).toLocaleDateString(
-                                  "es",
-                                  { day: "numeric", month: "short" },
-                                )}{" "}
-                                →{" "}
-                                {new Date(event.fecha_fin).toLocaleDateString("es", {
-                                  day: "numeric",
-                                  month: "short",
-                                  year: "numeric",
-                                })}
-                              </p>
-                            </div>
-                          </div>
-                          <div className="flex gap-2 opacity-0 group-hover:opacity-100 transition-opacity">
-                            <button
-                              onClick={() => handleEditEvent(event)}
-                              className="w-8 h-8 rounded-full bg-blue-50 text-blue-500 flex items-center justify-center active:bg-blue-100"
-                            >
-                              <span className="material-symbols-outlined text-lg">edit</span>
-                            </button>
-                            <button
-                              onClick={() => handleDeleteEvent(event.id_evento || event.id)}
-                              className="w-8 h-8 rounded-full bg-red-50 text-red-500 flex items-center justify-center active:bg-red-100"
-                            >
-                              <span className="material-symbols-outlined text-lg">delete</span>
-                            </button>
-                          </div>
-                        </div>
-                      ))}
                     </div>
-                  ) : (
-                    <div className="bg-slate-50 dark:bg-[#12080a] text-slate-400 dark:text-slate-500 rounded-2xl border border-dashed border-slate-200 dark:border-slate-800 p-8 text-center flex flex-col items-center justify-center">
-                      <span className="material-symbols-outlined text-4xl mb-2 opacity-50">event_busy</span>
-                      <p className="font-medium text-sm">No hay eventos activos.</p>
-                    </div>
-                  )}
-                </div>
-              </div>
-
-              {/* Right Column: Form */}
-              <div className="order-1 lg:order-2">
-                <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-3 flex items-center gap-2">
-                  Event Management
-                </h3>
-
-                <div className="bg-white dark:bg-[#12080a] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 space-y-4">
-                  {/* Nombre */}
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
-                      Nombre
-                    </label>
-                    <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-                      <span className="material-symbols-outlined text-slate-400">
-                        event_note
-                      </span>
-                      <input
-                        type="text"
-                        value={eventNombre}
-                        onChange={(e) => setEventNombre(e.target.value)}
-                        className="bg-transparent border-none outline-none w-full text-slate-700 dark:text-slate-200 text-sm font-medium placeholder-slate-400"
-                        placeholder="e.g. Qualifying Session"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Descripcion */}
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
-                      Descripción
-                    </label>
-                    <div className="flex items-start gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-                      <span className="material-symbols-outlined text-slate-400 mt-0.5">
-                        description
-                      </span>
-                      <textarea
-                        value={eventDescripcion}
-                        onChange={(e) => setEventDescripcion(e.target.value)}
-                        rows={3}
-                        className="bg-transparent border-none outline-none w-full text-slate-700 dark:text-slate-200 text-sm font-medium placeholder-slate-400 resize-none"
-                        placeholder="Descripción del evento..."
-                      />
-                    </div>
-                  </div>
-
-                  {/* Foto (Archivo) */}
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
-                      Foto del Evento
-                    </label>
-                    <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-                      <span className="material-symbols-outlined text-slate-400">
-                        image
-                      </span>
-                      <input
-                        type="file"
-                        accept="image/*"
-                        onChange={(e) => {
-                          const file = e.target.files[0];
-                          if (file) {
-                            setEventFotoFile(file);
-                            setEventFotoPreview(URL.createObjectURL(file));
-                          } else {
-                            // si el usuario cancela la selección
-                            setEventFotoFile(null);
-                            setEventFotoPreview(eventFoto ? `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${eventFoto}` : "");
-                          }
-                        }}
-                        className="bg-transparent border-none outline-none w-full text-slate-700 dark:text-slate-200 text-sm font-medium file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-xs file:font-bold file:bg-primary/10 file:text-primary hover:file:bg-primary/20 cursor-pointer"
-                      />
-                    </div>
-                    {/* Preview de la foto */}
-                    {eventFotoPreview && (
-                      <img
-                        src={eventFotoPreview}
-                        alt="preview"
-                        className="mt-4 w-full h-32 object-cover rounded-xl border border-slate-100 dark:border-slate-700 shadow-sm"
-                        onError={(e) => (e.target.style.display = "none")}
-                      />
-                    )}
-                  </div>
-
-                  {/* Fecha Inicio */}
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
-                      Fecha Inicio
-                    </label>
-                    <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-                      <span className="material-symbols-outlined text-slate-400">
-                        calendar_month
-                      </span>
-                      <DatePicker
-                        selected={eventFechaInicio}
-                        onChange={(date) => setEventFechaInicio(date)}
-                        showTimeSelect
-                        dateFormat="Pp"
-                        locale="es"
-                        selectsStart
-                        startDate={eventFechaInicio}
-                        endDate={eventFechaFin}
-                        className="bg-transparent border-none outline-none w-full text-slate-700 dark:text-slate-200 text-sm font-medium placeholder-slate-400"
-                        wrapperClassName="w-full"
-                        popperClassName="shadow-xl rounded-xl overflow-hidden border border-slate-100 dark:border-slate-700"
-                        placeholderText="Selecciona fecha y hora de inicio"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Fecha Fin */}
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
-                      Fecha Fin
-                    </label>
-                    <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-                      <span className="material-symbols-outlined text-slate-400">
-                        event_available
-                      </span>
-                      <DatePicker
-                        selected={eventFechaFin}
-                        onChange={(date) => setEventFechaFin(date)}
-                        showTimeSelect
-                        dateFormat="Pp"
-                        locale="es"
-                        selectsEnd
-                        startDate={eventFechaInicio}
-                        endDate={eventFechaFin}
-                        minDate={eventFechaInicio}
-                        className="bg-transparent border-none outline-none w-full text-slate-700 dark:text-slate-200 text-sm font-medium placeholder-slate-400"
-                        wrapperClassName="w-full"
-                        popperClassName="shadow-xl rounded-xl overflow-hidden border border-slate-100 dark:border-slate-700"
-                        placeholderText="Selecciona fecha y hora de fin"
-                      />
-                    </div>
-                  </div>
-
-                  {/* Estado */}
-                  <div>
-                    <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
-                      Estado
-                    </label>
-                    <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
-                      <span className="material-symbols-outlined text-slate-400">
-                        toggle_on
-                      </span>
-                      <select
-                        value={eventEstado}
-                        onChange={(e) => setEventEstado(e.target.value)}
-                        className="bg-transparent border-none outline-none w-full text-slate-700 dark:text-slate-200 text-sm font-medium appearance-none"
-                      >
-                        <option value="activo">Activo</option>
-                        <option value="inactivo">Inactivo</option>
-                        <option value="cancelado">Cancelado</option>
-                      </select>
-                    </div>
-                  </div>
-
-                  <div className="pt-2 flex gap-3">
-                    <button
-                      onClick={handleSaveEvent}
-                      disabled={!eventNombre || !eventFechaInicio || !eventFechaFin}
-                      className="flex-1 bg-slate-800 dark:bg-white text-white dark:text-slate-900 font-bold py-3.5 rounded-xl shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2 disabled:opacity-40 disabled:cursor-not-allowed"
-                    >
-                      <span className="material-symbols-outlined">{editingEventId ? 'update' : 'save'}</span>
-                      {editingEventId ? 'Actualizar Evento' : 'Crear Evento'}
-                    </button>
-                    {editingEventId && (
-                      <button
-                        onClick={resetEventForm}
-                        className="px-5 bg-slate-200 dark:bg-slate-800 text-slate-700 dark:text-white font-bold rounded-xl active:scale-95 transition-transform flex items-center justify-center border border-slate-300 dark:border-slate-700"
-                      >
-                        Cancelar
-                      </button>
-                    )}
-                  </div>
-                </div>
-              </div>
 
             </div>
           )}

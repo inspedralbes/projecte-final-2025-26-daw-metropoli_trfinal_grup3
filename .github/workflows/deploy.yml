@@ -1,4 +1,4 @@
-name: Deploy to Production
+name: WeMap CI/CD — Test → Deploy
 
 on:
   push:
@@ -6,21 +6,74 @@ on:
       - main
 
 jobs:
-  deploy:
+  # ── Job 1: Tests de la API contra producció actual ─────────────────────────
+  # Els tests s'executen ABANS de desplegar per evitar pujar codi trencat
+  test:
+    name: Cypress API Tests
     runs-on: ubuntu-latest
-
     steps:
-      - name: Deploy via SSH
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Wait for production server to be ready
+        run: |
+          echo "Comprovant que el servidor de producció és accessible..."
+          for i in {1..10}; do
+            if curl -sf "http://${{ secrets.SERVER_HOST }}:3000/api/categorias" > /dev/null 2>&1; then
+              echo "Servidor operatiu!"
+              break
+            fi
+            echo "Intent $i: servidor no disponible, esperant 10s..."
+            sleep 10
+          done
+
+      - name: Run Cypress API Tests (against current production)
+        # L'action gestiona sola: npm ci + instal·lació del binari de Cypress
+        uses: cypress-io/github-action@v6
+        with:
+          working-directory: front
+          config-file: cypress.api.config.js
+          config: baseUrl=http://${{ secrets.SERVER_HOST }}:8080
+          env: API_URL=http://${{ secrets.SERVER_HOST }}:3000
+          browser: chrome
+        env:
+          # Credencials de l'usuari de test ja existent a producció
+          CYPRESS_TEST_EMAIL: ${{ secrets.TEST_USER_EMAIL }}
+          CYPRESS_TEST_PASSWORD: ${{ secrets.TEST_USER_PASSWORD }}
+
+      - name: Upload screenshots on failure
+        if: failure()
+        uses: actions/upload-artifact@v4
+        with:
+          name: cypress-screenshots
+          path: front/cypress/screenshots
+          if-no-files-found: ignore
+
+  # ── Job 2: Desplegament al VPS (NOMÉS si els tests passen) ─────────────────
+  deploy:
+    name: Deploy to VPS
+    runs-on: ubuntu-latest
+    needs: test # ← DEPÈN dels tests: si fallen, NO es desplega
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy to Server via SSH
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: ${{ secrets.SERVER_HOST }}
           username: ${{ secrets.SERVER_USER }}
           key: ${{ secrets.SERVER_SSH_KEY }}
-          script_stop: true
           script: |
             cd ${{ secrets.SERVER_PATH }}
-            git fetch origin main
-            git reset --hard origin/main
-            git clean -fd
-            docker compose -f docker-compose.prod.yml up --build -d
-            docker image prune -f
+            git pull origin main
+            docker compose -f docker-compose.prod.yml build
+            docker compose -f docker-compose.prod.yml up -d
+
+      - name: Smoke test after deploy
+        run: |
+          echo "Verificant que el nou desplegament funciona..."
+          sleep 15
+          curl -sf "http://${{ secrets.SERVER_HOST }}:3000/api/categorias" \
+            && echo " Deploy verificat correctament" \
+            || (echo " El servidor no respon després del deploy" && exit 1)

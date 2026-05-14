@@ -37,7 +37,21 @@ export const deletePoi = async (id) => {
     if (!response.ok) throw new Error("Failed to delete POI");
     return await response.json();
   } catch (error) {
-    console.error("Error in deletePoi:", error);
+    throw error;
+  }
+};
+
+export const updatePoi = async (id, poiData) => {
+  try {
+    const response = await fetch(`${API_URL}/api/pois/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(poiData),
+    });
+    if (!response.ok) throw new Error("Failed to update POI");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in updatePoi:", error);
     throw error;
   }
 };
@@ -184,59 +198,6 @@ export const getPoiNodes = async () => {
   }
 };
 
-// ── Eventos ──
-export const getEventos = async () => {
-  try {
-    const response = await fetch(`${API_URL}/api/eventos`);
-    if (!response.ok) throw new Error("Failed to fetch Eventos");
-    return await response.json();
-  } catch (error) {
-    console.error("Error in getEventos:", error);
-    throw error;
-  }
-};
-
-export const getNextEvento = async () => {
-  try {
-    const response = await fetch(`${API_URL}/api/eventos/proximo`);
-    if (!response.ok) throw new Error("Failed to fetch next Evento");
-    return await response.json();
-  } catch (error) {
-    console.error("Error in getNextEvento:", error);
-    throw error;
-  }
-};
-
-export const createEvento = async (eventoData) => {
-  try {
-    const response = await fetch(`${API_URL}/api/eventos`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(eventoData),
-    });
-    if (!response.ok) throw new Error("Failed to create Evento");
-    return await response.json();
-  } catch (error) {
-    console.error("Error in createEvento:", error);
-    throw error;
-  }
-};
-
-export const updateEvento = async (id, eventoData) => {
-  try {
-    const response = await fetch(`${API_URL}/api/eventos/${id}`, {
-      method: "PUT",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(eventoData),
-    });
-    if (!response.ok) throw new Error("Failed to update Evento");
-    return await response.json();
-  } catch (error) {
-    console.error("Error in updateEvento:", error);
-    throw error;
-  }
-};
-
 // ── Tiempo (Weather) ──
 export const getTiempo = async () => {
   try {
@@ -257,6 +218,41 @@ export const getPublicaciones = async () => {
     return await response.json();
   } catch (error) {
     console.error("Error in getPublicaciones:", error);
+    throw error;
+  }
+};
+
+export const getActividad = async () => {
+  try {
+    const response = await fetch(`${API_URL}/api/comunidad/actividad`);
+    if (!response.ok) throw new Error("Failed to fetch Actividad");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getActividad:", error);
+    throw error;
+  }
+};
+
+export const getChatHistory = async (room) => {
+  try {
+    const response = await fetch(`${API_URL}/api/comunidad/chat/${room}`);
+    if (!response.ok) throw new Error("Failed to fetch Chat History");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getChatHistory:", error);
+    throw error;
+  }
+};
+
+export const searchUsers = async (query) => {
+  try {
+    const response = await fetch(
+      `${API_URL}/api/usuarios/search?q=${encodeURIComponent(query)}`,
+    );
+    if (!response.ok) throw new Error("Failed to search Users");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in searchUsers:", error);
     throw error;
   }
 };
@@ -313,10 +309,12 @@ export const createRespuesta = async (id, cid, respuestaData) => {
   }
 };
 
-export const toggleLike = async (id) => {
+export const toggleLike = async (id, { id_usuario } = {}) => {
   try {
     const response = await fetch(`${API_URL}/api/comunidad/${id}/like`, {
       method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_usuario }),
     });
     if (!response.ok) throw new Error("Failed to toggle Like");
     return await response.json();
@@ -416,30 +414,30 @@ export const getTramosByNode = async (nodeId) => {
   }
 };
 
-// ── Incidencias ──
 
-export const getIncidencias = async () => {
+
+export const getUsuarioStats = async (id) => {
   try {
-    const response = await fetch(`${API_URL}/api/incidencias`);
-    if (!response.ok) throw new Error("Failed to fetch Incidencias");
+    const response = await fetch(`${API_URL}/api/usuarios/${id}/stats`);
+    if (!response.ok) throw new Error("Failed to fetch Usuario Stats");
     return await response.json();
   } catch (error) {
-    console.error("Error in getIncidencias:", error);
+    console.error("Error in getUsuarioStats:", error);
     throw error;
   }
 };
 
-export const createIncidencia = async (incidenciaData) => {
+export const unifiedSearch = async (query, categoryId = null) => {
   try {
-    const response = await fetch(`${API_URL}/api/incidencias`, {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(incidenciaData),
-    });
-    if (!response.ok) throw new Error("Failed to create Incidencia");
+    const url = new URL(`${API_URL}/api/search`);
+    url.searchParams.append("q", query);
+    if (categoryId) url.searchParams.append("cat", categoryId);
+    
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Failed to fetch Search results");
     return await response.json();
   } catch (error) {
-    console.error("Error in createIncidencia:", error);
+    console.error("Error in unifiedSearch:", error);
     throw error;
   }
 };
@@ -540,5 +538,211 @@ export const removeAmigo = async (userId, friendId) => {
   } catch (error) {
     console.error("Error in removeAmigo:", error);
     throw error;
+  }
+};
+
+// ── Listas ──
+
+export const getListas = async (userId = null) => {
+  try {
+    const url = userId ? `${API_URL}/api/listas/publicas?userId=${userId}` : `${API_URL}/api/listas/publicas`;
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Failed to fetch Listas");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getListas:", error);
+    throw error;
+  }
+};
+
+export const getUsuarioListas = async (userId) => {
+  try {
+    const response = await fetch(`${API_URL}/api/listas/usuario/${userId}`);
+    if (!response.ok) throw new Error("Failed to fetch Usuario Listas");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getUsuarioListas:", error);
+    throw error;
+  }
+};
+
+export const getListaById = async (id) => {
+  try {
+    const response = await fetch(`${API_URL}/api/listas/${id}`);
+    if (!response.ok) throw new Error("Failed to fetch Lista");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getListaById:", error);
+    throw error;
+  }
+};
+
+export const createLista = async (listaData) => {
+  try {
+    const response = await fetch(`${API_URL}/api/listas`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(listaData),
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.error || errorData.message || "Failed to create Lista");
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error in createLista:", error);
+    throw error;
+  }
+};
+
+export const deleteLista = async (id) => {
+  try {
+    const response = await fetch(`${API_URL}/api/listas/${id}`, {
+      method: "DELETE",
+    });
+    if (!response.ok) throw new Error("Failed to delete Lista");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in deleteLista:", error);
+    throw error;
+  }
+};
+
+export const updateLista = async (id, listaData) => {
+  try {
+    const response = await fetch(`${API_URL}/api/listas/${id}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(listaData),
+    });
+    if (!response.ok) throw new Error("Failed to update Lista");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in updateLista:", error);
+    throw error;
+  }
+};
+
+export const uploadListaImage = async (idLista, file) => {
+  try {
+    const formData = new FormData();
+    formData.append("imagenLista", file);
+
+    const response = await fetch(`${API_URL}/api/listas/${idLista}/imagen`, {
+      method: "POST",
+      body: formData,
+    });
+    if (!response.ok) throw new Error("Failed to upload Lista image");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in uploadListaImage:", error);
+    throw error;
+  }
+};
+
+export const getFriendsListas = async (userId) => {
+  try {
+    const response = await fetch(`${API_URL}/api/listas/friends/all?userId=${userId}`);
+    if (!response.ok) throw new Error("Failed to fetch Friends Listas");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getFriendsListas:", error);
+    throw error;
+  }
+};
+
+export const toggleLikeLista = async (idLista, idUsuario) => {
+  try {
+    const response = await fetch(`${API_URL}/api/listas/${idLista}/like`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_usuario: idUsuario }),
+    });
+    if (!response.ok) throw new Error("Failed to toggle like on Lista");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in toggleLikeLista:", error);
+    throw error;
+  }
+};
+
+// ── Seguidores ──
+
+export const followUsuario = async (idSeguidor, idSeguido) => {
+  try {
+    const response = await fetch(`${API_URL}/api/seguidores/follow`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_seguidor: idSeguidor, id_seguido: idSeguido }),
+    });
+    if (!response.ok) throw new Error("Failed to follow user");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in followUsuario:", error);
+    throw error;
+  }
+};
+
+export const unfollowUsuario = async (idSeguidor, idSeguido) => {
+  try {
+    const response = await fetch(`${API_URL}/api/seguidores/unfollow`, {
+      method: "DELETE",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_seguidor: idSeguidor, id_seguido: idSeguido }),
+    });
+    if (!response.ok) throw new Error("Failed to unfollow user");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in unfollowUsuario:", error);
+    throw error;
+  }
+};
+
+export const getSeguidores = async (userId) => {
+  try {
+    const response = await fetch(
+      `${API_URL}/api/seguidores/${userId}/followers`,
+    );
+    if (!response.ok) throw new Error("Failed to fetch seguidores");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getSeguidores:", error);
+    throw error;
+  }
+};
+
+export const getSiguiendo = async (userId) => {
+  try {
+    const response = await fetch(
+      `${API_URL}/api/seguidores/${userId}/following`,
+    );
+    if (!response.ok) throw new Error("Failed to fetch siguiendo");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in getSiguiendo:", error);
+    throw error;
+  }
+};
+
+export const checkIsFollowing = async (userId, targetId) => {
+  try {
+    const response = await fetch(
+      `${API_URL}/api/seguidores/${userId}/isFollowing/${targetId}`,
+    );
+    if (!response.ok) throw new Error("Failed to check isFollowing");
+    return await response.json();
+  } catch (error) {
+    console.error("Error in checkIsFollowing:", error);
+    return { isFollowing: false };
+  }
+};
+
+export const getSeguidoresCounts = async (userId) => {
+  try {
+    const response = await fetch(`${API_URL}/api/seguidores/${userId}/counts`);
+    if (!response.ok) throw new Error("Failed to fetch counts");
+    return await response.json();
+  } catch (error) {
+    return { data: { followers: 0, following: 0 } };
   }
 };

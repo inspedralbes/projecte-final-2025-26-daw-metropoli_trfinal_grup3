@@ -190,7 +190,7 @@ const EditProfile = () => {
           progress_activity
         </span>
         <p className="text-slate-500 font-medium animate-pulse">
-          {t("loading", "Cargando perfil...")}
+          {t("common.loading", "Cargando...")}
         </p>
       </div>
     );
@@ -210,14 +210,14 @@ const EditProfile = () => {
             </span>
           </button>
           <h1 className="text-xl font-bold text-slate-800 dark:text-white">
-            {t("editProfile.title")}
+            {t("editProfile.title", "Editar Perfil")}
           </h1>
           <button
             onClick={handleGuardar}
             className={`px-4 py-2 rounded-full text-sm font-bold transition-all duration-300 shadow-sm ${
               guardado
                 ? "bg-emerald-500 text-white shadow-emerald-500/30"
-                : "bg-primary text-white hover:bg-primary/90 shadow-primary/30"
+                : "bg-primary text-primary-text hover:opacity-90 shadow-primary/30"
             }`}
           >
             {guardado ? (
@@ -225,10 +225,10 @@ const EditProfile = () => {
                 <span className="material-symbols-outlined text-base">
                   check
                 </span>
-                {t("editProfile.saved")}
+                {t("editProfile.saved", "Guardado")}
               </span>
             ) : (
-              t("editProfile.save")
+              t("editProfile.save", "Guardar")
             )}
           </button>
         </div>
@@ -253,7 +253,7 @@ const EditProfile = () => {
               </div>
               <label
                 htmlFor="avatar-upload"
-                className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-primary text-white flex items-center justify-center shadow-lg shadow-primary/30 hover:bg-primary/90 transition-colors border-2 border-white dark:border-slate-900 cursor-pointer"
+                className="absolute bottom-0 right-0 w-10 h-10 rounded-full bg-primary text-primary-text flex items-center justify-center shadow-lg shadow-primary/30 hover:opacity-90 transition-colors border-2 border-white dark:border-slate-900 cursor-pointer"
               >
                 <span className="material-symbols-outlined text-xl">
                   photo_camera
@@ -268,7 +268,7 @@ const EditProfile = () => {
               </label>
             </div>
             <p className="text-sm font-medium text-slate-500 dark:text-slate-400">
-              {t("editProfile.changeAvatar") || "Cambiar Foto de Perfil"}
+              {t("editProfile.changeAvatar", "Cambiar Foto de Perfil")}
             </p>
           </div>
 
@@ -282,14 +282,14 @@ const EditProfile = () => {
                 <span className="material-symbols-outlined text-slate-400 text-lg">
                   person
                 </span>
-                {t("editProfile.name")}
+                {t("editProfile.name", "Nombre")}
               </label>
               <input
                 type="text"
                 value={nombre}
                 onChange={(e) => setNombre(e.target.value)}
                 maxLength={40}
-                placeholder={t("editProfile.namePlaceholder") || "Tu nombre"}
+                placeholder={t("editProfile.namePlaceholder", "Tu nombre")}
                 className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-2xl px-4 py-3.5 text-base text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors ${
                   errores.nombre
                     ? "border-red-400 focus:ring-red-400"
@@ -312,7 +312,7 @@ const EditProfile = () => {
                 <span className="material-symbols-outlined text-slate-400 text-lg">
                   description
                 </span>
-                {t("editProfile.bio")}
+                {t("editProfile.bio", "Biografía")}
               </label>
               <textarea
                 value={bio}
@@ -320,8 +320,7 @@ const EditProfile = () => {
                 maxLength={100}
                 rows={3}
                 placeholder={
-                  t("editProfile.bioPlaceholder") ||
-                  "Cuéntanos algo sobre ti..."
+                  t("editProfile.bioPlaceholder", "Cuéntanos algo sobre ti...")
                 }
                 className={`w-full bg-slate-50 dark:bg-slate-950 border rounded-2xl px-4 py-3.5 text-base text-slate-800 dark:text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-primary/50 transition-colors resize-none ${
                   errores.bio
@@ -347,7 +346,7 @@ const EditProfile = () => {
               <p className="text-sm text-blue-700 dark:text-blue-300 leading-relaxed font-medium">
                 {t(
                   "editProfile.infoNote",
-                  "Your profile information is visible to other fans in the community. Changes to your avatar will update across all your posts and comments.",
+                  "Your profile information is visible to other explorers in the community. Changes to your avatar will update across all your routes and comments.",
                 )}
               </p>
             </div>

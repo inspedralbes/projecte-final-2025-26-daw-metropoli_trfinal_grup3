@@ -24,23 +24,12 @@ CREATE TABLE IF NOT EXISTS categoria (
     color_hex VARCHAR(7)
 );
 
--- 3. EVENTOS (Independiente)
-CREATE TABLE IF NOT EXISTS eventos (
-    id_evento INTEGER PRIMARY KEY AUTO_INCREMENT,
-    nombre VARCHAR(100) NOT NULL,
-    descripcion TEXT,
-    foto VARCHAR(255),
-    fecha_inicio DATETIME NOT NULL,
-    fecha_fin DATETIME NOT NULL,
-    estado VARCHAR(20) DEFAULT 'programado'
-);
 
 -- 4. NODOS DE NAVEGACIÓN (¡OJO! Movido ANTES de POIS)
 CREATE TABLE IF NOT EXISTS nodos_navegacion (
     id_nodo INTEGER PRIMARY KEY AUTO_INCREMENT,
     latitud DECIMAL(10, 8) NOT NULL,
-    longitud DECIMAL(11, 8) NOT NULL,
-    descripcion VARCHAR(100)
+    longitud DECIMAL(11, 8) NOT NULL
 );
 
 -- 5. RUTAS/TRAMOS (Depende de Nodos)
@@ -51,8 +40,8 @@ CREATE TABLE IF NOT EXISTS rutas_tramos (
     distancia_metros DECIMAL(10, 2),
     es_accesible BOOLEAN DEFAULT 1,
     tipo_terreno VARCHAR(50) DEFAULT 'asfalto',
-    FOREIGN KEY (id_nodo_origen) REFERENCES nodos_navegacion(id_nodo),
-    FOREIGN KEY (id_nodo_destino) REFERENCES nodos_navegacion(id_nodo)
+    FOREIGN KEY (id_nodo_origen) REFERENCES nodos_navegacion(id_nodo) ON DELETE CASCADE,
+    FOREIGN KEY (id_nodo_destino) REFERENCES nodos_navegacion(id_nodo) ON DELETE CASCADE
 );
 
 -- 6. POIS (Ahora sí, porque Nodos y Categorías ya existen)
@@ -64,58 +53,16 @@ CREATE TABLE IF NOT EXISTS pois (
     longitud DECIMAL(11, 8) NOT NULL,
     id_categoria INTEGER NOT NULL,
     es_accesible BOOLEAN DEFAULT 0,
-    es_fijo BOOLEAN DEFAULT 1,
+    es_fijo BOOLEAN DEFAULT 0,
     imagen_url VARCHAR(255),
-    id_nodo_acceso INTEGER, -- Coma añadida
-    FOREIGN KEY (id_nodo_acceso) REFERENCES nodos_navegacion(id_nodo), -- Coma añadida
-    FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria)
+    id_nodo_acceso INTEGER,
+    id_usuario INTEGER NULL,
+    visibilidad ENUM('public', 'friends', 'private') DEFAULT 'public',
+    FOREIGN KEY (id_nodo_acceso) REFERENCES nodos_navegacion(id_nodo) ON DELETE SET NULL,
+    FOREIGN KEY (id_categoria) REFERENCES categoria(id_categoria) ON DELETE CASCADE,
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE
 );
 
--- 7. EVENTO_POI_CONFIG (Depende de Eventos y Pois)
-CREATE TABLE IF NOT EXISTS evento_poi_config (
-    id_evento INTEGER,
-    id_poi INTEGER,
-    estado VARCHAR(20) DEFAULT 'disponible',
-    PRIMARY KEY (id_evento, id_poi),
-    FOREIGN KEY (id_evento) REFERENCES eventos(id_evento),
-    FOREIGN KEY (id_poi) REFERENCES pois(id_poi)
-);
-
--- 8. HORARIOS DETALLADOS (Depende de Pois y Eventos)
-CREATE TABLE IF NOT EXISTS poi_horarios (
-    id_horario INTEGER PRIMARY KEY AUTO_INCREMENT,
-    id_poi INTEGER NOT NULL,
-    id_evento INTEGER NOT NULL,
-    dia_semana VARCHAR(10) NOT NULL,
-    hora_apertura TIME NOT NULL,
-    hora_cierre TIME NOT NULL,
-    FOREIGN KEY (id_poi) REFERENCES pois(id_poi),
-    FOREIGN KEY (id_evento) REFERENCES eventos(id_evento)
-);
-
--- 9. MULTIMEDIA (Depende de Pois)
-CREATE TABLE IF NOT EXISTS poi_multimedia (
-    id_media INTEGER PRIMARY KEY AUTO_INCREMENT,
-    id_poi INTEGER NOT NULL,
-    url_archivo VARCHAR(255) NOT NULL,
-    tipo VARCHAR(20) DEFAULT 'imagen',
-    titulo VARCHAR(100),
-    orden INTEGER DEFAULT 0,
-    FOREIGN KEY (id_poi) REFERENCES pois(id_poi)
-);
-
--- 10. INCIDENCIAS (Depende de Pois y Usuarios)
-CREATE TABLE IF NOT EXISTS incidencias (
-    id_incidencia INTEGER PRIMARY KEY AUTO_INCREMENT,
-    id_poi INTEGER NOT NULL,
-    id_usuario_reporta INTEGER,
-    tipo VARCHAR(50) NOT NULL,
-    descripcion TEXT,
-    fecha_reporte DATETIME DEFAULT CURRENT_TIMESTAMP,
-    estado VARCHAR(20) DEFAULT 'activa',
-    FOREIGN KEY (id_poi) REFERENCES pois(id_poi),
-    FOREIGN KEY (id_usuario_reporta) REFERENCES usuario(id_usuario)
-);
 
 -- 11. TRADUCCIONES (Independiente lógicamente, referencialmente débil)
 CREATE TABLE IF NOT EXISTS traducciones (
@@ -159,5 +106,56 @@ CREATE TABLE IF NOT EXISTS qr_codes (
     ruta_archivo_qr VARCHAR(255) NOT NULL,
     activo BOOLEAN DEFAULT 1,
     fecha_creacion DATETIME DEFAULT CURRENT_TIMESTAMP,
-    FOREIGN KEY (id_nodo_inicio) REFERENCES nodos_navegacion(id_nodo)
+    FOREIGN KEY (id_nodo_inicio) REFERENCES nodos_navegacion(id_nodo) ON DELETE CASCADE
+);
+
+-- 14. LISTAS DE USUARIOS
+CREATE TABLE IF NOT EXISTS listas (
+    id_lista INT AUTO_INCREMENT PRIMARY KEY,
+    id_usuario INT NOT NULL,
+    nombre VARCHAR(255) NOT NULL,
+    descripcion TEXT,
+    imagen_url VARCHAR(255),
+    visibilidad ENUM('public', 'friends', 'private') DEFAULT 'private',
+    likes INTEGER DEFAULT 0,
+    fecha_creacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS lista_likes (
+    id_lista INT NOT NULL,
+    id_usuario INT NOT NULL,
+    fecha_like TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_lista, id_usuario),
+    FOREIGN KEY (id_lista) REFERENCES listas(id_lista) ON DELETE CASCADE,
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE
+);
+
+CREATE TABLE IF NOT EXISTS lista_pois (
+    id_lista INT NOT NULL,
+    id_poi INT NOT NULL,
+    orden INT NOT NULL,
+    PRIMARY KEY (id_lista, id_poi),
+    FOREIGN KEY (id_lista) REFERENCES listas(id_lista) ON DELETE CASCADE,
+    FOREIGN KEY (id_poi) REFERENCES pois(id_poi) ON DELETE CASCADE
+);
+
+-- 15. SEGUIDORES (Sistema follow/unfollow unidireccional)
+CREATE TABLE IF NOT EXISTS seguidores (
+    id_seguidor INTEGER NOT NULL,
+    id_seguido  INTEGER NOT NULL,
+    fecha_seguimiento DATETIME DEFAULT CURRENT_TIMESTAMP,
+    PRIMARY KEY (id_seguidor, id_seguido),
+    FOREIGN KEY (id_seguidor) REFERENCES usuario(id_usuario) ON DELETE CASCADE,
+    FOREIGN KEY (id_seguido)  REFERENCES usuario(id_usuario) ON DELETE CASCADE
+);
+-- 16. ACTIVIDAD DEL USUARIO (Estadísticas)
+CREATE TABLE IF NOT EXISTS usuario_actividad (
+    id_actividad INTEGER PRIMARY KEY AUTO_INCREMENT,
+    id_usuario INTEGER NOT NULL,
+    tipo VARCHAR(50) NOT NULL, -- 'poi_visitado', 'ruta_completada'
+    valor DECIMAL(10, 2) DEFAULT 0, -- Distancia en KM o puntos
+    id_referencia INTEGER NULL, -- ID del POI o de la lista/ruta
+    fecha DATETIME DEFAULT CURRENT_TIMESTAMP,
+    FOREIGN KEY (id_usuario) REFERENCES usuario(id_usuario) ON DELETE CASCADE
 );

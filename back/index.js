@@ -5,7 +5,8 @@ import { createServer } from "http"; // Necesario para envolver el servidor de E
 import path from "path";
 import { fileURLToPath } from "url";
 import routes from "./src/routes/index.js";
-import qrRoutes from "./src/routes/qrRoutes.js"; // IMPORT NEW ROUTE
+import qrRoutes from "./src/routes/qrRoutes.js";
+import jarvisRoutes from "./src/routes/jarvisRoutes.js";
 import "./src/services/weatherService.js";
 import { initSocket } from "./src/config/socket.js"; // Nuestra antena de radio nueva
 
@@ -29,13 +30,15 @@ app.use(express.json());
 
 // Servir la carpeta 'public' para acceder a los QR generados
 app.use("/public", express.static(path.join(__dirname, "public")));
-// Servir imágenes directamente en /images — los controladores guardan rutas como /images/eventos/foto.jpg
+// Servir imágenes directamente en /images — los controladores guardan rutas como /images/tipo/foto.jpg
 app.use("/images", express.static(path.join(__dirname, "public/images")));
 // Servir uploads directamente en /uploads (para imágenes de la comunidad y perfil)
 app.use("/uploads", express.static(path.join(__dirname, "public/uploads")));
 
 app.use("/api", routes);
 app.use("/api/qr", qrRoutes); // CONFIGURE NEW ROUTE PREFIX
+app.use("/api/jarvis", jarvisRoutes);
+
 app.get("/", (req, res) => {
   res.send("MetroPoli Backend API is running");
 });

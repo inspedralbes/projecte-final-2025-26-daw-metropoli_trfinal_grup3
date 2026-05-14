@@ -51,6 +51,7 @@ Ahora puedes gestionar el proyecto fácilmente usando scripts de Node/NPM desde 
 - **`npm run clean`**: Limpieza total (elimina imágenes y volúmenes/base de datos).
 
 ### Requisitos
+
 - Tener instalado Node.js y Docker.
 - Los scripts se encargan de ejecutar `docker compose` internamente.
 

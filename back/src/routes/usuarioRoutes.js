@@ -12,7 +12,10 @@ const router = express.Router();
 
 router.post('/', usuarioController.createUsuario);
 router.get('/', usuarioController.getUsuarios);
+router.get('/search', usuarioController.searchUsuarios);
 router.get('/:id', usuarioController.getUsuarioById);
+router.get('/:id/stats', usuarioController.getUsuarioStats);
+router.post('/actividad', usuarioController.logActividad);
 router.put('/:id/perfil', upload.single('fotoPerfil'), usuarioController.editarPerfil);
 
 export default router;

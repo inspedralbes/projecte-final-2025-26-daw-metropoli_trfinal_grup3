@@ -89,7 +89,7 @@ const WeatherCard = () => {
     return (
         <div className="weather-card">
             <div className="weather-header">
-                <h3>METRÓPOLI WEATHER</h3>
+                <h3>WEMAP WEATHER</h3>
             </div>
 
             <div className="weather-grid">

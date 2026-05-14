@@ -6,7 +6,6 @@ const router = express.Router();
 
 // Creación de POIs
 router.post('/', poiController.createPoiSimple);
-router.post('/completo', poiController.createPoiCompleto);
 
 // Obtener todos los POIs
 router.get('/', poiController.getPois);
@@ -19,5 +18,8 @@ router.post('/:id/imagen', upload.single('imagenPoi'), poiController.uploadPoiIm
 
 // Eliminar un POI
 router.delete('/:id', poiController.deletePoi);
+
+// Actualizar un POI
+router.put('/:id', poiController.updatePoi);
 
 export default router;

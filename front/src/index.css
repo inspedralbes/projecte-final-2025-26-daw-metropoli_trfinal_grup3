@@ -2,8 +2,9 @@
 @variant dark (&:where(.dark, .dark *));
 
 @theme {
-  --color-primary: #ee2b4b;
-  --color-primary-dark: #c41e3a;
+  --color-primary: var(--theme-color, #000000);
+  --color-primary-text: var(--theme-text, #ffffff);
+  --color-primary-dark: color-mix(in srgb, var(--theme-color, #000000) 80%, black);
   --color-background-light: #f8f6f6;
   --color-background-dark: #0f0506;
   --color-surface-dark: #1f1214;
@@ -14,7 +15,12 @@
 }
 
 :root {
-  --primary-color: #ee2b4b;
+  --theme-color: #000000;
+  --theme-text: #ffffff;
+}
+html.dark {
+  --theme-color: #ffffff;
+  --theme-text: #000000;
 }
 
 body {
@@ -63,6 +69,10 @@ html.dark body {
   box-shadow:
     0 8px 25px -5px rgba(238, 43, 75, 0.6),
     0 10px 10px -5px rgba(238, 43, 75, 0.4);
+}
+
+.shadow-primary-glow {
+  box-shadow: 0 8px 25px -5px color-mix(in srgb, var(--theme-color) 50%, transparent);
 }
 
 /* Leaflet Overrides for Dark Mode */
@@ -146,4 +156,35 @@ html.dark body {
   left: 50%;
   transform: translateX(-50%);
   animation: scan-move 2.5s infinite ease-in-out;
+}
+
+/* Modern Scrollbar */
+.modern-scrollbar::-webkit-scrollbar {
+  width: 5px;
+}
+.modern-scrollbar::-webkit-scrollbar-track {
+  background: transparent;
+}
+.modern-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 10px;
+}
+html.dark .modern-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+/* Responsive Container Utility */
+.safe-container {
+  @apply w-full mx-auto px-6;
+}
+
+@media (min-width: 768px) {
+  .safe-container {
+    @apply max-w-[1440px] px-12;
+  }
+}
+
+@media (min-width: 1536px) {
+  .safe-container {
+    @apply px-20;
+  }
 }

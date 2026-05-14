@@ -41,8 +41,8 @@ const calcularScore = (distanciaMetros, esAccesible) => {
 
 const createPoiSimple = async (req, res) => {
     try {
-        const { nombre, descripcion, latitud, longitud, id_categoria, es_accesible, es_fijo, imagen_url, id_nodo_acceso } = req.body;
-        const nuevoPoi = await poiService.createPoiSimple({ nombre, descripcion, latitud, longitud, id_categoria, es_accesible, es_fijo, imagen_url, id_nodo_acceso });
+        const { nombre, descripcion, latitud, longitud, id_categoria, es_accesible, es_fijo, imagen_url, id_nodo_acceso, id_usuario, visibilidad } = req.body;
+        const nuevoPoi = await poiService.createPoiSimple({ nombre, descripcion, latitud, longitud, id_categoria, es_accesible, es_fijo, imagen_url, id_nodo_acceso, id_usuario, visibilidad });
         res.status(201).json({
             success: true,
             message: 'POI creado',
@@ -60,23 +60,7 @@ const createPoiSimple = async (req, res) => {
     }
 };
 
-const createPoiCompleto = async (req, res) => {
-    try {
-        const { nombre, descripcion, latitud, longitud, id_categoria, es_accesible, es_fijo, imagen_url, id_nodo_acceso, horarios, multimedia } = req.body;
-        const result = await poiService.createPoiCompleto({ nombre, descripcion, latitud, longitud, id_categoria, es_accesible, es_fijo, imagen_url, id_nodo_acceso, horarios, multimedia });
-        res.status(201).json({
-            success: true,
-            message: 'POI completo creado con detalles asociados',
-            data: result
-        });
-    } catch (error) {
-        res.status(500).json({
-            success: false,
-            message: error.message,
-            error_code: 'ERROR_INTERNO'
-        });
-    }
-};
+
 
 const getPois = async (req, res) => {
     try {
@@ -216,7 +200,7 @@ const uploadPoiImage = async (req, res) => {
         }
 
         // Construimos la ruta relativa que guardaremos en la BD
-        // Usamos req.file.filename (igual que eventoController) para obtener solo el nombre
+        // Usamos req.file.filename para obtener solo el nombre
         // del archivo, y prefijamos la carpeta pública: /images/pois/poi-123.jpg
         const rutaRelativa = `/images/pois/${req.file.filename}`;
 
@@ -239,11 +223,29 @@ const uploadPoiImage = async (req, res) => {
     }
 };
 
+const updatePoi = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { nombre, descripcion } = req.body;
+        await poiModel.update(id, { nombre, descripcion });
+        res.json({
+            success: true,
+            message: 'POI actualizado correctamente'
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+            error_code: 'ERROR_INTERNO'
+        });
+    }
+};
+
 export default {
     createPoiSimple,
-    createPoiCompleto,
     getPois,
     deletePoi,
     getPoisCercanos,
-    uploadPoiImage
+    uploadPoiImage,
+    updatePoi
 };

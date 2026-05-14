@@ -2,16 +2,21 @@ import { query } from '../config/mysql.js';
 
 const create = async (poi, connection = null) => {
     const runQuery = connection ? connection.query.bind(connection) : query;
-    const { nombre, descripcion, latitud, longitud, id_categoria, es_accesible, es_fijo, imagen_url, id_nodo_acceso } = poi;
+    const { nombre, descripcion, latitud, longitud, id_categoria, es_accesible, es_fijo, imagen_url, id_nodo_acceso, id_usuario, visibilidad } = poi;
     const [result] = await runQuery(
-        'INSERT INTO pois (nombre, descripcion, latitud, longitud, id_categoria, es_accesible, es_fijo, imagen_url, id_nodo_acceso) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
-        [nombre, descripcion, latitud, longitud, id_categoria, es_accesible, es_fijo, imagen_url, id_nodo_acceso]
+        'INSERT INTO pois (nombre, descripcion, latitud, longitud, id_categoria, es_accesible, es_fijo, imagen_url, id_nodo_acceso, id_usuario, visibilidad) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+        [nombre, descripcion, latitud, longitud, id_categoria, es_accesible, es_fijo, imagen_url, id_nodo_acceso, id_usuario || null, visibilidad || 'public']
     );
     return { id_poi: result.insertId, ...poi };
 };
 
 const getAll = async () => {
-    const [rows] = await query('SELECT * FROM pois');
+    const [rows] = await query('SELECT * FROM pois WHERE visibilidad = "public"');
+    return rows;
+};
+
+const getByUsuarioId = async (id_usuario) => {
+    const [rows] = await query('SELECT * FROM pois WHERE id_usuario = ?', [id_usuario]);
     return rows;
 };
 
@@ -28,6 +33,10 @@ const updateImageUrl = async (id, imagenUrl) => {
     return await query('UPDATE pois SET imagen_url = ? WHERE id_poi = ?', [imagenUrl, id]);
 };
 
+const update = async (id, { nombre, descripcion }) => {
+    return await query('UPDATE pois SET nombre = ?, descripcion = ? WHERE id_poi = ?', [nombre, descripcion, id]);
+};
+
 const nullifyNodeReference = async (nodeId) => {
     return await query('UPDATE pois SET id_nodo_acceso = NULL WHERE id_nodo_acceso = ?', [nodeId]);
 };
@@ -38,5 +47,7 @@ export default {
     getNodoAccesoId,
     deleteById,
     nullifyNodeReference,
-    updateImageUrl
+    updateImageUrl,
+    update,
+    getByUsuarioId
 };

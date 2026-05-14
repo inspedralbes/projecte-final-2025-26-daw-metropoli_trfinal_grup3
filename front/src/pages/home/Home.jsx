@@ -1,629 +1,405 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
-import {
-  getTiempo,
-  getNextEvento,
-  getPoisCercanos
-} from "../../services/communicationManager";
 import Navbar from "../../layouts/Navbar";
+import Header from "../../layouts/Header";
+import UserAvatar from "../../components/UserAvatar";
+import Mapis from "../../JARVIS/Mapis";
+import { 
+  getCategorias, 
+  getUsuarioListas, 
+  getListas, 
+  getUsuarioStats,
+  unifiedSearch,
+  getAmigos
+} from "../../services/communicationManager";
+import SearchResultsPanel from "../../components/SearchResultsPanel";
+import FriendStatusRow from "../../components/shared/FriendStatusRow";
 
 const Home = () => {
   const { t } = useTranslation();
-
   const storedUser = localStorage.getItem("usuario");
   const user = storedUser ? JSON.parse(storedUser) : null;
 
-  // Utilidad para construir la URL del avatar
-  const getAvatarUrl = (fotoUrl) => {
-    if (!fotoUrl) return "https://cdn-icons-png.flaticon.com/512/149/149071.png";
-    if (fotoUrl.startsWith("http")) return fotoUrl;
-    return `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${fotoUrl}`;
-  };
+  const [categories, setCategories] = useState([]);
+  const [nearbyPlaces, setNearbyPlaces] = useState([]);
+  const [friendCollections, setFriendCollections] = useState([]);
+  const [userStats, setUserStats] = useState({ discovered: 0, completedRoutes: 0, kmWalked: 0 });
+  const [weeklyActivity, setWeeklyActivity] = useState([]);
+  const [amigos, setAmigos] = useState([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState(null);
 
-  const calculateTimeLeft = (raceDate) => {
-    if (!raceDate) return { days: null, hours: null, minutes: null };
-    const now = new Date();
-    const difference = new Date(raceDate) - now;
-    if (difference > 0) {
-      return {
-        days: Math.floor(difference / (1000 * 60 * 60 * 24)),
-        hours: Math.floor((difference / (1000 * 60 * 60)) % 24),
-        minutes: Math.floor((difference / 1000 / 60) % 60),
-      };
-    }
-    return { days: 0, hours: 0, minutes: 0 };
-  };
-
-  const [raceDate, setRaceDate] = useState(null);
-  const [eventName, setEventName] = useState("");
-  const [eventFoto, setEventFoto] = useState("");
-  const [timeLeft, setTimeLeft] = useState({
-    days: null,
-    hours: null,
-    minutes: null,
-  });
-  const [weatherStats, setWeatherStats] = useState({
-    air: "--",
-    track: "--",
-    rain: "--",
-    wind: "--",
-  });
-
-  // Estado para los POIs cercanos al usuario
-  const [poisCercanos, setPoisCercanos] = useState([]);
-  // 'cargando' => esperando geoloc o respuesta API
-  // 'ok'       => tenemos datos
-  // 'denegado' => el usuario rechazó el permiso
-  // 'error'    => algo fue mal
-  const [estadoGeolocalizacion, setEstadoGeolocalizacion] = useState('cargando');
-
-  // Actualiza la cuenta atras cada minuto usando la fecha del evento
-  useEffect(() => {
-    if (!raceDate) return;
-    setTimeLeft(calculateTimeLeft(raceDate));
-    const timer = setInterval(
-      () => setTimeLeft(calculateTimeLeft(raceDate)),
-      60000,
-    );
-    return () => clearInterval(timer);
-  }, [raceDate]);
-
-  // Obtiene el proximo evento de la API
-  useEffect(() => {
-    getNextEvento()
-      .then((res) => {
-        if (res && res.data) {
-          if (res.data.fecha_inicio) setRaceDate(res.data.fecha_inicio);
-          if (res.data.nombre) setEventName(res.data.nombre);
-          if (res.data.foto) setEventFoto(res.data.foto);
-        }
-      })
-      .catch((err) =>
-        console.error("Error al obtener el proximo evento:", err),
-      );
-  }, []);
+  // Search State
+  const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState({ usuarios: [], listas: [], lugares: [] });
+  const [isSearching, setIsSearching] = useState(false);
+  const [activeCategory, setActiveCategory] = useState(null);
+  const [isSearchPanelOpen, setIsSearchPanelOpen] = useState(false);
 
   useEffect(() => {
-    getTiempo()
-      .then((data) => {
-        if (!data || !data.hourly) return;
-        const times = data.hourly.time;
-        var now = new Date();
-        now.setMinutes(0, 0, 0);
-        var nowTime = now.getTime();
-        var currentIndex = 0;
-        var minDiff = Math.abs(new Date(times[0]).getTime() - nowTime);
-        for (var i = 1; i < times.length; i++) {
-          var diff = Math.abs(new Date(times[i]).getTime() - nowTime);
-          if (diff < minDiff) {
-            minDiff = diff;
-            currentIndex = i;
+    const fetchHomeData = async () => {
+      try {
+        setLoading(true);
+        
+        // 1. Fetch Categories
+        const catRes = await getCategorias();
+        if (catRes && catRes.success) setCategories(catRes.data);
+
+        // 2. Fetch User Lists (Les teves rutes)
+        if (user && user.id_usuario) {
+          const userListsRes = await getUsuarioListas(user.id_usuario);
+          if (userListsRes && userListsRes.success) setNearbyPlaces(userListsRes.data);
+
+          // 3. Fetch User Stats
+          const statsRes = await getUsuarioStats(user.id_usuario);
+          if (statsRes && statsRes.success) {
+            setUserStats({
+              discovered: statsRes.data.discovered,
+              completedRoutes: statsRes.data.completedRoutes,
+              kmWalked: statsRes.data.kmWalked
+            });
+            setWeeklyActivity(statsRes.data.weeklyActivity);
           }
         }
-        setWeatherStats({
-          air: `${data.hourly.temperature_2m[currentIndex]}°C`,
-          track: `${data.hourly.soil_temperature_0cm[currentIndex]}°C`,
-          rain: `${data.hourly.precipitation_probability[currentIndex]}%`,
-          wind: `${data.hourly.wind_speed_10m ? data.hourly.wind_speed_10m[currentIndex] : 0} km/h`,
-        });
-      })
-      .catch((err) => console.error("Error al obtener el tiempo:", err));
-  }, []);
 
-  const discoverItems = [];
+        // 4. Fetch Public Lists (Dels teus amics)
+        const publicListsRes = await getListas(user?.id_usuario);
+        if (publicListsRes && publicListsRes.success) {
+          setFriendCollections(publicListsRes.data.filter(l => l.id_usuario !== user?.id_usuario));
+        }
 
-  // Solicita la ubicación del usuario y carga los POIs cercanos
+        // 5. Fetch Friends (For the status row)
+        if (user && user.id_usuario) {
+          const amigosRes = await getAmigos(user.id_usuario);
+          if (amigosRes && amigosRes.success) setAmigos(amigosRes.data);
+        }
+
+      } catch (err) {
+        console.error("Error fetching home data:", err);
+        setError("Error al cargar los datos. Por favor, inténtalo de nuevo.");
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchHomeData();
+  }, [user?.id_usuario]);
+
+  // Unified Search Logic (Debounced)
   useEffect(() => {
-    // Comprobamos si el navegador soporta geolocalización
-    if (!navigator.geolocation) {
-      setEstadoGeolocalizacion('error');
-      return;
-    }
-
-    // Pedimos la posición al navegador.
-    // Si el usuario ya aceptó antes, el navegador la devuelve directamente sin modal.
-    // Si no ha decidido aún, muestra el modal de permiso.
-    navigator.geolocation.getCurrentPosition(
-      // Callback de éxito
-      async (posicion) => {
-        const lat = posicion.coords.latitude;
-        const lng = posicion.coords.longitude;
-
+    const timer = setTimeout(async () => {
+      if (searchQuery.trim().length >= 2) {
+        setIsSearching(true);
+        setIsSearchPanelOpen(true);
         try {
-          const respuesta = await getPoisCercanos(lat, lng);
-          if (respuesta.success && respuesta.data) {
-            setPoisCercanos(respuesta.data);
-            setEstadoGeolocalizacion('ok');
-          } else {
-            setEstadoGeolocalizacion('error');
+          const res = await unifiedSearch(searchQuery, activeCategory);
+          if (res.success) {
+            setSearchResults(res.data);
           }
         } catch (err) {
-          console.error('Error al obtener POIs cercanos:', err);
-          setEstadoGeolocalizacion('error');
+          console.error("Search error:", err);
+        } finally {
+          setIsSearching(false);
         }
-      },
-      // Callback de error (el usuario denegó el permiso o hubo un timeout)
-      (errorGeo) => {
-        if (errorGeo.code === errorGeo.PERMISSION_DENIED) {
-          setEstadoGeolocalizacion('denegado');
-        } else {
-          setEstadoGeolocalizacion('error');
-        }
-      },
-      // Opciones
-      { enableHighAccuracy: false, timeout: 10000 }
-    );
-  }, []);
+      } else {
+        setIsSearchPanelOpen(false);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [searchQuery, activeCategory]);
+
+  const [currentPlaceIndex, setCurrentPlaceIndex] = useState(0);
+
+  const nextPlace = () => {
+    if (nearbyPlaces.length === 0) return;
+    setCurrentPlaceIndex((prev) => (prev + 1) % nearbyPlaces.length);
+  };
+
+  const prevPlace = () => {
+    if (nearbyPlaces.length === 0) return;
+    setCurrentPlaceIndex((prev) => (prev - 1 + nearbyPlaces.length) % nearbyPlaces.length);
+  };
 
   return (
-    <div className="relative min-h-screen w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-white font-display select-none transition-colors duration-300 md:pl-16">
-      {/* Top Bar */}
-      <div className="w-full pt-6 px-5 pb-2 z-20 flex justify-between items-center transition-colors touch-none md:max-w-6xl md:mx-auto">
-        <div className="flex items-center gap-2 md:hidden">
-          <img
-            src="/logo/logo1.png"
-            alt="Circuit de Catalunya"
-            className="h-12 w-auto object-contain block dark:hidden"
-          />
-          <img
-            src="/logo/logo.png"
-            alt="Circuit de Catalunya"
-            className="h-12 w-auto object-contain hidden dark:block"
-          />
+    <div className="relative min-h-screen w-full bg-[#f0f4f9] dark:bg-slate-950 text-[#1a1a1a] dark:text-white font-display overflow-x-hidden md:pl-20 pb-32 transition-colors duration-300">
+      
+      {loading && (
+        <div className="fixed inset-0 z-50 flex items-center justify-center bg-white/80 dark:bg-slate-950/80 backdrop-blur-sm">
+          <div className="w-12 h-12 border-4 border-black dark:border-white border-t-transparent rounded-full animate-spin"></div>
         </div>
-        <div className="hidden md:flex items-center gap-3">
-          <h1 className="text-2xl font-black italic uppercase tracking-tighter text-slate-800 dark:text-white">
-            Welcome Back, <span className="text-primary">{user?.nombre || "Invitado"}</span>
-          </h1>
-        </div>
-        <Link
-          to="/profile"
-          className="w-10 h-10 rounded-full border-2 border-primary p-0.5 overflow-hidden shadow-sm"
-        >
-          <img
-            src={getAvatarUrl(user?.foto)}
-            alt="Profile"
-            className="w-full h-full object-cover rounded-full"
-          />
-        </Link>
-      </div>
+      )}
 
-      {/* Scrollable Content */}
-      <div className="overflow-y-auto no-scrollbar pb-24 md:pb-10 px-5 space-y-5 md:max-w-6xl md:mx-auto">
-        {/* Desktop: 2-column layout */}
-        <div className="lg:grid lg:grid-cols-[1fr_320px] lg:gap-8 lg:items-start">
-          {/* Left column */}
-          <div className="space-y-5">
-            {/* Hero Card */}
-            <div className="w-full h-[380px] md:h-[420px] rounded-[32px] overflow-hidden relative shadow-xl shadow-slate-200 dark:shadow-black/50 group transition-all">
-              <img
-                src={eventFoto ? `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${eventFoto}` : "https://media.formula1.com/image/upload/f_auto/q_auto/v1677245035/content/dam/fom-website/2018-redesign-assets/Racehub%20header%20images%2016x9/Spain.jpg.transform/9col/image.jpg"}
-                alt="Race Weekend"
-                className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
+      {error && (
+        <div className="fixed top-24 left-6 right-6 z-40 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl flex justify-between items-center shadow-lg animate-in slide-in-from-top duration-300">
+          <span className="font-medium">{error}</span>
+          <button onClick={() => window.location.reload()} className="bg-red-700 text-white px-3 py-1 rounded-lg text-sm">Reintentar</button>
+        </div>
+      )}
+
+      <Header />
+
+      <div className="safe-container">
+        {/* Search Bar */}
+        <section className="mt-5 relative md:ml-48 md:mr-40">
+        <div className="flex items-center gap-3 border-b border-gray-300 dark:border-white/20 pb-2">
+          <span className="material-symbols-outlined text-gray-400">search</span>
+          <input 
+            type="text" 
+            value={searchQuery}
+            onChange={(e) => setSearchQuery(e.target.value)}
+            onFocus={() => searchQuery.trim().length >= 2 && setIsSearchPanelOpen(true)}
+            placeholder={t("collections.search", "On t'agradaria anar?")}
+            className="bg-transparent border-none outline-none text-lg placeholder-gray-400 w-full p-0 focus:ring-0 text-[#1a1a1a] dark:text-white"
+          />
+          {searchQuery && (
+            <button onClick={() => setSearchQuery("")} className="material-symbols-outlined text-gray-400 hover:text-black dark:hover:text-white transition-colors">close</button>
+          )}
+        </div>
+
+        {/* Floating Search Results */}
+        <SearchResultsPanel 
+          isOpen={isSearchPanelOpen} 
+          results={searchResults} 
+          isLoading={isSearching} 
+          query={searchQuery}
+          onClose={() => setIsSearchPanelOpen(false)}
+        />
+      </section>
+
+        {/* Friends Horizontal Scroll (Replaces Categories) */}
+        <section className="mt-8">
+        <FriendStatusRow 
+          friends={amigos} 
+          title={t("profile.friendsList", "Amics Online")}
+        />
+      </section>
+
+        {/* Nearby Destinations Section */}
+        <section className="mt-10">
+          <div className="md:grid md:grid-cols-2 md:gap-12 items-start">
+            <div>
+              <div className="flex justify-between items-end mb-6">
+                <h2 className="text-2xl font-medium tracking-tight">{t("nav.collections", "Les teves rutes")}</h2>
+                {user && (
+                  <Link to="/profile" className="text-gray-400 dark:text-white/40 text-sm font-medium hover:text-black dark:hover:text-white transition-colors">{t("collections.viewAll", "Veure-ho tot")}</Link>
+                )}
+              </div>
+
+              {/* Large Featured Card (Carousel/Single for now) */}
+              <div className="relative w-full aspect-[4/5] md:aspect-[16/9] rounded-[3.5rem] overflow-hidden shadow-2xl group">
+          {nearbyPlaces.length > 0 ? (
+            <>
+              <img 
+                key={nearbyPlaces[currentPlaceIndex].id_lista}
+                src={nearbyPlaces[currentPlaceIndex].imagen_url || "https://images.unsplash.com/photo-1583997052301-0042b33fc598?w=800&q=80"} 
+                alt={nearbyPlaces[currentPlaceIndex].nombre} 
+                className="absolute inset-0 w-full h-full object-cover transition-all duration-1000 group-hover:scale-110 animate-in fade-in zoom-in duration-500"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-black/20 to-transparent"></div>
-
-              {/* Live Badge */}
-              <div className="absolute top-5 right-5 bg-primary px-3 py-1 rounded-full flex items-center gap-2 shadow-lg shadow-primary/40">
-                <div className="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                <span className="text-[10px] font-bold uppercase tracking-wider text-white">
-                  {t("home.liveNow")}
-                </span>
-              </div>
-
-              <div className="absolute bottom-0 left-0 right-0 p-6 text-white">
-                <p className="text-primary font-bold italic text-sm mb-1 uppercase tracking-wider">
-                  {t("home.raceWeekend")}
-                </p>
-                <h1 className="text-4xl font-black italic leading-[0.9] mb-4 drop-shadow-lg">
-                  {eventName || t("home.spanishGP")}
-                  <br />
-                </h1>
-
-                <div className="bg-white/10 dark:bg-black/60 backdrop-blur-md rounded-2xl p-4 flex items-center justify-between border border-white/20 dark:border-white/10 shadow-lg transition-colors">
-                  <div className="flex gap-4 text-center">
-                    {[
-                      { val: timeLeft.days, label: t("home.days") },
-                      { val: timeLeft.hours, label: t("home.hours") },
-                      { val: timeLeft.minutes, label: t("home.minutes") },
-                    ].map((item, i) => (
-                      <div key={i} className="flex items-start gap-1">
-                        {i > 0 && (
-                          <div className="text-white/40 font-light text-xl">
-                            :
-                          </div>
-                        )}
-                        <div className="text-center">
-                          <span className="text-2xl font-bold block leading-none filter drop-shadow-md">
-                            {item.val === null
-                              ? "--"
-                              : String(item.val).padStart(2, "0")}
-                          </span>
-                          <span className="text-[9px] uppercase text-white/70 font-bold tracking-wider">
-                            {item.label}
-                          </span>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                  <Link
-                    to="/events"
-                    className="bg-primary hover:bg-[#ff1e3c] text-white px-4 py-3 rounded-xl font-bold text-xs uppercase tracking-wider shadow-lg shadow-primary/30 transition-colors"
-                  >
-                    {t("home.viewSchedule")}
-                  </Link>
-                </div>
-              </div>
-            </div>
-
-            {/* Quick Access Grid */}
-            <div className="grid grid-cols-2 md:grid-cols-2 gap-4">
-              <Link
-                to="/"
-                className="relative h-40 rounded-[24px] overflow-hidden group shadow-md hover:shadow-lg transition-all dark:shadow-none bg-white dark:bg-[#12080a]"
-              >
-                <div className="absolute inset-0">
-                  <img
-                    src="https://images.unsplash.com/photo-1524661135-423995f22d0b?auto=format&fit=crop&q=80&w=800"
-                    alt="Map"
-                    className="w-full h-full object-cover opacity-60 dark:opacity-40 group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-black/10"></div>
-                </div>
-                <div className="relative z-10 p-5 h-full flex flex-col justify-end">
-                  <div className="w-10 h-10 bg-primary/20 backdrop-blur-sm text-primary rounded-xl flex items-center justify-center mb-auto border border-white/10 group-hover:bg-primary group-hover:text-white transition-colors">
-                    <span className="material-symbols-outlined font-variation-settings-filled">
-                      map
-                    </span>
-                  </div>
-                  <h3 className="text-lg font-bold italic text-white leading-tight drop-shadow-md">
-                    {t("home.liveMap")}
-                  </h3>
-                  <p className="text-xs text-white/70 mt-1 drop-shadow-sm">
-                    {t("home.gpsTrack")}
-                  </p>
-                </div>
-              </Link>
-
-              <Link
-                to="/community"
-                className="relative h-40 rounded-[24px] overflow-hidden group shadow-md hover:shadow-lg transition-all dark:shadow-none text-left bg-white dark:bg-[#12080a]"
-              >
-                <div className="absolute inset-0">
-                  <img
-                    src="https://images.unsplash.com/photo-1528605248644-14dd04022da1?auto=format&fit=crop&q=80&w=800"
-                    alt="Groups"
-                    className="w-full h-full object-cover opacity-60 dark:opacity-40 group-hover:scale-110 transition-transform duration-500"
-                  />
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 to-black/10"></div>
-                </div>
-                <div className="relative z-10 p-5 h-full flex flex-col justify-end">
-                  <div className="w-10 h-10 bg-white/20 backdrop-blur-sm text-white rounded-xl flex items-center justify-center mb-auto border border-white/10 group-hover:bg-white group-hover:text-slate-800 transition-colors">
-                    <span className="material-symbols-outlined">groups</span>
-                  </div>
-                  <h3 className="text-lg font-bold italic text-white leading-tight drop-shadow-md">
-                    {t("home.groups") || "Groups"}
-                  </h3>
-                  <p className="text-xs text-white/70 mt-1 drop-shadow-sm">
-                    {t("home.connectWithFans") || "Connect with fans"}
-                  </p>
-                </div>
-              </Link>
-            </div>
-
-            {/* Fan Zone Banner */}
-            <Link
-              to="/community"
-              className="block w-full relative h-[88px] rounded-[24px] overflow-hidden active:scale-[0.98] shadow-lg shadow-slate-200/50 dark:shadow-none transition-all group bg-white dark:bg-[#12080a]"
-            >
-              <div className="absolute inset-0">
-                <img
-                  src="https://images.unsplash.com/photo-1492684223066-81342ee5ff30?auto=format&fit=crop&q=80&w=800"
-                  alt="Fan Zone"
-                  className="w-full h-full object-cover opacity-50 dark:opacity-30 group-hover:scale-105 transition-transform duration-500"
-                />
-                <div className="absolute inset-0 bg-gradient-to-r from-black/90 via-black/60 to-transparent"></div>
-              </div>
-              <div className="relative z-10 flex items-center justify-between px-5 h-full">
-                <div className="flex items-center gap-4">
-                  <div className="w-12 h-12 bg-white/10 backdrop-blur-md rounded-xl flex items-center justify-center border border-white/10 group-hover:bg-primary group-hover:text-white group-hover:border-primary transition-all">
-                    <span className="material-symbols-outlined text-white">
-                      flag
-                    </span>
-                  </div>
-                  <div>
-                    <div className="flex items-center gap-2 mb-0.5">
-                      <h3 className="text-white font-bold italic text-lg leading-none drop-shadow-md">
-                        {t("home.fanZone")}
-                      </h3>
-                      <div className="w-2 h-2 rounded-full bg-green-500 animate-pulse shadow-[0_0_10px_rgba(34,197,94,0.5)]"></div>
-                    </div>
-                    <p className="text-xs text-white/60 drop-shadow-sm">
-                      {t("home.driverQA")}
-                    </p>
-                  </div>
-                </div>
-                <span className="material-symbols-outlined text-white/40 group-hover:text-white transition-colors">
-                  chevron_right
-                </span>
-              </div>
-            </Link>
-
-            {/* Discover Nearby */}
-            <div>
-              <div className="flex justify-between items-center mb-3 px-1">
-                <div className="flex items-center gap-2">
-                  <div className="w-4 h-1 bg-primary rounded-full"></div>
-                  <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-white/60">
-                    {t("home.discoverNearby")}
+              
+              {/* Card Content */}
+              <div className="absolute inset-0 p-10 flex flex-col justify-between pointer-events-none">
+                <div className="space-y-1">
+                  <p className="text-white/70 text-lg uppercase tracking-widest font-light">Barcelona</p>
+                  <h3 className="text-white text-6xl font-medium tracking-tighter leading-none -ml-1">
+                    {nearbyPlaces[currentPlaceIndex].nombre}
                   </h3>
                 </div>
-                <button className="text-[10px] font-bold text-primary uppercase tracking-wider hover:text-slate-600 dark:hover:text-white transition-colors">
-                  {t("home.seeAll")}
-                </button>
-              </div>
 
-              {/* Estado: cargando */}
-              {estadoGeolocalizacion === 'cargando' && (
-                <div className="flex items-center justify-center gap-3 py-10 text-slate-400 dark:text-white/40">
-                  <div className="w-5 h-5 rounded-full border-2 border-primary border-t-transparent animate-spin"></div>
-                  <span className="text-sm font-medium">Buscando puntos cercanos...</span>
-                </div>
-              )}
-
-              {/* Estado: el usuario denegó el permiso de ubicación */}
-              {estadoGeolocalizacion === 'denegado' && (
-                <div className="flex flex-col items-center justify-center gap-3 py-10 px-4 text-center">
-                  <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-slate-400 dark:text-white/40 text-2xl">location_off</span>
-                  </div>
-                  <p className="text-sm font-medium text-slate-500 dark:text-white/50 max-w-[240px]">
-                    Activa la ubicación para ver puntos de interés cerca de ti
-                  </p>
-                </div>
-              )}
-
-              {/* Estado: error genérico */}
-              {estadoGeolocalizacion === 'error' && (
-                <div className="flex flex-col items-center justify-center gap-3 py-10 px-4 text-center">
-                  <div className="w-12 h-12 rounded-full bg-slate-100 dark:bg-white/10 flex items-center justify-center">
-                    <span className="material-symbols-outlined text-slate-400 dark:text-white/40 text-2xl">signal_disconnected</span>
-                  </div>
-                  <p className="text-sm font-medium text-slate-500 dark:text-white/50">
-                    No se han podido cargar los puntos cercanos
-                  </p>
-                </div>
-              )}
-
-              {/* Estado: OK — mostramos las cards de POIs */}
-              {estadoGeolocalizacion === 'ok' && (
-                <div className="flex gap-4 overflow-x-auto no-scrollbar pb-2 md:grid md:grid-cols-3 md:overflow-visible">
-
-                  {/* Si no hay POIs cercanos */}
-                  {poisCercanos.length === 0 && (
-                    <div className="flex flex-col items-center justify-center gap-3 py-10 px-4 text-center w-full col-span-3">
-                      <span className="material-symbols-outlined text-slate-300 dark:text-white/20 text-4xl">explore</span>
-                      <p className="text-sm font-medium text-slate-400 dark:text-white/40">
-                        No hay puntos de interés cerca de tu ubicación
-                      </p>
-                    </div>
-                  )}
-
-                  {/* Cards de cada POI */}
-                  {poisCercanos.map((poi) => {
-                    // Construimos la URL de la imagen del POI
-                    // Si no tiene imagen, mostramos un fondo de gradiente con icono
-                    let imagenSrc = null;
-                    if (poi.imagen_url) {
-                      imagenSrc = `${import.meta.env.VITE_API_URL || "http://localhost:3000"}${poi.imagen_url}`;
-                    }
-
-                    return (
-                      <div
-                        key={poi.id_poi}
-                        className="min-w-[280px] md:min-w-0 h-[200px] bg-white dark:bg-[#1e1e1e] rounded-[24px] border border-slate-100 dark:border-white/5 relative overflow-hidden snap-start shadow-sm dark:shadow-none transition-colors group"
-                      >
-                        {/* Imagen del POI o fondo de gradiente si no tiene */}
-                        <div className="absolute inset-0">
-                          {imagenSrc ? (
-                            <img
-                              src={imagenSrc}
-                              alt={poi.nombre}
-                              className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700"
-                            />
-                          ) : (
-                            <div className="w-full h-full bg-gradient-to-br from-slate-700 via-slate-800 to-slate-900 flex items-center justify-center">
-                              <span className="material-symbols-outlined text-white/20 text-6xl">location_on</span>
-                            </div>
-                          )}
-                          <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/40 to-transparent opacity-80 group-hover:opacity-90 transition-opacity"></div>
-                        </div>
-
-                        {/* Badge de distancia */}
-                        <div className="absolute top-4 left-4 bg-white/20 backdrop-blur-md px-3 py-1.5 rounded-full flex items-center gap-1.5 border border-white/20 shadow-sm z-10">
-                          <span className="material-symbols-outlined text-white text-xs transform -rotate-45">
-                            navigation
-                          </span>
-                          <span className="text-[10px] font-bold text-white tracking-wide">
-                            {poi.distancia_formateada}
-                          </span>
-                        </div>
-
-                        {/* Badge de accesibilidad (solo si es accesible) */}
-                        {poi.es_accesible === 1 && (
-                          <div className="absolute top-4 right-4 bg-green-500/80 backdrop-blur-md px-2 py-1 rounded-full flex items-center gap-1 z-10">
-                            <span className="material-symbols-outlined text-white text-xs">accessible</span>
-                          </div>
-                        )}
-
-                        {/* Nombre y descripción */}
-                        <div className="p-5 absolute bottom-0 w-full z-10">
-                          <h4 className="text-xl font-bold italic text-white leading-tight drop-shadow-lg">
-                            {poi.nombre}
-                          </h4>
-                          {poi.descripcion && (
-                            <p className="text-xs text-white/70 mt-1 truncate drop-shadow-md font-medium">
-                              {poi.descripcion}
-                            </p>
-                          )}
-                        </div>
-                      </div>
-                    );
-                  })}
-
-                </div>
-              )}
-
-            </div>
-          </div>
-
-          {/* Right column — desktop only sidebar widget */}
-          <div className="hidden lg:flex flex-col gap-5 sticky top-6">
-            {/* Weather Widget */}
-            <div className="w-full bg-white dark:bg-[#12080a] border border-slate-100 dark:border-white/5 rounded-[28px] p-6 shadow-lg shadow-slate-200/50 dark:shadow-none transition-all">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-4 h-1 bg-primary rounded-full"></div>
-                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-white/60">
-                  {t("home.trackConditions")}
-                </h3>
-              </div>
-              <div className="grid grid-cols-2 gap-4">
-                {[
-                  {
-                    icon: "thermostat",
-                    value: weatherStats.air,
-                    label: t("home.air"),
-                  },
-                  {
-                    icon: "speed",
-                    value: weatherStats.track,
-                    label: t("home.track"),
-                  },
-                  {
-                    icon: "water_drop",
-                    value: weatherStats.rain,
-                    label: t("home.rain"),
-                  },
-                  {
-                    icon: "air",
-                    value: weatherStats.wind,
-                    label: t("home.wind"),
-                  },
-                ].map((stat, i) => (
-                  <div
-                    key={i}
-                    className="flex flex-col items-center p-3 rounded-2xl bg-slate-50 dark:bg-white/5 border border-slate-100 dark:border-white/5"
-                  >
-                    <span className="material-symbols-outlined text-slate-300 dark:text-white/30 mb-1">
-                      {stat.icon}
-                    </span>
-                    <span className="text-base font-bold text-slate-800 dark:text-white leading-none">
-                      {stat.value}
-                    </span>
-                    <span className="text-[9px] font-bold uppercase text-slate-400 dark:text-white/30 mt-1 tracking-wider">
-                      {stat.label}
-                    </span>
-                  </div>
-                ))}
-              </div>
-            </div>
-
-            {/* Quick Links */}
-            <div className="w-full bg-white dark:bg-[#12080a] border border-slate-100 dark:border-white/5 rounded-[28px] p-6 shadow-lg shadow-slate-200/50 dark:shadow-none transition-all">
-              <div className="flex items-center gap-2 mb-4">
-                <div className="w-4 h-1 bg-primary rounded-full"></div>
-                <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 dark:text-white/60">
-                  {t("home.quickAccess")}
-                </h3>
-              </div>
-              <div className="space-y-2">
-                {[
-                  {
-                    to: "/events",
-                    icon: "calendar_month",
-                    label: t("home.viewSchedule"),
-                    color: "bg-primary/10 text-primary",
-                  },
-                  {
-                    to: "/",
-                    icon: "map",
-                    label: t("home.openCircuitMap"),
-                    color: "bg-blue-500/10 text-blue-500",
-                  },
-                  {
-                    to: "/community",
-                    icon: "groups",
-                    label: t("home.communityFeed"),
-                    color: "bg-indigo-500/10 text-indigo-500",
-                  },
-                ].map((link) => (
-                  <Link
-                    key={link.to}
-                    to={link.to}
-                    className="flex items-center gap-3 p-3 rounded-xl hover:bg-slate-50 dark:hover:bg-white/5 transition-colors group"
-                  >
-                    <div
-                      className={`w-9 h-9 rounded-xl ${link.color} flex items-center justify-center`}
+                <div className="flex justify-end items-end w-full">
+                  <div className="flex gap-2 pointer-events-auto translate-x-1">
+                    <button 
+                      onClick={prevPlace}
+                      className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 text-white hover:bg-white/40 transition-all"
                     >
-                      <span className="material-symbols-outlined text-lg">
-                        {link.icon}
-                      </span>
+                      <span className="material-symbols-outlined text-xl">arrow_back</span>
+                    </button>
+                    <button 
+                      onClick={nextPlace}
+                      className="w-12 h-12 rounded-full bg-white/20 backdrop-blur-md flex items-center justify-center border border-white/30 text-white hover:bg-white/40 transition-all"
+                    >
+                      <span className="material-symbols-outlined text-xl">arrow_forward</span>
+                    </button>
+                  </div>
+                </div>
+              </div>
+            </>
+          ) : (
+            <div className="absolute inset-0 bg-gray-200 dark:bg-white/5 flex items-center justify-center">
+              <p className="opacity-40 italic">Encara no tens rutes pròpies</p>
+            </div>
+          )}
+              </div>
+
+              {/* Map Widget & Community Button */}
+              <div className="mt-8 flex gap-4 h-[160px]">
+                <Link 
+                  to="/" 
+                  className="flex-[2] relative rounded-[2.5rem] overflow-hidden shadow-xl group active:scale-95 transition-transform"
+                >
+                  <img 
+                    src="/map_background.jpg" 
+                    className="absolute inset-0 w-full h-full object-cover transition-transform duration-1000 group-hover:scale-110" 
+                  />
+                  <div className="absolute inset-0 bg-black/20 flex flex-col items-center justify-center gap-2">
+                    <span className="material-symbols-outlined text-4xl text-white">map</span>
+                    <span className="text-lg font-medium tracking-tight text-white">{t("nav.map", "Mapa")}</span>
+                  </div>
+                </Link>
+                <Link 
+                  to="/community" 
+                  className="flex-1 bg-black text-white dark:bg-white dark:text-black rounded-[2.5rem] flex flex-col items-center justify-center gap-2 shadow-xl active:scale-95 transition-transform"
+                >
+                  <span className="material-symbols-outlined text-3xl">groups</span>
+                  <span className="text-lg font-medium tracking-tight opacity-60">{t("nav.community", "Comunitat")}</span>
+                </Link>
+              </div>
+            </div>
+
+            {/* User Stats Section - Desktop: moved next to Featured Card */}
+            <div className="hidden md:block md:mt-14">
+              <div className="h-full bg-white dark:bg-slate-900 text-black dark:text-white rounded-[3rem] p-8 shadow-xl dark:shadow-2xl border border-gray-100 dark:border-white/5 relative overflow-hidden flex flex-col justify-between">
+                <div className="absolute top-0 right-0 w-48 h-48 bg-gray-100 dark:bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+                
+                <div className="flex justify-between items-start mb-6 relative z-10">
+                  <div>
+                    <h2 className="text-2xl font-medium tracking-tight mb-1">{t("home.impact", "El teu impacte")}</h2>
+                    <p className="text-[10px] opacity-40 lowercase tracking-widest font-bold">{t("home.weeklyActivity", "activitat setmanal")}</p>
+                  </div>
+                  <div className="text-right">
+                    <p className="text-4xl font-medium tracking-tight">{userStats.kmWalked}</p>
+                    <p className="text-[10px] opacity-40 lowercase font-bold">{t("home.totalKm", "km totals")}</p>
+                  </div>
+                </div>
+
+                {/* Bar Chart */}
+                <div className="flex items-end justify-between h-24 gap-3 mb-6 relative z-10">
+                  {weeklyActivity.map((day, idx) => (
+                    <div key={idx} className="flex-1 flex flex-col items-center gap-3 group h-full">
+                      <div className="relative w-full flex flex-col justify-end h-full bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
+                        <div 
+                          className="w-full bg-black dark:bg-white rounded-full transition-all duration-[1500ms] ease-out"
+                          style={{ height: `${day.value}%` }}
+                        ></div>
+                      </div>
+                      <span className="text-[10px] font-bold opacity-40 lowercase">{day.day}</span>
                     </div>
-                    <span className="text-sm font-semibold text-slate-700 dark:text-white group-hover:text-primary transition-colors">
-                      {link.label}
-                    </span>
-                    <span className="material-symbols-outlined text-slate-300 ml-auto text-sm">
-                      chevron_right
-                    </span>
-                  </Link>
-                ))}
+                  ))}
+                </div>
+
+                <div className="grid grid-cols-2 gap-4 relative z-10">
+                  <div className="bg-gray-50 dark:bg-white/5 rounded-[2rem] p-4 flex items-center gap-4 border border-gray-100 dark:border-transparent">
+                    <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-xl">location_on</span>
+                    </div>
+                    <div>
+                      <p className="text-xl font-medium tracking-tight">{userStats.discovered}</p>
+                      <p className="text-[9px] opacity-40 lowercase font-bold">{t("home.discovered", "llocs descoberts")}</p>
+                    </div>
+                  </div>
+                  <div className="bg-gray-50 dark:bg-white/5 rounded-[2rem] p-4 flex items-center gap-4 border border-gray-100 dark:border-transparent">
+                    <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center">
+                      <span className="material-symbols-outlined text-xl">route</span>
+                    </div>
+                    <div>
+                      <p className="text-xl font-medium tracking-tight">{userStats.completedRoutes}</p>
+                      <p className="text-[9px] opacity-40 lowercase font-bold">{t("home.completedRoutes", "rutes fetes")}</p>
+                    </div>
+                  </div>
+                </div>
               </div>
             </div>
           </div>
-        </div>
 
-        {/* Weather Widget — mobile only */}
-        <div className="lg:hidden w-full bg-white dark:bg-[#12080a] border border-slate-100 dark:border-white/5 rounded-[28px] p-6 mb-8 flex justify-between items-center shadow-lg shadow-slate-200/50 dark:shadow-none transition-all">
-          {[
-            {
-              icon: "thermostat",
-              value: weatherStats.air,
-              label: t("home.air"),
-            },
-            {
-              icon: "speed",
-              value: weatherStats.track,
-              label: t("home.track"),
-            },
-            {
-              icon: "water_drop",
-              value: weatherStats.rain,
-              label: t("home.rain"),
-            },
-            { icon: "air", value: weatherStats.wind, label: t("home.wind") },
-          ].map((stat, i, arr) => (
-            <div key={i} className="flex items-center gap-3">
-              <div className="flex flex-col items-center">
-                <span className="material-symbols-outlined text-slate-300 dark:text-white/30 mb-2">
-                  {stat.icon}
-                </span>
-                <span className="text-lg font-bold text-slate-800 dark:text-white leading-none">
-                  {stat.value}
-                </span>
-                <span className="text-[9px] font-bold uppercase text-slate-400 dark:text-white/30 mt-1 tracking-wider">
-                  {stat.label}
-                </span>
-              </div>
-              {i < arr.length - 1 && (
-                <div className="w-[1px] h-8 bg-slate-100 dark:bg-white/10 ml-3"></div>
+          {/* Friend Collections Carousel */}
+          <div className="mt-12">
+            <h2 className="text-2xl font-medium tracking-tight mb-6">{t("home.groups", "Dels teus amics")}</h2>
+            <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-6 px-6">
+              {friendCollections.length > 0 ? (
+                friendCollections.map((col) => (
+                  <Link to={`/collections/${col.id_lista}`} key={col.id_lista} className="min-w-[320px] bg-white dark:bg-white/10 rounded-[2.5rem] p-6 border border-gray-100 dark:border-white/10 shadow-sm transition-colors duration-300 hover:scale-[1.02] transition-transform">
+                    <div className="relative aspect-[16/10] rounded-[1.5rem] overflow-hidden mb-6">
+                      <img src={col.imagen_url || "https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=400&q=80"} className="w-full h-full object-cover" />
+                      <div className="absolute top-4 left-4">
+                        <UserAvatar user={{ avatar: col.foto_perfil, nombre: col.nombre_usuario || "Usuari" }} className="w-10 h-10" />
+                      </div>
+                    </div>
+                    <h3 className="font-medium text-lg tracking-tight truncate mb-2">{col.nombre}</h3>
+                    <div className="flex justify-between items-center">
+                      <span className="text-lg font-medium tracking-tight text-gray-400 dark:text-white/40">{col.nombre_usuario || "Amic"}</span>
+                      <span className="text-lg font-medium tracking-tight bg-gray-100 dark:bg-white/10 px-3 py-1 rounded-full">{col.pois?.length || 0} {t("profile.points", "punts")}</span>
+                    </div>
+                  </Link>
+                ))
+              ) : (
+                <p className="px-6 opacity-40 italic">No hi ha rutes públiques recents</p>
               )}
             </div>
-          ))}
-        </div>
+          </div>
+
+          {/* User Stats Section - Mobile ONLY (already shown in desktop grid) */}
+          <div className="md:hidden mt-12 bg-white dark:bg-slate-900 text-black dark:text-white rounded-[3rem] p-8 shadow-xl dark:shadow-2xl border border-gray-100 dark:border-white/5 relative overflow-hidden">
+            <div className="absolute top-0 right-0 w-48 h-48 bg-gray-100 dark:bg-white/5 rounded-full -mr-20 -mt-20 blur-3xl"></div>
+            
+            <div className="flex justify-between items-start mb-10 relative z-10">
+              <div>
+                <h2 className="text-2xl font-medium tracking-tight mb-1">{t("home.impact", "El teu impacte")}</h2>
+                <p className="text-xs opacity-40 uppercase tracking-widest font-bold">{t("home.weeklyActivity", "Activitat setmanal")}</p>
+              </div>
+              <div className="text-right">
+                <p className="text-4xl font-medium tracking-tight">{userStats.kmWalked}</p>
+                <p className="text-[10px] opacity-40 uppercase font-bold">{t("home.totalKm", "KM totals")}</p>
+              </div>
+            </div>
+
+            {/* Bar Chart */}
+            <div className="flex items-end justify-between h-32 gap-3 mb-10 relative z-10">
+              {weeklyActivity.map((day, idx) => (
+                <div key={idx} className="flex-1 flex flex-col items-center gap-3 group h-full">
+                  <div className="relative w-full flex flex-col justify-end h-full bg-gray-100 dark:bg-white/5 rounded-full overflow-hidden">
+                    <div 
+                      className="w-full bg-black dark:bg-white rounded-full transition-all duration-[1500ms] ease-out"
+                      style={{ height: `${day.value}%` }}
+                    ></div>
+                  </div>
+                  <span className="text-[10px] font-bold opacity-40 uppercase">{day.day}</span>
+                </div>
+              ))}
+            </div>
+
+            <div className="grid grid-cols-2 gap-4 relative z-10">
+              <div className="bg-gray-50 dark:bg-white/5 rounded-[2rem] p-4 flex items-center gap-4 border border-gray-100 dark:border-transparent">
+                <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-xl">location_on</span>
+                </div>
+                <div>
+                  <p className="text-xl font-medium tracking-tight">{userStats.discovered}</p>
+                  <p className="text-[9px] opacity-40 uppercase font-bold">{t("home.discovered", "Llocs descoberts")}</p>
+                </div>
+              </div>
+              <div className="bg-gray-50 dark:bg-white/5 rounded-[2rem] p-4 flex items-center gap-4 border border-gray-100 dark:border-transparent">
+                <div className="w-10 h-10 rounded-full bg-black/5 dark:bg-white/10 flex items-center justify-center">
+                  <span className="material-symbols-outlined text-xl">route</span>
+                </div>
+                <div>
+                  <p className="text-xl font-medium tracking-tight">{userStats.completedRoutes}</p>
+                  <p className="text-[9px] opacity-40 uppercase font-bold">{t("home.completedRoutes", "Rutes fetes")}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
       </div>
 
+      {/* Bottom spacing for Navbar */}
+      <div className="h-20"></div>
+
       <Navbar />
+
+      {/* JARVIS Chatbot Mapis */}
+      <Mapis />
     </div>
   );
 };

@@ -24,10 +24,25 @@ const toggleLike = async (id_publicacion, userId) => {
   return await comunidadModel.toggleLike(id_publicacion, userId);
 };
 
+const getActividadReciente = async () => {
+  return await comunidadModel.getActividadReciente();
+};
+
+const getChatHistory = async (room) => {
+  return await comunidadModel.getChatHistory(room);
+};
+
+const saveMensaje = async (data) => {
+  return await comunidadModel.saveMensaje(data);
+};
+
 export default {
   getAllPublicaciones,
   createPublicacion,
   addComentario,
   addRespuesta,
   toggleLike,
+  getActividadReciente,
+  getChatHistory,
+  saveMensaje
 };

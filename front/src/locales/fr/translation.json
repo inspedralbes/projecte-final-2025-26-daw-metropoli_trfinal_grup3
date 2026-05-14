@@ -1,20 +1,20 @@
 {
   "home": {
-    "title": "F1 BARCELONA",
-    "liveNow": "En Direct",
-    "spanishGP": "Grand Prix d'Espagne 2026",
-    "raceWeekend": "PROCHAIN ÉVÉNEMENT",
+    "title": "MÉTROPOLI",
+    "liveNow": "Explorez maintenant",
+    "spanishGP": "Votre ville, à votre rythme",
+    "raceWeekend": "POINTS FORTS",
     "days": "Jours",
     "hours": "Hrs",
     "minutes": "Mins",
-    "viewSchedule": "Voir Programme",
-    "liveMap": "Carte en Direct",
-    "gpsTrack": "Localisateur GPS de Piste",
+    "viewSchedule": "Voir Nouveautés",
+    "liveMap": "Explorer la Carte",
+    "gpsTrack": "Ma Localisation",
     "dining": "Restauration",
     "orderFood": "Commander Nourriture et Boissons",
-    "fanZone": "Fan Zone",
-    "experience": "Expérience",
-    "driverQA": "Q&A Pilotes dans 15 min",
+    "fanZone": "Événements Locaux",
+    "experience": "Itinéraires",
+    "driverQA": "Nouveaux itinéraires ajoutés",
     "discoverNearby": "Découvrir à Proximité",
     "seeAll": "Voir Tout",
     "groups": "Communauté",
@@ -24,9 +24,8 @@
     "rain": "Pluie",
     "wind": "Vent",
     "quickAccess": "Accès Rapide",
-    "trackConditions": "Conditions de Piste",
-    "openCircuitMap": "Ouvrir la Carte",
-    "communityFeed": "Communauté"
+    "trackConditions": "Guide de la Ville",
+    "openCircuitMap": "Carte Interactive"
   },
   "community": {
     "yourGroup": "Votre Groupe",
@@ -46,30 +45,26 @@
     "tabs": {
       "recent": "Récents",
       "official": "Officiel",
-      "fanZone": "Fan Zone",
+      "fanZone": "Social",
       "popular": "Populaire"
     }
   },
   "nav": {
     "home": "Accueil",
-    "events": "Événements",
     "map": "Carte",
     "community": "Communauté",
     "profile": "Profil",
+    "createList": "Créer Liste",
     "settings": "Paramètres",
     "lightMode": "Mode Clair",
-    "darkMode": "Mode Sombre"
+    "darkMode": "Mode Sombre",
+    "collections": "Itinéraires"
   },
-  "events": {
-    "raceWeekend": "Week-end de Course",
-    "noEvents": "Aucun événement prévu",
-    "sessionsToday": "Sessions aujourd'hui",
-    "live": "En Direct",
-    "upcoming": "À Venir",
-    "done": "Terminé",
-    "noEventsForDay": "Aucun événement pour ce jour",
-    "mainEvent": "Événement Principal",
-    "liveNow": "En Direct"
+  "collections": {
+    "title": "Itinéraires",
+    "search": "Rechercher quelque chose...",
+    "nearby": "Destinations à Proximité",
+    "viewAll": "Voir Tout"
   },
   "settings": {
     "title": "Paramètres",
@@ -82,15 +77,71 @@
     "account": "Compte",
     "privacySecurity": "Confidentialité et Sécurité",
     "helpSupport": "Aide et Support",
-    "footerApp": "App Circuit de Barcelona-Catalunya",
-    "footerVersion": "Version 1.0.0 (Build 2026.05)"
+    "footerApp": "Application"
   },
   "profile": {
+    "my": "Mon",
     "friends": "Amis",
     "posts": "Messages",
+    "routes": "Itinéraires",
+    "myRoutes": "Mes Itinéraires",
     "achievements": "Réalisations",
     "friendsList": "Mes Amis",
     "recentPosts": "Activité Récente",
-    "yourAchievements": "Badges et Récompenses"
+    "yourAchievements": "Badges et Récompenses",
+    "editProfile": "Modifier le Profil"
+  },
+  "editProfile": {
+    "title": "Modifier le Profil",
+    "save": "Enregistrer",
+    "saved": "Enregistré",
+    "changeAvatar": "Touchez pour changer votre photo",
+    "chooseAvatar": "Choisissez un avatar",
+    "name": "Nom",
+    "namePlaceholder": "Votre nom",
+    "bio": "Biographie",
+    "bioPlaceholder": "Parlez-nous de vous...",
+    "infoNote": "Les modifications de votre nom et photo sont visibles par les autres membres de la communauté.",
+    "dangerZone": "Zone de Danger",
+    "deleteAccount": "Supprimer le compte",
+    "errorName": "Le nom ne peut pas être vide",
+    "errorNameLong": "Le nom ne peut pas dépasser 40 caractères",
+    "errorBioLong": "La biographie ne peut pas dépasser 100 caractères"
+  },
+  "auth": {
+    "login": "Se connecter",
+    "signup": "S'inscrire",
+    "tagline": "Connectez-vous pour continuer l'exploration",
+    "email": "Adresse e-mail",
+    "password": "Mot de passe",
+    "confirmPassword": "Confirmer le mot de passe",
+    "name": "Nom complet",
+    "backToHome": "Retour à l'accueil",
+    "backToLogin": "Retour à la connexion",
+    "noAccount": "Vous n'avez pas de compte ?",
+    "hasAccount": "Vous avez déjà un compte ?",
+    "registerFree": "Inscrivez-vous gratuitement",
+    "orContinueWith": "Ou continuez avec",
+    "orRegisterWith": "Ou inscrivez-vous avec",
+    "google": "Google",
+    "createAccount": "Créez votre compte",
+    "communityTag": "Rejoignez la communauté des explorateurs urbains",
+    "checkEmail": "Vérifiez vos e-mails",
+    "checkEmailSub": "Nous vous avons envoyé un code à 6 chiffres pour activer votre compte",
+    "verifyCode": "Vérifier le code",
+    "accountActivated": "Compte activé !",
+    "readyToExplore": "Vous pouvez maintenant vous connecter et commencer à explorer la ville.",
+    "goToLogin": "Aller à la connexion",
+    "invalidCode": "Code invalide.",
+    "errorAuth": "Erreur d'authentification.",
+    "errorConnect": "Erreur de connexion au serveur.",
+    "errorRegister": "Erreur lors de l'inscription.",
+    "passwordsNoMatch": "Les mots de passe ne correspondent pas.",
+    "passwordTooShort": "Le mot de passe doit comporter au moins 6 caractères.",
+    "verifyEmail": "Vous devez vérifier votre e-mail avant d'entrer.",
+    "credentialsIncorrect": "Identifiants incorrects.",
+    "newPassword": "Nouveau mot de passe",
+    "completeRegistration": "Terminer l'inscription",
+    "hello": "Bonjour"
   }
 }

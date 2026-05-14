@@ -1,0 +1,70 @@
+{
+  "changeName": "global-header",
+  "changeDir": "/Users/paulavera/Desktop/Programacion/projecte-final-2025-26-daw-metropoli_trfinal_grup3/openspec/changes/global-header",
+  "schemaName": "spec-driven",
+  "contextFiles": {
+    "proposal": "/Users/paulavera/Desktop/Programacion/projecte-final-2025-26-daw-metropoli_trfinal_grup3/openspec/changes/global-header/proposal.md",
+    "specs": "/Users/paulavera/Desktop/Programacion/projecte-final-2025-26-daw-metropoli_trfinal_grup3/openspec/changes/global-header/specs/**/*.md",
+    "design": "/Users/paulavera/Desktop/Programacion/projecte-final-2025-26-daw-metropoli_trfinal_grup3/openspec/changes/global-header/design.md",
+    "tasks": "/Users/paulavera/Desktop/Programacion/projecte-final-2025-26-daw-metropoli_trfinal_grup3/openspec/changes/global-header/tasks.md"
+  },
+  "progress": {
+    "total": 10,
+    "complete": 0,
+    "remaining": 10
+  },
+  "tasks": [
+    {
+      "id": "1",
+      "description": "1.1 Create `Header.jsx` in `front/src/layouts`",
+      "done": false
+    },
+    {
+      "id": "2",
+      "description": "1.2 Implement the avatar retrieval logic (`localStorage` and `getAvatarUrl`)",
+      "done": false
+    },
+    {
+      "id": "3",
+      "description": "1.3 Add dynamic title rendering based on `useLocation().pathname` (WeMap, Comunitat, Rutas)",
+      "done": false
+    },
+    {
+      "id": "4",
+      "description": "1.4 Ensure the title uses `font-display` and minimal top-left margin",
+      "done": false
+    },
+    {
+      "id": "5",
+      "description": "1.5 Add specific black text styling for the `/` (Map) route",
+      "done": false
+    },
+    {
+      "id": "6",
+      "description": "1.6 Implement the profile `Link` wrapping the user avatar on the top right",
+      "done": false
+    },
+    {
+      "id": "7",
+      "description": "2.1 Replace custom header in `Home.jsx` with the new `<Header />` component",
+      "done": false
+    },
+    {
+      "id": "8",
+      "description": "2.2 Replace custom header in `Map.jsx` with the new `<Header />` component",
+      "done": false
+    },
+    {
+      "id": "9",
+      "description": "2.3 Replace custom header in `Community.jsx` with the new `<Header />` component",
+      "done": false
+    },
+    {
+      "id": "10",
+      "description": "2.4 Replace custom header in `Collections.jsx` with the new `<Header />` component",
+      "done": false
+    }
+  ],
+  "state": "ready",
+  "instruction": "Read context files, work through pending tasks, mark complete as you go.\nPause if you hit blockers or need clarification."
+}

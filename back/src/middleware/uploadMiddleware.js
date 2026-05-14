@@ -8,12 +8,11 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 const PUBLIC_BASE = path.join(__dirname, "..", "..", "public");
 
-// Carpetas que deben existir — las creamos si no están
 const UPLOAD_DIRS = [
-  path.join(PUBLIC_BASE, "images", "eventos"),
   path.join(PUBLIC_BASE, "images", "usuarios"),
   path.join(PUBLIC_BASE, "images", "comunidad"),
   path.join(PUBLIC_BASE, "images", "pois"),
+  path.join(PUBLIC_BASE, "images", "listas"),
 ];
 
 for (const dir of UPLOAD_DIRS) {
@@ -26,7 +25,7 @@ for (const dir of UPLOAD_DIRS) {
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
     // Determinamos la carpeta destino según el campo del archivo
-    let folder = path.join(PUBLIC_BASE, "images", "eventos");
+    let folder = path.join(PUBLIC_BASE, "images", "temporal");
 
     if (file.fieldname === "fotoPerfil") {
       folder = path.join(PUBLIC_BASE, "images", "usuarios");
@@ -34,6 +33,8 @@ const storage = multer.diskStorage({
       folder = path.join(PUBLIC_BASE, "images", "comunidad");
     } else if (file.fieldname === "imagenPoi") {
       folder = path.join(PUBLIC_BASE, "images", "pois");
+    } else if (file.fieldname === "imagenLista") {
+      folder = path.join(PUBLIC_BASE, "images", "listas");
     }
 
     cb(null, folder);
@@ -41,13 +42,15 @@ const storage = multer.diskStorage({
   filename: (req, file, cb) => {
     const ext = path.extname(file.originalname);
 
-    let prefix = "evento";
+    let prefix = "upload";
     if (file.fieldname === "fotoPerfil") {
       prefix = "user";
     } else if (file.fieldname === "fotoPublicacion") {
       prefix = "publicacion";
     } else if (file.fieldname === "imagenPoi") {
       prefix = "poi";
+    } else if (file.fieldname === "imagenLista") {
+      prefix = "lista";
     }
 
     const fileName = `${prefix}-${Date.now()}${ext}`;
