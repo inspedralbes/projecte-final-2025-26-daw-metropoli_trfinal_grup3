@@ -420,6 +420,14 @@ const CreateList = () => {
       return;
     }
 
+    if (categories.length === 0) {
+      setToast({
+        message: "Error: No hi ha categories a la base de dades. Contacta a l'administrador.",
+        type: "error",
+      });
+      return;
+    }
+
     try {
       let finalPois = [...selectedPoisForList];
 
