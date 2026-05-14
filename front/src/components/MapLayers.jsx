@@ -47,16 +47,13 @@ const MapLayers = ({
       />
 
       {/* 1. Renderizado de Listas Existentes */}
-      {userLists && userLists.length > 0 && console.log("DEBUG MapLayers: Renderizando", userLists.length, "listas")}
       {userLists && userLists
         .filter(list => !focusedListId || list.id_lista === focusedListId)
         .map(list => {
           if (!list.pois || list.pois.length === 0) {
-            console.warn("DEBUG MapLayers: Lista", list.id_lista, "no tiene POIs");
             return null;
           }
           const isFocused = focusedListId === list.id_lista;
-          console.log("DEBUG MapLayers: Procesando lista", list.id_lista, "enfocada:", isFocused);
 
           // Si NO está enfocada, mostramos el CLUSTER
           if (!isFocused) {
@@ -139,7 +136,7 @@ const MapLayers = ({
         // Ocultar POIs generales si no hay onPoiClick (ej. en el mapa principal)
         if (!onPoiClick) return null;
 
-        if (focusedListId) console.log("DEBUG MapLayers: Ocultando POIs generales por focusedListId:", focusedListId);
+        if (focusedListId) return null;
 
         const filtered = generalMarkers?.filter(marker => {
           // Ocultar si hay una lista enfocada (navegación)
