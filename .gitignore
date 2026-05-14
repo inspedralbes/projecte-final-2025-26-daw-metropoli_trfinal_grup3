@@ -9,3 +9,4 @@ back/public/images/qr/
 
 # Docker logs
 *.log
+*.apk
