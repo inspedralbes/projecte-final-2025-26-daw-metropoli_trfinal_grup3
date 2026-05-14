@@ -21,8 +21,12 @@ export const createPoi = async (poiData) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(poiData),
     });
-    if (!response.ok) throw new Error("Failed to create POI");
-    return await response.json();
+    const data = await response.json();
+    if (!response.ok) {
+      console.error("createPoi server error:", data);
+      throw new Error(data.message || data.error_code || "Failed to create POI");
+    }
+    return data;
   } catch (error) {
     console.error("Error in createPoi:", error);
     throw error;
