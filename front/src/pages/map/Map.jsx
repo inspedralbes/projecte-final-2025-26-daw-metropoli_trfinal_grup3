@@ -14,6 +14,7 @@ import {
   createLista,
   updateLista,
   getUsuarios,
+  deleteLista,
 } from "../../services/communicationManager";
 import socket from "../../services/socketManager";
 import Toast from "../../components/Toast";
@@ -78,6 +79,7 @@ const Map = () => {
   const [isLegendOpen, setIsLegendOpen] = useState(false); // State for collapsible legend
   const [isSatelliteView, setIsSatelliteView] = useState(false); // State for satellite view toggle
   const [isSheetExpanded, setIsSheetExpanded] = useState(true); // State for bottom sheet toggle
+  const [isRouteDetailsVisible, setIsRouteDetailsVisible] = useState(false); // State for hiding details panel
   const [userLists, setUserLists] = useState([]);
   const [discoverLists, setDiscoverLists] = useState([]);
   const [realCurators, setRealCurators] = useState([]); // Real users for discovery
@@ -87,6 +89,7 @@ const Map = () => {
   const [currentZoom, setCurrentZoom] = useState(17);
   const [toast, setToast] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [isProcessingList, setIsProcessingList] = useState(false);
 
   // eslint-disable-next-line no-unused-vars
   const [imageBounds, setImageBounds] = useState([
@@ -308,10 +311,13 @@ const Map = () => {
   };
 
   const handleIncludeInMyLists = async (list) => {
+    if (isProcessingList) return;
+    setIsProcessingList(true);
     const userStr = localStorage.getItem("usuario");
     if (!userStr) {
     setToast({ message: "Has d'iniciar sessió per guardar llistes.", type: "warning" });
       navigate("/login");
+      setIsProcessingList(false);
       return;
     }
     const user = JSON.parse(userStr);
@@ -336,6 +342,30 @@ const Map = () => {
         message: "Hubo un error al guardar la lista.",
         type: "error",
       });
+    } finally {
+      setIsProcessingList(false);
+    }
+  };
+
+  const handleRemoveFromMyLists = async (listId) => {
+    if (isProcessingList) return;
+    setIsProcessingList(true);
+    try {
+      const res = await deleteLista(listId);
+      if (res.success) {
+        setToast({ message: "Llista eliminada de les teves llistes", type: "info" });
+        const userStr = localStorage.getItem("usuario");
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          const userListsRes = await getUsuarioListas(user.id_usuario);
+          if (userListsRes.success) setUserLists(userListsRes.data);
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting list:", error);
+      setToast({ message: "Error al eliminar la llista.", type: "error" });
+    } finally {
+      setIsProcessingList(false);
     }
   };
 
@@ -343,11 +373,18 @@ const Map = () => {
 
   const handleFocusList = async (list) => {
     if (focusedListId === list.id_lista) {
+      if (!isRouteDetailsVisible) {
+        setIsRouteDetailsVisible(true);
+        setIsSheetExpanded(false);
+        return;
+      }
       setFocusedListId(null);
       setUserToPoiRoute(null);
+      setIsRouteDetailsVisible(false);
       return;
     }
     setFocusedListId(list.id_lista);
+    setIsRouteDetailsVisible(true);
     setIsSheetExpanded(false);
 
     if (list.pois && list.pois.length >= 2) {
@@ -449,6 +486,7 @@ const Map = () => {
     } catch (err) {
       console.error(err);
     }
+    setIsRouteDetailsVisible(false);
   };
 
   // Real-time location tracking
@@ -688,6 +726,11 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
     { color: "bg-blue-500", label: "You" },
   ];
 
+  const focusedCommunityList = discoverLists.find((l) => l.id_lista === focusedListId);
+  const savedUserListForFocused = focusedCommunityList 
+    ? userLists.find((ul) => ul.nombre === focusedCommunityList.nombre) 
+    : null;
+
   return (
     <div
       className="relative h-[100dvh] w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display overflow-hidden select-none md:pl-20 transition-colors duration-300 overscroll-none flex"
@@ -838,7 +881,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
         {/* DESKTOP ROUTE PANEL (Right side or floating) */}
         <AnimatePresence>
-          {focusedListId && (
+          {focusedListId && isRouteDetailsVisible && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -912,26 +955,36 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
                       <span className="material-symbols-outlined">
                         navigation
                       </span>
-                      Començar Ruta
+                      {t("map.goToRoute", "Ir a la ruta")}
                     </button>
 
 
                     {!userLists.find((l) => l.id_lista === focusedListId) && (
-                      <button
-                        onClick={() =>
-                          handleIncludeInMyLists(
-                            discoverLists.find(
-                              (l) => l.id_lista === focusedListId,
-                            ),
-                          )
-                        }
-                        className="w-full bg-white dark:bg-white/5 text-black dark:text-white py-4 rounded-[2rem] font-bold border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 transition-all flex items-center justify-center gap-2"
-                      >
-                        <span className="material-symbols-outlined">
-                          add_circle
-                        </span>
-                        Guardar a les meves llistes
-                      </button>
+                      <>
+                        {!savedUserListForFocused ? (
+                          <button
+                            onClick={() => handleIncludeInMyLists(focusedCommunityList)}
+                            disabled={isProcessingList}
+                            className={`w-full bg-white dark:bg-white/5 text-black dark:text-white py-4 rounded-[2rem] font-bold border border-gray-100 dark:border-white/10 transition-all flex items-center justify-center gap-2 ${isProcessingList ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-white/10'}`}
+                          >
+                            <span className="material-symbols-outlined">
+                              {isProcessingList ? 'hourglass_empty' : 'add_circle'}
+                            </span>
+                            Guardar a les meves llistes
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleRemoveFromMyLists(savedUserListForFocused.id_lista)}
+                            disabled={isProcessingList}
+                            className={`w-full bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 py-4 rounded-[2rem] font-bold border border-red-200 dark:border-red-500/20 transition-all flex items-center justify-center gap-2 ${isProcessingList ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-100 dark:hover:bg-red-500/20'}`}
+                          >
+                            <span className="material-symbols-outlined">
+                              {isProcessingList ? 'hourglass_empty' : 'delete'}
+                            </span>
+                            Eliminar de les meves llistes
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
 
@@ -973,7 +1026,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
           {focusedListId && (
             <motion.div
               initial={{ y: "100%" }}
-              animate={{ y: 0 }}
+              animate={{ y: isRouteDetailsVisible ? 0 : "calc(100% - 30px)" }}
               exit={{ y: "100%" }}
               transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
               className="md:hidden fixed bottom-[76px] left-0 right-0 z-[1900] pointer-events-auto"
@@ -983,29 +1036,30 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
                 {/* Minimal Drag Handle Header */}
                 <div
                   className="flex flex-col items-center py-2 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-                  onClick={() => {
-                    setFocusedListId(null);
-                    setUserToPoiRoute(null);
-                  }}
+                  onClick={() => setIsRouteDetailsVisible(!isRouteDetailsVisible)}
                 >
                   <div className="w-12 h-1.5 bg-black/10 dark:bg-white/20 rounded-full"></div>
                 </div>
 
                 <div className="px-6 pb-6 overflow-y-auto no-scrollbar max-h-[55vh] mt-2">
                   <div className="flex items-center justify-between mb-3 px-1">
-                    <h3 className="text-[10px] font-black text-slate-500 dark:text-white tracking-widest font-display">
-                      {t("map.navigating", "Navegando ruta")}
-                    </h3>
-                    <div
-                      onClick={() => {
-                        setFocusedListId(null);
-                        setUserToPoiRoute(null);
-                      }}
-                      className="text-slate-400 hover:text-red-500 transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-lg">
-                        close
-                      </span>
+                    <div className="flex items-center gap-2">
+                      <div
+                        onClick={() => {
+                          setFocusedListId(null);
+                          setUserToPoiRoute(null);
+                          setIsRouteDetailsVisible(false);
+                          setIsSheetExpanded(true);
+                        }}
+                        className="text-slate-400 hover:text-primary transition-colors cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-xl">
+                          arrow_back
+                        </span>
+                      </div>
+                      <h3 className="text-[10px] font-black text-slate-500 dark:text-white tracking-widest font-display">
+                        {t("map.navigating", "Navegando ruta")}
+                      </h3>
                     </div>
                   </div>
 
@@ -1095,24 +1149,32 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
 
                         {/* Include in My Lists (if not already owned) */}
-                        {!userLists.find(
-                          (l) => l.id_lista === focusedListId,
-                        ) && (
-                          <button
-                            onClick={() =>
-                              handleIncludeInMyLists(
-                                discoverLists.find(
-                                  (l) => l.id_lista === focusedListId,
-                                ),
-                              )
-                            }
-                            className="w-full bg-white dark:bg-white/5 text-black dark:text-white py-3 rounded-xl text-[9px] font-black uppercase border border-black/10 dark:border-white/10 flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-white/10 transition-all"
-                          >
-                            <span className="material-symbols-outlined text-sm">
-                              add_circle
-                            </span>
-                            {t("map.saveToList", "Incluir en mis listas")}
-                          </button>
+                        {!userLists.find((l) => l.id_lista === focusedListId) && (
+                          <>
+                            {!savedUserListForFocused ? (
+                              <button
+                                onClick={() => handleIncludeInMyLists(focusedCommunityList)}
+                                disabled={isProcessingList}
+                                className={`w-full bg-white dark:bg-white/5 text-black dark:text-white py-3 rounded-xl text-[9px] font-black uppercase border border-black/10 dark:border-white/10 flex items-center justify-center gap-2 transition-all ${isProcessingList ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-50 dark:hover:bg-white/10'}`}
+                              >
+                                <span className="material-symbols-outlined text-sm">
+                                  {isProcessingList ? 'hourglass_empty' : 'add_circle'}
+                                </span>
+                                {t("map.saveToList", "Incluir en mis listas")}
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleRemoveFromMyLists(savedUserListForFocused.id_lista)}
+                                disabled={isProcessingList}
+                                className={`w-full bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 py-3 rounded-xl text-[9px] font-black uppercase border border-red-200 dark:border-red-500/20 flex items-center justify-center gap-2 transition-all ${isProcessingList ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-100 dark:hover:bg-red-500/20'}`}
+                              >
+                                <span className="material-symbols-outlined text-sm">
+                                  {isProcessingList ? 'hourglass_empty' : 'delete'}
+                                </span>
+                                Eliminar de mis listas
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
@@ -1209,75 +1271,77 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
         )}
 
         {/* Drawer Content - Bottom Sheet Style */}
-        <div className="w-full bg-white/95 dark:bg-[#0a0a0a]/95 rounded-t-[2rem] shadow-[0_-20px_60px_rgba(0,0,0,0.3)] backdrop-blur-lg border-t border-white/10 overflow-hidden font-display">
-          {/* Minimal Drag Handle Header */}
-          <div
-            className="w-full flex flex-col items-center py-2 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-            onClick={() => setIsSheetExpanded(!isSheetExpanded)}
-          >
-            <div className="w-12 h-1.5 bg-black/10 dark:bg-white/20 rounded-full"></div>
-          </div>
+        {!focusedListId && (
+          <div className="w-full bg-white/95 dark:bg-[#0a0a0a]/95 rounded-t-[2rem] shadow-[0_-20px_60px_rgba(0,0,0,0.3)] backdrop-blur-lg border-t border-white/10 overflow-hidden font-display">
+            {/* Minimal Drag Handle Header */}
+            <div
+              className="w-full flex flex-col items-center py-2 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              onClick={() => setIsSheetExpanded(!isSheetExpanded)}
+            >
+              <div className="w-12 h-1.5 bg-black/10 dark:bg-white/20 rounded-full"></div>
+            </div>
 
-          <div
-            className={`transition-all duration-500 ease-in-out overflow-hidden ${isSheetExpanded ? "max-h-[60vh] opacity-100 mt-2" : "max-h-0 opacity-0"}`}
-          >
-            <div className="px-6 pb-6 no-scrollbar overflow-y-auto max-h-[60vh]">
-              {/* My Lists Section */}
-              <section className="mb-6 mt-2">
-                <div className="flex items-center justify-between mb-4 px-1">
-                  <h2 className="text-[13px] font-black text-black dark:text-white tracking-tight font-display">
-                    {t("map.myLists", "Mis listas")}
-                  </h2>
-                  <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full text-[9px] font-bold">
-                    {userLists.length}
-                  </span>
-                </div>
-                <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-2 px-2">
-                  {userLists.length > 0 ? (
-                    userLists.map((route) => (
-                      <MiniRouteCard
-                        key={route.id_lista}
-                        route={route}
-                        onFocus={handleFocusList}
-                      />
-                    ))
-                  ) : (
-                    <p className="text-[10px] opacity-40 italic py-4 font-display">
-                      {t("map.noLists", "No has creado ninguna lista todavía.")}
-                    </p>
-                  )}
-                </div>
-              </section>
+            <div
+              className={`transition-all duration-500 ease-in-out overflow-hidden ${isSheetExpanded ? "max-h-[60vh] opacity-100 mt-2" : "max-h-0 opacity-0"}`}
+            >
+              <div className="px-6 pb-6 no-scrollbar overflow-y-auto max-h-[60vh]">
+                {/* My Lists Section */}
+                <section className="mb-6 mt-2">
+                  <div className="flex items-center justify-between mb-4 px-1">
+                    <h2 className="text-[13px] font-black text-black dark:text-white tracking-tight font-display">
+                      {t("map.myLists", "Mis listas")}
+                    </h2>
+                    <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full text-[9px] font-bold">
+                      {userLists.length}
+                    </span>
+                  </div>
+                  <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-2 px-2">
+                    {userLists.length > 0 ? (
+                      userLists.map((route) => (
+                        <MiniRouteCard
+                          key={route.id_lista}
+                          route={route}
+                          onFocus={handleFocusList}
+                        />
+                      ))
+                    ) : (
+                      <p className="text-[10px] opacity-40 italic py-4 font-display">
+                        {t("map.noLists", "No has creado ninguna lista todavía.")}
+                      </p>
+                    )}
+                  </div>
+                </section>
 
-              {/* Discover Section */}
-              <section className="mb-4">
-                <div className="flex items-center justify-between mb-4 px-1">
-                  <h2 className="text-[13px] font-black text-black dark:text-white tracking-tight font-display">
-                    {t("map.discover", "Listas para descubrir")}
-                  </h2>
-                  <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full text-[9px] font-bold">
-                    {discoverLists.length}
-                  </span>
-                </div>
-                <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-2 px-2">
-                  {discoverLists.length > 0 ? (
-                    discoverLists.map((col) => (
-                      <MiniDiscoverCard
-                        key={col.id_lista}
-                        col={col}
-                        onFocus={handleFocusList}
-                      />
-                    ))
-                  ) : (
-                    <p className="text-[10px] opacity-40 italic py-4 font-display">
-                      {t("map.noDiscover", "No hay listas públicas todavía.")}
-                    </p>
-                  )}
-                </div>
-              </section>
+                {/* Discover Section */}
+                <section className="mb-4">
+                  <div className="flex items-center justify-between mb-4 px-1">
+                    <h2 className="text-[13px] font-black text-black dark:text-white tracking-tight font-display">
+                      {t("map.discover", "Listas para descubrir")}
+                    </h2>
+                    <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full text-[9px] font-bold">
+                      {discoverLists.length}
+                    </span>
+                  </div>
+                  <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-2 px-2">
+                    {discoverLists.length > 0 ? (
+                      discoverLists.map((col) => (
+                        <MiniDiscoverCard
+                          key={col.id_lista}
+                          col={col}
+                          onFocus={handleFocusList}
+                        />
+                      ))
+                    ) : (
+                      <p className="text-[10px] opacity-40 italic py-4 font-display">
+                        {t("map.noDiscover", "No hay listas públicas todavía.")}
+                      </p>
+                    )}
+                  </div>
+                </section>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       <Navbar />
