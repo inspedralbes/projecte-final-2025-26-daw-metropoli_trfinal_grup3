@@ -120,11 +120,8 @@ const Collections = () => {
 
     try {
       setIsSaving(true);
-      const formData = new FormData();
-      formData.append('imagenLista', file);
-
-      // Usamos el ID de la ruta seleccionada para la subida
-      const res = await uploadListaImage(selectedRoute.id_lista, formData);
+      // uploadListaImage wraps the file in FormData internally — pass the raw File
+      const res = await uploadListaImage(selectedRoute.id_lista, file);
       if (res.success) {
         setEditForm(prev => ({ ...prev, imagen_url: res.data.imagen_url }));
       }
@@ -190,19 +187,7 @@ const Collections = () => {
         />
       </div>
 
-      {/* Pills (Static for design matching) */}
-      <div className="flex gap-3 overflow-x-auto pb-4 mb-4 scrollbar-hide">
-        <button className="flex items-center gap-2 bg-primary text-primary-text px-4 py-2 rounded-full whitespace-nowrap">
-          <img src="https://images.unsplash.com/photo-1515003197210-e0cd71810b5f?w=100" alt="Gràcia" className="w-6 h-6 rounded-full object-cover" />
-          Gràcia
-        </button>
-        <button className="bg-gray-100 dark:bg-gray-800 text-black dark:text-white px-6 py-2 rounded-full whitespace-nowrap border border-gray-200 dark:border-gray-700">
-          Gòtic
-        </button>
-        <button className="bg-gray-100 dark:bg-gray-800 text-black dark:text-white px-6 py-2 rounded-full whitespace-nowrap border border-gray-200 dark:border-gray-700">
-          Poblenou
-        </button>
-      </div>
+
 
       {/* Route Cards List / Loading / Empty / No Session */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">

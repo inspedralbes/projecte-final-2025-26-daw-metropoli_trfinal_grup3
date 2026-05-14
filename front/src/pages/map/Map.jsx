@@ -12,6 +12,7 @@ import {
   getListas,
   getUsuarioListas,
   createLista,
+  updateLista,
   getUsuarios,
 } from "../../services/communicationManager";
 import socket from "../../services/socketManager";
@@ -263,10 +264,53 @@ const Map = () => {
     }
   }, [location.search, markers]);
 
+  const handleShareToCommunity = async (list) => {
+    const userStr = localStorage.getItem("usuario");
+    if (!userStr) {
+      navigate("/login");
+      return;
+    }
+    const user = JSON.parse(userStr);
+
+    // Only the owner can share/unshare
+    if (list.id_usuario !== user.id_usuario) {
+      setToast({ message: "Només pots compartir les teves pròpies llistes.", type: "warning" });
+      return;
+    }
+
+    const newVisibility = list.visibilidad === "public" ? "private" : "public";
+    try {
+      await updateLista(list.id_lista, {
+        nombre: list.nombre,
+        descripcion: list.descripcion,
+        visibilidad: newVisibility,
+        pois: list.pois?.map((p) => ({ id_poi: p.id_poi })) || [],
+      });
+
+      // Update local state so button reflects change immediately
+      setUserLists((prev) =>
+        prev.map((l) =>
+          l.id_lista === list.id_lista ? { ...l, visibilidad: newVisibility } : l
+        )
+      );
+
+      setToast({
+        message:
+          newVisibility === "public"
+            ? "Ruta compartida a la Comunitat! Ara és pública."
+            : "Ruta retirada de la Comunitat. Ara és privada.",
+        type: newVisibility === "public" ? "success" : "info",
+      });
+    } catch (error) {
+      console.error("Error sharing list:", error);
+      setToast({ message: "Error al compartir la ruta.", type: "error" });
+    }
+  };
+
   const handleIncludeInMyLists = async (list) => {
     const userStr = localStorage.getItem("usuario");
     if (!userStr) {
-      alert("Debes iniciar sesión para guardar listas.");
+    setToast({ message: "Has d'iniciar sessió per guardar llistes.", type: "warning" });
       navigate("/login");
       return;
     }
@@ -297,7 +341,7 @@ const Map = () => {
 
   const handleGoToFirstPoi = (list) => {
     if (!userPosition || !list || !list.pois || list.pois.length === 0) {
-      alert("Necesitamos tu ubicación y una lista con puntos.");
+      setToast({ message: "Necessitem la teva ubicació i una llista amb punts.", type: "warning" });
       return;
     }
     handleGoToPoi(list.pois[0]);
@@ -347,7 +391,7 @@ const Map = () => {
 
   const handleGoToNearestPoi = () => {
     if (!userPosition || !focusedListId) {
-      alert("Necesitamos tu ubicación y una ruta seleccionada.");
+      setToast({ message: "Necessitem la teva ubicació i una ruta seleccionada.", type: "warning" });
       return;
     }
 
@@ -374,7 +418,7 @@ const Map = () => {
 
   const handleGetRouteToPoi = async (poi) => {
     if (!userPosition) {
-      alert("Necesitamos tu ubicación para calcular la ruta.");
+      setToast({ message: "Necessitem la teva ubicació per calcular la ruta.", type: "warning" });
       return;
     }
 
@@ -513,7 +557,7 @@ const Map = () => {
 
   const startWatchingLocation = () => {
     if (!navigator.geolocation) {
-      alert("La geolocalización no es compatible con este navegador.");
+      setToast({ message: "La geolocalització no és compatible amb aquest navegador.", type: "error" });
       return;
     }
 
@@ -532,9 +576,7 @@ const Map = () => {
       (error) => {
         console.error("Error de geolocalización:", error);
         if (error.code === 1) {
-          alert(
-            "Permiso de ubicación denegado. Por favor, habilita la ubicación en tu navegador para usar el seguimiento en tiempo real y la navegación.",
-          );
+          setToast({ message: "Permís d'ubicació denegat. Activa la ubicació al teu navegador.", type: "warning" });
         }
       },
       {
@@ -878,6 +920,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
                       Començar Ruta
                     </button>
 
+
                     {!userLists.find((l) => l.id_lista === focusedListId) && (
                       <button
                         onClick={() =>
@@ -1070,6 +1113,9 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
                           </span>
                           {t("map.howToGet", "Cómo llegar")}
                         </button>
+
+                        {/* Share to Community (only for owned lists) */}
+
 
                         {/* Include in My Lists (if not already owned) */}
                         {!userLists.find(

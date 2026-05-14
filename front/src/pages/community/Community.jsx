@@ -12,11 +12,11 @@ import {
   getAmigos,
   getActividad,
   searchUsers,
-  getListas,
-  getFriendsListas,
-  toggleLikeLista,
-  createLista,
+  updateLista,
   getUsuarioListas,
+  getListaById,
+  createLista,
+  toggleLikeLista,
 } from "../../services/communicationManager";
 import socket from "../../services/socketManager";
 import ChatModal from "../../components/community/ChatModal";
@@ -77,45 +77,54 @@ const compressImage = (file, maxPx = 1024, quality = 0.8) =>
   });
 
 // ─── Sub-componente: Card de una publicación ─────────────────────────────────
-const PostCard = ({ pub, onComentarioCreado }) => {
+const PostCard = ({ pub, onComentarioCreado, userLists = [] }) => {
   const [showComments, setShowComments] = useState(false);
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(pub.likes ?? 0);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [textoComentario, setTextoComentario] = useState("");
-  const interactedRef = React.useRef(false); // evita que el useEffect sobreescriba el estado local tras interacción
+  const [attachedLista, setAttachedLista] = useState(null);
+  const [routeSaving, setRouteSaving] = useState(false);
+  const [routeSaved, setRouteSaved] = useState(false);
+  const interactedRef = React.useRef(false);
 
   const navigate = useNavigate();
   const usuarioInfo = localStorage.getItem("usuario");
   const usuarioLogged = usuarioInfo ? JSON.parse(usuarioInfo) : null;
 
+  // Parse [lista:ID] marker from the post text
+  const listaMarkerMatch = pub.texto?.match(/\[lista:(\d+)\]/);
+  const listaId = listaMarkerMatch ? listaMarkerMatch[1] : null;
+  const displayText = pub.texto?.replace(/\s*\[lista:\d+\]/, "").trim();
+
   useEffect(() => {
-    // Solo sincronizar desde el servidor si el usuario NO ha interactuado todavía
+    if (listaId) {
+      getListaById(listaId)
+        .then((res) => setAttachedLista(res.data || res))
+        .catch(() => {});
+    }
+  }, [listaId]);
+
+  useEffect(() => {
     if (!interactedRef.current && usuarioLogged && pub.likes_usuarios) {
       setLiked(pub.likes_usuarios.includes(String(usuarioLogged.id_usuario)));
     }
-    // Siempre actualizar el conteo desde el servidor (si no hay interacción activa)
     if (!interactedRef.current) {
       setLikesCount(pub.likes ?? 0);
     }
   }, [pub]);
 
   const handleLike = async () => {
-    if (!usuarioLogged) {
-      navigate("/login");
-      return;
-    }
+    if (!usuarioLogged) { navigate("/login"); return; }
     if (isLikeLoading) return;
-    interactedRef.current = true; // marcar que el usuario ha interactuado
+    interactedRef.current = true;
     const prevLiked = liked;
     const prevCount = likesCount;
     setIsLikeLoading(true);
     setLiked(!prevLiked);
     setLikesCount(prevLiked ? prevCount - 1 : prevCount + 1);
     try {
-      const res = await toggleLike(pub._id, {
-        id_usuario: usuarioLogged.id_usuario,
-      });
+      const res = await toggleLike(pub._id, { id_usuario: usuarioLogged.id_usuario });
       setLikesCount(res.likes);
     } catch {
       setLiked(prevLiked);
@@ -127,10 +136,7 @@ const PostCard = ({ pub, onComentarioCreado }) => {
 
   const handleComentario = async (e) => {
     e.preventDefault();
-    if (!usuarioLogged) {
-      navigate("/login");
-      return;
-    }
+    if (!usuarioLogged) { navigate("/login"); return; }
     if (!textoComentario.trim()) return;
     try {
       await createComentario(pub._id, {
@@ -154,10 +160,7 @@ const PostCard = ({ pub, onComentarioCreado }) => {
         <div className="flex items-center gap-3">
           <Link to={`/profile/${pub.id_usuario}`}>
             <UserAvatar
-              user={{
-                foto_perfil: pub.foto_perfil,
-                nombre: pub.nombre_usuario,
-              }}
+              user={{ foto_perfil: pub.foto_perfil, nombre: pub.nombre_usuario }}
               className="w-10 h-10"
             />
           </Link>
@@ -175,19 +178,106 @@ const PostCard = ({ pub, onComentarioCreado }) => {
       </div>
 
       <div className="px-5 pb-4">
-        <p className="text-slate-700 dark:text-slate-200 text-sm leading-relaxed mb-4">
-          {pub.texto}
-        </p>
+        {displayText && (
+          <p className="text-slate-700 dark:text-slate-200 text-sm leading-relaxed mb-4">
+            {displayText}
+          </p>
+        )}
         {hasImage && (
           <div className="rounded-2xl overflow-hidden border border-gray-50 dark:border-white/5 bg-black/5 dark:bg-white/5">
             <img
               src={pub.foto}
               className="w-full max-h-[500px] object-contain"
-              onError={(e) =>
-                (e.target.src =
-                  "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2069&auto=format&fit=crop")
-              }
+              onError={(e) => (e.target.src = "https://images.unsplash.com/photo-1544620347-c4fd4a3d5957?q=80&w=2069&auto=format&fit=crop")}
             />
+          </div>
+        )}
+
+        {/* Attached route card — compact inline preview */}
+        {attachedLista && (() => {
+          const API = import.meta.env.VITE_API_URL || "http://localhost:3000";
+          const imgSrc = attachedLista.imagen_url
+            ? (attachedLista.imagen_url.startsWith("http") ? attachedLista.imagen_url : `${API}${attachedLista.imagen_url}`)
+            : "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600&q=80";
+          const isOwner = usuarioLogged && String(attachedLista.id_usuario) === String(usuarioLogged?.id_usuario);
+          const alreadySaved = routeSaved || userLists.some((ul) => ul.id_lista === attachedLista.id_lista);
+
+          const handleSaveRoute = async (e) => {
+            e.stopPropagation();
+            if (!usuarioLogged) { navigate("/login"); return; }
+            if (alreadySaved) return;
+            setRouteSaving(true);
+            try {
+              await createLista({
+                id_usuario: usuarioLogged.id_usuario,
+                nombre: attachedLista.nombre,
+                descripcion: attachedLista.descripcion || "Guardada des de la comunitat",
+                visibilidad: "private",
+                pois: (attachedLista.pois || []).map((p) => p.id_poi),
+              });
+              setRouteSaved(true);
+            } catch (err) { console.error(err); }
+            finally { setRouteSaving(false); }
+          };
+
+          return (
+            <div
+              className="mt-3 rounded-2xl overflow-hidden border border-gray-100 dark:border-white/10 cursor-pointer group"
+              onClick={() => navigate("/map", { state: { focusedList: attachedLista } })}
+            >
+              {/* Cover image */}
+              <div className="relative h-40 overflow-hidden">
+                <img
+                  src={imgSrc}
+                  alt={attachedLista.nombre}
+                  className="w-full h-full object-cover transition-transform duration-500 group-hover:scale-105"
+                  onError={(e) => (e.target.src = "https://images.unsplash.com/photo-1496442226666-8d4d0e62e6e9?w=600&q=80")}
+                />
+                <div className="absolute inset-0 bg-gradient-to-t from-black/75 via-black/10 to-transparent" />
+                <div className="absolute bottom-3 left-4 right-4 flex items-end justify-between">
+                  <div className="flex-1 min-w-0 pr-2">
+                    <p className="text-white font-bold text-sm leading-tight truncate">{attachedLista.nombre}</p>
+                    <p className="text-white/60 text-[10px] mt-0.5">
+                      {attachedLista.pois?.length || 0} punts
+                      {attachedLista.usuario_nombre ? ` · ${attachedLista.usuario_nombre}` : ""}
+                    </p>
+                  </div>
+                  {!isOwner && (
+                    <button
+                      onClick={handleSaveRoute}
+                      disabled={alreadySaved || routeSaving}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-[10px] font-bold transition-all ${
+                        alreadySaved ? "bg-amber-500 text-white" : "bg-white/20 backdrop-blur-sm text-white hover:bg-white/30"
+                      }`}
+                    >
+                      <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: alreadySaved ? "'FILL' 1" : "'FILL' 0" }}>
+                        bookmark
+                      </span>
+                      {alreadySaved ? "Guardada" : routeSaving ? "..." : "Guardar"}
+                    </button>
+                  )}
+                  {isOwner && (
+                    <span className="bg-emerald-500/80 backdrop-blur-sm text-white text-[9px] font-black uppercase px-2 py-1 rounded-full">
+                      La teva ruta
+                    </span>
+                  )}
+                </div>
+              </div>
+              {/* Footer */}
+              <div className="px-4 py-2.5 bg-white dark:bg-slate-900 flex items-center gap-2">
+                <span className="material-symbols-outlined text-primary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>route</span>
+                <span className="text-[10px] text-slate-400 font-medium">Toca per veure la ruta al mapa</span>
+                <span className="material-symbols-outlined text-slate-300 text-sm ml-auto">chevron_right</span>
+              </div>
+            </div>
+          );
+        })()}
+
+        {/* Loading placeholder while route loads */}
+        {listaId && !attachedLista && (
+          <div className="mt-3 bg-gray-50 dark:bg-white/5 rounded-2xl h-36 flex items-center justify-center gap-3 border border-gray-100 dark:border-white/10 animate-pulse">
+            <span className="material-symbols-outlined text-slate-300">route</span>
+            <span className="text-xs text-slate-400">Carregant ruta...</span>
           </div>
         )}
       </div>
@@ -197,10 +287,7 @@ const PostCard = ({ pub, onComentarioCreado }) => {
           onClick={handleLike}
           className={`flex items-center gap-2 transition-colors ${liked ? "text-primary" : "text-slate-400"}`}
         >
-          <span
-            className="material-symbols-outlined text-xl"
-            style={{ fontVariationSettings: liked ? "'FILL' 1" : "'FILL' 0" }}
-          >
+          <span className="material-symbols-outlined text-xl" style={{ fontVariationSettings: liked ? "'FILL' 1" : "'FILL' 0" }}>
             favorite
           </span>
           <span className="text-xs font-bold">{likesCount}</span>
@@ -210,9 +297,7 @@ const PostCard = ({ pub, onComentarioCreado }) => {
           className="flex items-center gap-2 text-slate-400"
         >
           <span className="material-symbols-outlined text-xl">chat_bubble</span>
-          <span className="text-xs font-bold">
-            {pub.comentarios?.length || 0}
-          </span>
+          <span className="text-xs font-bold">{pub.comentarios?.length || 0}</span>
         </button>
       </div>
 
@@ -222,23 +307,13 @@ const PostCard = ({ pub, onComentarioCreado }) => {
             {pub.comentarios?.map((com) => (
               <div key={com._id} className="flex gap-2">
                 <Link to={`/profile/${com.id_usuario}`}>
-                  <UserAvatar
-                    user={{
-                      foto_perfil: com.foto_perfil,
-                      nombre: com.nombre_usuario,
-                    }}
-                    className="w-6 h-6"
-                  />
+                  <UserAvatar user={{ foto_perfil: com.foto_perfil, nombre: com.nombre_usuario }} className="w-6 h-6" />
                 </Link>
                 <div className="bg-white dark:bg-slate-800 px-3 py-2 rounded-2xl rounded-tl-none border border-gray-100 dark:border-white/5">
                   <Link to={`/profile/${com.id_usuario}`}>
-                    <p className="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors">
-                      {com.nombre_usuario}
-                    </p>
+                    <p className="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors">{com.nombre_usuario}</p>
                   </Link>
-                  <p className="text-xs text-slate-700 dark:text-slate-200">
-                    {com.texto}
-                  </p>
+                  <p className="text-xs text-slate-700 dark:text-slate-200">{com.texto}</p>
                 </div>
               </div>
             ))}
@@ -250,10 +325,7 @@ const PostCard = ({ pub, onComentarioCreado }) => {
               placeholder="Escriu un comentari..."
               className="flex-1 bg-white dark:bg-slate-800 text-xs rounded-xl px-4 py-2 focus:outline-none border border-gray-200 dark:border-white/5 shadow-sm"
             />
-            <button
-              type="submit"
-              className="w-8 h-8 bg-primary text-white rounded-xl flex items-center justify-center shadow-md"
-            >
+            <button type="submit" className="w-8 h-8 bg-primary text-white rounded-xl flex items-center justify-center shadow-md">
               <span className="material-symbols-outlined text-sm">send</span>
             </button>
           </form>
@@ -264,19 +336,38 @@ const PostCard = ({ pub, onComentarioCreado }) => {
 };
 
 // ─── Sub-componente: Card de una lista ───────────────────────────────────────
-const ListaCard = ({ lista, userLists = [] }) => {
+const ListaCard = ({ lista, userLists = [], onListaChanged }) => {
   const navigate = useNavigate();
   const usuarioInfo = localStorage.getItem("usuario");
   const usuarioLogged = usuarioInfo ? JSON.parse(usuarioInfo) : null;
   const [liked, setLiked] = useState(lista.user_liked > 0);
   const [likesCount, setLikesCount] = useState(lista.likes || 0);
   const [toast, setToast] = useState(null);
+  const isOwner = usuarioLogged && String(lista.id_usuario) === String(usuarioLogged.id_usuario);
 
   const isSaved = userLists.some(
     (ul) =>
       ul.nombre === lista.nombre &&
       (ul.pois?.length || 0) === (lista.pois?.length || 0),
   );
+
+  const handleUnshare = async (e) => {
+    e.preventDefault();
+    e.stopPropagation();
+    try {
+      await updateLista(lista.id_lista, {
+        nombre: lista.nombre,
+        descripcion: lista.descripcion,
+        visibilidad: "private",
+        pois: lista.pois?.map((p) => ({ id_poi: p.id_poi })) || [],
+      });
+      setToast({ message: "Ruta retirada de la Comunitat.", type: "info" });
+      if (onListaChanged) onListaChanged();
+    } catch (error) {
+      console.error("Error unsharing list:", error);
+      setToast({ message: "Error al retirar la ruta.", type: "error" });
+    }
+  };
 
   const handleLike = async (e) => {
     e.preventDefault();
@@ -384,22 +475,40 @@ const ListaCard = ({ lista, userLists = [] }) => {
               </div>
             </div>
             <div className="flex items-center gap-2">
-              <button
-                onClick={handleSaveList}
-                className={`flex items-center justify-center w-8 h-8 rounded-full backdrop-blur-md transition-all ${isSaved ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20" : "bg-white/20 text-white hover:bg-white/30"}`}
-                title={
-                  isSaved ? "Llista ja guardada" : "Guardar a les meves llistes"
-                }
-              >
-                <span
-                  className="material-symbols-outlined text-sm"
-                  style={{
-                    fontVariationSettings: isSaved ? "'FILL' 1" : "'FILL' 0",
-                  }}
+              {/* Owner badge + unshare button */}
+              {isOwner && (
+                <button
+                  onClick={handleUnshare}
+                  className="flex items-center justify-center w-8 h-8 rounded-full backdrop-blur-md bg-emerald-500/80 text-white hover:bg-red-500/80 transition-all group"
+                  title="Retirar de la Comunitat"
                 >
-                  bookmark
-                </span>
-              </button>
+                  <span className="material-symbols-outlined text-sm group-hover:hidden" style={{ fontVariationSettings: "'FILL' 1" }}>
+                    public
+                  </span>
+                  <span className="material-symbols-outlined text-sm hidden group-hover:block">
+                    public_off
+                  </span>
+                </button>
+              )}
+              {/* Save bookmark (for non-owners) */}
+              {!isOwner && (
+                <button
+                  onClick={handleSaveList}
+                  className={`flex items-center justify-center w-8 h-8 rounded-full backdrop-blur-md transition-all ${isSaved ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20" : "bg-white/20 text-white hover:bg-white/30"}`}
+                  title={
+                    isSaved ? "Llista ja guardada" : "Guardar a les meves llistes"
+                  }
+                >
+                  <span
+                    className="material-symbols-outlined text-sm"
+                    style={{
+                      fontVariationSettings: isSaved ? "'FILL' 1" : "'FILL' 0",
+                    }}
+                  >
+                    bookmark
+                  </span>
+                </button>
+              )}
               <button
                 onClick={handleLike}
                 className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full backdrop-blur-md transition-all ${liked ? "bg-pink-500 text-white" : "bg-white/20 text-white hover:bg-white/30"}`}
@@ -449,18 +558,18 @@ const Community = () => {
   const usuarioLogged = usuarioInfo ? JSON.parse(usuarioInfo) : null;
 
   const [view, setView] = useState("feed"); // feed, activity, search, lists
-  const [subView, setSubView] = useState("public"); // public, friends
   const [publicaciones, setPublicaciones] = useState([]);
   const [actividad, setActividad] = useState([]);
-  const [listas, setListas] = useState([]);
   const [userLists, setUserLists] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchResults, setSearchResults] = useState([]);
   const [amigos, setAmigos] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [toast, setToast] = useState(null);
 
   const [showPostModal, setShowPostModal] = useState(false);
+  const [postAttachedRoute, setPostAttachedRoute] = useState(null); // lista object attached to post
   const [newPost, setNewPost] = useState({
     texto: "",
     tipo_publicacion: "popular",
@@ -489,57 +598,22 @@ const Community = () => {
     }
   };
 
-  const cargarListas = async () => {
-    // Si no hay usuario o no ha cargado, no intentamos cargar listas privadas
-    if (!usuarioLogged?.id_usuario) {
-      if (subView === "friends") {
-        setListas([]);
-        return;
-      }
-      // Para públicas podemos continuar sin ID
-    }
 
-    setLoading(true);
-    try {
-      let res;
-      if (subView === "public") {
-        res = await getListas(usuarioLogged?.id_usuario || null);
-      } else {
-        res = await getFriendsListas(usuarioLogged?.id_usuario);
-      }
-      setListas(res.data || []);
-    } catch (err) {
-      console.error(err);
-      setListas([]);
-    } finally {
-      setLoading(false);
-    }
-  };
 
   const handleSearch = async (q) => {
     setSearchQuery(q);
     if (q.length < 2) {
       setSearchResults([]);
       if (view === "search") setView("feed");
-      if (view === "lists") cargarListas();
       return;
     }
 
-    if (view === "lists") {
-      const filtered = listas.filter(
-        (l) =>
-          l.nombre.toLowerCase().includes(q.toLowerCase()) ||
-          l.descripcion?.toLowerCase().includes(q.toLowerCase()),
-      );
-      setListas(filtered);
-    } else {
-      setView("search");
-      try {
-        const res = await searchUsers(q);
-        if (res.success) setSearchResults(res.data);
-      } catch (err) {
-        console.error(err);
-      }
+    setView("search");
+    try {
+      const res = await searchUsers(q);
+      if (res.success) setSearchResults(res.data);
+    } catch (err) {
+      console.error(err);
     }
   };
 
@@ -548,14 +622,7 @@ const Community = () => {
     cargarActividad();
     if (usuarioLogged) {
       getAmigos(usuarioLogged.id_usuario).then((r) => setAmigos(r.data || []));
-      // Cargamos solo las listas propias del usuario para detectar duplicados correctamente
-      getUsuarioListas(usuarioLogged.id_usuario).then((r) =>
-        setUserLists(r.data || []),
-      );
-    }
-
-    if (view === "lists") {
-      cargarListas();
+      getUsuarioListas(usuarioLogged.id_usuario).then((r) => setUserLists(r.data || []));
     }
 
     socket.on("nueva_publicacion", cargarPublicaciones);
@@ -565,10 +632,12 @@ const Community = () => {
       socket.off("nueva_publicacion");
       socket.off("nuevo_comentario");
     };
-  }, [view, subView]);
+  }, []);
+
 
   const handleCreatePost = async () => {
-    if (!newPost.texto && !selectedFile) return;
+    // Need at least text, photo, or attached route
+    if (!newPost.texto && !selectedFile && !postAttachedRoute) return;
 
     // --- FILTRO DE PALABRAS RESTRINGIDAS ---
     const restrictedWords = [
@@ -577,7 +646,7 @@ const Community = () => {
       "basura", "asco", "fuck", "shit", "bitch"
     ];
 
-    const foundWord = restrictedWords.find(word => 
+    const foundWord = restrictedWords.find(word =>
       newPost.texto.toLowerCase().includes(word.toLowerCase())
     );
 
@@ -597,20 +666,59 @@ const Community = () => {
         const uploadRes = await uploadFotoComunidad(fileToUpload);
         fotoUrl = `${import.meta.env.VITE_API_URL || ""}${uploadRes.url}`;
       }
+
+      // If a route is attached, fetch its full data (with POIs) then make it public
+      if (postAttachedRoute) {
+        try {
+          const fullLista = await getListaById(postAttachedRoute.id_lista);
+          const listaData = fullLista.data || fullLista;
+          await updateLista(postAttachedRoute.id_lista, {
+            nombre: listaData.nombre,
+            descripcion: listaData.descripcion,
+            visibilidad: "public",
+            imagen_url: listaData.imagen_url || null,
+            pois: (listaData.pois || []).map((p) => ({ id_poi: p.id_poi || p.id })),
+          });
+          setUserLists((prev) =>
+            prev.map((l) =>
+              l.id_lista === postAttachedRoute.id_lista ? { ...l, visibilidad: "public" } : l
+            )
+          );
+        } catch (routeErr) {
+          console.error("Error making route public:", routeErr);
+          setToast({ message: "Error al compartir la ruta. Intenta-ho de nou.", type: "error" });
+          return;
+        }
+      }
+
+      const finalText = [
+        newPost.texto,
+        postAttachedRoute ? `[lista:${postAttachedRoute.id_lista}]` : "",
+      ].filter(Boolean).join(" ") ||
+        (postAttachedRoute ? `He compartit la ruta "${postAttachedRoute.nombre}" a la comunitat! 🗺️ [lista:${postAttachedRoute.id_lista}]` : "");
+
       await createPublicacion({
         id_usuario: usuarioLogged.id_usuario,
         nombre_usuario: usuarioLogged.nombre,
         foto_perfil: usuarioLogged.foto_perfil || null,
-        texto: newPost.texto,
+        texto: finalText,
         foto: fotoUrl,
         tipo_publicacion: newPost.tipo_publicacion,
       });
+
+      const routeName = postAttachedRoute?.nombre;
       setNewPost({ texto: "", tipo_publicacion: "popular" });
       setSelectedFile(null);
       setPreviewUrl("");
+      setPostAttachedRoute(null);
       setShowPostModal(false);
+
+      if (routeName) {
+        setToast({ message: `Ruta "${routeName}" compartida a la Comunitat! 🎉`, type: "success" });
+      }
     } catch (err) {
       console.error(err);
+      setToast({ message: "Error al publicar. Intenta-ho de nou.", type: "error" });
     }
   };
 
@@ -666,13 +774,6 @@ const Community = () => {
               </span>
               {t("community.tabs.recent", "Recents")}
             </button>
-            <button
-              onClick={() => setView("lists")}
-              className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium tracking-tight transition-all border ${view === "lists" ? "bg-primary text-primary-text border-transparent shadow-md shadow-primary/20" : "bg-white dark:bg-slate-950 text-slate-400 border-gray-100 dark:border-white/5 hover:border-gray-200"}`}
-            >
-              <span className="material-symbols-outlined text-sm">map</span>
-              Llistes
-            </button>
           </div>
         </div>
       </div>
@@ -687,6 +788,7 @@ const Community = () => {
         <main>
           {view === "feed" && (
             <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
+              {/* Posts */}
               {loading ? (
                 <div className="text-center py-20 opacity-30 font-bold uppercase tracking-widest text-xs">
                   {t("common.loading", "Carregant publicacions...")}
@@ -697,11 +799,14 @@ const Community = () => {
                     key={pub.id_publicacion || pub._id || pub.id || idx}
                     pub={pub}
                     onComentarioCreado={cargarPublicaciones}
+                    userLists={userLists}
                   />
                 ))
               )}
             </div>
           )}
+
+
 
           {view === "activity" && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-500 space-y-4">
@@ -740,47 +845,6 @@ const Community = () => {
             </div>
           )}
 
-          {view === "lists" && (
-            <div className="animate-in fade-in slide-in-from-bottom-4 duration-500">
-              <div className="flex gap-2 mb-8 bg-white dark:bg-slate-900 p-1.5 rounded-2xl border border-gray-100 dark:border-white/5 w-fit">
-                <button
-                  onClick={() => setSubView("public")}
-                  className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${subView === "public" ? "bg-pink-500 text-white shadow-lg shadow-pink-500/20" : "text-slate-400 hover:text-slate-600"}`}
-                >
-                  Públiques
-                </button>
-                <button
-                  onClick={() => setSubView("friends")}
-                  className={`px-6 py-2.5 rounded-xl text-[10px] font-black uppercase tracking-widest transition-all ${subView === "friends" ? "bg-indigo-500 text-white shadow-lg shadow-indigo-500/20" : "text-slate-400 hover:text-slate-600"}`}
-                >
-                  Amics
-                </button>
-              </div>
-
-              {loading ? (
-                <div className="text-center py-20 opacity-30 font-bold uppercase tracking-widest text-xs">
-                  Carregant llistes...
-                </div>
-              ) : listas.length === 0 ? (
-                <div className="bg-white dark:bg-slate-900 rounded-3xl p-12 text-center border border-dashed border-gray-200 dark:border-white/10">
-                  <span className="material-symbols-outlined text-4xl text-slate-200 mb-4">
-                    map
-                  </span>
-                  <p className="text-sm font-medium text-slate-400">
-                    No s'han trobat llistes en aquesta categoria.
-                  </p>
-                </div>
-              ) : (
-                listas.map((lista) => (
-                  <ListaCard
-                    key={lista.id_lista}
-                    lista={lista}
-                    userLists={userLists}
-                  />
-                ))
-              )}
-            </div>
-          )}
 
           {view === "search" && (
             <div className="animate-in fade-in zoom-in-95 duration-300 space-y-4">
@@ -837,7 +901,7 @@ const Community = () => {
       {showPostModal && (
         <div
           className="fixed inset-0 z-[10000] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
-          onClick={() => setShowPostModal(false)}
+          onClick={() => { setShowPostModal(false); setPostAttachedRoute(null); }}
         >
           <div
             className="w-full md:max-w-lg bg-white dark:bg-slate-950 rounded-[2.5rem] p-8 animate-in zoom-in duration-300"
@@ -848,60 +912,129 @@ const Community = () => {
                 {t("community.newPost", "Nova Publicació")}
               </h2>
               <button
-                onClick={() => setShowPostModal(false)}
+                onClick={() => { setShowPostModal(false); setPostAttachedRoute(null); }}
                 className="text-slate-400"
               >
                 <span className="material-symbols-outlined">close</span>
               </button>
             </div>
+
+            {/* Attached route preview */}
+            {postAttachedRoute && (
+              <div className="mb-4 flex items-center gap-3 px-4 py-3 bg-emerald-50 dark:bg-emerald-900/20 rounded-2xl border border-emerald-200 dark:border-emerald-700/40">
+                <span className="material-symbols-outlined text-emerald-500" style={{ fontVariationSettings: "'FILL' 1" }}>route</span>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300 truncate">{postAttachedRoute.nombre}</p>
+                  <p className="text-[10px] text-emerald-500">{postAttachedRoute.pois?.length || 0} punts · Es farà pública</p>
+                </div>
+                <button onClick={() => setPostAttachedRoute(null)} className="text-emerald-400 hover:text-emerald-600">
+                  <span className="material-symbols-outlined text-sm">close</span>
+                </button>
+              </div>
+            )}
+
             <textarea
               value={newPost.texto}
-              onChange={(e) =>
-                setNewPost({ ...newPost, texto: e.target.value })
-              }
-              placeholder={t("editProfile.bioPlaceholder", "Explica algo...")}
-              className="w-full bg-gray-50 dark:bg-white/5 rounded-2xl p-4 text-sm focus:outline-none min-h-[280px] resize-none border border-gray-100 dark:border-white/5"
+              onChange={(e) => setNewPost({ ...newPost, texto: e.target.value })}
+              placeholder={postAttachedRoute ? `Afegeix un comentari sobre "${postAttachedRoute.nombre}"...` : t("editProfile.bioPlaceholder", "Explica algo...")}
+              className="w-full bg-gray-50 dark:bg-white/5 rounded-2xl p-4 text-sm focus:outline-none min-h-[200px] resize-none border border-gray-100 dark:border-white/5"
             />
-            <div className="mt-4">
-              <button
-                onClick={() => fileInputRef.current.click()}
-                className="w-full py-3 bg-gray-100 dark:bg-white/10 text-slate-500 dark:text-slate-400 rounded-xl text-[10px] font-display font-bold uppercase tracking-widest flex items-center justify-center gap-2 hover:bg-gray-200 dark:hover:bg-white/20 transition-all"
-              >
-                <span className="material-symbols-outlined text-lg">image</span>{" "}
-                {t("community.photo", "Photo")}
-              </button>
+
+            {/* Action buttons row */}
+            <div className="mt-4 flex gap-2">
+              {/* Photo button — hidden when a route is attached */}
+              {!postAttachedRoute && (
+                <button
+                  onClick={() => fileInputRef.current.click()}
+                  className={`flex-1 py-3 rounded-xl text-[10px] font-display font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+                    selectedFile
+                      ? "bg-primary/10 text-primary border border-primary/30"
+                      : "bg-gray-100 dark:bg-white/10 text-slate-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-white/20"
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-lg">image</span>
+                  {selectedFile ? "Foto adjunta" : t("community.photo", "Foto")}
+                </button>
+              )}
+
+              {/* Route button — hidden when a photo is selected */}
+              {!selectedFile && usuarioLogged && (
+                <button
+                  onClick={() => {
+                    document.getElementById("route-picker-dropdown").classList.toggle("hidden");
+                  }}
+                  className={`flex-1 py-3 rounded-xl text-[10px] font-bold uppercase tracking-widest flex items-center justify-center gap-2 transition-all ${
+                    postAttachedRoute
+                      ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-600 dark:text-emerald-400 border border-emerald-300 dark:border-emerald-700"
+                      : "bg-gray-100 dark:bg-white/10 text-slate-500 dark:text-slate-400 hover:bg-gray-200 dark:hover:bg-white/20"
+                  }`}
+                >
+                  <span className="material-symbols-outlined text-lg">route</span>
+                  {postAttachedRoute ? "Ruta adjunta ✓" : "Adjuntar Ruta"}
+                </button>
+              )}
             </div>
+
+            {/* Route picker dropdown */}
+            {usuarioLogged && (
+              <div id="route-picker-dropdown" className="hidden mt-3 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 overflow-hidden">
+                {userLists.length === 0 ? (
+                  <div className="p-4 text-center text-xs text-slate-400">
+                    No tens cap ruta creada.{" "}
+                    <button onClick={() => navigate("/create-list")} className="text-primary font-bold hover:underline">Crear ruta</button>
+                  </div>
+                ) : (
+                  <div className="max-h-40 overflow-y-auto">
+                    {userLists.map((lista) => (
+                      <button
+                        key={lista.id_lista}
+                        onClick={() => {
+                          setPostAttachedRoute(lista);
+                          document.getElementById("route-picker-dropdown").classList.add("hidden");
+                        }}
+                        className={`w-full flex items-center gap-3 px-4 py-3 text-left hover:bg-gray-100 dark:hover:bg-white/10 transition-all border-b border-gray-100 dark:border-white/5 last:border-0 ${
+                          postAttachedRoute?.id_lista === lista.id_lista ? "bg-emerald-50 dark:bg-emerald-900/20" : ""
+                        }`}
+                      >
+                        <span className="material-symbols-outlined text-slate-400 text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>route</span>
+                        <div className="flex-1 min-w-0">
+                          <p className="text-sm font-bold truncate text-slate-800 dark:text-white">{lista.nombre}</p>
+                          <p className="text-[10px] text-slate-400">{lista.pois?.length || 0} punts</p>
+                        </div>
+                        {lista.visibilidad === "public" && (
+                          <span className="text-[9px] font-black uppercase text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">Pública</span>
+                        )}
+                      </button>
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
+
             <input
               ref={fileInputRef}
               type="file"
               className="hidden"
               onChange={(e) => {
                 const f = e.target.files[0];
-                if (f) {
-                  setSelectedFile(f);
-                  setPreviewUrl(URL.createObjectURL(f));
-                }
+                if (f) { setSelectedFile(f); setPreviewUrl(URL.createObjectURL(f)); }
               }}
             />
             {previewUrl && (
               <div className="relative mt-4 rounded-xl overflow-hidden aspect-video border border-gray-100">
                 <img src={previewUrl} className="w-full h-full object-cover" />
                 <button
-                  onClick={() => {
-                    setSelectedFile(null);
-                    setPreviewUrl("");
-                  }}
+                  onClick={() => { setSelectedFile(null); setPreviewUrl(""); }}
                   className="absolute top-2 right-2 bg-black/50 text-white w-6 h-6 rounded-full flex items-center justify-center"
                 >
-                  <span className="material-symbols-outlined text-sm">
-                    close
-                  </span>
+                  <span className="material-symbols-outlined text-sm">close</span>
                 </button>
               </div>
             )}
             <button
               onClick={handleCreatePost}
-              className="w-full mt-6 bg-primary text-white dark:text-black py-4 rounded-2xl font-display font-semibold shadow-xl shadow-primary/20 active:scale-95 transition-transform"
+              disabled={!newPost.texto && !selectedFile && !postAttachedRoute}
+              className="w-full mt-6 bg-primary text-white dark:text-black py-4 rounded-2xl font-display font-semibold shadow-xl shadow-primary/20 active:scale-95 transition-transform disabled:opacity-40"
             >
               {t("community.publish", "Publicar")}
             </button>
