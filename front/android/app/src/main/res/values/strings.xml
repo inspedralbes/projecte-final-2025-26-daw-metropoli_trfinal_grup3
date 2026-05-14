@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">Metropoli</string>
-    <string name="title_activity_main">Metropoli</string>
+    <string name="app_name">WeMap</string>
+    <string name="title_activity_main">WeMap</string>
     <string name="package_name">com.metropoli.app</string>
     <string name="custom_url_scheme">com.metropoli.app</string>
 </resources>
