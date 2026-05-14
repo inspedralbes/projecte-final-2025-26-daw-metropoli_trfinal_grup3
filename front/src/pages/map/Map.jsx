@@ -339,13 +339,7 @@ const Map = () => {
     }
   };
 
-  const handleGoToFirstPoi = (list) => {
-    if (!userPosition || !list || !list.pois || list.pois.length === 0) {
-      setToast({ message: "Necessitem la teva ubicació i una llista amb punts.", type: "warning" });
-      return;
-    }
-    handleGoToPoi(list.pois[0]);
-  };
+
 
   const handleFocusList = async (list) => {
     if (focusedListId === list.id_lista) {
@@ -395,7 +389,8 @@ const Map = () => {
       return;
     }
 
-    const list = userLists.find((l) => l.id_lista === focusedListId);
+    let list = userLists.find((l) => l.id_lista === focusedListId);
+    if (!list) list = discoverLists.find((l) => l.id_lista === focusedListId);
     if (!list || !list.pois || list.pois.length === 0) return;
 
     let nearestPoi = list.pois[0];
@@ -414,6 +409,7 @@ const Map = () => {
     });
 
     handleGetRouteToPoi(nearestPoi);
+    setIsSheetExpanded(false);
   };
 
   const handleGetRouteToPoi = async (poi) => {
@@ -1093,25 +1089,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
                           {t("map.goToRoute", "Ir a la ruta")}
                         </button>
 
-                        {/* Navigation to first POI */}
-                        <button
-                          onClick={() =>
-                            handleGoToFirstPoi(
-                              userLists.find(
-                                (l) => l.id_lista === focusedListId,
-                              ) ||
-                                discoverLists.find(
-                                  (l) => l.id_lista === focusedListId,
-                                ),
-                            )
-                          }
-                          className="w-full bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-white py-3 rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-2 hover:bg-slate-200 dark:hover:bg-white/10 transition-all border border-black/5 dark:border-white/5"
-                        >
-                          <span className="material-symbols-outlined text-sm">
-                            directions
-                          </span>
-                          {t("map.howToGet", "Cómo llegar")}
-                        </button>
+
 
                         {/* Share to Community (only for owned lists) */}
 

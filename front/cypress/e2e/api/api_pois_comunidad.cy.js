@@ -12,7 +12,7 @@ describe("API - POIs", () => {
     });
   });
 
-  it.skip("GET /api/pois/:id retorna un POI concret", () => {
+  it("GET /api/pois/:id retorna un POI concret", () => {
     cy.request(`${API()}/api/pois`).then((res) => {
       const llista = res.body.data ?? res.body;
       if (llista.length === 0) return; // No hi ha POIs, skip
