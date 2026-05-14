@@ -52,10 +52,16 @@ const createPoiSimple = async (req, res) => {
         // Avisar a todos los clientes de que el mapa ha cambiado usando el modulo oficial de la radio
         emitirMensaje('mapa_actualizado', { type: 'create' });
     } catch (error) {
+        console.error('[createPoiSimple] Error detallado:', {
+            message: error.message,
+            code: error.code,
+            sqlMessage: error.sqlMessage,
+            sql: error.sql,
+        });
         res.status(500).json({
             success: false,
-            message: error.message,
-            error_code: 'ERROR_INTERNO'
+            message: error.sqlMessage || error.message,
+            error_code: error.code || 'ERROR_INTERNO'
         });
     }
 };
