@@ -18,6 +18,7 @@ const ComentarioSchema = new mongoose.Schema(
     nombre_usuario: { type: String, default: "Usuario" },
     foto_perfil: { type: String, default: null },
     texto: { type: String, required: true },
+    foto: { type: String, default: null },
     respuestas: { type: [RespuestaSchema], default: [] },
   },
   { timestamps: true },

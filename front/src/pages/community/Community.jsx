@@ -83,6 +83,9 @@ const PostCard = ({ pub, onComentarioCreado, userLists = [] }) => {
   const [likesCount, setLikesCount] = useState(pub.likes ?? 0);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [textoComentario, setTextoComentario] = useState("");
+  const [comentarioFile, setComentarioFile] = useState(null);
+  const [comentarioPreview, setComentarioPreview] = useState("");
+  const fileInputRef = useRef(null);
   const [attachedLista, setAttachedLista] = useState(null);
   const [routeSaving, setRouteSaving] = useState(false);
   const [routeSaved, setRouteSaved] = useState(false);
@@ -137,15 +140,42 @@ const PostCard = ({ pub, onComentarioCreado, userLists = [] }) => {
   const handleComentario = async (e) => {
     e.preventDefault();
     if (!usuarioLogged) { navigate("/login"); return; }
-    if (!textoComentario.trim()) return;
+    if (!textoComentario.trim() && !comentarioFile) return;
+
+    // Filtro de palabras restringidas
+    const restrictedWords = [
+      "mierda", "puta", "puto", "gilipollas", "cabron", "cabrón", "cojones", "joder", "hostia", "follar",
+      "pendejo", "zorra", "maricon", "maricón", "idiota", "estupido", "estúpido", "imbecil", "imbécil",
+      "basura", "asco", "fuck", "shit", "bitch"
+    ];
+
+    const foundWord = restrictedWords.find(word =>
+      textoComentario.toLowerCase().includes(word.toLowerCase())
+    );
+
+    if (foundWord) {
+      alert(`Opa! El teu missatge conté paraules no permeses (ex: "${foundWord}"). Per favor, mantingues el respecte a la comunitat.`);
+      return;
+    }
+
     try {
+      let fotoUrl = null;
+      if (comentarioFile) {
+        const fileToUpload = await compressImage(comentarioFile);
+        const uploadRes = await uploadFotoComunidad(fileToUpload);
+        fotoUrl = `${import.meta.env.VITE_API_URL || ""}${uploadRes.url}`;
+      }
+
       await createComentario(pub._id, {
         id_usuario: usuarioLogged.id_usuario,
         nombre_usuario: usuarioLogged.nombre,
         foto_perfil: usuarioLogged.foto_perfil || null,
-        texto: textoComentario.trim(),
+        texto: textoComentario.trim() || "📸 Foto",
+        foto: fotoUrl,
       });
       setTextoComentario("");
+      setComentarioFile(null);
+      setComentarioPreview("");
       onComentarioCreado(pub._id);
     } catch (err) {
       console.error(err);
@@ -309,26 +339,68 @@ const PostCard = ({ pub, onComentarioCreado, userLists = [] }) => {
                 <Link to={`/profile/${com.id_usuario}`}>
                   <UserAvatar user={{ foto_perfil: com.foto_perfil, nombre: com.nombre_usuario }} className="w-6 h-6" />
                 </Link>
-                <div className="bg-white dark:bg-slate-800 px-3 py-2 rounded-2xl rounded-tl-none border border-gray-100 dark:border-white/5">
+                <div className="bg-white dark:bg-slate-800 px-3 py-2 rounded-2xl rounded-tl-none border border-gray-100 dark:border-white/5 max-w-[85%]">
                   <Link to={`/profile/${com.id_usuario}`}>
                     <p className="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors">{com.nombre_usuario}</p>
                   </Link>
                   <p className="text-xs text-slate-700 dark:text-slate-200">{com.texto}</p>
+                  {com.foto && (
+                    <div className="mt-2 rounded-xl overflow-hidden border border-gray-100 dark:border-white/5">
+                      <img src={com.foto} alt="Comentario" className="max-w-full max-h-32 object-contain" />
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
           </div>
-          <form onSubmit={handleComentario} className="flex gap-2">
-            <input
-              value={textoComentario}
-              onChange={(e) => setTextoComentario(e.target.value)}
-              placeholder="Escriu un comentari..."
-              className="flex-1 bg-white dark:bg-slate-800 text-xs rounded-xl px-4 py-2 focus:outline-none border border-gray-200 dark:border-white/5 shadow-sm"
-            />
-            <button type="submit" className="w-8 h-8 bg-primary text-white rounded-xl flex items-center justify-center shadow-md">
-              <span className="material-symbols-outlined text-sm">send</span>
-            </button>
-          </form>
+          <div className="flex flex-col gap-2">
+            {comentarioPreview && (
+              <div className="relative self-start mt-2">
+                <img src={comentarioPreview} className="h-16 w-16 object-cover rounded-xl border border-gray-200" alt="Preview" />
+                <button
+                  type="button"
+                  onClick={() => { setComentarioFile(null); setComentarioPreview(""); }}
+                  className="absolute -top-2 -right-2 bg-black/60 text-white w-5 h-5 rounded-full flex items-center justify-center"
+                >
+                  <span className="material-symbols-outlined text-[10px]">close</span>
+                </button>
+              </div>
+            )}
+            <form onSubmit={handleComentario} className="flex gap-2 items-center">
+              <input
+                type="file"
+                className="hidden"
+                ref={fileInputRef}
+                onChange={(e) => {
+                  const f = e.target.files[0];
+                  if (f) {
+                    setComentarioFile(f);
+                    setComentarioPreview(URL.createObjectURL(f));
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current.click()}
+                className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${comentarioFile ? "bg-primary/10 text-primary" : "bg-gray-100 dark:bg-slate-800 text-slate-400 hover:text-primary"}`}
+              >
+                <span className="material-symbols-outlined text-sm">image</span>
+              </button>
+              <input
+                value={textoComentario}
+                onChange={(e) => setTextoComentario(e.target.value)}
+                placeholder="Escriu un comentari..."
+                className="flex-1 bg-white dark:bg-slate-800 text-xs rounded-xl px-4 py-2 focus:outline-none border border-gray-200 dark:border-white/5 shadow-sm"
+              />
+              <button 
+                type="submit" 
+                disabled={!textoComentario.trim() && !comentarioFile}
+                className="w-8 h-8 bg-primary text-white rounded-xl flex items-center justify-center shadow-md disabled:opacity-50 transition-opacity"
+              >
+                <span className="material-symbols-outlined text-sm">send</span>
+              </button>
+            </form>
+          </div>
         </div>
       )}
     </article>
