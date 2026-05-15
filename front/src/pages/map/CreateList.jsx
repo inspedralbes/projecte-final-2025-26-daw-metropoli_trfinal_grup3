@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { MapContainer, useMapEvents } from "react-leaflet";
+import { MapContainer, useMapEvents, Circle } from "react-leaflet";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Navbar from "../../layouts/Navbar";
@@ -68,6 +68,7 @@ const CreateList = () => {
   const [otherListGeometries, setOtherListGeometries] = useState({});
   const [focusedListId, setFocusedListId] = useState(null);
   const [userPosition, setUserPosition] = useState(null);
+  const [hasInitialCentered, setHasInitialCentered] = useState(false);
 
   const [editingListId, setEditingListId] = useState(null);
   const [showOtherLists, setShowOtherLists] = useState(true);
@@ -79,6 +80,7 @@ const CreateList = () => {
   const [toast, setToast] = useState(null);
   const [showOptimizeConfirm, setShowOptimizeConfirm] = useState(false);
   const [pendingSavePois, setPendingSavePois] = useState(null);
+  const [isProcessingList, setIsProcessingList] = useState(false);
 
   // Ref para tener acceso inmediato al estado dentro de eventos de Leaflet
   const selectedPoisRef = useRef([]);
@@ -211,16 +213,18 @@ const CreateList = () => {
   }, [location.state]);
 
   useEffect(() => {
-    if (mapRef.current && (pois.length > 0 || allNodes.length > 0)) {
-      const bounds = L.latLngBounds([
-        ...pois.map((p) => [parseFloat(p.latitud), parseFloat(p.longitud)]),
-        ...allNodes.map((n) => [parseFloat(n.latitud), parseFloat(n.longitud)]),
-      ]);
+    if (mapRef.current && selectedPoisForList.length > 0) {
+      const bounds = L.latLngBounds(
+        selectedPoisForList.map((p) => [parseFloat(p.latitud), parseFloat(p.longitud)])
+      );
       if (bounds.isValid()) {
         mapRef.current.fitBounds(bounds, { padding: [50, 50] });
       }
+    } else if (mapRef.current && userPosition && !hasInitialCentered && !location.state?.editingList) {
+      mapRef.current.flyTo(userPosition, 17, { animate: true, duration: 1.5 });
+      setHasInitialCentered(true);
     }
-  }, [pois, allNodes]);
+  }, [selectedPoisForList, userPosition, hasInitialCentered, location.state?.editingList]);
 
   const handleSelectPoi = (poi) => {
     const existingIndex = selectedPoisForList.findIndex(
@@ -451,6 +455,8 @@ const CreateList = () => {
 
   // Separated save logic so it can be called after the optimize confirm modal
   const _doSave = async (finalPois) => {
+    if (isProcessingList) return;
+    setIsProcessingList(true);
     try {
       // --- 2. Creación Real de POIs Temporales ---
       const poiIdsFinales = [];
@@ -540,6 +546,7 @@ const CreateList = () => {
         message: "Error al desar la ruta. Intenta-ho de nou.",
         type: "error",
       });
+      setIsProcessingList(false);
     }
   };
 
@@ -575,6 +582,20 @@ const CreateList = () => {
             currentUser={JSON.parse(localStorage.getItem("usuario") || "null")}
             t={t}
           />
+
+          {/* Location Focus Circle */}
+          {userPosition && (
+            <Circle
+              center={userPosition}
+              radius={20}
+              pathOptions={{
+                fillColor: "#3b82f6",
+                fillOpacity: 0.1,
+                color: "#3b82f6",
+                weight: 1,
+              }}
+            />
+          )}
         </MapContainer>
       </div>
 
@@ -913,13 +934,14 @@ const CreateList = () => {
                             <button
                               onClick={handleSaveList}
                               disabled={
-                                selectedPoisForList.length < 2 || !listName
+                                selectedPoisForList.length < 2 || !listName || isProcessingList
                               }
-                              className={`w-full py-3.5 rounded-xl font-bold text-sm ${editingListId ? "bg-primary text-primary-text" : "bg-black dark:bg-white text-white dark:text-black"} disabled:opacity-20 active:scale-95 transition-all`}
+                              className={`w-full py-3.5 rounded-xl font-bold text-sm ${editingListId ? "bg-primary text-primary-text" : "bg-black dark:bg-white text-white dark:text-black"} ${isProcessingList ? 'opacity-50 cursor-not-allowed' : 'active:scale-95 hover:opacity-90'} transition-all flex items-center justify-center gap-2`}
                             >
+                              {isProcessingList && <span className="material-symbols-outlined animate-spin text-sm">refresh</span>}
                               {editingListId
                                 ? t("createList.saveChanges", "Guardar cambios")
-                                : t("createList.save")}
+                                : t("createList.save", "Guardar ruta")}
                             </button>
                           )}
                         </div>
@@ -1010,16 +1032,19 @@ const CreateList = () => {
             <div className="flex gap-3">
               <button
                 onClick={async () => {
+                  if (isProcessingList) return;
                   setShowOptimizeConfirm(false);
                   await _doSave(pendingSavePois);
                   setPendingSavePois(null);
                 }}
-                className="flex-1 py-3 rounded-2xl text-sm font-bold bg-gray-100 dark:bg-white/10 text-slate-600 dark:text-white hover:bg-gray-200 dark:hover:bg-white/20 transition-all"
+                disabled={isProcessingList}
+                className={`flex-1 py-3 rounded-2xl text-sm font-bold bg-gray-100 dark:bg-white/10 text-slate-600 dark:text-white transition-all ${isProcessingList ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200 dark:hover:bg-white/20'}`}
               >
                 Mantenir ordre
               </button>
               <button
                 onClick={async () => {
+                  if (isProcessingList) return;
                   setShowOptimizeConfirm(false);
                   const points = [...pendingSavePois];
                   const result = [points.shift()];
@@ -1055,7 +1080,8 @@ const CreateList = () => {
                   setPendingSavePois(null);
                   await _doSave(result);
                 }}
-                className="flex-[2] py-3 rounded-2xl text-sm font-bold bg-primary text-primary-text shadow-lg shadow-primary/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
+                disabled={isProcessingList}
+                className={`flex-[2] py-3 rounded-2xl text-sm font-bold bg-primary text-primary-text shadow-lg shadow-primary/30 transition-all ${isProcessingList ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.98]'}`}
               >
                 Sí, optimitzar
               </button>
