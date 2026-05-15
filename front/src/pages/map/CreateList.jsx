@@ -69,6 +69,7 @@ const CreateList = () => {
   const [focusedListId, setFocusedListId] = useState(null);
   const [userPosition, setUserPosition] = useState(null);
   const [hasInitialCentered, setHasInitialCentered] = useState(false);
+  const [hasInitialFitBounds, setHasInitialFitBounds] = useState(false);
 
   const [editingListId, setEditingListId] = useState(null);
   const [showOtherLists, setShowOtherLists] = useState(true);
@@ -213,18 +214,19 @@ const CreateList = () => {
   }, [location.state]);
 
   useEffect(() => {
-    if (mapRef.current && selectedPoisForList.length > 0) {
+    if (mapRef.current && location.state?.editingList && selectedPoisForList.length > 0 && !hasInitialFitBounds) {
       const bounds = L.latLngBounds(
         selectedPoisForList.map((p) => [parseFloat(p.latitud), parseFloat(p.longitud)])
       );
       if (bounds.isValid()) {
         mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+        setHasInitialFitBounds(true);
       }
     } else if (mapRef.current && userPosition && !hasInitialCentered && !location.state?.editingList) {
       mapRef.current.flyTo(userPosition, 17, { animate: true, duration: 1.5 });
       setHasInitialCentered(true);
     }
-  }, [selectedPoisForList, userPosition, hasInitialCentered, location.state?.editingList]);
+  }, [selectedPoisForList, userPosition, hasInitialCentered, hasInitialFitBounds, location.state?.editingList]);
 
   const handleSelectPoi = (poi) => {
     const existingIndex = selectedPoisForList.findIndex(
