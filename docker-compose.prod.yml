@@ -9,9 +9,9 @@ services:
       - .env
     environment:
       - DB_HOST=db
-      - DB_USER=root
-      - DB_PASSWORD=password
-      - DB_NAME=metropoli
+      - DB_USER=${DB_USER:-root}
+      - DB_PASSWORD=${DB_PASSWORD:-password}
+      - DB_NAME=${DB_NAME:-metropoli}
     volumes:
       - uploads_data:/app/public
     depends_on:
@@ -38,9 +38,11 @@ services:
   db:
     image: mysql:8.0
     restart: always
+    env_file:
+      - .env
     environment:
-      MYSQL_ROOT_PASSWORD: password
-      MYSQL_DATABASE: metropoli
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-metropoli}
     volumes:
       - db_data:/var/lib/mysql
       - ./back/src/data-access/create.sql:/docker-entrypoint-initdb.d/a_create.sql
