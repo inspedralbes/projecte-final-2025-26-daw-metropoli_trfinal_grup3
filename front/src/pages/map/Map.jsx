@@ -388,9 +388,7 @@ const Map = () => {
     setIsSheetExpanded(false);
 
     if (list.pois && list.pois.length >= 2) {
-      // Append first POI to the end to close the loop
-      const closedPois = [...list.pois, list.pois[0]];
-      const coordsString = closedPois
+      const coordsString = list.pois
         .map((p) => `${p.longitud},${p.latitud}`)
         .join(";");
       try {
@@ -745,7 +743,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
             </h2>
             <div className="space-y-4">
               {userLists.length > 0 ? (
-                userLists.map((route) => (
+                [...userLists].sort((a, b) => b.id_lista - a.id_lista).map((route) => (
                   <div
                     key={route.id_lista}
                     onClick={() => handleFocusList(route)}
@@ -1226,17 +1224,17 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
       )}
       <Header />
 
-      {/* DESKTOP CONTROLS: Top corners */}
-      <div className="hidden md:flex fixed top-24 right-6 left-96 z-[1001] pointer-events-none flex-col items-end gap-3">
+      {/* DESKTOP CONTROLS: Bottom right */}
+      <div className="hidden md:flex fixed bottom-8 right-6 z-[1001] pointer-events-none flex-col items-end gap-3">
         <button
           onClick={handleLocate}
-          className="pointer-events-auto w-12 h-12 bg-white dark:bg-slate-900 text-black dark:text-white rounded-2xl shadow-2xl border border-gray-100 dark:border-white/5 flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+          className="pointer-events-auto w-14 h-14 bg-white dark:bg-slate-900 text-black dark:text-white rounded-2xl shadow-2xl border border-gray-100 dark:border-white/5 flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
         >
           <span className="material-symbols-outlined">my_location</span>
         </button>
         <Link
           to="/create-list"
-          className="pointer-events-auto w-12 h-12 bg-primary text-primary-text rounded-2xl shadow-primary-glow flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+          className="pointer-events-auto w-14 h-14 bg-primary text-primary-text rounded-2xl shadow-primary-glow flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
         >
           <span className="material-symbols-outlined text-2xl font-bold">
             add
@@ -1247,7 +1245,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
       <div className="fixed inset-x-0 bottom-[76px] z-[1900] pointer-events-auto md:hidden">
         {/* Floating Pill Buttons Centered Above Drawer */}
         {!focusedListId && !isSheetExpanded && (
-          <div className="flex justify-center gap-2 px-5 mb-4 translate-y-2">
+          <div className="flex justify-center gap-2 px-5 mb-2">
             <button
               onClick={handleLocate}
               className="pointer-events-auto flex items-center gap-2 bg-white dark:bg-slate-900 text-black dark:text-white px-5 py-2.5 rounded-full shadow-2xl border border-black/5 dark:border-white/5 active:scale-95 transition-transform"
@@ -1297,7 +1295,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
                   </div>
                   <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-2 px-2">
                     {userLists.length > 0 ? (
-                      userLists.map((route) => (
+                      [...userLists].sort((a, b) => b.id_lista - a.id_lista).map((route) => (
                         <MiniRouteCard
                           key={route.id_lista}
                           route={route}

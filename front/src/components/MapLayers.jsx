@@ -83,9 +83,8 @@ const MapLayers = ({
           let geom = listData?.geom;
           
           if (!geom) {
-            // Fallback: connect points directly, closing the loop
-            const points = list.pois.map(p => [parseFloat(p.latitud), parseFloat(p.longitud)]);
-            geom = [...points, points[0]];
+            // Fallback: connect points directly
+            geom = list.pois.map(p => [parseFloat(p.latitud), parseFloat(p.longitud)]);
           }
 
           return (
@@ -221,7 +220,7 @@ const MapLayers = ({
             html: currentUser?.foto_perfil 
               ? `<div class="flex flex-col items-center justify-center" style="width: 100px; margin-left: -50px; margin-top: -20px;">
                   <div class="w-10 h-10 rounded-full border-2 border-primary shadow-lg overflow-hidden bg-white flex-shrink-0 animate-pulse">
-                    <img src="${API_URL}${currentUser.foto_perfil}" class="w-full h-full object-cover" />
+                    <img src="${currentUser.foto_perfil.startsWith('http') ? currentUser.foto_perfil : `${API_URL}${currentUser.foto_perfil.startsWith('/') ? '' : '/'}${currentUser.foto_perfil}`}" class="w-full h-full object-cover" onerror="this.onerror=null; this.src='https://ui-avatars.com/api/?name=${encodeURIComponent(currentUser.nombre || 'Tú')}&background=random&color=fff&size=128&bold=true';" />
                   </div>
                   <div class="mt-1 bg-primary/90 backdrop-blur-sm px-2 py-0.5 rounded-lg text-white text-[9px] font-black uppercase tracking-tight text-center leading-tight shadow-xl border border-white/20 whitespace-nowrap">
                     ${t?.('map.you', 'Tú') || 'Tú'}

@@ -79,8 +79,6 @@ const CreateList = () => {
   const [isSheetMinimized, setIsSheetMinimized] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [toast, setToast] = useState(null);
-  const [showOptimizeConfirm, setShowOptimizeConfirm] = useState(false);
-  const [pendingSavePois, setPendingSavePois] = useState(null);
   const [isProcessingList, setIsProcessingList] = useState(false);
 
   // Ref para tener acceso inmediato al estado dentro de eventos de Leaflet
@@ -140,13 +138,11 @@ const CreateList = () => {
           combinedLists.forEach(async (list) => {
             if (list.pois && list.pois.length >= 2) {
               try {
-                // Append first POI to end to close loop
-                const closedPois = [...list.pois, list.pois[0]];
-                const coords = closedPois
+                const coords = list.pois
                   .map((p) => `${p.longitud},${p.latitud}`)
                   .join(";");
                 const res = await fetch(
-                  `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`,
+                  `https://router.project-osrm.org/route/v1/foot/${coords}?overview=full&geometries=geojson`,
                 );
                 const data = await res.json();
                 if (data.code === "Ok") {
@@ -233,10 +229,36 @@ const CreateList = () => {
       (p) => p.id_poi === poi.id_poi,
     );
     if (existingIndex === -1) {
-      // Si no está en el itinerario, lo añadimos (lo "unimos")
+      // Si no está en el itinerario, lo añadimos y AUTO-OPTIMIZAMOS el orden
       const newSelected = [...selectedPoisForList, poi];
-      setSelectedPoisForList(newSelected);
-      setActivePoiIndex(newSelected.length - 1);
+      
+      if (newSelected.length >= 3) {
+        // Auto-optimizar con el algoritmo del vecino más cercano (Nearest Neighbor)
+        const points = [...newSelected];
+        const optimized = [points.shift()]; // Mantener el primero como inicio
+        
+        while (points.length > 0) {
+          const last = optimized[optimized.length - 1];
+          let nearestIdx = 0;
+          let minDist = L.latLng(parseFloat(last.latitud), parseFloat(last.longitud))
+            .distanceTo(L.latLng(parseFloat(points[0].latitud), parseFloat(points[0].longitud)));
+            
+          for (let i = 1; i < points.length; i++) {
+            const d = L.latLng(parseFloat(last.latitud), parseFloat(last.longitud))
+              .distanceTo(L.latLng(parseFloat(points[i].latitud), parseFloat(points[i].longitud)));
+            if (d < minDist) {
+              minDist = d;
+              nearestIdx = i;
+            }
+          }
+          optimized.push(points.splice(nearestIdx, 1)[0]);
+        }
+        setSelectedPoisForList(optimized);
+        setActivePoiIndex(optimized.length - 1);
+      } else {
+        setSelectedPoisForList(newSelected);
+        setActivePoiIndex(newSelected.length - 1);
+      }
     } else {
       // Si ya está, lo quitamos del itinerario para "desunirlo"
       setSelectedPoisForList((prev) =>
@@ -356,14 +378,25 @@ const CreateList = () => {
     }
   };
 
+  const handleLocate = () => {
+    if (userPosition && mapRef.current) {
+      mapRef.current.flyTo(userPosition, 17, { animate: true, duration: 1.2 });
+    } else {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const p = [pos.coords.latitude, pos.coords.longitude];
+        setUserPosition(p);
+        if (mapRef.current)
+          mapRef.current.flyTo(p, 17, { animate: true, duration: 1.2 });
+      });
+    }
+  };
+
   // Cálculo de ruta en tiempo real para la lista que se está creando
   useEffect(() => {
     const getLiveRoute = async () => {
       if (selectedPoisForList.length >= 2) {
         try {
-          // Append first POI to end to close loop
-          const closedPois = [...selectedPoisForList, selectedPoisForList[0]];
-          const coords = closedPois
+          const coords = selectedPoisForList
             .map((p) => `${p.longitud},${p.latitud}`)
             .join(";");
           const res = await fetch(
@@ -400,14 +433,6 @@ const CreateList = () => {
     }
   };
 
-  const handleLocate = () => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition((pos) => {
-      const p = [pos.coords.latitude, pos.coords.longitude];
-      if (mapRef.current)
-        mapRef.current.flyTo(p, 17, { animate: true, duration: 1.5 });
-    });
-  };
 
   const handleSaveList = async () => {
     if (selectedPoisForList.length < 2) {
@@ -436,15 +461,7 @@ const CreateList = () => {
     }
 
     try {
-      let finalPois = [...selectedPoisForList];
-
-      // --- 1. Optimización Automática ---
-      if (finalPois.length >= 3) {
-        // Store pois and show confirm modal instead of window.confirm
-        setPendingSavePois(finalPois);
-        setShowOptimizeConfirm(true);
-        return; // will resume in continueAfterOptimize
-      }
+      const finalPois = [...selectedPoisForList];
       await _doSave(finalPois);
     } catch (err) {
       console.error("Error saving/updating list:", err);
@@ -933,18 +950,25 @@ const CreateList = () => {
                                   )}
                             </button>
                           ) : (
-                            <button
-                              onClick={handleSaveList}
-                              disabled={
-                                selectedPoisForList.length < 2 || !listName || isProcessingList
-                              }
-                              className={`w-full py-3.5 rounded-xl font-bold text-sm ${editingListId ? "bg-primary text-primary-text" : "bg-black dark:bg-white text-white dark:text-black"} ${isProcessingList ? 'opacity-50 cursor-not-allowed' : 'active:scale-95 hover:opacity-90'} transition-all flex items-center justify-center gap-2`}
-                            >
-                              {isProcessingList && <span className="material-symbols-outlined animate-spin text-sm">refresh</span>}
-                              {editingListId
-                                ? t("createList.saveChanges", "Guardar cambios")
-                                : t("createList.save", "Guardar ruta")}
-                            </button>
+                            <div className="flex flex-col gap-2 w-full">
+                              {(!listName || selectedPoisForList.length < 2) && (
+                                <p className="text-[10px] text-red-500 font-bold text-center italic">
+                                  {!listName ? "Ponle un nombre a la lista" : "Añade al menos 2 puntos al itinerario"}
+                                </p>
+                              )}
+                              <button
+                                onClick={handleSaveList}
+                                disabled={
+                                  selectedPoisForList.length < 2 || !listName || isProcessingList
+                                }
+                                className={`w-full py-3.5 rounded-xl font-bold text-sm ${editingListId ? "bg-primary text-primary-text" : "bg-black dark:bg-white text-white dark:text-black"} ${isProcessingList ? 'opacity-50 cursor-not-allowed' : 'disabled:opacity-20 disabled:cursor-not-allowed active:scale-95 hover:opacity-90'} transition-all flex items-center justify-center gap-2`}
+                              >
+                                {isProcessingList && <span className="material-symbols-outlined animate-spin text-sm">refresh</span>}
+                                {editingListId
+                                  ? t("createList.saveChanges", "Guardar cambios")
+                                  : t("createList.save", "Guardar ruta")}
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -998,94 +1022,6 @@ const CreateList = () => {
                 className="flex-1 py-3 rounded-2xl text-sm font-bold bg-red-500 text-white hover:bg-red-600 transition-all active:scale-95"
               >
                 {t("createList.confirmCloseBtn", "Sí, descartar")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Optimize Confirm Modal */}
-      {showOptimizeConfirm && (
-        <div className="fixed inset-0 z-[2000] flex items-center justify-center p-6">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowOptimizeConfirm(false)}
-          />
-          <div className="relative bg-white dark:bg-slate-900 rounded-[2rem] p-7 shadow-2xl max-w-sm w-full border border-gray-100 dark:border-white/10 animate-in fade-in zoom-in duration-200">
-            <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <span
-                className="material-symbols-outlined text-primary text-3xl"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
-                auto_fix_high
-              </span>
-            </div>
-            <h3 className="text-lg font-black text-center text-slate-800 dark:text-white mb-2">
-              Optimitzar ruta?
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 text-center mb-6 leading-relaxed">
-              Vols que el sistema ordeni els punts automàticament per crear la
-              ruta més curta?
-              <br />
-              <span className="text-slate-400">
-                Si no, es mantindrà el teu ordre manual.
-              </span>
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={async () => {
-                  if (isProcessingList) return;
-                  setShowOptimizeConfirm(false);
-                  await _doSave(pendingSavePois);
-                  setPendingSavePois(null);
-                }}
-                disabled={isProcessingList}
-                className={`flex-1 py-3 rounded-2xl text-sm font-bold bg-gray-100 dark:bg-white/10 text-slate-600 dark:text-white transition-all ${isProcessingList ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-200 dark:hover:bg-white/20'}`}
-              >
-                Mantenir ordre
-              </button>
-              <button
-                onClick={async () => {
-                  if (isProcessingList) return;
-                  setShowOptimizeConfirm(false);
-                  const points = [...pendingSavePois];
-                  const result = [points.shift()];
-                  while (points.length > 0) {
-                    const last = result[result.length - 1];
-                    let nearestIdx = 0;
-                    let minDist = L.latLng(
-                      parseFloat(last.latitud),
-                      parseFloat(last.longitud),
-                    ).distanceTo(
-                      L.latLng(
-                        parseFloat(points[0].latitud),
-                        parseFloat(points[0].longitud),
-                      ),
-                    );
-                    for (let i = 1; i < points.length; i++) {
-                      const d = L.latLng(
-                        parseFloat(last.latitud),
-                        parseFloat(last.longitud),
-                      ).distanceTo(
-                        L.latLng(
-                          parseFloat(points[i].latitud),
-                          parseFloat(points[i].longitud),
-                        ),
-                      );
-                      if (d < minDist) {
-                        minDist = d;
-                        nearestIdx = i;
-                      }
-                    }
-                    result.push(points.splice(nearestIdx, 1)[0]);
-                  }
-                  setPendingSavePois(null);
-                  await _doSave(result);
-                }}
-                disabled={isProcessingList}
-                className={`flex-[2] py-3 rounded-2xl text-sm font-bold bg-primary text-primary-text shadow-lg shadow-primary/30 transition-all ${isProcessingList ? 'opacity-50 cursor-not-allowed' : 'hover:scale-[1.02] active:scale-[0.98]'}`}
-              >
-                Sí, optimitzar
               </button>
             </div>
           </div>

@@ -17,31 +17,30 @@ const Header = () => {
 
   // Determine title and color based on current route
   const getTitle = () => {
-    if (pathname === "/" ) {
-      // Map: WeMap in black for contrast over the map
+    if (pathname === "/" || pathname === "/map") {
       return (
-        <span className="text-black dark:text-white font-display text-3xl font-semibold tracking-tight leading-none hover:text-primary transition-colors">
+        <span className="text-primary font-display text-3xl font-semibold tracking-tight leading-none transition-colors drop-shadow-md">
           wemap
         </span>
       );
     }
     if (pathname === "/home") {
       return (
-        <span className="text-[#1a1a1a] dark:text-white font-display text-3xl font-semibold tracking-tight leading-none hover:text-primary transition-colors">
+        <span className="text-primary font-display text-3xl font-semibold tracking-tight leading-none transition-colors drop-shadow-sm">
           wemap
         </span>
       );
     }
     if (pathname.startsWith("/community")) {
       return (
-        <span className="text-[#1a1a1a] dark:text-primary font-display text-3xl font-semibold tracking-tight leading-none">
+        <span className="text-primary font-display text-3xl font-semibold tracking-tight leading-none drop-shadow-sm">
           {t("nav.community")}
         </span>
       );
     }
     if (pathname.startsWith("/collections") || pathname.startsWith("/colections")) {
       return (
-        <span className="text-[#1a1a1a] dark:text-primary font-display text-3xl font-semibold tracking-tight leading-none">
+        <span className="text-primary font-display text-3xl font-semibold tracking-tight leading-none drop-shadow-sm">
           {t("nav.collections")}
         </span>
       );
@@ -58,7 +57,7 @@ const Header = () => {
   const headerPosition = isMapRoute ? "absolute" : "relative md:absolute";
 
   return (
-    <div className={`${headerPosition} top-0 left-0 right-0 z-[60] flex items-center justify-between px-5 pt-5 pb-3 pointer-events-none md:pl-24`}>
+    <div className={`${headerPosition} top-0 left-0 right-0 z-[1010] flex items-center justify-between px-5 pt-5 pb-3 pointer-events-none md:pl-24`}>
       {/* Left: Title */}
       <div className="pointer-events-auto">
         {title}
