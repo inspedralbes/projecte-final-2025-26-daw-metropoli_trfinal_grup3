@@ -97,7 +97,6 @@ const CreateList = () => {
           const userObj = JSON.parse(userStr);
           userId = userObj.id_usuario;
           setCurrentUserId(userId);
-          console.log("DEBUG CreateList: userId detectado:", userId);
         } else {
           console.warn(
             "DEBUG CreateList: No hay usuario logueado en localStorage",
@@ -113,11 +112,6 @@ const CreateList = () => {
             : Promise.resolve({ success: true, data: [] }),
         ]);
 
-        console.log(
-          "DEBUG CreateList: Listas recibidas:",
-          listRes.data?.length || 0,
-        );
-
         if (poiRes.success) setPois(poiRes.data);
         if (catRes.success) setCategories(catRes.data);
         if (nodeRes.success) setAllNodes(nodeRes.data);
@@ -130,11 +124,6 @@ const CreateList = () => {
             }
           }
           setOtherLists(combinedLists);
-          console.log(
-            "DEBUG CreateList: otherLists actualizado con",
-            combinedLists.length,
-            "listas",
-          );
 
           // Sequential fetch to avoid 429 Too Many Requests
           const loadRoutes = async () => {

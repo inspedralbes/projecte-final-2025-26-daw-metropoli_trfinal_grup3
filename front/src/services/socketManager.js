@@ -7,8 +7,6 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 const isLocalhost = API_URL.includes("localhost") || API_URL.includes("127.0.0.1");
 const URL_DEL_SERVIDOR = isLocalhost ? API_URL : "";
 
-console.log("WS URL Configurada:", URL_DEL_SERVIDOR || window.location.origin + " (same-origin via Nginx)");
-
 const socket = io(URL_DEL_SERVIDOR, {
   // polling first (works over HTTP/HTTPS), then upgrades to WebSocket automatically
   transports: ["polling", "websocket"],

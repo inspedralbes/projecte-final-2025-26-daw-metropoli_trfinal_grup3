@@ -140,7 +140,6 @@ const ScanQrModal = ({ allUsers, onFollowed, onClose }) => {
 
   const handleResult = (decoded) => {
     try {
-      console.log("QR Decoded:", decoded);
       let targetId;
 
       if (decoded.includes("/profile/")) {

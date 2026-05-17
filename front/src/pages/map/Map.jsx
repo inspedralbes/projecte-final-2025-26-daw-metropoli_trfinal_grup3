@@ -236,7 +236,6 @@ const Map = () => {
 
     // Listen to real-time map updates from WebSockets
     socket.on("mapa_actualizado", () => {
-      console.log("WebSocket Notice: Map updated! Refreshing POIs...");
       fetchPois();
       fetchUserLists();
       fetchDiscoverLists();
@@ -661,7 +660,6 @@ const Map = () => {
         const { latitude, longitude } = position.coords;
         const newPos = [latitude, longitude];
         setUserPosition(newPos);
-        console.log("Posición actualizada:", newPos);
       },
       (error) => {
         console.error("Error de geolocalización:", error);
@@ -892,12 +890,6 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
           attributionControl={false}
         >
           <MapEvents setCurrentZoom={setCurrentZoom} />
-          {console.log(
-            "DEBUG Map.jsx: currentZoom =",
-            currentZoom,
-            "| focusedListId =",
-            focusedListId,
-          )}
           <MapLayers
             isSatelliteView={isSatelliteView}
             currentZoom={currentZoom}
