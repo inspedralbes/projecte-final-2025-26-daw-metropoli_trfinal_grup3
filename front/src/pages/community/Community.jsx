@@ -82,6 +82,7 @@ const compressImage = (file, maxPx = 1024, quality = 0.8) =>
 
 // ─── Sub-componente: Card de una publicación ─────────────────────────────────
 const PostCard = ({ pub, onComentarioCreado, userLists = [] }) => {
+  const { t } = useTranslation();
   const [showComments, setShowComments] = useState(false);
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(pub.likes ?? 0);
