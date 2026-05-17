@@ -277,7 +277,7 @@ const Map = () => {
 
     // Only the owner can share/unshare
     if (list.id_usuario !== user.id_usuario) {
-      setToast({ message: "Només pots compartir les teves pròpies llistes.", type: "warning" });
+      setToast({ message: t("map.toast.only_own_lists", "Només pots compartir les teves pròpies llistes."), type: "warning" });
       return;
     }
 
@@ -300,13 +300,13 @@ const Map = () => {
       setToast({
         message:
           newVisibility === "public"
-            ? "Ruta compartida a la Comunitat! Ara és pública."
-            : "Ruta retirada de la Comunitat. Ara és privada.",
+            ? t("map.toast.shared_success", "Ruta compartida a la Comunitat! Ara és pública.")
+            : t("map.toast.unshared_success", "Ruta retirada de la Comunitat. Ara és privada."),
         type: newVisibility === "public" ? "success" : "info",
       });
     } catch (error) {
       console.error("Error sharing list:", error);
-      setToast({ message: "Error al compartir la ruta.", type: "error" });
+      setToast({ message: t("map.toast.share_error", "Error al compartir la ruta."), type: "error" });
     }
   };
 
@@ -315,7 +315,7 @@ const Map = () => {
     setIsProcessingList(true);
     const userStr = localStorage.getItem("usuario");
     if (!userStr) {
-    setToast({ message: "Has d'iniciar sessió per guardar llistes.", type: "warning" });
+    setToast({ message: t("map.toast.login_required", "Has d'iniciar sessió per guardar llistes."), type: "warning" });
       navigate("/login");
       setIsProcessingList(false);
       return;
@@ -332,14 +332,14 @@ const Map = () => {
       };
       const res = await createLista(newListData);
       if (res.success) {
-        setToast({ message: "¡Lista añadida a tus listas!", type: "success" });
+        setToast({ message: t("map.toast.added_success", "¡Lista añadida a tus listas!"), type: "success" });
         const userListsRes = await getUsuarioListas(user.id_usuario);
         if (userListsRes.success) setUserLists(userListsRes.data);
       }
     } catch (error) {
       console.error("Error copying list:", error);
       setToast({
-        message: "Hubo un error al guardar la lista.",
+        message: t("map.toast.add_error", "Hubo un error al guardar la lista."),
         type: "error",
       });
     } finally {
@@ -353,7 +353,7 @@ const Map = () => {
     try {
       const res = await deleteLista(listId);
       if (res.success) {
-        setToast({ message: "Llista eliminada de les teves llistes", type: "info" });
+        setToast({ message: t("map.toast.removed_success", "Llista eliminada de les teves llistes"), type: "info" });
         const userStr = localStorage.getItem("usuario");
         if (userStr) {
           const user = JSON.parse(userStr);
@@ -363,7 +363,7 @@ const Map = () => {
       }
     } catch (error) {
       console.error("Error deleting list:", error);
-      setToast({ message: "Error al eliminar la llista.", type: "error" });
+      setToast({ message: t("map.toast.remove_error", "Error al eliminar la llista."), type: "error" });
     } finally {
       setIsProcessingList(false);
     }
@@ -420,7 +420,7 @@ const Map = () => {
 
   const handleGoToNearestPoi = () => {
     if (!userPosition || !focusedListId) {
-      setToast({ message: "Necessitem la teva ubicació i una ruta seleccionada.", type: "warning" });
+      setToast({ message: t("map.toast.need_location_and_route", "Necessitem la teva ubicació i una ruta seleccionada."), type: "warning" });
       return;
     }
 
@@ -449,7 +449,7 @@ const Map = () => {
 
   const handleGetRouteToPoi = async (poi) => {
     if (!userPosition) {
-      setToast({ message: "Necessitem la teva ubicació per calcular la ruta.", type: "warning" });
+      setToast({ message: t("map.toast.need_location", "Necessitem la teva ubicació per calcular la ruta."), type: "warning" });
       return;
     }
 
@@ -589,7 +589,7 @@ const Map = () => {
 
   const startWatchingLocation = () => {
     if (!navigator.geolocation) {
-      setToast({ message: "La geolocalització no és compatible amb aquest navegador.", type: "error" });
+      setToast({ message: t("map.toast.geolocation_not_supported", "La geolocalització no és compatible amb aquest navegador."), type: "error" });
       return;
     }
 
@@ -608,7 +608,7 @@ const Map = () => {
       (error) => {
         console.error("Error de geolocalización:", error);
         if (error.code === 1) {
-          setToast({ message: "Permís d'ubicació denegat. Activa la ubicació al teu navegador.", type: "warning" });
+          setToast({ message: t("map.toast.location_denied", "Permís d'ubicació denegat. Activa la ubicació al teu navegador."), type: "warning" });
         }
       },
       {
@@ -739,7 +739,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
         <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-8">
           <section>
             <h2 className="text-sm font-bold text-gray-500 dark:text-white mb-4 px-1 lowercase">
-              les meves rutes
+              {t("map.myRoutes", "les meves rutes")}
             </h2>
             <div className="space-y-4">
               {userLists.length > 0 ? (
@@ -768,7 +768,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
                 ))
               ) : (
                 <p className="text-xs opacity-40 italic">
-                  Encara no has creat cap llista.
+                  {t("map.no_own_routes_desc", "Encara no has creat cap llista.")}
                 </p>
               )}
             </div>
@@ -776,7 +776,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
           <section>
             <h2 className="text-sm font-bold text-gray-500 dark:text-white mb-4 px-1 lowercase">
-              descobrir
+              {t("map.discover_title", "descobrir")}
             </h2>
             <div className="grid grid-cols-2 gap-3">
               {discoverLists.map((col) => (

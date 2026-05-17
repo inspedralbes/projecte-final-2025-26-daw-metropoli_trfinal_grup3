@@ -10,6 +10,7 @@ import EditProfile from "./pages/profile/EditProfile";
 import Login from "./pages/auth/Login";
 import SignUp from "./pages/auth/SignUp";
 import { FriendsProvider } from "./context/FriendsContext";
+import { SearchProvider } from "./context/SearchContext";
 import QRScanner from "./components/QrScanner";
 import CircuitScannerPage from "./pages/CircuitScanner";
 import CreateList from "./pages/map/CreateList";
@@ -50,29 +51,31 @@ function App() {
   }, []);
 
   return (
-    <FriendsProvider>
-      <div className="map-page-wrapper">
-        <Routes>
-          <Route path="/login" element={<Login />} />
-          <Route path="/signup" element={<SignUp />} />
-          <Route path="/home" element={<Home />} />
-          <Route path="/" element={<Map />} />
-          <Route path="/map" element={<Map />} />
-          <Route path="/admin" element={<Admin />} />
-          <Route path="/community" element={<Community />} />
-          <Route path="/settings" element={<Settings />} />
-          <Route path="/profile" element={<Profile />} />
-          <Route path="/profile/:id" element={<Profile />} />
-          <Route path="/profile/edit" element={<EditProfile />} />
-          <Route path="/escaneo" element={<QRScanner />} />
-          <Route path="/create-list" element={<CreateList />} />
-          <Route path="/colections" element={<Collections />} />
-          <Route path="/colections/:id" element={<Collections />} />
-          <Route path="/collections" element={<Collections />} />
-          <Route path="/collections/:id" element={<Collections />} />
-        </Routes>
-      </div>
-    </FriendsProvider>
+    <SearchProvider>
+      <FriendsProvider>
+        <div className="map-page-wrapper">
+          <Routes>
+            <Route path="/login" element={<Login />} />
+            <Route path="/signup" element={<SignUp />} />
+            <Route path="/home" element={<Home />} />
+            <Route path="/" element={<Map />} />
+            <Route path="/map" element={<Map />} />
+            <Route path="/admin" element={<Admin />} />
+            <Route path="/community" element={<Community />} />
+            <Route path="/settings" element={<Settings />} />
+            <Route path="/profile" element={<Profile />} />
+            <Route path="/profile/:id" element={<Profile />} />
+            <Route path="/profile/edit" element={<EditProfile />} />
+            <Route path="/escaneo" element={<QRScanner />} />
+            <Route path="/create-list" element={<CreateList />} />
+            <Route path="/colections" element={<Collections />} />
+            <Route path="/colections/:id" element={<Collections />} />
+            <Route path="/collections" element={<Collections />} />
+            <Route path="/collections/:id" element={<Collections />} />
+          </Routes>
+        </div>
+      </FriendsProvider>
+    </SearchProvider>
   );
 }
 

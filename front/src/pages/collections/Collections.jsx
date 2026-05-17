@@ -1,6 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
 import { useTranslation } from 'react-i18next';
+import { useSearch } from '../../context/SearchContext';
 import Header from '../../layouts/Header';
 import Navbar from '../../layouts/Navbar';
 import {
@@ -44,7 +45,10 @@ const mockRoutes = [
 
 const Collections = () => {
   const { t } = useTranslation();
-  const [searchQuery, setSearchQuery] = useState("");
+  const { searchQuery: desktopSearchQuery } = useSearch();
+  const [mobileSearchQuery, setMobileSearchQuery] = useState("");
+  // Active query: desktop context (from Header) or mobile local input
+  const searchQuery = desktopSearchQuery || mobileSearchQuery;
   const [filterType, setFilterType] = useState("all");
   const [listas, setListas] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -174,18 +178,18 @@ const Collections = () => {
   return (
     <div className="relative min-h-screen bg-[#f0f4f9] dark:bg-slate-950 text-[#1a1a1a] dark:text-white font-display md:pl-20 pb-24 transition-colors duration-300">
       <Header />
-      <div className="safe-container">
+      <div className="safe-container page-top-offset">
 
-        {/* Search Bar */}
-        <div className="relative mb-6 md:ml-48 md:mr-40">
+        {/* Search Bar — mobile only, hidden on desktop (Header handles it) */}
+        <div className="relative mb-6 md:hidden">
           <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-gray-400">
             search
           </span>
           <input
             type="text"
             placeholder={t("collections.search")}
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
+            value={mobileSearchQuery}
+            onChange={(e) => setMobileSearchQuery(e.target.value)}
             className="w-full bg-transparent border border-gray-300 dark:border-gray-700 rounded-full py-3 pl-12 pr-4 focus:outline-none focus:border-black dark:focus:border-white transition-colors"
           />
         </div>
@@ -346,7 +350,7 @@ const Collections = () => {
                     value={editForm.nombre}
                     onChange={(e) => setEditForm({ ...editForm, nombre: e.target.value })}
                     className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-white transition-colors font-medium text-white"
-                    placeholder="Nombre de la ruta..."
+                    placeholder={t("collections.placeholder_route_name", "Nombre de la ruta...")}
                   />
                 </div>
                 <div className="space-y-2">
@@ -357,7 +361,7 @@ const Collections = () => {
                     value={editForm.descripcion}
                     onChange={(e) => setEditForm({ ...editForm, descripcion: e.target.value })}
                     className="w-full bg-white/5 border border-white/10 rounded-2xl px-5 py-4 focus:outline-none focus:border-white transition-colors font-medium min-h-[100px] resize-none text-white"
-                    placeholder="Añade una descripción..."
+                    placeholder={t("collections.placeholder_add_description", "Añade una descripción...")}
                   />
                 </div>
                 <div className="space-y-2">

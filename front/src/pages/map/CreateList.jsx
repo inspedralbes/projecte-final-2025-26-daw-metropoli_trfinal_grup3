@@ -274,7 +274,7 @@ const CreateList = () => {
     // Solo añadimos al "pool" de puntos disponibles en el mapa
     const newPoi = {
       id_poi: tempId,
-      nombre: `POI Nodo ${node.id_nodo}`,
+      nombre: t("createList.defaultNodePoiName", "POI Nodo {{id}}", { id: node.id_nodo }),
       latitud: node.latitud,
       longitud: node.longitud,
       id_categoria: categories[0]?.id_categoria || 1,
@@ -291,7 +291,7 @@ const CreateList = () => {
 
     const newPoi = {
       id_poi: tempId,
-      nombre: `Punto ${pois.length + 1}`,
+      nombre: t("createList.defaultPoiName", "Punto {{number}}", { number: pois.length + 1 }),
       latitud: latlng.lat,
       longitud: latlng.lng,
       id_categoria: categories[0]?.id_categoria || 1,
@@ -306,7 +306,7 @@ const CreateList = () => {
     if (!userPosition) {
       setToast({
         message:
-          "No s'ha pogut detectar la teva ubicació. Activa els permisos de geolocalització.",
+          t("createList.locationError", "No s'ha pogut detectar la teva ubicació. Activa els permisos de geolocalització."),
         type: "warning",
       });
       return;
@@ -315,7 +315,7 @@ const CreateList = () => {
     const tempId = `temp-${Date.now()}`;
     const newPoi = {
       id_poi: tempId,
-      nombre: `Punto en mi ubicación`,
+      nombre: t("createList.defaultLocationPoiName", "Punto en mi ubicación"),
       latitud: userPosition[0],
       longitud: userPosition[1],
       id_categoria: categories[0]?.id_categoria || 1,
@@ -437,7 +437,7 @@ const CreateList = () => {
   const handleSaveList = async () => {
     if (selectedPoisForList.length < 2) {
       setToast({
-        message: "Selecciona almenys 2 punts per definir una ruta.",
+        message: t("createList.need2Points", "Selecciona almenys 2 punts per definir una ruta."),
         type: "warning",
       });
       return;
@@ -454,7 +454,7 @@ const CreateList = () => {
     if (categories.length === 0) {
       setToast({
         message:
-          "Error: No hi ha categories a la base de dades. Contacta a l'administrador.",
+          t("createList.noCategoriesError", "Error: No hi ha categories a la base de dades. Contacta a l'administrador."),
         type: "error",
       });
       return;
@@ -466,7 +466,7 @@ const CreateList = () => {
     } catch (err) {
       console.error("Error saving/updating list:", err);
       setToast({
-        message: "Error al desar la ruta. Intenta-ho de nou.",
+        message: t("createList.saveError", "Error al desar la ruta. Intenta-ho de nou."),
         type: "error",
       });
     }
@@ -505,7 +505,7 @@ const CreateList = () => {
       const user = JSON.parse(localStorage.getItem("usuario"));
       if (!user) {
         setToast({
-          message: "Has d'iniciar sessió per crear llistes.",
+          message: t("createList.loginRequired", "Has d'iniciar sessió per crear llistes."),
           type: "error",
         });
         navigate("/login");
@@ -543,8 +543,8 @@ const CreateList = () => {
 
         setToast({
           message: editingListId
-            ? " Ruta actualitzada correctament!"
-            : " Ruta creada i guardada!",
+            ? t("createList.updatedSuccess", "Ruta actualitzada correctament!")
+            : t("createList.createdSuccess", "Ruta creada i guardada!"),
           type: "success",
         });
 
@@ -562,7 +562,7 @@ const CreateList = () => {
     } catch (err) {
       console.error("Error saving/updating list:", err);
       setToast({
-        message: "Error al desar la ruta. Intenta-ho de nou.",
+        message: t("createList.saveError", "Error al desar la ruta. Intenta-ho de nou."),
         type: "error",
       });
       setIsProcessingList(false);
@@ -953,7 +953,7 @@ const CreateList = () => {
                             <div className="flex flex-col gap-2 w-full">
                               {(!listName || selectedPoisForList.length < 2) && (
                                 <p className="text-[10px] text-red-500 font-bold text-center italic">
-                                  {!listName ? "Ponle un nombre a la lista" : "Añade al menos 2 puntos al itinerario"}
+                                  {!listName ? t("createList.missingName", "Ponle un nombre a la lista") : t("createList.missingPoints", "Añade al menos 2 puntos al itinerario")}
                                 </p>
                               )}
                               <button

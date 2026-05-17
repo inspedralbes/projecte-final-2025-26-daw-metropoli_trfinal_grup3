@@ -1,8 +1,10 @@
 import React, { useState } from 'react';
+import { useTranslation } from 'react-i18next';
 import QRScanner from '../components/QrScanner';
 import { useNavigate } from 'react-router-dom';
 
 const CircuitScannerPage = () => {
+    const { t } = useTranslation();
     const [error, setError] = useState(null);
     const navigate = useNavigate();
 
@@ -10,22 +12,22 @@ const CircuitScannerPage = () => {
         try {
             const qrData = JSON.parse(decodedText);
             if (qrData.nodo_actual) {
-                alert(`Has escaneado el Nodo ${qrData.nodo_actual}. Llevándote a navegación...`);
+                alert(t("scanner.alerts.scanned_node", "Has escaneado el Nodo {{node}}. Llevándote a navegación...", { node: qrData.nodo_actual }));
                 // REDIRECT A AR NAVIGATION CON ESTADO
                 // navigate('/ar-navigation', { state: { nodoOrigen: qrData.nodo_actual } });
             } else {
                 throw new Error("Formato inválido");
             }
         } catch (e) {
-            setError("El código QR no es un nodo válido del circuito.");
+            setError(t("scanner.errors.invalid_format", "El código QR no es un nodo válido del circuito."));
         }
     };
 
     return (
         <div className="h-[100dvh] w-full bg-slate-950 flex flex-col items-center justify-center font-display text-white px-6">
             <div className="text-center mb-8">
-                <h1 className="text-2xl font-bold mb-2 uppercase tracking-tight italic">Escáner de Circuito</h1>
-                <p className="text-slate-400 text-sm">Escanea el código QR situado en tu posición actual para empezar a guiarte.</p>
+                <h1 className="text-2xl font-bold mb-2 uppercase tracking-tight italic">{t("scanner.title", "Escáner de Circuito")}</h1>
+                <p className="text-slate-400 text-sm">{t("scanner.instructions", "Escanea el código QR situado en tu posición actual para empezar a guiarte.")}</p>
             </div>
 
             {error ? (
@@ -36,7 +38,7 @@ const CircuitScannerPage = () => {
                         onClick={() => setError(null)}
                         className="mt-6 bg-red-500 text-white px-6 py-2 rounded-xl font-bold w-full active:scale-95 transition-transform"
                     >
-                        Reintentar
+                        {t("common.retry", "Reintentar")}
                     </button>
                 </div>
             ) : (
@@ -50,7 +52,7 @@ const CircuitScannerPage = () => {
                 className="mt-12 text-slate-400 flex items-center gap-2 hover:text-white transition-colors font-bold uppercase text-xs tracking-widest"
             >
                 <span className="material-symbols-outlined text-lg">arrow_back</span>
-                Volver
+                {t("common.back", "Volver")}
             </button>
         </div>
     );

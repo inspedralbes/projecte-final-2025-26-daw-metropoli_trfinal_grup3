@@ -76,7 +76,10 @@
     "visibilityPublic": "Pública",
     "visibilityPrivate": "Privada",
     "imageLabel": "Imagen de Portada",
-    "uploadImage": "Escoger de galería"
+    "uploadImage": "Escoger de galería",
+    "filterAll": "Todos",
+    "filterPublic": "Público",
+    "filterPrivate": "Privado"
   },
   "settings": {
     "title": "Ajustes",
@@ -100,7 +103,16 @@
     "extensionTitle": "Extensión de Navegador",
     "chromeExtension": "WeMap Premium Extension",
     "extensionDesc": "Accede a tus mapas, comunidad y perfil al instante desde cualquier pestaña.",
-    "downloadExtension": "Instalar Extensión"
+    "downloadExtension": "Instalar Extensión",
+    "installStepsTitle": "Pasos para instalar:",
+    "installStep1": "Descarga y descomprime el archivo ZIP.",
+    "installStep2": "Ve a",
+    "installStep3": "Activa el",
+    "installStep3Bold": "\"Modo desarrollador\"",
+    "installStep3Extra": "(arriba a la derecha).",
+    "installStep4": "Haz clic en",
+    "installStep4Bold": "\"Cargar descomprimida\"",
+    "installStep4Extra": "y selecciona la carpeta."
   },
   "profile": {
     "my": "Mi",
@@ -165,6 +177,18 @@
     "confirmCloseTitle": "¿Descartar ruta?",
     "confirmCloseBtn": "Sí, descartar",
     "closePanel": "Cerrar panel",
+    "defaultNodePoiName": "POI Nodo {{id}}",
+    "defaultPoiName": "Punto {{number}}",
+    "locationError": "No se pudo detectar tu ubicación. Activa los permisos de geolocalización.",
+    "defaultLocationPoiName": "Punto en mi ubicación",
+    "need2Points": "Selecciona al menos 2 puntos para definir una ruta.",
+    "noCategoriesError": "Error: No hay categorías en la base de datos. Contacta al administrador.",
+    "saveError": "Error al guardar la ruta. Inténtalo de nuevo.",
+    "loginRequired": "Debes iniciar sesión para crear listas.",
+    "updatedSuccess": "¡Ruta actualizada correctamente!",
+    "createdSuccess": "¡Ruta creada y guardada!",
+    "missingName": "Ponle un nombre a la lista",
+    "missingPoints": "Añade al menos 2 puntos al itinerario",
     "visibility": {
       "public": "Público",
       "private": "Privado",
@@ -211,10 +235,77 @@
     "title": "Panel de Control",
     "networkMode": "Modo Red: Pincha en el asfalto para crear caminos nuevos o pulsa en los nodos/POIs para conectarlos entre sí.",
     "poiLabel": "POI",
-    "qr": {
-      "selectNode": "Selecciona un nodo del circuito...",
-      "noNodes": "No hay nodos de navegación disponibles",
-      "fileNote": "Por defecto se guardará como zona-sin-definir.png. Se usará este texto como nombre de archivo en servidor."
+    "active_connections": "Conexiones activas: ",
+    "offline": "Desconectado. Reconectando...",
+    "connected_nodes": "Nodos conectados con éxito",
+    "connection_error": "Error al conectar nodos",
+    "node_deleted": "Nodo eliminado con éxito",
+    "delete_node_error": "Error al eliminar el nodo",
+    "points_deleted": "Punto de interés eliminado",
+    "delete_point_error": "Error al eliminar el punto",
+    "delete_poi_confirm": "¿Estás seguro de que deseas eliminar este punto de interés?",
+    "poi_saved": "Punto guardado correctamente",
+    "save_poi_error": "Error al guardar el punto",
+    "select_spot_map": "Selecciona un punto en el mapa",
+    "category_created": "Categoría creada con éxito",
+    "create_category_error": "Error al crear la categoría",
+    "fill_all_fields": "Por favor, completa todos los campos de la categoría.",
+    "convert_poi_confirm": "¿Estás seguro de que deseas convertir este nodo de navegación ordinario en un Punto de Interés (POI) visible en la app?",
+    "convert_poi_success": "Nodo convertido a POI con éxito",
+    "convert_poi_error": "Error al convertir nodo a POI",
+    "tab_map_network": "Mapa y Red de Caminos",
+    "tab_qr_codes": "Códigos QR",
+    "active_network_mode": "Modo Red Activo",
+    "active_view_mode": "Modo Vista Normal",
+    "click_map_node": "Haz click en el mapa para situar un nuevo nodo de la red.",
+    "selected_node_info": "Información del Nodo Seleccionado",
+    "node_id_label": "ID del Nodo:",
+    "location": "Ubicación:",
+    "node_type": "Tipo de Nodo:",
+    "ordinary_navigation": "Navegación Ordinario",
+    "connect_help": "Para conectar dos nodos, pulsa en el primero y luego en el segundo.",
+    "convert_to_poi": "Pasar a POI",
+    "delete_node": "Borrar Nodo",
+    "point_name": "Nombre del Punto",
+    "point_name_placeholder": "ej. Tribuna Principal",
+    "point_type": "Tipo de Punto",
+    "accessible_zone": "Zona accesible",
+    "accessible_yes": "Se mostrará el icono ♿ en la app",
+    "accessible_no": "Sin indicador de accesibilidad",
+    "point_image": "Imagen del punto (opcional)",
+    "select_image": "Seleccionar imagen...",
+    "save_point": "Guardar Punto",
+    "select_location_map": "Selecciona la Ubicación en el Mapa",
+    "add_category": "Añadir Nuevo Tipo de Punto / Categoría",
+    "category_name": "Nombre de la Categoría",
+    "category_placeholder": "ej. Sala VIP",
+    "choose_icon": "Elegir Icono",
+    "color_hex": "Color Hexadecimal",
+    "create_category": "Crear Categoría",
+    "qrs": {
+      "alerts": {
+        "generate_error": "Error al generar el QR. Comprueba que el backend esté conectado."
+      },
+      "generated_title": "QRs Generados",
+      "active": "Activo",
+      "inactive": "Inactivo",
+      "node_id": "Nodo ID",
+      "date": "Fecha",
+      "download_tooltip": "Descargar Imagen QR",
+      "no_qrs": "No se han generado Códigos QR.",
+      "generate_instructions": "Genera uno en el panel de la derecha.",
+      "generator_title": "Generador de QR Topográfico",
+      "start_node": "Nodo de Inicio (Punto Físico)",
+      "select_node_placeholder": "Selecciona un nodo del circuito...",
+      "no_nodes_available": "No hay nodos de navegación disponibles",
+      "node_warning": "Asegúrate de que el nodo seleccionado coincida con el punto real donde imprimirás este cartel QR para la navegación en AR.",
+      "zone_name": "Nombre de Zona (Opcional)",
+      "zone_placeholder": "ej. tribuna-sur",
+      "zone_name_desc_1": "Por defecto se guardará como",
+      "zone_name_desc_2": "zona-sin-definir.png",
+      "zone_name_desc_3": "Se usará este texto como nombre de archivo en servidor.",
+      "generating": "Generando e Insertando...",
+      "generate_btn": "Generar Nuevo Código QR"
     }
   },
   "common": {
@@ -225,7 +316,8 @@
     "delete": "Eliminar",
     "back": "Atrás",
     "version": "Versión",
-    "build": "Compilación"
+    "build": "Compilación",
+    "retry": "Reintentar"
   },
   "map_extra": {
     "youAreHere": "Estás aquí"
@@ -235,9 +327,22 @@
     "temperature": "Temperatura",
     "humidity": "Humedad",
     "wind": "Viento",
-    "condition": "Condición"
+    "condition": "Condición",
+    "no_data": "No hay datos disponibles",
+    "sunny": "Soleado",
+    "partly_cloudy": "Parcialmente nublado",
+    "cloudy": "Nublado",
+    "rainy": "Lluvia",
+    "stormy": "Tormenta"
   },
   "community": {
+    "chat": {
+      "online_now": "En línea ahora",
+      "loading": "Cargando chat...",
+      "start_conversation": "Inicia una conversación con",
+      "write_message": "Escribe un mensaje...",
+      "search_gifs": "Buscar GIFs..."
+    },
     "tabs": {
       "recent": "Recientes",
       "popular": "Popular",
@@ -250,7 +355,8 @@
     "publish": "Publicar",
     "photo": "Foto",
     "follow": "Seguir",
-    "following": "Siguiendo"
+    "following": "Siguiendo",
+    "searchPlaceholder": "Buscar amigos o listas..."
   },
   "profile": {
     "my": "Mi",
@@ -268,6 +374,8 @@
     "nowFollowing": "¡Ahora sigues a",
     "noFollowers": "Aún nadie sigue este perfil",
     "noFollowing": "No sigue a nadie todavía",
+    "user_not_found": "Usuario no encontrado",
+    "back_to_community": "Volver a Comunidad",
     "qr": {
       "myTitle": "Mi código QR",
       "myDesc": "Deja que otro usuario escanee este QR para añadirte como amigo",
@@ -283,19 +391,69 @@
       "error": "Error al escanear",
       "errorSelf": "No puedes seguirte a ti mismo",
       "errorFollow": "No se pudo seguir al usuario"
-    },
-    "home": {
-      "impact": "Tu impacto",
-      "weeklyActivity": "Actividad semanal",
-      "totalKm": "KM totales",
-      "discovered": "Lugares descubiertos",
-      "completedRoutes": "Rutas hechas",
-      "groups": "De tus amigos",
-      "dining": "Bares",
-      "experience": "Segunda mano",
-      "orderFood": "Cafés",
-      "fanZone": "Cultura",
-      "trackConditions": "El tu impacto"
     }
+  },
+  "home": {
+    "impact": "Tu impacto",
+    "weeklyActivity": "Actividad semanal",
+    "totalKm": "KM totales",
+    "discovered": "Lugares descubiertos",
+    "completedRoutes": "Rutas hechas",
+    "groups": "De tus amigos",
+    "dining": "Bares",
+    "experience": "Segunda mano",
+    "orderFood": "Cafés",
+    "fanZone": "Cultura",
+    "trackConditions": "Tu impacto",
+    "no_own_routes": "Aún no tienes rutas propias",
+    "no_recent_routes": "No hay rutas públicas recientes",
+    "barcelona": "Barcelona",
+    "searchPlaceholder": "¿A dónde te gustaría ir?"
+  },
+  "jarvis": {
+    "how_create_route": "¿Cómo creo una ruta?",
+    "how_share_friends": "¿Cómo comparto con amigos?",
+    "vintage_shops_route": "Ruta de tiendas vintage",
+    "what_can_i_do": "¿Qué puedo hacer aquí?",
+    "guide_subtitle": "Tu guía de wemap",
+    "clear_chat": "Limpiar chat",
+    "hello_im_mapis": "¡Hola! Soy Mapis",
+    "greeting_description": "Estoy aquí para ayudarte a crear y compartir las mejores rutas con tus amigos.",
+    "ask_placeholder": "Pregunta sobre wemap...",
+    "powered_by": "Impulsado por Mapis AI",
+    "welcome_bubble": "¡Hola! Soy Mapis. ¿Quieres crear una ruta increíble y compartirla con tus amigos? ¡Pregúntame cómo!"
+  },
+  "search_panel": {
+    "searching": "Buscando en el mapa...",
+    "no_results": "No hemos encontrado nada",
+    "try_other_keywords": "Prueba con otras palabras clave",
+    "people": "Personas",
+    "default_bio": "Explorador de WeMap",
+    "routes_collections": "Rutas y Colecciones",
+    "pois": "Lugares de interés",
+    "explore_ai": "Explora con WeMap AI"
+  },
+  "scanner": {
+    "alerts": {
+      "scanned_node": "Has escaneado el Nodo {{node}}. Llevándote a navegación..."
+    },
+    "errors": {
+      "invalid_format": "El código QR no es un nodo válido del circuito."
+    },
+    "title": "Escáner de Circuito",
+    "instructions": "Escanea el código QR situado en tu posición actual para empezar a guiarte."
+  },
+  "map": {
+    "myRoutes": "Mis rutas",
+    "no_own_routes_desc": "Aún no tienes listas propias creadas.",
+    "discover_title": "Descubrir",
+    "goToRoute": "Ir a la ruta",
+    "navigating": "Navegando ruta",
+    "saveToList": "Incluir en mis listas",
+    "center": "Centrar",
+    "myLists": "Mis listas",
+    "noLists": "No has creado ninguna lista todavía.",
+    "discover": "Listas para descubrir",
+    "noDiscover": "No hay listas públicas todavía."
   }
 }

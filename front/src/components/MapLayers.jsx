@@ -231,7 +231,7 @@ const MapLayers = ({
             iconAnchor: currentUser?.foto_perfil ? [0, 0] : [8, 8]
           })}
         >
-          <Popup><span className="text-black font-bold">Estás aquí</span></Popup>
+          <Popup><span className="text-black font-bold">{t?.('map_extra.youAreHere', 'Estás aquí') || 'Estás aquí'}</span></Popup>
         </Marker>
       )}
 
