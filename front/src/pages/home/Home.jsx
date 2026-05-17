@@ -240,8 +240,24 @@ const Home = () => {
               </div>
             </>
           ) : (
-            <div className="absolute inset-0 bg-gray-200 dark:bg-white/5 flex items-center justify-center">
-              <p className="opacity-40 italic">{t("home.no_own_routes", "Encara no tens rutes pròpies")}</p>
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-slate-200 dark:from-slate-900/90 dark:to-slate-950/90 flex flex-col items-center justify-center p-8 text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 relative">
+                <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse"></div>
+                <span className="material-symbols-outlined text-3xl text-primary relative z-10">route</span>
+              </div>
+              <h4 className="text-xl font-bold tracking-tight text-slate-800 dark:text-white mb-2">
+                {t("home.no_routes_title", "Crea la teva primera ruta")}
+              </h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 max-w-[260px] leading-relaxed">
+                {t("home.no_own_routes_desc_home", "Encara no tens rutes pròpies. Comença a planificar el teu itinerari de manera senzilla.")}
+              </p>
+              <Link 
+                to="/create-list" 
+                className="px-6 py-3.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+              >
+                <span className="material-symbols-outlined text-sm font-bold">add</span>
+                {t("home.create_route_btn", "Crear ruta")}
+              </Link>
             </div>
           )}
               </div>
