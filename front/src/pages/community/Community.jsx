@@ -18,6 +18,9 @@ import {
   getListaById,
   createLista,
   toggleLikeLista,
+  guardarLista,
+  getListas,
+  getFriendsListas
 } from "../../services/communicationManager";
 import socket from "../../services/socketManager";
 import ChatModal from "../../components/community/ChatModal";
@@ -237,18 +240,20 @@ const PostCard = ({ pub, onComentarioCreado, userLists = [] }) => {
             e.stopPropagation();
             if (!usuarioLogged) { navigate("/login"); return; }
             if (alreadySaved) return;
-            setRouteSaving(true);
+            setRouteSaved(true);
             try {
               await createLista({
                 id_usuario: usuarioLogged.id_usuario,
                 nombre: attachedLista.nombre,
-                descripcion: attachedLista.descripcion || t("community.saved_from_community", "Guardada des de la comunitat"),
+                descripcion: `[GUARDADA de: ${attachedLista.usuario_nombre || 'Comunidad'}] ${attachedLista.descripcion || ""}`,
                 visibilidad: "private",
-                pois: (attachedLista.pois || []).map((p) => p.id_poi),
+                imagen_url: attachedLista.imagen_url || null,
+                pois: (attachedLista.pois || []).map((p) => p.id_poi || p.id),
               });
-              setRouteSaved(true);
-            } catch (err) { console.error(err); }
-            finally { setRouteSaving(false); }
+            } catch (err) { 
+              console.error(err); 
+              setRouteSaved(false);
+            }
           };
 
           return (
@@ -410,6 +415,7 @@ const PostCard = ({ pub, onComentarioCreado, userLists = [] }) => {
 
 // ─── Sub-componente: Card de una lista ───────────────────────────────────────
 const ListaCard = ({ lista, userLists = [], onListaChanged }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const usuarioInfo = localStorage.getItem("usuario");
   const usuarioLogged = usuarioInfo ? JSON.parse(usuarioInfo) : null;
@@ -423,6 +429,7 @@ const ListaCard = ({ lista, userLists = [], onListaChanged }) => {
       ul.nombre === lista.nombre &&
       (ul.pois?.length || 0) === (lista.pois?.length || 0),
   );
+  const [localSaved, setLocalSaved] = useState(false);
 
   const handleUnshare = async (e) => {
     e.preventDefault();
@@ -476,7 +483,7 @@ const ListaCard = ({ lista, userLists = [], onListaChanged }) => {
       return;
     }
 
-    if (isSaved) {
+    if (isSaved || localSaved) {
       setToast({
         message: t("community.toast.already_saved", "Ja tens aquesta llista guardada!"),
         type: "warning",
@@ -484,23 +491,27 @@ const ListaCard = ({ lista, userLists = [], onListaChanged }) => {
       return;
     }
 
+    setLocalSaved(true);
+
     try {
-      const newListData = {
+      const res = await createLista({
         id_usuario: usuarioLogged.id_usuario,
         nombre: lista.nombre,
-        descripcion: lista.descripcion || t("community.saved_from_community", "Guardada des de la comunitat"),
+        descripcion: `[GUARDADA de: ${lista.usuario_nombre || 'Comunidad'}] ${lista.descripcion || ""}`,
         visibilidad: "private",
-        pois: lista.pois?.map((p) => p.id_poi) || [],
-      };
-      const res = await createLista(newListData);
+        imagen_url: lista.imagen_url || null,
+        pois: (lista.pois || []).map((p) => p.id_poi || p.id),
+      });
       if (res.success) {
         setToast({
           message: t("community.toast.saved_to_routes", "Llista guardada a les teves rutes!"),
           type: "success",
         });
+        if (onListaChanged) onListaChanged();
       }
     } catch (error) {
       console.error("Error saving list:", error);
+      setLocalSaved(false);
       setToast({ message: t("community.toast.save_error", "Error al guardar la llista"), type: "error" });
     }
   };
@@ -567,15 +578,15 @@ const ListaCard = ({ lista, userLists = [], onListaChanged }) => {
               {!isOwner && (
                 <button
                   onClick={handleSaveList}
-                  className={`flex items-center justify-center w-8 h-8 rounded-full backdrop-blur-md transition-all ${isSaved ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20" : "bg-white/20 text-white hover:bg-white/30"}`}
+                  className={`flex items-center justify-center w-8 h-8 rounded-full backdrop-blur-md transition-all ${(isSaved || localSaved) ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20" : "bg-white/20 text-white hover:bg-white/30"}`}
                   title={
-                    isSaved ? t("community.toast.already_saved", "Llista ja guardada") : t("community.save_to_my_lists", "Guardar a les meves llistes")
+                    (isSaved || localSaved) ? t("community.toast.already_saved", "Llista ja guardada") : t("community.save_to_my_lists", "Guardar a les meves llistes")
                   }
                 >
                   <span
                     className="material-symbols-outlined text-sm"
                     style={{
-                      fontVariationSettings: isSaved ? "'FILL' 1" : "'FILL' 0",
+                      fontVariationSettings: (isSaved || localSaved) ? "'FILL' 1" : "'FILL' 0",
                     }}
                   >
                     bookmark
@@ -644,6 +655,10 @@ const Community = () => {
   const [amigos, setAmigos] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [toast, setToast] = useState(null);
+  
+  const [publicListas, setPublicListas] = useState([]);
+  const [friendsListas, setFriendsListas] = useState([]);
+  const [loadingListas, setLoadingListas] = useState(false);
 
   // Active query: desktop context or mobile local
   const searchQuery = desktopSearchQuery || mobileSearchQuery;
@@ -675,6 +690,22 @@ const Community = () => {
       if (res.success) setActividad(res.data);
     } catch (err) {
       console.error(err);
+    }
+  };
+
+  const cargarListas = async () => {
+    setLoadingListas(true);
+    try {
+      const [pubRes, friendRes] = await Promise.all([
+        getListas(usuarioLogged?.id_usuario),
+        usuarioLogged ? getFriendsListas(usuarioLogged.id_usuario) : Promise.resolve({ data: [] })
+      ]);
+      if (pubRes.success) setPublicListas(pubRes.data || []);
+      if (friendRes.success) setFriendsListas(friendRes.data || []);
+    } catch (error) {
+      console.error("Error loading lists:", error);
+    } finally {
+      setLoadingListas(false);
     }
   };
 
@@ -713,6 +744,7 @@ const Community = () => {
   useEffect(() => {
     cargarPublicaciones();
     cargarActividad();
+    cargarListas();
     if (usuarioLogged) {
       getAmigos(usuarioLogged.id_usuario).then((r) => setAmigos(r.data || []));
       getUsuarioListas(usuarioLogged.id_usuario).then((r) => setUserLists(r.data || []));
@@ -867,6 +899,20 @@ const Community = () => {
               </span>
               {t("community.tabs.recent", "Recents")}
             </button>
+            <button
+              onClick={() => setView("listas")}
+              className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium tracking-tight transition-all border ${view === "listas" ? "bg-primary text-primary-text border-transparent shadow-md shadow-primary/20" : "bg-white dark:bg-slate-950 text-slate-400 border-gray-100 dark:border-white/5 hover:border-gray-200"}`}
+            >
+              <span
+                className="material-symbols-outlined text-sm"
+                style={{
+                  fontVariationSettings: view === "listas" ? "'FILL' 1" : "'FILL' 0",
+                }}
+              >
+                list_alt
+              </span>
+              {t("community.tabs.listas", "Llistes")}
+            </button>
           </div>
         </div>
       </div>
@@ -900,6 +946,48 @@ const Community = () => {
           )}
 
 
+
+          {view === "listas" && (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-500 space-y-8">
+              <div>
+                <h3 className="text-xl font-bold tracking-tight text-primary mb-6">
+                  {t("community.friends_lists", "Llistes dels amics")}
+                </h3>
+                {loadingListas ? (
+                  <div className="text-center py-10 opacity-30 font-bold uppercase tracking-widest text-xs">
+                    {t("community.loading_lists", "Carregant llistes...")}
+                  </div>
+                ) : friendsListas.length === 0 ? (
+                  <div className="text-center py-10 opacity-30">
+                    {t("community.no_friends_lists", "No hi ha llistes d'amics")}
+                  </div>
+                ) : (
+                  friendsListas.map((lista) => (
+                    <ListaCard key={lista.id_lista} lista={lista} userLists={userLists} onListaChanged={cargarListas} />
+                  ))
+                )}
+              </div>
+
+              <div>
+                <h3 className="text-xl font-bold tracking-tight text-primary mb-6">
+                  {t("community.public_lists", "Llistes Públiques")}
+                </h3>
+                {loadingListas ? (
+                  <div className="text-center py-10 opacity-30 font-bold uppercase tracking-widest text-xs">
+                    {t("community.loading_lists", "Carregant llistes...")}
+                  </div>
+                ) : publicListas.length === 0 ? (
+                  <div className="text-center py-10 opacity-30">
+                    {t("community.no_public_lists", "No hi ha llistes públiques")}
+                  </div>
+                ) : (
+                  publicListas.map((lista) => (
+                    <ListaCard key={lista.id_lista} lista={lista} userLists={userLists} onListaChanged={cargarListas} />
+                  ))
+                )}
+              </div>
+            </div>
+          )}
 
           {view === "activity" && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-500 space-y-4">

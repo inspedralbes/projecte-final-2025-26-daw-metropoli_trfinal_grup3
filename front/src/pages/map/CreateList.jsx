@@ -80,6 +80,7 @@ const CreateList = () => {
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [toast, setToast] = useState(null);
   const [isProcessingList, setIsProcessingList] = useState(false);
+  const [routeProfile, setRouteProfile] = useState("foot");
 
   // Ref para tener acceso inmediato al estado dentro de eventos de Leaflet
   const selectedPoisRef = useRef([]);
@@ -135,36 +136,48 @@ const CreateList = () => {
             "listas",
           );
 
-          combinedLists.forEach(async (list) => {
-            if (list.pois && list.pois.length >= 2) {
-              try {
-                const coords = list.pois
-                  .map((p) => `${p.longitud},${p.latitud}`)
-                  .join(";");
-                const res = await fetch(
-                  `https://router.project-osrm.org/route/v1/foot/${coords}?overview=full&geometries=geojson`,
-                );
-                const data = await res.json();
-                if (data.code === "Ok") {
-                  const route = data.routes[0];
-                  const geom = route.geometry.coordinates.map((c) => [
-                    c[1],
-                    c[0],
-                  ]);
-                  setOtherListGeometries((prev) => ({
-                    ...prev,
-                    [list.id_lista]: {
-                      geom,
-                      distance: route.distance,
-                      waypoints: route.legs.map((leg) => leg.distance), // Distancia entre puntos
-                    },
-                  }));
+          // Sequential fetch to avoid 429 Too Many Requests
+          const loadRoutes = async () => {
+            for (const list of combinedLists) {
+              if (list.pois && list.pois.length >= 2) {
+                try {
+                  const coords = list.pois
+                    .map((p) => `${p.longitud},${p.latitud}`)
+                    .join(";");
+                  const url = routeProfile === "foot" 
+                    ? `https://routing.openstreetmap.de/routed-foot/route/v1/driving/${coords}?overview=full&geometries=geojson`
+                    : `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
+                  const res = await fetch(url);
+                  if (res.status === 429) {
+                    console.warn("OSM Rate limit reached (429), stopping preload.");
+                    break;
+                  }
+                  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                  const data = await res.json();
+                  if (data.code === "Ok") {
+                    const route = data.routes[0];
+                    const geom = route.geometry.coordinates.map((c) => [
+                      c[1],
+                      c[0],
+                    ]);
+                    setOtherListGeometries((prev) => ({
+                      ...prev,
+                      [list.id_lista]: {
+                        geom,
+                        distance: route.distance,
+                        waypoints: route.legs.map((leg) => leg.distance),
+                      },
+                    }));
+                  }
+                  // Small delay to respect public API limits
+                  await new Promise(r => setTimeout(r, 250));
+                } catch (e) {
+                  console.warn("Error precargando ruta:", e.message || e);
                 }
-              } catch (e) {
-                console.error("Error precargando ruta:", e);
               }
             }
-          });
+          };
+          loadRoutes();
         }
       } catch (err) {
         console.error("Error in fetchData:", err);
@@ -399,9 +412,11 @@ const CreateList = () => {
           const coords = selectedPoisForList
             .map((p) => `${p.longitud},${p.latitud}`)
             .join(";");
-          const res = await fetch(
-            `https://router.project-osrm.org/route/v1/foot/${coords}?overview=full&geometries=geojson`,
-          );
+          const url = routeProfile === "foot" 
+            ? `https://routing.openstreetmap.de/routed-foot/route/v1/driving/${coords}?overview=full&geometries=geojson`
+            : `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
           if (data.code === "Ok") {
             const geom = data.routes[0].geometry.coordinates.map((c) => [
@@ -410,6 +425,14 @@ const CreateList = () => {
             ]);
             setJoinedRoute(geom);
             setTotalDistance(data.routes[0].distance);
+          } else {
+            const fallbackGeom = selectedPoisForList.map((p) => [
+              parseFloat(p.latitud),
+              parseFloat(p.longitud),
+            ]);
+            setJoinedRoute(fallbackGeom);
+            setTotalDistance(0);
+            setToast({ message: "No se pudo calcular la ruta para este medio, uniendo puntos en línea recta.", type: "warning" });
           }
         } catch (e) {
           console.error("Error calculating live route:", e);
@@ -420,7 +443,7 @@ const CreateList = () => {
       }
     };
     getLiveRoute();
-  }, [selectedPoisForList]);
+  }, [selectedPoisForList, routeProfile]);
 
   const handleFocusList = (list) => {
     setFocusedListId(list.id_lista);
@@ -568,6 +591,7 @@ const CreateList = () => {
       setIsProcessingList(false);
     }
   };
+  const focusedList = focusedListId ? otherLists.find(l => l.id_lista === focusedListId) : null;
 
   return (
     <div className="relative h-screen w-full bg-slate-950 text-white font-display overflow-hidden select-none md:pl-20">
@@ -600,6 +624,7 @@ const CreateList = () => {
             userPosition={userPosition}
             currentUser={JSON.parse(localStorage.getItem("usuario") || "null")}
             t={t}
+            routeProfile={routeProfile}
           />
 
           {/* Location Focus Circle */}
@@ -640,6 +665,16 @@ const CreateList = () => {
         >
           <span className="material-symbols-outlined text-2xl">
             my_location
+          </span>
+        </button>
+
+        <button
+          onClick={() => setRouteProfile(prev => prev === "foot" ? "driving" : "foot")}
+          className="w-16 h-16 bg-white text-black rounded-full shadow-xl flex items-center justify-center hover:bg-gray-100 transition-all hover:scale-110 active:scale-95 border border-black/5"
+          title={routeProfile === "foot" ? t("createList.switchToCar", "Cambiar a coche") : t("createList.switchToFoot", "Cambiar a pie")}
+        >
+          <span className="material-symbols-outlined text-2xl">
+            {routeProfile === "foot" ? "directions_walk" : "directions_car"}
           </span>
         </button>
 
@@ -751,7 +786,11 @@ const CreateList = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Lado Izquierdo: Configuración General */}
                       <div className="space-y-4">
-                        {!focusedListId && (
+                        {focusedList?.imagen_url ? (
+                          <div className="relative h-24 w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl overflow-hidden flex flex-col items-center justify-center">
+                            <img src={`${import.meta.env.VITE_API_URL || "http://localhost:3000"}${focusedList.imagen_url}`} className="absolute inset-0 w-full h-full object-cover" alt={focusedList.nombre} />
+                          </div>
+                        ) : !focusedListId ? (
                           <div
                             onClick={() =>
                               document
@@ -792,20 +831,20 @@ const CreateList = () => {
                               }}
                             />
                           </div>
-                        )}
+                        ) : null}
 
                         <div className="space-y-3">
                           <input
                             type="text"
                             placeholder={t("createList.namePlaceholder")}
-                            value={listName}
+                            value={focusedList ? focusedList.nombre : listName}
                             onChange={(e) => setListName(e.target.value)}
                             readOnly={!!focusedListId}
                             className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-black dark:text-white placeholder:text-black/30 dark:placeholder:text-white/30 focus:border-primary/50 outline-none font-display"
                           />
                           <textarea
                             placeholder={t("createList.descPlaceholder")}
-                            value={listDesc}
+                            value={focusedList ? (focusedList.descripcion || "") : listDesc}
                             onChange={(e) => setListDesc(e.target.value)}
                             readOnly={!!focusedListId}
                             className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-black dark:text-white placeholder:text-black/30 dark:placeholder:text-white/30 focus:border-primary/50 outline-none h-20 resize-none font-display"

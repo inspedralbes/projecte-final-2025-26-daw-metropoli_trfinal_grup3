@@ -670,6 +670,24 @@ export const toggleLikeLista = async (idLista, idUsuario) => {
   }
 };
 
+export const guardarLista = async (idLista, idUsuario) => {
+  try {
+    const response = await fetch(`${API_URL}/api/listas/${idLista}/guardar`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_usuario: idUsuario }),
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to save Lista");
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error in guardarLista:", error);
+    throw error;
+  }
+};
+
 // ── Seguidores ──
 
 export const followUsuario = async (idSeguidor, idSeguido) => {

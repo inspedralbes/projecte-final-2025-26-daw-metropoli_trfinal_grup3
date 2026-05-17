@@ -13,5 +13,6 @@ router.post('/:id/imagen', upload.single('imagenLista'), listaController.uploadL
 router.put('/:id', listaController.updateLista);
 router.delete('/:id', listaController.deleteLista);
 router.post('/:id_lista/like', listaController.toggleLikeLista);
+router.post('/:id/guardar', listaController.guardarLista);
 
 export default router;

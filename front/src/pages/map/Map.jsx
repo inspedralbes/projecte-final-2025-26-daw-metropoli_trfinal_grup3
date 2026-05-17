@@ -106,6 +106,7 @@ const Map = () => {
   const [activeFilter, setActiveFilter] = useState(null); // null = mostrar todos, id_categoria = filtrar
   const [route, setRoute] = useState(null); // Array de [lat, lng] para Dijkstra Polyline
   const [distance, setDistance] = useState(null); // Distancia de la ruta
+  const [routeProfile, setRouteProfile] = useState("foot");
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -392,9 +393,10 @@ const Map = () => {
         .map((p) => `${p.longitud},${p.latitud}`)
         .join(";");
       try {
-        const res = await fetch(
-          `https://router.project-osrm.org/route/v1/foot/${coordsString}?overview=full&geometries=geojson`,
-        );
+        const url = routeProfile === "foot" 
+          ? `https://routing.openstreetmap.de/routed-foot/route/v1/driving/${coordsString}?overview=full&geometries=geojson`
+          : `https://router.project-osrm.org/route/v1/driving/${coordsString}?overview=full&geometries=geojson`;
+        const res = await fetch(url);
         const data = await res.json();
         if (data.code === "Ok") {
           const geom = data.routes[0].geometry.coordinates.map((c) => [
@@ -408,9 +410,18 @@ const Map = () => {
 
           const bounds = L.latLngBounds(geom);
           mapRef.current.fitBounds(bounds, {
-            padding: [50, 50],
+            padding: [100, 100],
             animate: true,
+            duration: 1.5,
+            maxZoom: 16,
           });
+        } else {
+          setOtherListGeometries((prev) => {
+            const next = { ...prev };
+            delete next[list.id_lista];
+            return next;
+          });
+          setToast({ message: t("map.toast.no_route", "No se pudo calcular la ruta para este medio, usando línea recta."), type: "warning" });
         }
       } catch (err) {
         console.error(err);
@@ -457,9 +468,10 @@ const Map = () => {
     const end = `${poi.longitud},${poi.latitud}`;
 
     try {
-      const res = await fetch(
-        `https://router.project-osrm.org/route/v1/foot/${start};${end}?overview=full&geometries=geojson`,
-      );
+      const url = routeProfile === "foot" 
+        ? `https://routing.openstreetmap.de/routed-foot/route/v1/driving/${start};${end}?overview=full&geometries=geojson`
+        : `https://router.project-osrm.org/route/v1/driving/${start};${end}?overview=full&geometries=geojson`;
+      const res = await fetch(url);
       const data = await res.json();
       if (data.code === "Ok") {
         const geom = data.routes[0].geometry.coordinates.map((c) => [
@@ -477,9 +489,14 @@ const Map = () => {
           [parseFloat(poi.latitud), parseFloat(poi.longitud)],
         ]);
         mapRef.current.fitBounds(bounds, {
-          padding: [100, 100],
+          padding: [120, 120],
           animate: true,
+          duration: 1.5,
+          maxZoom: 16,
         });
+      } else {
+        setUserToPoiRoute(null);
+        setToast({ message: t("map.toast.no_nav_route", "No se pudo calcular la navegación para este medio."), type: "warning" });
       }
     } catch (err) {
       console.error(err);
@@ -515,13 +532,14 @@ const Map = () => {
     return () => navigator.geolocation.clearWatch(watchId);
   }, [userToPoiRoute?.poiId, userLists]);
 
-  const silentUpdateRouteToPoi = async (uPos, poi) => {
+  const silentUpdateRouteToPoi = async (uPos, poi, profile = routeProfile) => {
     const start = `${uPos[1]},${uPos[0]}`;
     const end = `${poi.longitud},${poi.latitud}`;
     try {
-      const res = await fetch(
-        `https://router.project-osrm.org/route/v1/foot/${start};${end}?overview=full&geometries=geojson`,
-      );
+      const url = profile === "foot" 
+        ? `https://routing.openstreetmap.de/routed-foot/route/v1/driving/${start};${end}?overview=full&geometries=geojson`
+        : `https://router.project-osrm.org/route/v1/driving/${start};${end}?overview=full&geometries=geojson`;
+      const res = await fetch(url);
       const data = await res.json();
       if (data.code === "Ok") {
         const geom = data.routes[0].geometry.coordinates.map((c) => [
@@ -532,6 +550,7 @@ const Map = () => {
           geom,
           distance: data.routes[0].distance,
           poiId: poi.id_poi,
+          actualDest: [parseFloat(poi.latitud), parseFloat(poi.longitud)]
         });
       }
     } catch (err) {
@@ -543,6 +562,45 @@ const Map = () => {
   useEffect(() => {
     handleLocate();
   }, []);
+
+  useEffect(() => {
+    if (focusedListId) {
+      const list = userLists.find((l) => l.id_lista === focusedListId) || discoverLists.find((l) => l.id_lista === focusedListId);
+      if (list && list.pois && list.pois.length >= 2) {
+        const coordsString = list.pois.map((p) => `${p.longitud},${p.latitud}`).join(";");
+        const url = routeProfile === "foot" 
+          ? `https://routing.openstreetmap.de/routed-foot/route/v1/driving/${coordsString}?overview=full&geometries=geojson`
+          : `https://router.project-osrm.org/route/v1/driving/${coordsString}?overview=full&geometries=geojson`;
+        fetch(url)
+          .then(res => res.json())
+          .then(data => {
+            if (data.code === "Ok") {
+              const geom = data.routes[0].geometry.coordinates.map((c) => [c[1], c[0]]);
+              const snappedWaypoints = data.waypoints.map(wp => [wp.location[1], wp.location[0]]);
+              setOtherListGeometries((prev) => ({
+                ...prev,
+                [focusedListId]: { geom, distance: data.routes[0].distance, snappedWaypoints },
+              }));
+            } else {
+              setOtherListGeometries((prev) => {
+                const next = { ...prev };
+                delete next[focusedListId];
+                return next;
+              });
+              setToast({ message: t("map.toast.no_route", "No se pudo calcular la ruta para este medio, usando línea recta."), type: "warning" });
+            }
+          })
+          .catch(console.error);
+      }
+    }
+    if (userToPoiRoute?.poiId && userPosition) {
+       const poi = [...userLists, ...discoverLists].flatMap((l) => l.pois || []).find((p) => p && p.id_poi === userToPoiRoute.poiId);
+       if (poi) {
+         silentUpdateRouteToPoi(userPosition, poi, routeProfile);
+       }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeProfile]);
 
   // Transformation of Dijkstra Output to Leaflet Polyline Coordinates
   const fetchRoute = async (origenId, destinoId, coords = null) => {
@@ -729,6 +787,12 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
     ? userLists.find((ul) => ul.nombre === focusedCommunityList.nombre) 
     : null;
 
+  const activeListInfo = focusedListId ? (userLists.find((l) => l.id_lista === focusedListId) || discoverLists.find((l) => l.id_lista === focusedListId)) : null;
+  const isSavedList = activeListInfo?.descripcion?.startsWith('[GUARDADA de: ');
+  const originalOwnerMatch = isSavedList ? activeListInfo.descripcion.match(/\[GUARDADA de: (.*?)\]/) : null;
+  const originalOwnerName = originalOwnerMatch ? originalOwnerMatch[1] : null;
+  const cleanDescription = isSavedList ? activeListInfo.descripcion.replace(/\[GUARDADA de: .*?\]\s*/, '') : activeListInfo?.descripcion;
+
   return (
     <div
       className="relative h-[100dvh] w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display overflow-hidden select-none md:pl-20 transition-colors duration-300 overscroll-none flex"
@@ -860,6 +924,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
             userToPoiRoute={userToPoiRoute}
             currentUser={currentUser}
             t={t}
+            routeProfile={routeProfile}
           />
 
           {/* Location Focus Circle */}
@@ -905,19 +970,38 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
                 <div className="flex-1 overflow-y-auto no-scrollbar px-8 pb-8 space-y-6">
                   <div className="space-y-2">
                     <h2 className="text-3xl font-black italic uppercase tracking-tighter leading-tight">
-                      {userLists.find((l) => l.id_lista === focusedListId)
-                        ?.nombre ||
-                        discoverLists.find((l) => l.id_lista === focusedListId)
-                          ?.nombre}
+                      {activeListInfo?.nombre}
                     </h2>
+                    {isSavedList && (
+                      <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest bg-emerald-500/10 inline-block px-2 py-1 rounded-full">
+                        Guardada de {originalOwnerName}
+                      </p>
+                    )}
                     <p className="text-sm opacity-60 italic">
-                      {userLists.find((l) => l.id_lista === focusedListId)
-                        ?.descripcion ||
-                        "Explora aquest itinerari seleccionat."}
+                      {cleanDescription || "Explora aquest itinerari seleccionat."}
                     </p>
                   </div>
 
-                  <div className="flex gap-3">
+                  <div className="space-y-4">
+                    {/* Route Profile Toggle Desktop */}
+                    <div className="flex bg-gray-100 dark:bg-white/5 p-1 rounded-full">
+                      <button
+                        onClick={() => setRouteProfile("foot")}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-full text-xs font-bold transition-all ${routeProfile === "foot" ? "bg-white dark:bg-slate-800 text-black dark:text-white shadow-md" : "text-gray-400 hover:text-black dark:hover:text-white"}`}
+                      >
+                        <span className="material-symbols-outlined text-[16px]">directions_walk</span>
+                        A pie
+                      </button>
+                      <button
+                        onClick={() => setRouteProfile("driving")}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-full text-xs font-bold transition-all ${routeProfile === "driving" ? "bg-white dark:bg-slate-800 text-black dark:text-white shadow-md" : "text-gray-400 hover:text-black dark:hover:text-white"}`}
+                      >
+                        <span className="material-symbols-outlined text-[16px]">directions_car</span>
+                        En coche
+                      </button>
+                    </div>
+
+                    <div className="flex gap-3">
                     <div className="flex-1 bg-gray-50 dark:bg-white/5 p-4 rounded-3xl border border-gray-100 dark:border-white/5">
                       <p className="text-[10px] font-bold uppercase opacity-40 mb-1">
                         Distància
@@ -943,6 +1027,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
                         )?.pois.length || 0}
                       </p>
                     </div>
+                  </div>
                   </div>
 
                   <div className="space-y-4">
@@ -1066,20 +1151,34 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
                     <div className="space-y-3">
                       <div className="p-5 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/10 group">
                         <h4 className="text-xl font-black text-black dark:text-white italic mb-1 leading-tight">
-                          {userLists.find((l) => l.id_lista === focusedListId)
-                            ?.nombre ||
-                            discoverLists.find(
-                              (l) => l.id_lista === focusedListId,
-                            )?.nombre}
+                          {activeListInfo?.nombre}
                         </h4>
+                        {isSavedList && (
+                          <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest bg-emerald-500/10 inline-block px-2 py-1 rounded-full mb-2">
+                            Guardada de {originalOwnerName}
+                          </p>
+                        )}
                         <p className="text-[10px] text-slate-500 dark:text-white/40 leading-relaxed italic mb-4">
-                          {userLists.find((l) => l.id_lista === focusedListId)
-                            ?.descripcion ||
-                            discoverLists.find(
-                              (l) => l.id_lista === focusedListId,
-                            )?.descripcion ||
-                            "Explora este itinerario."}
+                          {cleanDescription || "Explora este itinerario."}
                         </p>
+
+                        {/* Route Profile Toggle Mobile */}
+                        <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-full mb-3">
+                          <button
+                            onClick={() => setRouteProfile("foot")}
+                            className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-full text-[10px] font-bold transition-all ${routeProfile === "foot" ? "bg-white dark:bg-slate-800 text-black dark:text-white shadow-sm" : "text-slate-400 hover:text-black dark:hover:text-white"}`}
+                          >
+                            <span className="material-symbols-outlined text-[14px]">directions_walk</span>
+                            A pie
+                          </button>
+                          <button
+                            onClick={() => setRouteProfile("driving")}
+                            className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-full text-[10px] font-bold transition-all ${routeProfile === "driving" ? "bg-white dark:bg-slate-800 text-black dark:text-white shadow-sm" : "text-slate-400 hover:text-black dark:hover:text-white"}`}
+                          >
+                            <span className="material-symbols-outlined text-[14px]">directions_car</span>
+                            En coche
+                          </button>
+                        </div>
 
                         <div className="flex gap-3">
                           <div className="flex-1 bg-white/50 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5">
@@ -1227,6 +1326,15 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
       {/* DESKTOP CONTROLS: Bottom right */}
       <div className="hidden md:flex fixed bottom-8 right-6 z-[1001] pointer-events-none flex-col items-end gap-3">
         <button
+          onClick={() => setRouteProfile(prev => prev === "foot" ? "driving" : "foot")}
+          className="pointer-events-auto w-14 h-14 bg-white dark:bg-slate-900 text-black dark:text-white rounded-2xl shadow-2xl border border-gray-100 dark:border-white/5 flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+          title={routeProfile === "foot" ? t("map.switchToCar", "Cambiar a coche") : t("map.switchToFoot", "Cambiar a pie")}
+        >
+          <span className="material-symbols-outlined text-2xl">
+            {routeProfile === "foot" ? "directions_walk" : "directions_car"}
+          </span>
+        </button>
+        <button
           onClick={handleLocate}
           className="pointer-events-auto w-14 h-14 bg-white dark:bg-slate-900 text-black dark:text-white rounded-2xl shadow-2xl border border-gray-100 dark:border-white/5 flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
         >
@@ -1246,6 +1354,14 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
         {/* Floating Pill Buttons Centered Above Drawer */}
         {!focusedListId && !isSheetExpanded && (
           <div className="flex justify-center gap-2 px-5 mb-2">
+            <button
+              onClick={() => setRouteProfile(prev => prev === "foot" ? "driving" : "foot")}
+              className="pointer-events-auto w-12 h-12 bg-white dark:bg-slate-900 text-black dark:text-white rounded-full shadow-2xl border border-black/5 dark:border-white/5 flex items-center justify-center active:scale-95 transition-transform"
+            >
+              <span className="material-symbols-outlined text-xl">
+                {routeProfile === "foot" ? "directions_walk" : "directions_car"}
+              </span>
+            </button>
             <button
               onClick={handleLocate}
               className="pointer-events-auto flex items-center gap-2 bg-white dark:bg-slate-900 text-black dark:text-white px-5 py-2.5 rounded-full shadow-2xl border border-black/5 dark:border-white/5 active:scale-95 transition-transform"
