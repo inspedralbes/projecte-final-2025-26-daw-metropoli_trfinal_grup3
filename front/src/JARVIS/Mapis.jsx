@@ -1,10 +1,12 @@
 import React, { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import Mapis3D from "./components/Mapis3D";
 import SpeechBubble from "./components/SpeechBubble";
 import ChatWindow from "./components/ChatWindow";
 import useMapisAI from "./hooks/useMapisAI";
 
 const Mapis = () => {
+  const { t } = useTranslation();
   const [clickCount, setClickCount] = useState(0);
   const [showBubble, setShowBubble] = useState(false);
   const [isChatOpen, setIsChatOpen] = useState(false);
@@ -48,7 +50,7 @@ const Mapis = () => {
         show={showBubble} 
         message={
           <span>
-            ¡Hola! Soy Mapis. ¿Quieres crear una ruta increíble y compartirla con tus amigos? ¡Pregúntame cómo! <i className="fas fa-map-location-dot ml-1 text-primary"></i> <i className="fas fa-mobile-screen-button ml-1 text-primary"></i>
+            {t("jarvis.welcome_bubble", "¡Hola! Soy Mapis. ¿Quieres crear una ruta increíble y compartirla con tus amigos? ¡Pregúntame cómo!")} <i className="fas fa-map-location-dot ml-1 text-primary"></i> <i className="fas fa-mobile-screen-button ml-1 text-primary"></i>
           </span>
         }
         onDismiss={handleDismissBubble}

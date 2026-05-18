@@ -2,8 +2,10 @@ import React from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { User, MapPin, List, ArrowRight, Search } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useTranslation } from "react-i18next";
 
 const SearchResultsPanel = ({ isOpen, results, isLoading, query, onClose }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
 
   if (!isOpen || (!query && !isLoading)) return null;
@@ -31,15 +33,15 @@ const SearchResultsPanel = ({ isOpen, results, isLoading, query, onClose }) => {
           {isLoading ? (
             <div className="py-12 flex flex-col items-center justify-center gap-4">
               <div className="w-8 h-8 border-3 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
-              <p className="text-sm text-gray-500 dark:text-gray-400 animate-pulse">Buscant en el mapa...</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 animate-pulse">{t("search_panel.searching", "Buscant en el mapa...")}</p>
             </div>
           ) : !hasResults ? (
             <div className="py-12 text-center">
               <div className="w-16 h-16 bg-gray-100 dark:bg-slate-800 rounded-full flex items-center justify-center mx-auto mb-4">
                 <Search size={24} className="text-gray-400" />
               </div>
-              <p className="text-gray-800 dark:text-white font-bold">No hem trobat res</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Prova amb altres paraules clau</p>
+              <p className="text-gray-800 dark:text-white font-bold">{t("search_panel.no_results", "No hem trobat res")}</p>
+              <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{t("search_panel.try_other_keywords", "Prova amb altres paraules clau")}</p>
             </div>
           ) : (
             <div className="space-y-6 p-2">
@@ -47,7 +49,7 @@ const SearchResultsPanel = ({ isOpen, results, isLoading, query, onClose }) => {
               {results.usuarios?.length > 0 && (
                 <section>
                   <h4 className="px-3 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2 flex items-center gap-2">
-                    <User size={12} /> Persones
+                    <User size={12} /> {t("search_panel.people", "Persones")}
                   </h4>
                   <div className="space-y-1">
                     {results.usuarios.map((u) => (
@@ -67,7 +69,7 @@ const SearchResultsPanel = ({ isOpen, results, isLoading, query, onClose }) => {
                         </div>
                         <div className="flex-1 text-left">
                           <p className="text-sm font-bold text-gray-900 dark:text-white group-hover:text-blue-500 transition-colors">{u.nombre}</p>
-                          <p className="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-1">{u.bio || "Explorador de WeMap"}</p>
+                          <p className="text-[11px] text-gray-500 dark:text-gray-400 line-clamp-1">{u.bio || t("search_panel.default_bio", "Explorador de WeMap")}</p>
                         </div>
                         <ArrowRight size={16} className="text-gray-300 dark:text-slate-700 opacity-0 group-hover:opacity-100 -translate-x-2 group-hover:translate-x-0 transition-all" />
                       </button>
@@ -80,7 +82,7 @@ const SearchResultsPanel = ({ isOpen, results, isLoading, query, onClose }) => {
               {results.listas?.length > 0 && (
                 <section>
                   <h4 className="px-3 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2 flex items-center gap-2">
-                    <List size={12} /> Rutes i Col·leccions
+                    <List size={12} /> {t("search_panel.routes_collections", "Rutes i Col·leccions")}
                   </h4>
                   <div className="space-y-1">
                     {results.listas.map((l) => (
@@ -107,7 +109,7 @@ const SearchResultsPanel = ({ isOpen, results, isLoading, query, onClose }) => {
               {results.lugares?.length > 0 && (
                 <section>
                   <h4 className="px-3 text-[10px] font-black uppercase tracking-widest text-gray-400 dark:text-gray-500 mb-2 flex items-center gap-2">
-                    <MapPin size={12} /> Llocs d'interès
+                    <MapPin size={12} /> {t("search_panel.pois", "Llocs d'interès")}
                   </h4>
                   <div className="space-y-1">
                     {results.lugares.map((p) => (
@@ -135,7 +137,7 @@ const SearchResultsPanel = ({ isOpen, results, isLoading, query, onClose }) => {
         
         {/* Footer info */}
         <div className="p-3 bg-gray-50 dark:bg-slate-800/50 border-t border-gray-100 dark:border-white/5 text-center">
-          <p className="text-[10px] text-gray-400 uppercase tracking-tighter font-bold">Explora amb WeMap AI</p>
+          <p className="text-[10px] text-gray-400 uppercase tracking-tighter font-bold">{t("search_panel.explore_ai", "Explora amb WeMap AI")}</p>
         </div>
       </motion.div>
     </AnimatePresence>

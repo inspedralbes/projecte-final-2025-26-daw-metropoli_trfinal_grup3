@@ -197,6 +197,42 @@ const uploadListaImage = async (req, res) => {
     }
 };
 
+const guardarLista = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const { id_usuario } = req.body;
+        
+        if (!id_usuario) return res.status(400).json({ success: false, message: 'ID de usuario requerido' });
+
+        const listaOriginal = await listaModel.getById(id);
+        if (!listaOriginal) return res.status(404).json({ success: false, message: 'Lista no encontrada' });
+
+        if (listaOriginal.id_usuario === parseInt(id_usuario)) {
+            return res.status(400).json({ success: false, message: 'No puedes guardar tu propia lista' });
+        }
+
+        const nuevaDescripcion = `[GUARDADA de: ${listaOriginal.usuario_nombre}] ${listaOriginal.descripcion || ''}`;
+
+        const nuevaLista = await listaModel.create({
+            id_usuario,
+            nombre: listaOriginal.nombre,
+            descripcion: nuevaDescripcion,
+            visibilidad: 'private',
+            imagen_url: listaOriginal.imagen_url
+        });
+
+        const pois = await listaModel.getPoisByListaId(id);
+        for (let i = 0; i < pois.length; i++) {
+            await listaModel.addPoiToLista(nuevaLista.id_lista, pois[i].id_poi, pois[i].orden);
+        }
+
+        res.status(201).json({ success: true, message: 'Lista guardada con éxito', data: nuevaLista });
+    } catch (error) {
+        console.error('Error in guardarLista:', error);
+        res.status(500).json({ success: false, message: 'Error al guardar la lista' });
+    }
+};
+
 export default {
     createLista,
     getPublicListas,
@@ -206,5 +242,6 @@ export default {
     deleteLista,
     updateLista,
     toggleLikeLista,
-    uploadListaImage
+    uploadListaImage,
+    guardarLista
 };

@@ -3,8 +3,10 @@ import { Link } from "react-router-dom";
 import socket from "../../services/socketManager";
 import { getChatHistory } from "../../services/communicationManager";
 import UserAvatar from "../UserAvatar";
+import { useTranslation } from "react-i18next";
 
 const ChatModal = ({ friend, onClose, user }) => {
+  const { t } = useTranslation();
   const [messages, setMessages] = useState([]);
   const [newMessage, setNewMessage] = useState("");
   const [loading, setLoading] = useState(true);
@@ -98,7 +100,7 @@ const ChatModal = ({ friend, onClose, user }) => {
               </Link>
               <p className="text-[10px] text-emerald-500 font-black uppercase tracking-widest mt-1.5 flex items-center gap-1">
                 <span className="w-1.5 h-1.5 bg-emerald-500 rounded-full animate-pulse"></span>
-                En línia ara
+                {t("community.chat.online_now", "En línia ara")}
               </p>
             </div>
           </div>
@@ -115,11 +117,11 @@ const ChatModal = ({ friend, onClose, user }) => {
           className="flex-1 overflow-y-auto p-6 space-y-4 modern-scrollbar bg-white dark:bg-slate-900"
         >
           {loading ? (
-            <div className="h-full flex items-center justify-center opacity-30">Carregant xat...</div>
+            <div className="h-full flex items-center justify-center opacity-30">{t("community.chat.loading", "Carregant xat...")}</div>
           ) : messages.length === 0 ? (
             <div className="h-full flex flex-col items-center justify-center text-center space-y-2 opacity-30">
                 <span className="material-symbols-outlined text-4xl">chat_bubble</span>
-                <p className="text-sm">Inicia una conversa amb {friend.nombre}</p>
+                <p className="text-sm">{t("community.chat.start_conversation", "Inicia una conversa amb")} {friend.nombre}</p>
             </div>
           ) : (
             messages.map((m, i) => {
@@ -162,7 +164,7 @@ const ChatModal = ({ friend, onClose, user }) => {
             <input 
               value={newMessage}
               onChange={(e) => setNewMessage(e.target.value)}
-              placeholder="Escriu un missatge..."
+              placeholder={t("community.chat.write_message", "Escriu un missatge...")}
               className="flex-1 bg-transparent border-none focus:outline-none px-2 text-sm text-slate-800 dark:text-white"
             />
             <button 
@@ -179,6 +181,7 @@ const ChatModal = ({ friend, onClose, user }) => {
 };
 
 const GifPicker = ({ onSelect }) => {
+    const { t } = useTranslation();
     const [show, setShow] = useState(false);
     const [gifs, setGifs] = useState([]);
     const [search, setSearch] = useState("");
@@ -218,7 +221,7 @@ const GifPicker = ({ onSelect }) => {
                 <div className="absolute bottom-full mb-4 left-0 w-64 bg-white dark:bg-slate-800 border border-gray-100 dark:border-white/10 rounded-2xl shadow-2xl p-4 animate-in slide-in-from-bottom-2 duration-200">
                     <input 
                         className="w-full bg-gray-50 dark:bg-white/5 rounded-xl px-3 py-2 text-xs mb-3 outline-none"
-                        placeholder="Cerca GIFs..."
+                        placeholder={t("community.chat.search_gifs", "Cerca GIFs...")}
                         value={search}
                         onChange={e => { setSearch(e.target.value); fetchGifs(e.target.value); }}
                     />

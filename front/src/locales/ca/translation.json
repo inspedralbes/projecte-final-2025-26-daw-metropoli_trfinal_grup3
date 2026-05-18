@@ -75,7 +75,10 @@
     "visibilityPublic": "Pública",
     "visibilityPrivate": "Privada",
     "imageLabel": "Imatge de Portada",
-    "uploadImage": "Escollir de galeria"
+    "uploadImage": "Escollir de galeria",
+    "filterAll": "Tots",
+    "filterPublic": "Públic",
+    "filterPrivate": "Privat"
   },
   "settings": {
     "title": "Ajustos",
@@ -94,7 +97,20 @@
     "helpSupport": "Ajuda i Suport",
     "logout": "Tancar Sessió",
     "footerApp": "Aplicació Metròpoli",
-    "footerVersion": "Versió Estable"
+    "footerVersion": "Versió Estable",
+    "extensionTitle": "Extensió del Navegador",
+    "chromeExtension": "WeMap Premium Extension",
+    "extensionDesc": "Accedeix als teus mapes, comunitat i perfil a l'instant des de qualsevol pestanya.",
+    "downloadExtension": "Instal·lar Extensió",
+    "installStepsTitle": "Passos per instal·lar:",
+    "installStep1": "Descarrega i descomprimeix el fitxer ZIP.",
+    "installStep2": "Vés a",
+    "installStep3": "Activa el",
+    "installStep3Bold": "\"Mode desenvolupador\"",
+    "installStep3Extra": "(a dalt a la dreta).",
+    "installStep4": "Fes clic en",
+    "installStep4Bold": "\"Carrega descomprimida\"",
+    "installStep4Extra": "i selecciona la carpeta."
   },
   "profile": {
     "my": "El meu",
@@ -145,6 +161,18 @@
     "confirmCloseTitle": "Descartar ruta?",
     "confirmCloseBtn": "Sí, descartar",
     "closePanel": "Tancar panel",
+    "defaultNodePoiName": "POI Node {{id}}",
+    "defaultPoiName": "Punt {{number}}",
+    "locationError": "No s'ha pogut detectar la teva ubicació. Activa els permisos de geolocalització.",
+    "defaultLocationPoiName": "Punt a la meva ubicació",
+    "need2Points": "Selecciona almenys 2 punts per definir una ruta.",
+    "noCategoriesError": "Error: No hi ha categories a la base de dades. Contacta amb l'administrador.",
+    "saveError": "Error al desar la ruta. Intenta-ho de nou.",
+    "loginRequired": "Has d'iniciar sessió per crear llistes.",
+    "updatedSuccess": "Ruta actualitzada correctament!",
+    "createdSuccess": "Ruta creada i guardada!",
+    "missingName": "Posa un nom a la llista",
+    "missingPoints": "Afegeix almenys 2 punts a l'itinerari",
     "visibility": {
       "public": "Públic",
       "private": "Privat",
@@ -230,7 +258,8 @@
     "publish": "Publicar",
     "photo": "Foto",
     "follow": "Seguir",
-    "following": "Seguint"
+    "following": "Seguint",
+    "searchPlaceholder": "Busca amics o llistes..."
   },
   "profile": {
     "my": "El meu",
@@ -248,6 +277,8 @@
     "nowFollowing": "Ara segueixes a",
     "noFollowers": "Encara ningú segueix aquest perfil",
     "noFollowing": "No segueix a ningú encara",
+    "user_not_found": "Usuari no trobat",
+    "back_to_community": "Tornar a Comunitat",
     "qr": {
       "myTitle": "El meu codi QR",
       "myDesc": "Deixa que un altre usuari escanegi aquest QR per afegir-te com a amic",
@@ -263,19 +294,69 @@
       "error": "Error en escanegar",
       "errorSelf": "No pots seguir-te a tu mateix",
       "errorFollow": "No s'ha pogut seguir l'usuari"
-    },
-    "home": {
-      "impact": "El teu impacte",
-      "weeklyActivity": "Activitat setmanal",
-      "totalKm": "KM totals",
-      "discovered": "Llocs descoberts",
-      "completedRoutes": "Rutes fetes",
-      "groups": "Dels teus amics",
-      "dining": "Bars",
-      "experience": "Segona mà",
-      "orderFood": "Cafès",
-      "fanZone": "Cultura",
-      "trackConditions": "El teu impacte"
     }
+  },
+  "home": {
+    "impact": "El teu impacte",
+    "weeklyActivity": "Activitat setmanal",
+    "totalKm": "KM totals",
+    "discovered": "Llocs descoberts",
+    "completedRoutes": "Rutes fetes",
+    "groups": "Dels teus amics",
+    "dining": "Bars",
+    "experience": "Segona mà",
+    "orderFood": "Cafès",
+    "fanZone": "Cultura",
+    "trackConditions": "El teu impacte",
+    "no_own_routes": "Encara no tens rutes pròpies",
+    "no_recent_routes": "No hi ha rutes públiques recents",
+    "barcelona": "Barcelona",
+    "searchPlaceholder": "On t'agradaria anar?"
+  },
+  "jarvis": {
+    "how_create_route": "Com creo una ruta?",
+    "how_share_friends": "Com comparteixo amb amics?",
+    "vintage_shops_route": "Ruta de botigues vintage",
+    "what_can_i_do": "Què puc fer aquí?",
+    "guide_subtitle": "La teva guia de wemap",
+    "clear_chat": "Netejar xat",
+    "hello_im_mapis": "Hola! Sóc Mapis",
+    "greeting_description": "Estic aquí per ajudar-te a crear i compartir les millors rutes amb els teus amics.",
+    "ask_placeholder": "Pregunta sobre wemap...",
+    "powered_by": "Impulsat per Mapis AI",
+    "welcome_bubble": "Hola! Sóc Mapis. Vols crear una ruta increïble i compartir-la amb els teus amics? Pregunta'm com!"
+  },
+  "search_panel": {
+    "searching": "Cercant al mapa...",
+    "no_results": "No hem trobat res",
+    "try_other_keywords": "Prova amb altres paraules clau",
+    "people": "Persones",
+    "default_bio": "Explorador de WeMap",
+    "routes_collections": "Rutes y Coleccions",
+    "pois": "Llocs d'interès",
+    "explore_ai": "Explora amb WeMap AI"
+  },
+  "scanner": {
+    "alerts": {
+      "scanned_node": "Has escanejat el Node {{node}}. Portant-te a la navegació..."
+    },
+    "errors": {
+      "invalid_format": "El codi QR no és un node vàlid del circuit."
+    },
+    "title": "Escàner de Circuit",
+    "instructions": "Escaneja el codi QR situat a la teva posició actual per començar a guiar-te."
+  },
+  "map": {
+    "myRoutes": "Les meves rutes",
+    "no_own_routes_desc": "Encara no has creat cap llista.",
+    "discover_title": "Descobrir",
+    "goToRoute": "Anar a la ruta",
+    "navigating": "Navegant ruta",
+    "saveToList": "Incloure a les meves llistes",
+    "center": "Centrar",
+    "myLists": "Les meves llistes",
+    "noLists": "Encara no has creat cap llista.",
+    "discover": "Llistes per descobrir",
+    "noDiscover": "Encara no hi ha llistes públiques."
   }
 }

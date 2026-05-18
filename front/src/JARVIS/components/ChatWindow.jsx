@@ -2,8 +2,10 @@ import React, { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { Send, X, Trash2, MapPin, Sparkles, Navigation } from "lucide-react";
 import ReactMarkdown from "react-markdown";
+import { useTranslation } from "react-i18next";
 
 const ChatWindow = ({ isOpen, onClose, messages, sendMessage, isLoading, clearChat }) => {
+  const { t } = useTranslation();
   const [input, setInput] = useState("");
   const [isFocused, setIsFocused] = useState(false);
   const messagesEndRef = useRef(null);
@@ -29,10 +31,10 @@ const ChatWindow = ({ isOpen, onClose, messages, sendMessage, isLoading, clearCh
 
   // Sugerencias rápidas para el estado vacío
   const quickActions = [
-    { text: "¿Cómo creo una ruta?", icon: "fa-location-dot" },
-    { text: "¿Cómo comparto con amigos?", icon: "fa-share-nodes" },
-    { text: "Ruta de tiendas vintage", icon: "fa-shirt" },
-    { text: "¿Qué puedo hacer aquí?", icon: "fa-star" },
+    { text: t("jarvis.how_create_route", "¿Cómo creo una ruta?"), icon: "fa-location-dot" },
+    { text: t("jarvis.how_share_friends", "¿Cómo comparto con amigos?"), icon: "fa-share-nodes" },
+    { text: t("jarvis.vintage_shops_route", "Ruta de tiendas vintage"), icon: "fa-shirt" },
+    { text: t("jarvis.what_can_i_do", "¿Qué puedo hacer aquí?"), icon: "fa-star" },
   ];
 
   return (
@@ -67,7 +69,7 @@ const ChatWindow = ({ isOpen, onClose, messages, sendMessage, isLoading, clearCh
                 </h3>
                 <p className="text-xs font-medium text-gray-500 dark:text-gray-400 flex items-center gap-1 font-display">
                   <Sparkles size={10} className="text-primary" />
-                  Tu guía de wemap
+                  {t("jarvis.guide_subtitle", "Tu guía de wemap")}
                 </p>
               </div>
             </div>
@@ -76,7 +78,7 @@ const ChatWindow = ({ isOpen, onClose, messages, sendMessage, isLoading, clearCh
               <button
                 onClick={clearChat}
                 className="p-2 hover:bg-gray-100 dark:hover:bg-white/10 rounded-xl transition-all active:scale-95"
-                title="Limpiar chat"
+                title={t("jarvis.clear_chat", "Limpiar chat")}
               >
                 <Trash2 size={18} />
               </button>
@@ -102,9 +104,9 @@ const ChatWindow = ({ isOpen, onClose, messages, sendMessage, isLoading, clearCh
                   <Navigation size={32} className="text-primary" />
                 </div>
                 <div className="text-center space-y-1 font-display">
-                  <h4 className="text-lg font-bold text-gray-800 dark:text-gray-100">¡Hola! Soy Mapis</h4>
+                  <h4 className="text-lg font-bold text-gray-800 dark:text-gray-100">{t("jarvis.hello_im_mapis", "¡Hola! Soy Mapis")}</h4>
                   <p className="text-sm text-gray-500 dark:text-gray-400 max-w-[250px] mx-auto">
-                    Estoy aquí para ayudarte a crear y compartir las mejores rutas con tus amigos.
+                    {t("jarvis.greeting_description", "Estoy aquí para ayudarte a crear y compartir las mejores rutas con tus amigos.")}
                   </p>
                 </div>
                 
@@ -172,7 +174,7 @@ const ChatWindow = ({ isOpen, onClose, messages, sendMessage, isLoading, clearCh
                 onChange={(e) => setInput(e.target.value)}
                 onFocus={() => setIsFocused(true)}
                 onBlur={() => setIsFocused(false)}
-                placeholder="Pregunta sobre wemap..."
+                placeholder={t("jarvis.ask_placeholder", "Pregunta sobre wemap...")}
                 className="w-full bg-white dark:bg-gray-100 border border-gray-300 dark:border-white/20 text-gray-900 rounded-full py-3.5 pl-5 pr-14 focus:outline-none focus:border-primary focus:ring-4 focus:ring-primary/10 transition-all shadow-sm placeholder:text-gray-400 font-display"
               />
               <button
@@ -186,7 +188,7 @@ const ChatWindow = ({ isOpen, onClose, messages, sendMessage, isLoading, clearCh
             
             <div className="text-center mt-2">
               <span className="text-[10px] text-gray-400 dark:text-gray-500 uppercase tracking-wider font-semibold">
-                Impulsado por Mapis AI
+                {t("jarvis.powered_by", "Impulsado por Mapis AI")}
               </span>
             </div>
           </div>

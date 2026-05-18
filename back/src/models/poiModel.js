@@ -20,6 +20,11 @@ const getByUsuarioId = async (id_usuario) => {
     return rows;
 };
 
+const getById = async (id) => {
+    const [rows] = await query('SELECT * FROM pois WHERE id_poi = ?', [id]);
+    return rows[0] || null;
+};
+
 const getNodoAccesoId = async (idPoi) => {
     const [rows] = await query('SELECT id_nodo_acceso FROM pois WHERE id_poi = ?', [idPoi]);
     return rows[0] ? rows[0].id_nodo_acceso : null;
@@ -49,5 +54,6 @@ export default {
     nullifyNodeReference,
     updateImageUrl,
     update,
-    getByUsuarioId
+    getByUsuarioId,
+    getById
 };

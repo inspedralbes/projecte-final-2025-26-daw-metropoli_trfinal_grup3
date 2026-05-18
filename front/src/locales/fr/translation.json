@@ -47,7 +47,8 @@
       "official": "Officiel",
       "fanZone": "Social",
       "popular": "Populaire"
-    }
+    },
+    "searchPlaceholder": "Rechercher des amis ou des listes..."
   },
   "nav": {
     "home": "Accueil",
@@ -64,7 +65,22 @@
     "title": "Itinéraires",
     "search": "Rechercher quelque chose...",
     "nearby": "Destinations à Proximité",
-    "viewAll": "Voir Tout"
+    "viewAll": "Voir Tout",
+    "errorLoading": "Impossible de charger vos collections.",
+    "errorConnection": "Erreur de connexion au serveur.",
+    "noSessionTitle": "Se connecter",
+    "noSessionDesc": "Vous devez vous connecter pour voir vos collections personnelles.",
+    "emptyTitle": "Aucun itinéraire enregistré",
+    "noSearchMatch": "Aucun itinéraire ne correspond à votre recherche.",
+    "noLists": "Vous n'avez pas encore créé d'itinéraire personnel.",
+    "editTitle": "Modifier l'itinéraire",
+    "visibilityPublic": "Public",
+    "visibilityPrivate": "Privé",
+    "imageLabel": "Image de couverture",
+    "uploadImage": "Choisir de la galerie",
+    "filterAll": "Tous",
+    "filterPublic": "Public",
+    "filterPrivate": "Privé"
   },
   "settings": {
     "title": "Paramètres",
@@ -77,7 +93,20 @@
     "account": "Compte",
     "privacySecurity": "Confidentialité et Sécurité",
     "helpSupport": "Aide et Support",
-    "footerApp": "Application"
+    "footerApp": "Application",
+    "extensionTitle": "Extension de Navigateur",
+    "chromeExtension": "WeMap Premium Extension",
+    "extensionDesc": "Accédez instantanément à vos cartes, votre communauté et votre profil depuis n'importe quel onglet.",
+    "downloadExtension": "Installer l'extension",
+    "installStepsTitle": "Étapes pour installer :",
+    "installStep1": "Téléchargez et extrayez le fichier ZIP.",
+    "installStep2": "Allez sur",
+    "installStep3": "Activez le",
+    "installStep3Bold": "\"Mode développeur\"",
+    "installStep3Extra": "(en haut à droite).",
+    "installStep4": "Cliquez sur",
+    "installStep4Bold": "\"Charger non empaquetée\"",
+    "installStep4Extra": "et sélectionnez le dossier."
   },
   "profile": {
     "my": "Mon",
@@ -89,7 +118,9 @@
     "friendsList": "Mes Amis",
     "recentPosts": "Activité Récente",
     "yourAchievements": "Badges et Récompenses",
-    "editProfile": "Modifier le Profil"
+    "editProfile": "Modifier le Profil",
+    "user_not_found": "Utilisateur non trouvé",
+    "back_to_community": "Retour à la Communauté"
   },
   "editProfile": {
     "title": "Modifier le Profil",
@@ -143,5 +174,108 @@
     "newPassword": "Nouveau mot de passe",
     "completeRegistration": "Terminer l'inscription",
     "hello": "Bonjour"
+  },
+  "createList": {
+    "title": "Créer Liste",
+    "subtitle": "Sélectionnez des points sur la carte pour créer votre itinéraire personnalisé.",
+    "namePlaceholder": "Écrivez un titre...",
+    "descPlaceholder": "De quoi parle cette liste ?",
+    "back": "Retour",
+    "save": "Enregistrer et publier",
+    "success": "Liste créée avec succès !",
+    "errorNoName": "Veuillez donner un nom à votre liste.",
+    "addCover": "Ajouter une couverture",
+    "addPoiAtLocation": "Ajouter un point à ma position",
+    "points": "Points",
+    "newList": "Nouvelle liste",
+    "editingList": "Modifier la liste",
+    "inspecting": "Inspection",
+    "saveChanges": "Enregistrer les modifications",
+    "editRoute": "Modifier l'itinéraire",
+    "useAsTemplate": "Utiliser comme modèle",
+    "confirmClose": "Êtes-vous sûr ? L'itinéraire que vous créez sera perdu.",
+    "confirmCloseTitle": "Abandonner l'itinéraire ?",
+    "confirmCloseBtn": "Oui, abandonner",
+    "closePanel": "Fermer le panneau",
+    "defaultNodePoiName": "POI Nœud {{id}}",
+    "defaultPoiName": "Point {{number}}",
+    "locationError": "Impossible de détecter votre position. Veuillez activer la géolocalisation.",
+    "defaultLocationPoiName": "Point à ma position",
+    "need2Points": "Sélectionnez au moins 2 points pour définir un itinéraire.",
+    "noCategoriesError": "Erreur : Aucune catégorie dans la base de données. Contactez l'administrateur.",
+    "saveError": "Erreur lors de l'enregistrement de l'itinéraire. Veuillez réessayer.",
+    "loginRequired": "Vous devez vous connecter pour créer des listes.",
+    "updatedSuccess": "Itinéraire mis à jour avec succès !",
+    "createdSuccess": "Itinéraire créé et enregistré !",
+    "missingName": "Donnez un nom à la liste",
+    "missingPoints": "Ajoutez au moins 2 points à l'itinéraire",
+    "visibility": {
+      "public": "Public",
+      "private": "Privé",
+      "friends": "Amis"
+    }
+  },
+  "home": {
+    "impact": "Votre impact",
+    "weeklyActivity": "Activité hebdomadaire",
+    "totalKm": "KM totaux",
+    "discovered": "Lieux découverts",
+    "completedRoutes": "Itinéraires faits",
+    "groups": "De vos amis",
+    "dining": "Bars",
+    "experience": "Seconde main",
+    "orderFood": "Cafés",
+    "fanZone": "Culture",
+    "trackConditions": "Votre impact",
+    "no_own_routes": "Vous n'avez pas encore d'itinéraires propres",
+    "no_recent_routes": "Aucun itinéraire public récent",
+    "barcelona": "Barcelone",
+    "searchPlaceholder": "Où aimeriez-vous aller ?"
+  },
+  "jarvis": {
+    "how_create_route": "Comment créer un itinéraire ?",
+    "how_share_friends": "Comment partager avec des amis ?",
+    "vintage_shops_route": "Itinéraire des boutiques vintage",
+    "what_can_i_do": "Que puis-je faire ici ?",
+    "guide_subtitle": "Votre guide wemap",
+    "clear_chat": "Effacer le chat",
+    "hello_im_mapis": "Bonjour ! Je suis Mapis",
+    "greeting_description": "Je suis là pour vous aider à créer et partager les meilleurs itinéraires avec vos amis.",
+    "ask_placeholder": "Demandez à propos de wemap...",
+    "powered_by": "Propulsé par Mapis AI",
+    "welcome_bubble": "Bonjour ! Je suis Mapis. Tu veux créer un itinéraire incroyable et le partager avec tes amis ? Demande-moi comment !"
+  },
+  "search_panel": {
+    "searching": "Recherche sur la carte...",
+    "no_results": "Nous n'avons rien trouvé",
+    "try_other_keywords": "Essayez d'autres mots-clés",
+    "people": "Personnes",
+    "default_bio": "Explorateur WeMap",
+    "routes_collections": "Itinéraires & Collections",
+    "pois": "Points d'intérêt",
+    "explore_ai": "Explorez avec WeMap AI"
+  },
+  "scanner": {
+    "alerts": {
+      "scanned_node": "Vous avez scanné le Nœud {{node}}. Redirection vers la navigation..."
+    },
+    "errors": {
+      "invalid_format": "Le code QR n'est pas un nœud de circuit valide."
+    },
+    "title": "Scanner de Circuit",
+    "instructions": "Scannez le code QR situé à votre position actuelle pour commencer à vous guider."
+  },
+  "map": {
+    "myRoutes": "Mes itinéraires",
+    "no_own_routes_desc": "Vous n'avez pas encore créé d'itinéraire.",
+    "discover_title": "Découvrir",
+    "goToRoute": "Aller à l'itinéraire",
+    "navigating": "Navigation de l'itinéraire",
+    "saveToList": "Ajouter à mes listes",
+    "center": "Centrer",
+    "myLists": "Mes listes",
+    "noLists": "Vous n'avez pas encore créé de listes.",
+    "discover": "Listas à découvrir",
+    "noDiscover": "Aucune liste publique pour le moment."
   }
 }

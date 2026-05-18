@@ -13,6 +13,9 @@ router.get('/', poiController.getPois);
 // Obtener los POIs más cercanos a una coordenada (debe ir ANTES de /:id para evitar conflictos)
 router.get('/cercanos', poiController.getPoisCercanos);
 
+// Obtener un POI por ID
+router.get('/:id', poiController.getPoiById);
+
 // Subir o actualizar la imagen de un POI existente
 router.post('/:id/imagen', upload.single('imagenPoi'), poiController.uploadPoiImage);
 

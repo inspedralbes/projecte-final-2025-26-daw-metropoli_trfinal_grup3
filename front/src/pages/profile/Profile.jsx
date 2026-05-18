@@ -140,7 +140,6 @@ const ScanQrModal = ({ allUsers, onFollowed, onClose }) => {
 
   const handleResult = (decoded) => {
     try {
-      console.log("QR Decoded:", decoded);
       let targetId;
 
       if (decoded.includes("/profile/")) {
@@ -579,12 +578,12 @@ const Profile = () => {
         <span className="material-symbols-outlined text-6xl mb-4">
           person_off
         </span>
-        <h2 className="text-xl font-bold">Usuario no encontrado</h2>
+        <h2 className="text-xl font-bold">{t("profile.user_not_found", "Usuario no encontrado")}</h2>
         <Link
           to="/community"
           className="mt-4 text-primary font-bold hover:underline"
         >
-          Volver a Comunidad
+          {t("profile.back_to_community", "Volver a Comunidad")}
         </Link>
       </div>
     );

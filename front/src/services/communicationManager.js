@@ -21,8 +21,12 @@ export const createPoi = async (poiData) => {
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify(poiData),
     });
-    if (!response.ok) throw new Error("Failed to create POI");
-    return await response.json();
+    const data = await response.json();
+    if (!response.ok) {
+      console.error("createPoi server error:", data);
+      throw new Error(data.message || data.error_code || "Failed to create POI");
+    }
+    return data;
   } catch (error) {
     console.error("Error in createPoi:", error);
     throw error;
@@ -662,6 +666,24 @@ export const toggleLikeLista = async (idLista, idUsuario) => {
     return await response.json();
   } catch (error) {
     console.error("Error in toggleLikeLista:", error);
+    throw error;
+  }
+};
+
+export const guardarLista = async (idLista, idUsuario) => {
+  try {
+    const response = await fetch(`${API_URL}/api/listas/${idLista}/guardar`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ id_usuario: idUsuario }),
+    });
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => ({}));
+      throw new Error(errorData.message || "Failed to save Lista");
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error in guardarLista:", error);
     throw error;
   }
 };

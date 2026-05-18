@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useRef } from "react";
 import { AnimatePresence, motion } from "framer-motion";
-import { MapContainer, useMapEvents } from "react-leaflet";
+import { MapContainer, useMapEvents, Circle } from "react-leaflet";
 import { useNavigate, useLocation } from "react-router-dom";
 import { useTranslation } from "react-i18next";
 import Navbar from "../../layouts/Navbar";
@@ -68,6 +68,8 @@ const CreateList = () => {
   const [otherListGeometries, setOtherListGeometries] = useState({});
   const [focusedListId, setFocusedListId] = useState(null);
   const [userPosition, setUserPosition] = useState(null);
+  const [hasInitialCentered, setHasInitialCentered] = useState(false);
+  const [hasInitialFitBounds, setHasInitialFitBounds] = useState(false);
 
   const [editingListId, setEditingListId] = useState(null);
   const [showOtherLists, setShowOtherLists] = useState(true);
@@ -77,8 +79,8 @@ const CreateList = () => {
   const [isSheetMinimized, setIsSheetMinimized] = useState(false);
   const [showCloseConfirm, setShowCloseConfirm] = useState(false);
   const [toast, setToast] = useState(null);
-  const [showOptimizeConfirm, setShowOptimizeConfirm] = useState(false);
-  const [pendingSavePois, setPendingSavePois] = useState(null);
+  const [isProcessingList, setIsProcessingList] = useState(false);
+  const [routeProfile, setRouteProfile] = useState("foot");
 
   // Ref para tener acceso inmediato al estado dentro de eventos de Leaflet
   const selectedPoisRef = useRef([]);
@@ -95,7 +97,6 @@ const CreateList = () => {
           const userObj = JSON.parse(userStr);
           userId = userObj.id_usuario;
           setCurrentUserId(userId);
-          console.log("DEBUG CreateList: userId detectado:", userId);
         } else {
           console.warn(
             "DEBUG CreateList: No hay usuario logueado en localStorage",
@@ -111,11 +112,6 @@ const CreateList = () => {
             : Promise.resolve({ success: true, data: [] }),
         ]);
 
-        console.log(
-          "DEBUG CreateList: Listas recibidas:",
-          listRes.data?.length || 0,
-        );
-
         if (poiRes.success) setPois(poiRes.data);
         if (catRes.success) setCategories(catRes.data);
         if (nodeRes.success) setAllNodes(nodeRes.data);
@@ -128,44 +124,49 @@ const CreateList = () => {
             }
           }
           setOtherLists(combinedLists);
-          console.log(
-            "DEBUG CreateList: otherLists actualizado con",
-            combinedLists.length,
-            "listas",
-          );
 
-          combinedLists.forEach(async (list) => {
-            if (list.pois && list.pois.length >= 2) {
-              try {
-                // Append first POI to end to close loop
-                const closedPois = [...list.pois, list.pois[0]];
-                const coords = closedPois
-                  .map((p) => `${p.longitud},${p.latitud}`)
-                  .join(";");
-                const res = await fetch(
-                  `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`,
-                );
-                const data = await res.json();
-                if (data.code === "Ok") {
-                  const route = data.routes[0];
-                  const geom = route.geometry.coordinates.map((c) => [
-                    c[1],
-                    c[0],
-                  ]);
-                  setOtherListGeometries((prev) => ({
-                    ...prev,
-                    [list.id_lista]: {
-                      geom,
-                      distance: route.distance,
-                      waypoints: route.legs.map((leg) => leg.distance), // Distancia entre puntos
-                    },
-                  }));
+          // Sequential fetch to avoid 429 Too Many Requests
+          const loadRoutes = async () => {
+            for (const list of combinedLists) {
+              if (list.pois && list.pois.length >= 2) {
+                try {
+                  const coords = list.pois
+                    .map((p) => `${p.longitud},${p.latitud}`)
+                    .join(";");
+                  const url = routeProfile === "foot" 
+                    ? `https://routing.openstreetmap.de/routed-foot/route/v1/driving/${coords}?overview=full&geometries=geojson`
+                    : `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
+                  const res = await fetch(url);
+                  if (res.status === 429) {
+                    console.warn("OSM Rate limit reached (429), stopping preload.");
+                    break;
+                  }
+                  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+                  const data = await res.json();
+                  if (data.code === "Ok") {
+                    const route = data.routes[0];
+                    const geom = route.geometry.coordinates.map((c) => [
+                      c[1],
+                      c[0],
+                    ]);
+                    setOtherListGeometries((prev) => ({
+                      ...prev,
+                      [list.id_lista]: {
+                        geom,
+                        distance: route.distance,
+                        waypoints: route.legs.map((leg) => leg.distance),
+                      },
+                    }));
+                  }
+                  // Small delay to respect public API limits
+                  await new Promise(r => setTimeout(r, 250));
+                } catch (e) {
+                  console.warn("Error precargando ruta:", e.message || e);
                 }
-              } catch (e) {
-                console.error("Error precargando ruta:", e);
               }
             }
-          });
+          };
+          loadRoutes();
         }
       } catch (err) {
         console.error("Error in fetchData:", err);
@@ -211,26 +212,55 @@ const CreateList = () => {
   }, [location.state]);
 
   useEffect(() => {
-    if (mapRef.current && (pois.length > 0 || allNodes.length > 0)) {
-      const bounds = L.latLngBounds([
-        ...pois.map((p) => [parseFloat(p.latitud), parseFloat(p.longitud)]),
-        ...allNodes.map((n) => [parseFloat(n.latitud), parseFloat(n.longitud)]),
-      ]);
+    if (mapRef.current && location.state?.editingList && selectedPoisForList.length > 0 && !hasInitialFitBounds) {
+      const bounds = L.latLngBounds(
+        selectedPoisForList.map((p) => [parseFloat(p.latitud), parseFloat(p.longitud)])
+      );
       if (bounds.isValid()) {
         mapRef.current.fitBounds(bounds, { padding: [50, 50] });
+        setHasInitialFitBounds(true);
       }
+    } else if (mapRef.current && userPosition && !hasInitialCentered && !location.state?.editingList) {
+      mapRef.current.flyTo(userPosition, 17, { animate: true, duration: 1.5 });
+      setHasInitialCentered(true);
     }
-  }, [pois, allNodes]);
+  }, [selectedPoisForList, userPosition, hasInitialCentered, hasInitialFitBounds, location.state?.editingList]);
 
   const handleSelectPoi = (poi) => {
     const existingIndex = selectedPoisForList.findIndex(
       (p) => p.id_poi === poi.id_poi,
     );
     if (existingIndex === -1) {
-      // Si no está en el itinerario, lo añadimos (lo "unimos")
+      // Si no está en el itinerario, lo añadimos y AUTO-OPTIMIZAMOS el orden
       const newSelected = [...selectedPoisForList, poi];
-      setSelectedPoisForList(newSelected);
-      setActivePoiIndex(newSelected.length - 1);
+      
+      if (newSelected.length >= 3) {
+        // Auto-optimizar con el algoritmo del vecino más cercano (Nearest Neighbor)
+        const points = [...newSelected];
+        const optimized = [points.shift()]; // Mantener el primero como inicio
+        
+        while (points.length > 0) {
+          const last = optimized[optimized.length - 1];
+          let nearestIdx = 0;
+          let minDist = L.latLng(parseFloat(last.latitud), parseFloat(last.longitud))
+            .distanceTo(L.latLng(parseFloat(points[0].latitud), parseFloat(points[0].longitud)));
+            
+          for (let i = 1; i < points.length; i++) {
+            const d = L.latLng(parseFloat(last.latitud), parseFloat(last.longitud))
+              .distanceTo(L.latLng(parseFloat(points[i].latitud), parseFloat(points[i].longitud)));
+            if (d < minDist) {
+              minDist = d;
+              nearestIdx = i;
+            }
+          }
+          optimized.push(points.splice(nearestIdx, 1)[0]);
+        }
+        setSelectedPoisForList(optimized);
+        setActivePoiIndex(optimized.length - 1);
+      } else {
+        setSelectedPoisForList(newSelected);
+        setActivePoiIndex(newSelected.length - 1);
+      }
     } else {
       // Si ya está, lo quitamos del itinerario para "desunirlo"
       setSelectedPoisForList((prev) =>
@@ -246,7 +276,7 @@ const CreateList = () => {
     // Solo añadimos al "pool" de puntos disponibles en el mapa
     const newPoi = {
       id_poi: tempId,
-      nombre: `POI Nodo ${node.id_nodo}`,
+      nombre: t("createList.defaultNodePoiName", "POI Nodo {{id}}", { id: node.id_nodo }),
       latitud: node.latitud,
       longitud: node.longitud,
       id_categoria: categories[0]?.id_categoria || 1,
@@ -263,7 +293,7 @@ const CreateList = () => {
 
     const newPoi = {
       id_poi: tempId,
-      nombre: `Punto ${pois.length + 1}`,
+      nombre: t("createList.defaultPoiName", "Punto {{number}}", { number: pois.length + 1 }),
       latitud: latlng.lat,
       longitud: latlng.lng,
       id_categoria: categories[0]?.id_categoria || 1,
@@ -278,7 +308,7 @@ const CreateList = () => {
     if (!userPosition) {
       setToast({
         message:
-          "No s'ha pogut detectar la teva ubicació. Activa els permisos de geolocalització.",
+          t("createList.locationError", "No s'ha pogut detectar la teva ubicació. Activa els permisos de geolocalització."),
         type: "warning",
       });
       return;
@@ -287,7 +317,7 @@ const CreateList = () => {
     const tempId = `temp-${Date.now()}`;
     const newPoi = {
       id_poi: tempId,
-      nombre: `Punto en mi ubicación`,
+      nombre: t("createList.defaultLocationPoiName", "Punto en mi ubicación"),
       latitud: userPosition[0],
       longitud: userPosition[1],
       id_categoria: categories[0]?.id_categoria || 1,
@@ -350,19 +380,32 @@ const CreateList = () => {
     }
   };
 
+  const handleLocate = () => {
+    if (userPosition && mapRef.current) {
+      mapRef.current.flyTo(userPosition, 17, { animate: true, duration: 1.2 });
+    } else {
+      navigator.geolocation.getCurrentPosition((pos) => {
+        const p = [pos.coords.latitude, pos.coords.longitude];
+        setUserPosition(p);
+        if (mapRef.current)
+          mapRef.current.flyTo(p, 17, { animate: true, duration: 1.2 });
+      });
+    }
+  };
+
   // Cálculo de ruta en tiempo real para la lista que se está creando
   useEffect(() => {
     const getLiveRoute = async () => {
       if (selectedPoisForList.length >= 2) {
         try {
-          // Append first POI to end to close loop
-          const closedPois = [...selectedPoisForList, selectedPoisForList[0]];
-          const coords = closedPois
+          const coords = selectedPoisForList
             .map((p) => `${p.longitud},${p.latitud}`)
             .join(";");
-          const res = await fetch(
-            `https://router.project-osrm.org/route/v1/foot/${coords}?overview=full&geometries=geojson`,
-          );
+          const url = routeProfile === "foot" 
+            ? `https://routing.openstreetmap.de/routed-foot/route/v1/driving/${coords}?overview=full&geometries=geojson`
+            : `https://router.project-osrm.org/route/v1/driving/${coords}?overview=full&geometries=geojson`;
+          const res = await fetch(url);
+          if (!res.ok) throw new Error(`HTTP ${res.status}`);
           const data = await res.json();
           if (data.code === "Ok") {
             const geom = data.routes[0].geometry.coordinates.map((c) => [
@@ -371,6 +414,14 @@ const CreateList = () => {
             ]);
             setJoinedRoute(geom);
             setTotalDistance(data.routes[0].distance);
+          } else {
+            const fallbackGeom = selectedPoisForList.map((p) => [
+              parseFloat(p.latitud),
+              parseFloat(p.longitud),
+            ]);
+            setJoinedRoute(fallbackGeom);
+            setTotalDistance(0);
+            setToast({ message: "No se pudo calcular la ruta para este medio, uniendo puntos en línea recta.", type: "warning" });
           }
         } catch (e) {
           console.error("Error calculating live route:", e);
@@ -381,7 +432,7 @@ const CreateList = () => {
       }
     };
     getLiveRoute();
-  }, [selectedPoisForList]);
+  }, [selectedPoisForList, routeProfile]);
 
   const handleFocusList = (list) => {
     setFocusedListId(list.id_lista);
@@ -394,19 +445,11 @@ const CreateList = () => {
     }
   };
 
-  const handleLocate = () => {
-    if (!navigator.geolocation) return;
-    navigator.geolocation.getCurrentPosition((pos) => {
-      const p = [pos.coords.latitude, pos.coords.longitude];
-      if (mapRef.current)
-        mapRef.current.flyTo(p, 17, { animate: true, duration: 1.5 });
-    });
-  };
 
   const handleSaveList = async () => {
     if (selectedPoisForList.length < 2) {
       setToast({
-        message: "Selecciona almenys 2 punts per definir una ruta.",
+        message: t("createList.need2Points", "Selecciona almenys 2 punts per definir una ruta."),
         type: "warning",
       });
       return;
@@ -420,21 +463,22 @@ const CreateList = () => {
       return;
     }
 
-    try {
-      let finalPois = [...selectedPoisForList];
+    if (categories.length === 0) {
+      setToast({
+        message:
+          t("createList.noCategoriesError", "Error: No hi ha categories a la base de dades. Contacta a l'administrador."),
+        type: "error",
+      });
+      return;
+    }
 
-      // --- 1. Optimización Automática ---
-      if (finalPois.length >= 3) {
-        // Store pois and show confirm modal instead of window.confirm
-        setPendingSavePois(finalPois);
-        setShowOptimizeConfirm(true);
-        return; // will resume in continueAfterOptimize
-      }
+    try {
+      const finalPois = [...selectedPoisForList];
       await _doSave(finalPois);
     } catch (err) {
       console.error("Error saving/updating list:", err);
       setToast({
-        message: "Error al desar la ruta. Intenta-ho de nou.",
+        message: t("createList.saveError", "Error al desar la ruta. Intenta-ho de nou."),
         type: "error",
       });
     }
@@ -442,6 +486,8 @@ const CreateList = () => {
 
   // Separated save logic so it can be called after the optimize confirm modal
   const _doSave = async (finalPois) => {
+    if (isProcessingList) return;
+    setIsProcessingList(true);
     try {
       // --- 2. Creación Real de POIs Temporales ---
       const poiIdsFinales = [];
@@ -451,9 +497,11 @@ const CreateList = () => {
             nombre: poi.nombre,
             latitud: poi.latitud,
             longitud: poi.longitud,
-            id_categoria: poi.id_categoria,
-            es_accesible: poi.es_accesible,
-            id_nodo_acceso: poi.id_nodo_acceso,
+            id_categoria: poi.id_categoria || 1,
+            es_accesible: poi.es_accesible ?? 1,
+            // User-created points have no nav node — pass null to avoid FK violation
+            id_nodo_acceso: null,
+            visibilidad: "public",
           });
           if (resPoi.success) {
             poiIdsFinales.push(resPoi.data.id_poi);
@@ -469,7 +517,7 @@ const CreateList = () => {
       const user = JSON.parse(localStorage.getItem("usuario"));
       if (!user) {
         setToast({
-          message: "Has d'iniciar sessió per crear llistes.",
+          message: t("createList.loginRequired", "Has d'iniciar sessió per crear llistes."),
           type: "error",
         });
         navigate("/login");
@@ -507,8 +555,8 @@ const CreateList = () => {
 
         setToast({
           message: editingListId
-            ? " Ruta actualitzada correctament!"
-            : " Ruta creada i guardada!",
+            ? t("createList.updatedSuccess", "Ruta actualitzada correctament!")
+            : t("createList.createdSuccess", "Ruta creada i guardada!"),
           type: "success",
         });
 
@@ -526,11 +574,13 @@ const CreateList = () => {
     } catch (err) {
       console.error("Error saving/updating list:", err);
       setToast({
-        message: "Error al desar la ruta. Intenta-ho de nou.",
+        message: t("createList.saveError", "Error al desar la ruta. Intenta-ho de nou."),
         type: "error",
       });
+      setIsProcessingList(false);
     }
   };
+  const focusedList = focusedListId ? otherLists.find(l => l.id_lista === focusedListId) : null;
 
   return (
     <div className="relative h-screen w-full bg-slate-950 text-white font-display overflow-hidden select-none md:pl-20">
@@ -563,7 +613,22 @@ const CreateList = () => {
             userPosition={userPosition}
             currentUser={JSON.parse(localStorage.getItem("usuario") || "null")}
             t={t}
+            routeProfile={routeProfile}
           />
+
+          {/* Location Focus Circle */}
+          {userPosition && (
+            <Circle
+              center={userPosition}
+              radius={20}
+              pathOptions={{
+                fillColor: "#3b82f6",
+                fillOpacity: 0.1,
+                color: "#3b82f6",
+                weight: 1,
+              }}
+            />
+          )}
         </MapContainer>
       </div>
 
@@ -589,6 +654,16 @@ const CreateList = () => {
         >
           <span className="material-symbols-outlined text-2xl">
             my_location
+          </span>
+        </button>
+
+        <button
+          onClick={() => setRouteProfile(prev => prev === "foot" ? "driving" : "foot")}
+          className="w-16 h-16 bg-white text-black rounded-full shadow-xl flex items-center justify-center hover:bg-gray-100 transition-all hover:scale-110 active:scale-95 border border-black/5"
+          title={routeProfile === "foot" ? t("createList.switchToCar", "Cambiar a coche") : t("createList.switchToFoot", "Cambiar a pie")}
+        >
+          <span className="material-symbols-outlined text-2xl">
+            {routeProfile === "foot" ? "directions_walk" : "directions_car"}
           </span>
         </button>
 
@@ -700,7 +775,11 @@ const CreateList = () => {
                     <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                       {/* Lado Izquierdo: Configuración General */}
                       <div className="space-y-4">
-                        {!focusedListId && (
+                        {focusedList?.imagen_url ? (
+                          <div className="relative h-24 w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl overflow-hidden flex flex-col items-center justify-center">
+                            <img src={`${import.meta.env.VITE_API_URL || "http://localhost:3000"}${focusedList.imagen_url}`} className="absolute inset-0 w-full h-full object-cover" alt={focusedList.nombre} />
+                          </div>
+                        ) : !focusedListId ? (
                           <div
                             onClick={() =>
                               document
@@ -741,20 +820,20 @@ const CreateList = () => {
                               }}
                             />
                           </div>
-                        )}
+                        ) : null}
 
                         <div className="space-y-3">
                           <input
                             type="text"
                             placeholder={t("createList.namePlaceholder")}
-                            value={listName}
+                            value={focusedList ? focusedList.nombre : listName}
                             onChange={(e) => setListName(e.target.value)}
                             readOnly={!!focusedListId}
                             className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-black dark:text-white placeholder:text-black/30 dark:placeholder:text-white/30 focus:border-primary/50 outline-none font-display"
                           />
                           <textarea
                             placeholder={t("createList.descPlaceholder")}
-                            value={listDesc}
+                            value={focusedList ? (focusedList.descripcion || "") : listDesc}
                             onChange={(e) => setListDesc(e.target.value)}
                             readOnly={!!focusedListId}
                             className="w-full bg-black/5 dark:bg-white/5 border border-black/10 dark:border-white/10 rounded-xl px-4 py-3 text-sm text-black dark:text-white placeholder:text-black/30 dark:placeholder:text-white/30 focus:border-primary/50 outline-none h-20 resize-none font-display"
@@ -899,17 +978,25 @@ const CreateList = () => {
                                   )}
                             </button>
                           ) : (
-                            <button
-                              onClick={handleSaveList}
-                              disabled={
-                                selectedPoisForList.length < 2 || !listName
-                              }
-                              className={`w-full py-3.5 rounded-xl font-bold text-sm ${editingListId ? "bg-primary text-primary-text" : "bg-black dark:bg-white text-white dark:text-black"} disabled:opacity-20 active:scale-95 transition-all`}
-                            >
-                              {editingListId
-                                ? t("createList.saveChanges", "Guardar cambios")
-                                : t("createList.save")}
-                            </button>
+                            <div className="flex flex-col gap-2 w-full">
+                              {(!listName || selectedPoisForList.length < 2) && (
+                                <p className="text-[10px] text-red-500 font-bold text-center italic">
+                                  {!listName ? t("createList.missingName", "Ponle un nombre a la lista") : t("createList.missingPoints", "Añade al menos 2 puntos al itinerario")}
+                                </p>
+                              )}
+                              <button
+                                onClick={handleSaveList}
+                                disabled={
+                                  selectedPoisForList.length < 2 || !listName || isProcessingList
+                                }
+                                className={`w-full py-3.5 rounded-xl font-bold text-sm ${editingListId ? "bg-primary text-primary-text" : "bg-black dark:bg-white text-white dark:text-black"} ${isProcessingList ? 'opacity-50 cursor-not-allowed' : 'disabled:opacity-20 disabled:cursor-not-allowed active:scale-95 hover:opacity-90'} transition-all flex items-center justify-center gap-2`}
+                              >
+                                {isProcessingList && <span className="material-symbols-outlined animate-spin text-sm">refresh</span>}
+                                {editingListId
+                                  ? t("createList.saveChanges", "Guardar cambios")
+                                  : t("createList.save", "Guardar ruta")}
+                              </button>
+                            </div>
                           )}
                         </div>
                       </div>
@@ -963,90 +1050,6 @@ const CreateList = () => {
                 className="flex-1 py-3 rounded-2xl text-sm font-bold bg-red-500 text-white hover:bg-red-600 transition-all active:scale-95"
               >
                 {t("createList.confirmCloseBtn", "Sí, descartar")}
-              </button>
-            </div>
-          </div>
-        </div>
-      )}
-
-      {/* Optimize Confirm Modal */}
-      {showOptimizeConfirm && (
-        <div className="fixed inset-0 z-[200] flex items-center justify-center p-6">
-          <div
-            className="absolute inset-0 bg-black/60 backdrop-blur-sm"
-            onClick={() => setShowOptimizeConfirm(false)}
-          />
-          <div className="relative bg-white dark:bg-slate-900 rounded-[2rem] p-7 shadow-2xl max-w-sm w-full border border-gray-100 dark:border-white/10 animate-in fade-in zoom-in duration-200">
-            <div className="w-14 h-14 bg-primary/10 rounded-2xl flex items-center justify-center mx-auto mb-4">
-              <span
-                className="material-symbols-outlined text-primary text-3xl"
-                style={{ fontVariationSettings: "'FILL' 1" }}
-              >
-                auto_fix_high
-              </span>
-            </div>
-            <h3 className="text-lg font-black text-center text-slate-800 dark:text-white mb-2">
-              Optimitzar ruta?
-            </h3>
-            <p className="text-xs text-slate-500 dark:text-slate-400 text-center mb-6 leading-relaxed">
-              Vols que el sistema ordeni els punts automàticament per crear la
-              ruta més curta?
-              <br />
-              <span className="text-slate-400">
-                Si no, es mantindrà el teu ordre manual.
-              </span>
-            </p>
-            <div className="flex gap-3">
-              <button
-                onClick={async () => {
-                  setShowOptimizeConfirm(false);
-                  await _doSave(pendingSavePois);
-                  setPendingSavePois(null);
-                }}
-                className="flex-1 py-3 rounded-2xl text-sm font-bold bg-gray-100 dark:bg-white/10 text-slate-600 dark:text-white hover:bg-gray-200 dark:hover:bg-white/20 transition-all"
-              >
-                Mantenir ordre
-              </button>
-              <button
-                onClick={async () => {
-                  setShowOptimizeConfirm(false);
-                  const points = [...pendingSavePois];
-                  const result = [points.shift()];
-                  while (points.length > 0) {
-                    const last = result[result.length - 1];
-                    let nearestIdx = 0;
-                    let minDist = L.latLng(
-                      parseFloat(last.latitud),
-                      parseFloat(last.longitud),
-                    ).distanceTo(
-                      L.latLng(
-                        parseFloat(points[0].latitud),
-                        parseFloat(points[0].longitud),
-                      ),
-                    );
-                    for (let i = 1; i < points.length; i++) {
-                      const d = L.latLng(
-                        parseFloat(last.latitud),
-                        parseFloat(last.longitud),
-                      ).distanceTo(
-                        L.latLng(
-                          parseFloat(points[i].latitud),
-                          parseFloat(points[i].longitud),
-                        ),
-                      );
-                      if (d < minDist) {
-                        minDist = d;
-                        nearestIdx = i;
-                      }
-                    }
-                    result.push(points.splice(nearestIdx, 1)[0]);
-                  }
-                  setPendingSavePois(null);
-                  await _doSave(result);
-                }}
-                className="flex-[2] py-3 rounded-2xl text-sm font-bold bg-primary text-white shadow-lg shadow-primary/30 hover:scale-[1.02] active:scale-[0.98] transition-all"
-              >
-                Sí, optimitzar 🚀
               </button>
             </div>
           </div>

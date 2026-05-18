@@ -63,8 +63,23 @@
   "collections": {
     "title": "Routes",
     "search": "Search something...",
-    "nearby": "Nearby Destination",
-    "viewAll": "View All"
+    "nearby": "Nearby Destinations",
+    "viewAll": "View All",
+    "errorLoading": "Could not load your collections.",
+    "errorConnection": "Server connection error.",
+    "noSessionTitle": "Log in",
+    "noSessionDesc": "You need to log in to view your personal collections.",
+    "emptyTitle": "No saved routes",
+    "noSearchMatch": "No routes match your search.",
+    "noLists": "You haven't created any personal routes yet.",
+    "editTitle": "Edit Route",
+    "visibilityPublic": "Public",
+    "visibilityPrivate": "Private",
+    "imageLabel": "Cover Image",
+    "uploadImage": "Choose from gallery",
+    "filterAll": "All",
+    "filterPublic": "Public",
+    "filterPrivate": "Private"
   },
   "settings": {
     "title": "Settings",
@@ -87,7 +102,16 @@
     "extensionTitle": "Browser Extension",
     "chromeExtension": "WeMap Premium Extension",
     "extensionDesc": "Access your maps, community, and profile instantly from any tab.",
-    "downloadExtension": "Install Extension"
+    "downloadExtension": "Install Extension",
+    "installStepsTitle": "Steps to install:",
+    "installStep1": "Download and extract the ZIP file.",
+    "installStep2": "Go to",
+    "installStep3": "Enable",
+    "installStep3Bold": "\"Developer mode\"",
+    "installStep3Extra": "(top right).",
+    "installStep4": "Click",
+    "installStep4Bold": "\"Load unpacked\"",
+    "installStep4Extra": "and select the folder."
   },
   "profile": {
     "my": "My",
@@ -152,6 +176,18 @@
     "confirmCloseTitle": "Discard route?",
     "confirmCloseBtn": "Yes, discard",
     "closePanel": "Close panel",
+    "defaultNodePoiName": "POI Node {{id}}",
+    "defaultPoiName": "Point {{number}}",
+    "locationError": "Could not detect your location. Please enable geolocation permissions.",
+    "defaultLocationPoiName": "Point at my location",
+    "need2Points": "Select at least 2 points to define a route.",
+    "noCategoriesError": "Error: There are no categories in the database. Contact the administrator.",
+    "saveError": "Error saving route. Please try again.",
+    "loginRequired": "You must log in to create lists.",
+    "updatedSuccess": "Route updated successfully!",
+    "createdSuccess": "Route created and saved!",
+    "missingName": "Give the list a name",
+    "missingPoints": "Add at least 2 points to the itinerary",
     "visibility": {
       "public": "Public",
       "private": "Private",
@@ -236,7 +272,8 @@
     "newPost": "New Post",
     "publish": "Publish",
     "follow": "Follow",
-    "following": "Following"
+    "following": "Following",
+    "searchPlaceholder": "Search friends or lists..."
   },
   "profile": {
     "my": "My",
@@ -254,6 +291,8 @@
     "nowFollowing": "Now following",
     "noFollowers": "No followers yet",
     "noFollowing": "Not following anyone yet",
+    "user_not_found": "User not found",
+    "back_to_community": "Back to Community",
     "qr": {
       "myTitle": "My QR Code",
       "myDesc": "Let another user scan this QR to add you as a friend",
@@ -269,19 +308,69 @@
       "error": "Scan error",
       "errorSelf": "You cannot follow yourself",
       "errorFollow": "Could not follow the user"
-    },
-    "home": {
-      "impact": "Your impact",
-      "weeklyActivity": "Weekly activity",
-      "totalKm": "Total KM",
-      "discovered": "Places discovered",
-      "completedRoutes": "Routes completed",
-      "groups": "From your friends",
-      "dining": "Bars",
-      "experience": "Second hand",
-      "orderFood": "Cafes",
-      "fanZone": "Culture",
-      "trackConditions": "Your impact"
     }
+  },
+  "home": {
+    "impact": "Your impact",
+    "weeklyActivity": "Weekly activity",
+    "totalKm": "Total KM",
+    "discovered": "Places discovered",
+    "completedRoutes": "Routes completed",
+    "groups": "From your friends",
+    "dining": "Bars",
+    "experience": "Second hand",
+    "orderFood": "Cafes",
+    "fanZone": "Culture",
+    "trackConditions": "Your impact",
+    "no_own_routes": "You don't have your own routes yet",
+    "no_recent_routes": "No recent public routes",
+    "barcelona": "Barcelona",
+    "searchPlaceholder": "Where would you like to go?"
+  },
+  "jarvis": {
+    "how_create_route": "How do I create a route?",
+    "how_share_friends": "How do I share with friends?",
+    "vintage_shops_route": "Vintage shops route",
+    "what_can_i_do": "What can I do here?",
+    "guide_subtitle": "Your wemap guide",
+    "clear_chat": "Clear chat",
+    "hello_im_mapis": "Hello! I'm Mapis",
+    "greeting_description": "I'm here to help you create and share the best routes with your friends.",
+    "ask_placeholder": "Ask about wemap...",
+    "powered_by": "Powered by Mapis AI",
+    "welcome_bubble": "Hello! I'm Mapis. Do you want to create an amazing route and share it with your friends? Ask me how!"
+  },
+  "search_panel": {
+    "searching": "Searching the map...",
+    "no_results": "We didn't find anything",
+    "try_other_keywords": "Try other keywords",
+    "people": "People",
+    "default_bio": "WeMap Explorer",
+    "routes_collections": "Routes & Collections",
+    "pois": "Points of Interest",
+    "explore_ai": "Explore with WeMap AI"
+  },
+  "scanner": {
+    "alerts": {
+      "scanned_node": "You have scanned Node {{node}}. Taking you to navigation..."
+    },
+    "errors": {
+      "invalid_format": "The QR code is not a valid circuit node."
+    },
+    "title": "Circuit Scanner",
+    "instructions": "Scan the QR code located at your current position to start guiding you."
+  },
+  "map": {
+    "myRoutes": "My routes",
+    "no_own_routes_desc": "You haven't created any routes yet.",
+    "discover_title": "Discover",
+    "goToRoute": "Go to route",
+    "navigating": "Navigating route",
+    "saveToList": "Add to my lists",
+    "center": "Center",
+    "myLists": "My lists",
+    "noLists": "You haven't created any lists yet.",
+    "discover": "Routes to discover",
+    "noDiscover": "No public lists yet."
   }
 }

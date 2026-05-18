@@ -1,10 +1,12 @@
 import { useState, useEffect } from 'react';
+import { useTranslation } from 'react-i18next';
 import './WeatherCard.css';
 
 //doc temporal para ver si la api funcionaba
 //dejare marcadas las partes donde se recogen los datos de la api y como. 
 // air, track, rain, wind 
 const WeatherCard = () => {
+    const { t } = useTranslation();
     const [weatherData, setWeatherData] = useState(null);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState(null);
@@ -32,9 +34,9 @@ const WeatherCard = () => {
     }, []);
 
     //ifs para gestionar el estado de carga, se pueden ignorar
-    if (loading) return <div className="weather-card loading">Cargando...</div>;
+    if (loading) return <div className="weather-card loading">{t("common.loading", "Cargando...")}</div>;
     if (error) return <div className="weather-card error">Error: {error}</div>;
-    if (!weatherData || !weatherData.hourly) return <div className="weather-card empty">No hay datos disponibles</div>;
+    if (!weatherData || !weatherData.hourly) return <div className="weather-card empty">{t("weather.no_data", "No hay datos disponibles")}</div>;
 
     // Explicación: Este código busca en la lista de horas que nos da la API cual corresponde a la hora actual.
     // 1. Coge la hora actual.
@@ -65,51 +67,51 @@ const WeatherCard = () => {
 
     // chorrada para que segun la temperatura se vea un emoji u otro se puede ignorar 
     let weatherIcon = '☀️';
-    let weatherStatus = 'Soleado';
+    let weatherStatus = t("weather.sunny", "Soleado");
 
     if (precipProb > 20) {
         weatherIcon = '⛅';
-        weatherStatus = 'Parcialmente nublado';
+        weatherStatus = t("weather.partly_cloudy", "Parcialmente nublado");
     }
     if (precipProb > 50) {
         weatherIcon = '☁️';
-        weatherStatus = 'Nublado';
+        weatherStatus = t("weather.cloudy", "Nublado");
     }
     // if (precipProb > 70 || precip > 0.1) {
     if (precipProb > 70) {
         weatherIcon = '🌧️';
-        weatherStatus = 'Lluvia';
+        weatherStatus = t("weather.rainy", "Lluvia");
     }
     // if (precipProb > 90 || precip > 2.0) {
     if (precipProb > 90) {
         weatherIcon = '⛈️';
-        weatherStatus = 'Tormenta';
+        weatherStatus = t("weather.stormy", "Tormenta");
     }
 
     return (
         <div className="weather-card">
             <div className="weather-header">
-                <h3>WEMAP WEATHER</h3>
+                <h3>{t("weather.title", "WEMAP WEATHER")}</h3>
             </div>
 
             <div className="weather-grid">
                 <div className="weather-item">
-                    <span className="item-label">AIR</span>
+                    <span className="item-label">{t("home.air", "AIR")}</span>
                     <span className="item-value">{currentTemp}°C</span>
                 </div>
 
                 <div className="weather-item">
-                    <span className="item-label">TRACK</span>
+                    <span className="item-label">{t("home.track", "TRACK")}</span>
                     <span className="item-value">{soilTemp}°C</span>
                 </div>
 
                 <div className="weather-item">
-                    <span className="item-label">RAIN</span>
+                    <span className="item-label">{t("home.rain", "RAIN")}</span>
                     <span className="item-value">{precipProb}%</span>
                 </div>
 
                 <div className="weather-item">
-                    <span className="item-label">WIND</span>
+                    <span className="item-label">{t("home.wind", "WIND")}</span>
                     <span className="item-value">{windSpeed}km/h</span>
                 </div>
             </div>

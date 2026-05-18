@@ -188,3 +188,10 @@ html.dark .modern-scrollbar::-webkit-scrollbar-thumb {
     @apply px-20;
   }
 }
+
+/* Desktop top padding to push page content below the absolute-positioned Header */
+@media (min-width: 768px) {
+  .page-top-offset {
+    padding-top: 80px;
+  }
+}

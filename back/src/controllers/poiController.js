@@ -52,10 +52,16 @@ const createPoiSimple = async (req, res) => {
         // Avisar a todos los clientes de que el mapa ha cambiado usando el modulo oficial de la radio
         emitirMensaje('mapa_actualizado', { type: 'create' });
     } catch (error) {
+        console.error('[createPoiSimple] Error detallado:', {
+            message: error.message,
+            code: error.code,
+            sqlMessage: error.sqlMessage,
+            sql: error.sql,
+        });
         res.status(500).json({
             success: false,
-            message: error.message,
-            error_code: 'ERROR_INTERNO'
+            message: error.sqlMessage || error.message,
+            error_code: error.code || 'ERROR_INTERNO'
         });
     }
 };
@@ -69,6 +75,33 @@ const getPois = async (req, res) => {
             success: true,
             message: 'Lista de POIs recuperada',
             data: pois
+        });
+    } catch (error) {
+        res.status(500).json({
+            success: false,
+            message: error.message,
+            error_code: 'ERROR_INTERNO'
+        });
+    }
+};
+
+const getPoiById = async (req, res) => {
+    try {
+        const { id } = req.params;
+        const poi = await poiModel.getById(id);
+        
+        if (!poi) {
+            return res.status(404).json({
+                success: false,
+                message: 'POI no encontrado',
+                error_code: 'NOT_FOUND'
+            });
+        }
+        
+        res.json({
+            success: true,
+            message: 'POI recuperado',
+            data: poi
         });
     } catch (error) {
         res.status(500).json({
@@ -247,5 +280,6 @@ export default {
     deletePoi,
     getPoisCercanos,
     uploadPoiImage,
-    updatePoi
+    updatePoi,
+    getPoiById
 };

@@ -260,13 +260,13 @@ const Settings = () => {
                 </a>
                 <div className="mt-4 p-3 bg-slate-50 dark:bg-white/5 rounded-xl text-left w-full">
                   <p className="text-[10px] font-bold text-slate-500 dark:text-slate-400 uppercase mb-1 flex items-center gap-1">
-                    <i className="fa-solid fa-circle-info"></i> Pasos para instalar:
+                    <i className="fa-solid fa-circle-info"></i> {t("settings.installStepsTitle", "Pasos para instalar:")}
                   </p>
                   <ol className="text-[10px] text-slate-400 space-y-1 list-decimal ml-3">
-                    <li>Descarga y descomprime el archivo ZIP.</li>
-                    <li>Ve a <code className="bg-slate-200 dark:bg-slate-800 px-1 rounded">chrome://extensions</code></li>
-                    <li>Activa el <b>"Modo desarrollador"</b> (arriba a la derecha).</li>
-                    <li>Haz clic en <b>"Cargar descomprimida"</b> y selecciona la carpeta.</li>
+                    <li>{t("settings.installStep1", "Descarga y descomprime el archivo ZIP.")}</li>
+                    <li>{t("settings.installStep2", "Ve a")} <code className="bg-slate-200 dark:bg-slate-800 px-1 rounded">chrome://extensions</code></li>
+                    <li>{t("settings.installStep3", "Activa el")} <b>{t("settings.installStep3Bold", "\"Modo desarrollador\"")}</b> {t("settings.installStep3Extra", "(arriba a la derecha).")}</li>
+                    <li>{t("settings.installStep4", "Haz clic en")} <b>{t("settings.installStep4Bold", "\"Cargar descomprimida\"")}</b> {t("settings.installStep4Extra", "y selecciona la carpeta.")}</li>
                   </ol>
                 </div>
               </div>

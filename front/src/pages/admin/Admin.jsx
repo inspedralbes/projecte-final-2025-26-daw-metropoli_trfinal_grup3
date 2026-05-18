@@ -1,4 +1,5 @@
 import { useState, useEffect } from "react";
+import { useTranslation } from "react-i18next";
 import { getPois, createPoi, deletePoi, getCategorias, createCategoria, getTramos, createTramosBulk, getNodos, createPath, deleteNode, deleteTramo, getTramosByNode, uploadPoiImage } from "../../services/communicationManager";
 import {
   MapContainer,
@@ -76,6 +77,7 @@ const LocationMarker = ({ setPosition, position, isPathMode, onMapClick }) => {
 };
 
 const Admin = () => {
+  const { t } = useTranslation();
   // Map State
   const [selectedPosition, setSelectedPosition] = useState(null);
   const [pointName, setPointName] = useState("");
@@ -168,15 +170,15 @@ const Admin = () => {
   // Funció per guardar un punt al mapa
   const handleSavePoint = async () => {
     if (!selectedPosition) {
-      alert("Haz clic en el mapa para seleccionar una ubicación.");
+      alert(t("admin.alerts.select_location", "Haz clic en el mapa para seleccionar una ubicación."));
       return;
     }
     if (!pointName) {
-      alert("Por favor, introduce un nombre para el punto.");
+      alert(t("admin.alerts.enter_name", "Por favor, introduce un nombre para el punto."));
       return;
     }
     if (!pointType) {
-      alert("Por favor, selecciona una categoría.");
+      alert(t("admin.alerts.select_category", "Por favor, selecciona una categoría."));
       return;
     }
 
@@ -218,12 +220,12 @@ const Admin = () => {
 
     } catch (err) {
       console.error('Error saving POI:', err);
-      alert('Error al guardar el punto. Comprueba la conexión o consola.');
+      alert(t("admin.alerts.save_error", "Error al guardar el punto. Comprueba la conexión o consola."));
     }
   };
 
   const handleDeletePoint = (id) => {
-    if (window.confirm("¿Seguro que quieres borrar este punto?")) {
+    if (window.confirm(t("admin.alerts.confirm_delete_poi", "¿Seguro que quieres borrar este punto?"))) {
       deletePoi(id)
         .then(() => fetchPois())
         .catch(err => console.error("Error deleting POI:", err));
@@ -266,7 +268,7 @@ const Admin = () => {
 
     if (currentRouteNodes.length >= 1 && lastNodeId !== nodeId) {
       // Preguntamos al usuario fuera del setter de estado
-      const isDobleVia = window.confirm("¿Tramo de DOBLE VÍA?");
+      const isDobleVia = window.confirm(t("admin.alerts.confirm_double_way", "¿Tramo de DOBLE VÍA?"));
 
       setPendingTramos(ts => [...ts, {
         id_nodo_origen: lastNodeId,
@@ -308,11 +310,11 @@ const Admin = () => {
   };
 
   const handleDeleteNode = async (nodeId) => {
-    if (!window.confirm("¿Estás seguro de que deseas eliminar este nodo? Se eliminarán todos los tramos conectados a él.")) return;
+    if (!window.confirm(t("admin.alerts.confirm_delete_node", "¿Estás seguro de que deseas eliminar este nodo? Se eliminarán todos los tramos conectados a él."))) return;
     try {
       const res = await deleteNode(nodeId);
       if (res.success) {
-        alert("Nodo eliminado");
+        alert(t("admin.alerts.node_deleted", "Nodo eliminado"));
         fetchNetworkData();
       }
     } catch (err) {
@@ -321,7 +323,7 @@ const Admin = () => {
   };
 
   const handleDeleteTramo = async (tramoId, nodeId) => {
-    if (!window.confirm("¿Eliminar este tramo?")) return;
+    if (!window.confirm(t("admin.alerts.confirm_delete_tramo", "¿Eliminar este tramo?"))) return;
     try {
       const res = await deleteTramo(tramoId);
       if (res.success) {
@@ -339,7 +341,7 @@ const Admin = () => {
     try {
       const res = await createTramosBulk(pendingTramos);
       if (res.success) {
-        alert(`Se han guardado ${res.count} tramos.`);
+        alert(t("admin.alerts.tramos_saved", "Se han guardado {{count}} tramos.", { count: res.count }));
         setPendingTramos([]);
         setCurrentRouteNodes([]);
         fetchNetworkData(); // Recargar los tramos consolidados
@@ -348,7 +350,7 @@ const Admin = () => {
       }
     } catch (err) {
       console.error("Error saving route:", err);
-      alert("Error al guardar la ruta.");
+      alert(t("admin.alerts.route_save_error", "Error al guardar la ruta."));
     }
   };
 
@@ -358,23 +360,23 @@ const Admin = () => {
 
   const handleSavePath = async () => {
     if (currentPathCoords.length < 2) {
-      alert("Debes dibujar al menos 2 puntos para crear un camino.");
+      alert(t("admin.alerts.min_points_path", "Debes dibujar al menos 2 puntos para crear un camino."));
       return;
     }
 
-    const isBidirectional = window.confirm("¿Este camino es de DOBLE VÍA?\n\nPulsa 'Aceptar' para doble vía (A<->B) o 'Cancelar' para UNA SOLA VÍA (A->B).");
+    const isBidirectional = window.confirm(t("admin.alerts.confirm_double_way_path", "¿Este camino es de DOBLE VÍA?\n\nPulsa 'Aceptar' para doble vía (A<->B) o 'Cancelar' para UNA SOLA VÍA (A->B)."));
 
     try {
       const res = await createPath(currentPathCoords, isBidirectional);
       if (res.success) {
-        alert(`Camino guardado con ${res.count} segmentos.`);
+        alert(t("admin.alerts.path_saved", "Camino guardado con {{count}} segmentos.", { count: res.count }));
         setCurrentPathCoords([]);
         setIsPathDrawMode(false);
         fetchNetworkData();
       }
     } catch (err) {
       console.error("Error saving path:", err);
-      alert("Error al guardar el camino.");
+      alert(t("admin.alerts.path_save_error", "Error al guardar el camino."));
     }
   };
 
@@ -417,14 +419,14 @@ const Admin = () => {
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 ${activeTab === 'map' ? 'bg-white dark:bg-slate-800 text-primary shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
           >
             <span className="material-symbols-outlined text-lg">map</span>
-            Mapa
+            {t("admin.tabs.map", "Mapa")}
           </button>
           <button
             onClick={() => setActiveTab('qrs')}
             className={`flex-1 py-3 px-4 rounded-xl text-sm font-bold transition-all duration-300 flex items-center justify-center gap-2 ${activeTab === 'qrs' ? 'bg-white dark:bg-slate-800 text-primary shadow-sm ring-1 ring-slate-900/5 dark:ring-white/10' : 'text-slate-500 hover:text-slate-700 dark:hover:text-slate-300'}`}
           >
             <span className="material-symbols-outlined text-lg">qr_code_2</span>
-            Códigos QR
+            {t("admin.tabs.qrs", "Códigos QR")}
           </button>
         </div>
 
@@ -434,7 +436,7 @@ const Admin = () => {
             <div className="animate-fade-in max-w-2xl mx-auto">
               <div className="flex justify-between items-center mb-3">
                 <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
-                  Map Management
+                  {t("admin.map_management", "Map Management")}
                 </h3>
 
                 {/* Botones de Modo Dibujo */}
@@ -449,7 +451,7 @@ const Admin = () => {
                     <span className="material-symbols-outlined text-[16px]">
                       {isDrawMode ? 'close' : 'polyline'}
                     </span>
-                    {isDrawMode ? 'Salir Modo Red' : 'Modo Red (Dibujar/Conectar)'}
+                    {isDrawMode ? t("admin.exit_network_mode", "Salir Modo Red") : t("admin.enter_network_mode", "Modo Red (Dibujar/Conectar)")}
                   </button>
 
                   {isDrawMode && (currentPathCoords.length > 0 || pendingTramos.length > 0) && (
@@ -459,7 +461,7 @@ const Admin = () => {
                         className="px-3 py-1.5 rounded-lg text-xs font-bold bg-slate-100 text-slate-600 hover:bg-slate-200 transition-colors flex items-center gap-1 border border-slate-200"
                       >
                         <span className="material-symbols-outlined text-[16px]">delete</span>
-                        Limpiar
+                        {t("common.clear", "Limpiar")}
                       </button>
                       {(currentPathCoords.length >= 2 || pendingTramos.length > 0) && (
                         <button
@@ -467,7 +469,7 @@ const Admin = () => {
                           className="px-3 py-1.5 rounded-lg text-xs font-bold bg-primary text-white hover:bg-primary/90 transition-colors flex items-center gap-1 shadow-sm"
                         >
                           <span className="material-symbols-outlined text-[16px]">save</span>
-                          Guardar Red
+                          {t("admin.save_network", "Guardar Red")}
                         </button>
                       )}
                     </>
@@ -478,7 +480,7 @@ const Admin = () => {
               {isDrawMode && (
                 <div className="bg-primary/10 border border-primary/20 text-primary text-xs px-3 py-2 rounded-xl mb-3 flex items-start gap-2">
                   <span className="material-symbols-outlined text-primary text-sm mt-0.5">info</span>
-                  <p><strong>Modo Red:</strong> Pincha en el asfalto para crear caminos nuevos o pulsa en los nodos/POIs para conectarlos entre sí.</p>
+                  <p><strong>{t("admin.network_mode_label", "Modo Red")}</strong>: {t("admin.network_mode_desc", "Pincha en el asfalto para crear caminos nuevos o pulsa en los nodos/POIs para conectarlos entre sí.")}</p>
                 </div>
               )}
 
@@ -502,37 +504,37 @@ const Admin = () => {
 
                   {/* Render Existing Tramos (Saved) */}
                   {existingTramos.map(tramo => {
-                    const origen = allNodes.find(n => n.id_nodo === tramo.id_nodo_origen);
-                    const destino = allNodes.find(n => n.id_nodo === tramo.id_nodo_destino);
-                    if (origen && destino) {
-                      return (
-                        <Polyline
-                          key={`tramo-${tramo.id_tramo}`}
-                          positions={[[origen.latitud, origen.longitud], [destino.latitud, destino.longitud]]}
-                          color="#64748b" // Slate 500
-                          weight={3}
-                          opacity={0.6}
-                        />
-                      )
-                    }
-                    return null;
+                     const origen = allNodes.find(n => n.id_nodo === tramo.id_nodo_origen);
+                     const destino = allNodes.find(n => n.id_nodo === tramo.id_nodo_destino);
+                     if (origen && destino) {
+                       return (
+                         <Polyline
+                           key={`tramo-${tramo.id_tramo}`}
+                           positions={[[origen.latitud, origen.longitud], [destino.latitud, destino.longitud]]}
+                           color="#64748b" // Slate 500
+                           weight={3}
+                           opacity={0.6}
+                         />
+                       )
+                     }
+                     return null;
                   })}
 
                   {/* Render Pending Tramos (Drawing Mode) */}
                   {pendingTramos.map((tramo, idx) => {
-                    const origen = allNodes.find(n => n.id_nodo === tramo.id_nodo_origen);
-                    const destino = allNodes.find(n => n.id_nodo === tramo.id_nodo_destino);
-                    if (origen && destino) {
-                      return (
-                        <Polyline
-                          key={`pending-${idx}`}
-                          positions={[[origen.latitud, origen.longitud], [destino.latitud, destino.longitud]]}
-                          color="#f59e0b" // Amber 500
-                          weight={4}
-                        />
-                      )
-                    }
-                    return null;
+                     const origen = allNodes.find(n => n.id_nodo === tramo.id_nodo_origen);
+                     const destino = allNodes.find(n => n.id_nodo === tramo.id_nodo_destino);
+                     if (origen && destino) {
+                       return (
+                         <Polyline
+                           key={`pending-${idx}`}
+                           positions={[[origen.latitud, origen.longitud], [destino.latitud, destino.longitud]]}
+                           color="#f59e0b" // Amber 500
+                           weight={4}
+                         />
+                       )
+                     }
+                     return null;
                   })}
 
                   {/* Render Current Path being drawn */}
@@ -581,7 +583,7 @@ const Admin = () => {
                               <h4 className="font-bold border-b mb-2">{point.nombre}</h4>
 
                               <div className="mb-3">
-                                <p className="text-[10px] font-bold uppercase text-slate-400 mb-1">Tramos Conectados</p>
+                                <p className="text-[10px] font-bold uppercase text-slate-400 mb-1">{t("admin.connected_tramos", "Tramos Conectados")}</p>
                                 {nodeTramos.length > 0 ? (
                                   <ul className="space-y-1 max-h-24 overflow-y-auto">
                                     {nodeTramos.map(t => (
@@ -597,7 +599,7 @@ const Admin = () => {
                                     ))}
                                   </ul>
                                 ) : (
-                                  <p className="text-[10px] italic text-slate-400">Sin tramos</p>
+                                  <p className="text-[10px] italic text-slate-400">{t("admin.no_tramos", "Sin tramos")}</p>
                                 )}
                               </div>
 
@@ -605,7 +607,7 @@ const Admin = () => {
                                 onClick={() => handleDeletePoint(point.id_poi)}
                                 className="text-xs text-red-500 font-bold hover:underline"
                               >
-                                Eliminar Punto
+                                {t("admin.delete_point", "Eliminar Punto")}
                               </button>
                             </div>
                           </Popup>
@@ -639,15 +641,15 @@ const Admin = () => {
                           <Popup eventHandlers={{ add: () => handleFetchNodeTramos(node.id_nodo) }}>
                             <div className="p-1 w-48 space-y-2">
                               <h4 className="font-bold text-xs text-slate-400 italic">Nodo #{node.id_nodo}</h4>
-                              <p className="text-xs text-slate-500 italic">Navigation Node</p>
+                              <p className="text-xs text-slate-500 italic">{t("admin.navigation_node", "Navigation Node")}</p>
 
                               <div className="border-t pt-2">
-                                <p className="text-[10px] font-bold uppercase text-slate-400 mb-1">Tramos Conectados</p>
+                                <p className="text-[10px] font-bold uppercase text-slate-400 mb-1">{t("admin.connected_tramos", "Tramos Conectados")}</p>
                                 {nodeTramos.length > 0 ? (
                                   <ul className="space-y-1 max-h-24 overflow-y-auto">
                                     {nodeTramos.map(t => (
                                       <li key={t.id_tramo} className="text-[10px] flex justify-between items-center bg-slate-50 p-1 rounded">
-                                        <span>#{t.id_tramo} ({t.id_nodo_origen} \u2192 {t.id_nodo_destino})</span>
+                                        <span>#{t.id_tramo} ({t.id_nodo_origen} &rarr; {t.id_nodo_destino})</span>
                                         <button
                                           onClick={() => handleDeleteTramo(t.id_tramo, node.id_nodo)}
                                           className="text-red-500 hover:text-red-700 font-bold"
@@ -658,7 +660,7 @@ const Admin = () => {
                                     ))}
                                   </ul>
                                 ) : (
-                                  <p className="text-[10px] italic text-slate-400">Sin tramos</p>
+                                  <p className="text-[10px] italic text-slate-400">{t("admin.no_tramos", "Sin tramos")}</p>
                                 )}
                               </div>
 
@@ -667,13 +669,13 @@ const Admin = () => {
                                   onClick={() => handleConvertNodeToPoi(node)}
                                   className="bg-primary text-white text-[9px] font-bold py-1 px-2 rounded hover:bg-primary/90 transition-colors"
                                 >
-                                  Pasar a POI
+                                  {t("admin.convert_to_poi", "Pasar a POI")}
                                 </button>
                                 <button
                                   onClick={() => handleDeleteNode(node.id_nodo)}
                                   className="bg-red-500 text-white text-[9px] font-bold py-1 px-2 rounded hover:bg-red-600 transition-colors"
                                 >
-                                  Borrar Nodo
+                                  {t("admin.delete_node", "Borrar Nodo")}
                                 </button>
                               </div>
                             </div>
@@ -688,7 +690,7 @@ const Admin = () => {
               <div className="bg-white dark:bg-[#12080a] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 space-y-4 poi-form">
                 <div>
                   <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
-                    Point Name
+                    {t("admin.point_name", "Point Name")}
                   </label>
                   <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
                     <span className="material-symbols-outlined text-slate-400">
@@ -699,14 +701,14 @@ const Admin = () => {
                       value={pointName}
                       onChange={(e) => setPointName(e.target.value)}
                       className="bg-transparent border-none outline-none w-full text-slate-700 dark:text-slate-200 text-sm font-medium placeholder-slate-400"
-                      placeholder="e.g. Main Grandstand"
+                      placeholder={t("admin.point_name_placeholder", "e.g. Main Grandstand")}
                     />
                   </div>
                 </div>
 
                 <div>
                   <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
-                    Point Type
+                    {t("admin.point_type", "Point Type")}
                   </label>
                   <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
                     <span className="material-symbols-outlined text-slate-400">
@@ -731,9 +733,9 @@ const Admin = () => {
                   <div className="flex items-center gap-3">
                     <span className="material-symbols-outlined text-slate-400">accessible</span>
                     <div>
-                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200">Zona accesible</p>
+                      <p className="text-sm font-medium text-slate-700 dark:text-slate-200">{t("admin.accessible_zone", "Zona accesible")}</p>
                       <p className="text-xs text-slate-400">
-                        {poiEsAccesible ? 'Se mostrará el icono ♿ en la app' : 'Sin indicador de accesibilidad'}
+                        {poiEsAccesible ? t("admin.accessible_yes", "Se mostrará el icono ♿ en la app") : t("admin.accessible_no", "Sin indicador de accesibilidad")}
                       </p>
                     </div>
                   </div>
@@ -753,7 +755,7 @@ const Admin = () => {
                 {/* Campo para seleccionar la imagen del POI */}
                 <div>
                   <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
-                    Imagen del punto (opcional)
+                    {t("admin.point_image", "Imagen del punto (opcional)")}
                   </label>
 
                   {/* Preview de la imagen si ya se seleccionó una */}
@@ -780,7 +782,7 @@ const Admin = () => {
                   <label className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700 cursor-pointer hover:bg-slate-100 dark:hover:bg-slate-700 transition-colors">
                     <span className="material-symbols-outlined text-slate-400">add_photo_alternate</span>
                     <span className="text-sm font-medium text-slate-500 dark:text-slate-400">
-                      {poiImageFile ? poiImageFile.name : 'Seleccionar imagen...'}
+                      {poiImageFile ? poiImageFile.name : t("admin.select_image", "Seleccionar imagen...")}
                     </span>
                     <input
                       type="file"
@@ -808,7 +810,7 @@ const Admin = () => {
                     <span className="material-symbols-outlined">
                       add_location_alt
                     </span>
-                    {selectedPosition ? "Save Point" : "Select Location on Map"}
+                    {selectedPosition ? t("admin.save_point", "Save Point") : t("admin.select_location_map", "Select Location on Map")}
                   </button>
                 </div>
               </div>
@@ -816,12 +818,12 @@ const Admin = () => {
               {/* Create Category Panel */}
               <div className="mt-6 bg-white dark:bg-[#12080a] rounded-3xl border border-slate-100 dark:border-slate-800 shadow-sm p-5 space-y-4">
                 <h3 className="text-sm font-bold text-slate-400 uppercase tracking-wider mb-2 flex items-center gap-2">
-                  Add New Point Type / Category
+                  {t("admin.add_category", "Add New Point Type / Category")}
                 </h3>
 
                 <div>
                   <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
-                    Category Name
+                    {t("admin.category_name", "Category Name")}
                   </label>
                   <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-3 border border-slate-100 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
                     <span className="material-symbols-outlined text-slate-400">new_label</span>
@@ -830,7 +832,7 @@ const Admin = () => {
                       value={newCatName}
                       onChange={(e) => setNewCatName(e.target.value)}
                       className="bg-transparent border-none outline-none w-full text-slate-700 dark:text-slate-200 text-sm font-medium placeholder-slate-400"
-                      placeholder="e.g. VIP Lounge"
+                      placeholder={t("admin.category_placeholder", "e.g. VIP Lounge")}
                     />
                   </div>
                 </div>
@@ -838,7 +840,7 @@ const Admin = () => {
                 <div className="grid grid-cols-2 gap-4">
                   <div className="col-span-2 md:col-span-1">
                     <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
-                      Choose Icon
+                      {t("admin.choose_icon", "Choose Icon")}
                     </label>
                     <div className="flex flex-wrap gap-2">
                       <button
@@ -886,7 +888,7 @@ const Admin = () => {
                   </div>
                   <div>
                     <label className="block text-xs font-bold uppercase text-slate-400 mb-2 ml-1">
-                      Color Hex
+                      {t("admin.color_hex", "Color Hex")}
                     </label>
                     <div className="flex items-center gap-3 bg-slate-50 dark:bg-slate-800 rounded-xl px-4 py-1.5 border border-slate-100 dark:border-slate-700 focus-within:ring-2 focus-within:ring-primary/20 transition-all">
                       <input
@@ -912,10 +914,10 @@ const Admin = () => {
                     className="w-full bg-slate-800 dark:bg-slate-700 text-white font-bold py-3.5 rounded-xl shadow-lg active:scale-95 transition-transform flex items-center justify-center gap-2"
                   >
                     <span className="material-symbols-outlined">add_circle</span>
-                    Create Category
+                    {t("admin.create_category", "Create Category")}
                   </button>
                 </div>
-                    </div>
+              </div>
 
             </div>
           )}

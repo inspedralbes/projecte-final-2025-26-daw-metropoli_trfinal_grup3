@@ -14,6 +14,7 @@ import {
   createLista,
   updateLista,
   getUsuarios,
+  deleteLista,
 } from "../../services/communicationManager";
 import socket from "../../services/socketManager";
 import Toast from "../../components/Toast";
@@ -78,6 +79,7 @@ const Map = () => {
   const [isLegendOpen, setIsLegendOpen] = useState(false); // State for collapsible legend
   const [isSatelliteView, setIsSatelliteView] = useState(false); // State for satellite view toggle
   const [isSheetExpanded, setIsSheetExpanded] = useState(true); // State for bottom sheet toggle
+  const [isRouteDetailsVisible, setIsRouteDetailsVisible] = useState(false); // State for hiding details panel
   const [userLists, setUserLists] = useState([]);
   const [discoverLists, setDiscoverLists] = useState([]);
   const [realCurators, setRealCurators] = useState([]); // Real users for discovery
@@ -87,6 +89,7 @@ const Map = () => {
   const [currentZoom, setCurrentZoom] = useState(17);
   const [toast, setToast] = useState(null);
   const [currentUser, setCurrentUser] = useState(null);
+  const [isProcessingList, setIsProcessingList] = useState(false);
 
   // eslint-disable-next-line no-unused-vars
   const [imageBounds, setImageBounds] = useState([
@@ -103,6 +106,7 @@ const Map = () => {
   const [activeFilter, setActiveFilter] = useState(null); // null = mostrar todos, id_categoria = filtrar
   const [route, setRoute] = useState(null); // Array de [lat, lng] para Dijkstra Polyline
   const [distance, setDistance] = useState(null); // Distancia de la ruta
+  const [routeProfile, setRouteProfile] = useState("foot");
 
   const navigate = useNavigate();
   const location = useLocation();
@@ -232,7 +236,6 @@ const Map = () => {
 
     // Listen to real-time map updates from WebSockets
     socket.on("mapa_actualizado", () => {
-      console.log("WebSocket Notice: Map updated! Refreshing POIs...");
       fetchPois();
       fetchUserLists();
       fetchDiscoverLists();
@@ -274,7 +277,7 @@ const Map = () => {
 
     // Only the owner can share/unshare
     if (list.id_usuario !== user.id_usuario) {
-      setToast({ message: "Només pots compartir les teves pròpies llistes.", type: "warning" });
+      setToast({ message: t("map.toast.only_own_lists", "Només pots compartir les teves pròpies llistes."), type: "warning" });
       return;
     }
 
@@ -297,21 +300,24 @@ const Map = () => {
       setToast({
         message:
           newVisibility === "public"
-            ? "Ruta compartida a la Comunitat! Ara és pública."
-            : "Ruta retirada de la Comunitat. Ara és privada.",
+            ? t("map.toast.shared_success", "Ruta compartida a la Comunitat! Ara és pública.")
+            : t("map.toast.unshared_success", "Ruta retirada de la Comunitat. Ara és privada."),
         type: newVisibility === "public" ? "success" : "info",
       });
     } catch (error) {
       console.error("Error sharing list:", error);
-      setToast({ message: "Error al compartir la ruta.", type: "error" });
+      setToast({ message: t("map.toast.share_error", "Error al compartir la ruta."), type: "error" });
     }
   };
 
   const handleIncludeInMyLists = async (list) => {
+    if (isProcessingList) return;
+    setIsProcessingList(true);
     const userStr = localStorage.getItem("usuario");
     if (!userStr) {
-    setToast({ message: "Has d'iniciar sessió per guardar llistes.", type: "warning" });
+    setToast({ message: t("map.toast.login_required", "Has d'iniciar sessió per guardar llistes."), type: "warning" });
       navigate("/login");
+      setIsProcessingList(false);
       return;
     }
     const user = JSON.parse(userStr);
@@ -326,46 +332,70 @@ const Map = () => {
       };
       const res = await createLista(newListData);
       if (res.success) {
-        setToast({ message: "¡Lista añadida a tus listas!", type: "success" });
+        setToast({ message: t("map.toast.added_success", "¡Lista añadida a tus listas!"), type: "success" });
         const userListsRes = await getUsuarioListas(user.id_usuario);
         if (userListsRes.success) setUserLists(userListsRes.data);
       }
     } catch (error) {
       console.error("Error copying list:", error);
       setToast({
-        message: "Hubo un error al guardar la lista.",
+        message: t("map.toast.add_error", "Hubo un error al guardar la lista."),
         type: "error",
       });
+    } finally {
+      setIsProcessingList(false);
     }
   };
 
-  const handleGoToFirstPoi = (list) => {
-    if (!userPosition || !list || !list.pois || list.pois.length === 0) {
-      setToast({ message: "Necessitem la teva ubicació i una llista amb punts.", type: "warning" });
-      return;
+  const handleRemoveFromMyLists = async (listId) => {
+    if (isProcessingList) return;
+    setIsProcessingList(true);
+    try {
+      const res = await deleteLista(listId);
+      if (res.success) {
+        setToast({ message: t("map.toast.removed_success", "Llista eliminada de les teves llistes"), type: "info" });
+        const userStr = localStorage.getItem("usuario");
+        if (userStr) {
+          const user = JSON.parse(userStr);
+          const userListsRes = await getUsuarioListas(user.id_usuario);
+          if (userListsRes.success) setUserLists(userListsRes.data);
+        }
+      }
+    } catch (error) {
+      console.error("Error deleting list:", error);
+      setToast({ message: t("map.toast.remove_error", "Error al eliminar la llista."), type: "error" });
+    } finally {
+      setIsProcessingList(false);
     }
-    handleGoToPoi(list.pois[0]);
   };
+
+
 
   const handleFocusList = async (list) => {
     if (focusedListId === list.id_lista) {
+      if (!isRouteDetailsVisible) {
+        setIsRouteDetailsVisible(true);
+        setIsSheetExpanded(false);
+        return;
+      }
       setFocusedListId(null);
       setUserToPoiRoute(null);
+      setIsRouteDetailsVisible(false);
       return;
     }
     setFocusedListId(list.id_lista);
+    setIsRouteDetailsVisible(true);
     setIsSheetExpanded(false);
 
     if (list.pois && list.pois.length >= 2) {
-      // Append first POI to the end to close the loop
-      const closedPois = [...list.pois, list.pois[0]];
-      const coordsString = closedPois
+      const coordsString = list.pois
         .map((p) => `${p.longitud},${p.latitud}`)
         .join(";");
       try {
-        const res = await fetch(
-          `https://router.project-osrm.org/route/v1/foot/${coordsString}?overview=full&geometries=geojson`,
-        );
+        const url = routeProfile === "foot" 
+          ? `https://routing.openstreetmap.de/routed-foot/route/v1/driving/${coordsString}?overview=full&geometries=geojson`
+          : `https://router.project-osrm.org/route/v1/driving/${coordsString}?overview=full&geometries=geojson`;
+        const res = await fetch(url);
         const data = await res.json();
         if (data.code === "Ok") {
           const geom = data.routes[0].geometry.coordinates.map((c) => [
@@ -379,9 +409,18 @@ const Map = () => {
 
           const bounds = L.latLngBounds(geom);
           mapRef.current.fitBounds(bounds, {
-            padding: [50, 50],
+            padding: [100, 100],
             animate: true,
+            duration: 1.5,
+            maxZoom: 16,
           });
+        } else {
+          setOtherListGeometries((prev) => {
+            const next = { ...prev };
+            delete next[list.id_lista];
+            return next;
+          });
+          setToast({ message: t("map.toast.no_route", "No se pudo calcular la ruta para este medio, usando línea recta."), type: "warning" });
         }
       } catch (err) {
         console.error(err);
@@ -391,11 +430,12 @@ const Map = () => {
 
   const handleGoToNearestPoi = () => {
     if (!userPosition || !focusedListId) {
-      setToast({ message: "Necessitem la teva ubicació i una ruta seleccionada.", type: "warning" });
+      setToast({ message: t("map.toast.need_location_and_route", "Necessitem la teva ubicació i una ruta seleccionada."), type: "warning" });
       return;
     }
 
-    const list = userLists.find((l) => l.id_lista === focusedListId);
+    let list = userLists.find((l) => l.id_lista === focusedListId);
+    if (!list) list = discoverLists.find((l) => l.id_lista === focusedListId);
     if (!list || !list.pois || list.pois.length === 0) return;
 
     let nearestPoi = list.pois[0];
@@ -414,11 +454,12 @@ const Map = () => {
     });
 
     handleGetRouteToPoi(nearestPoi);
+    setIsSheetExpanded(false);
   };
 
   const handleGetRouteToPoi = async (poi) => {
     if (!userPosition) {
-      setToast({ message: "Necessitem la teva ubicació per calcular la ruta.", type: "warning" });
+      setToast({ message: t("map.toast.need_location", "Necessitem la teva ubicació per calcular la ruta."), type: "warning" });
       return;
     }
 
@@ -426,9 +467,10 @@ const Map = () => {
     const end = `${poi.longitud},${poi.latitud}`;
 
     try {
-      const res = await fetch(
-        `https://router.project-osrm.org/route/v1/foot/${start};${end}?overview=full&geometries=geojson`,
-      );
+      const url = routeProfile === "foot" 
+        ? `https://routing.openstreetmap.de/routed-foot/route/v1/driving/${start};${end}?overview=full&geometries=geojson`
+        : `https://router.project-osrm.org/route/v1/driving/${start};${end}?overview=full&geometries=geojson`;
+      const res = await fetch(url);
       const data = await res.json();
       if (data.code === "Ok") {
         const geom = data.routes[0].geometry.coordinates.map((c) => [
@@ -446,13 +488,19 @@ const Map = () => {
           [parseFloat(poi.latitud), parseFloat(poi.longitud)],
         ]);
         mapRef.current.fitBounds(bounds, {
-          padding: [100, 100],
+          padding: [120, 120],
           animate: true,
+          duration: 1.5,
+          maxZoom: 16,
         });
+      } else {
+        setUserToPoiRoute(null);
+        setToast({ message: t("map.toast.no_nav_route", "No se pudo calcular la navegación para este medio."), type: "warning" });
       }
     } catch (err) {
       console.error(err);
     }
+    setIsRouteDetailsVisible(false);
   };
 
   // Real-time location tracking
@@ -483,13 +531,14 @@ const Map = () => {
     return () => navigator.geolocation.clearWatch(watchId);
   }, [userToPoiRoute?.poiId, userLists]);
 
-  const silentUpdateRouteToPoi = async (uPos, poi) => {
+  const silentUpdateRouteToPoi = async (uPos, poi, profile = routeProfile) => {
     const start = `${uPos[1]},${uPos[0]}`;
     const end = `${poi.longitud},${poi.latitud}`;
     try {
-      const res = await fetch(
-        `https://router.project-osrm.org/route/v1/foot/${start};${end}?overview=full&geometries=geojson`,
-      );
+      const url = profile === "foot" 
+        ? `https://routing.openstreetmap.de/routed-foot/route/v1/driving/${start};${end}?overview=full&geometries=geojson`
+        : `https://router.project-osrm.org/route/v1/driving/${start};${end}?overview=full&geometries=geojson`;
+      const res = await fetch(url);
       const data = await res.json();
       if (data.code === "Ok") {
         const geom = data.routes[0].geometry.coordinates.map((c) => [
@@ -500,6 +549,7 @@ const Map = () => {
           geom,
           distance: data.routes[0].distance,
           poiId: poi.id_poi,
+          actualDest: [parseFloat(poi.latitud), parseFloat(poi.longitud)]
         });
       }
     } catch (err) {
@@ -511,6 +561,45 @@ const Map = () => {
   useEffect(() => {
     handleLocate();
   }, []);
+
+  useEffect(() => {
+    if (focusedListId) {
+      const list = userLists.find((l) => l.id_lista === focusedListId) || discoverLists.find((l) => l.id_lista === focusedListId);
+      if (list && list.pois && list.pois.length >= 2) {
+        const coordsString = list.pois.map((p) => `${p.longitud},${p.latitud}`).join(";");
+        const url = routeProfile === "foot" 
+          ? `https://routing.openstreetmap.de/routed-foot/route/v1/driving/${coordsString}?overview=full&geometries=geojson`
+          : `https://router.project-osrm.org/route/v1/driving/${coordsString}?overview=full&geometries=geojson`;
+        fetch(url)
+          .then(res => res.json())
+          .then(data => {
+            if (data.code === "Ok") {
+              const geom = data.routes[0].geometry.coordinates.map((c) => [c[1], c[0]]);
+              const snappedWaypoints = data.waypoints.map(wp => [wp.location[1], wp.location[0]]);
+              setOtherListGeometries((prev) => ({
+                ...prev,
+                [focusedListId]: { geom, distance: data.routes[0].distance, snappedWaypoints },
+              }));
+            } else {
+              setOtherListGeometries((prev) => {
+                const next = { ...prev };
+                delete next[focusedListId];
+                return next;
+              });
+              setToast({ message: t("map.toast.no_route", "No se pudo calcular la ruta para este medio, usando línea recta."), type: "warning" });
+            }
+          })
+          .catch(console.error);
+      }
+    }
+    if (userToPoiRoute?.poiId && userPosition) {
+       const poi = [...userLists, ...discoverLists].flatMap((l) => l.pois || []).find((p) => p && p.id_poi === userToPoiRoute.poiId);
+       if (poi) {
+         silentUpdateRouteToPoi(userPosition, poi, routeProfile);
+       }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [routeProfile]);
 
   // Transformation of Dijkstra Output to Leaflet Polyline Coordinates
   const fetchRoute = async (origenId, destinoId, coords = null) => {
@@ -557,7 +646,7 @@ const Map = () => {
 
   const startWatchingLocation = () => {
     if (!navigator.geolocation) {
-      setToast({ message: "La geolocalització no és compatible amb aquest navegador.", type: "error" });
+      setToast({ message: t("map.toast.geolocation_not_supported", "La geolocalització no és compatible amb aquest navegador."), type: "error" });
       return;
     }
 
@@ -571,12 +660,11 @@ const Map = () => {
         const { latitude, longitude } = position.coords;
         const newPos = [latitude, longitude];
         setUserPosition(newPos);
-        console.log("Posición actualizada:", newPos);
       },
       (error) => {
         console.error("Error de geolocalización:", error);
         if (error.code === 1) {
-          setToast({ message: "Permís d'ubicació denegat. Activa la ubicació al teu navegador.", type: "warning" });
+          setToast({ message: t("map.toast.location_denied", "Permís d'ubicació denegat. Activa la ubicació al teu navegador."), type: "warning" });
         }
       },
       {
@@ -692,6 +780,17 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
     { color: "bg-blue-500", label: "You" },
   ];
 
+  const focusedCommunityList = discoverLists.find((l) => l.id_lista === focusedListId);
+  const savedUserListForFocused = focusedCommunityList 
+    ? userLists.find((ul) => ul.nombre === focusedCommunityList.nombre) 
+    : null;
+
+  const activeListInfo = focusedListId ? (userLists.find((l) => l.id_lista === focusedListId) || discoverLists.find((l) => l.id_lista === focusedListId)) : null;
+  const isSavedList = activeListInfo?.descripcion?.startsWith('[GUARDADA de: ');
+  const originalOwnerMatch = isSavedList ? activeListInfo.descripcion.match(/\[GUARDADA de: (.*?)\]/) : null;
+  const originalOwnerName = originalOwnerMatch ? originalOwnerMatch[1] : null;
+  const cleanDescription = isSavedList ? activeListInfo.descripcion.replace(/\[GUARDADA de: .*?\]\s*/, '') : activeListInfo?.descripcion;
+
   return (
     <div
       className="relative h-[100dvh] w-full bg-gray-50 dark:bg-slate-950 text-slate-800 dark:text-slate-100 font-display overflow-hidden select-none md:pl-20 transition-colors duration-300 overscroll-none flex"
@@ -702,11 +801,11 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
         <div className="flex-1 overflow-y-auto no-scrollbar p-6 space-y-8">
           <section>
             <h2 className="text-sm font-bold text-gray-500 dark:text-white mb-4 px-1 lowercase">
-              les meves rutes
+              {t("map.myRoutes", "les meves rutes")}
             </h2>
             <div className="space-y-4">
               {userLists.length > 0 ? (
-                userLists.map((route) => (
+                [...userLists].sort((a, b) => b.id_lista - a.id_lista).map((route) => (
                   <div
                     key={route.id_lista}
                     onClick={() => handleFocusList(route)}
@@ -731,7 +830,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
                 ))
               ) : (
                 <p className="text-xs opacity-40 italic">
-                  Encara no has creat cap llista.
+                  {t("map.no_own_routes_desc", "Encara no has creat cap llista.")}
                 </p>
               )}
             </div>
@@ -739,7 +838,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
           <section>
             <h2 className="text-sm font-bold text-gray-500 dark:text-white mb-4 px-1 lowercase">
-              descobrir
+              {t("map.discover_title", "descobrir")}
             </h2>
             <div className="grid grid-cols-2 gap-3">
               {discoverLists.map((col) => (
@@ -791,12 +890,6 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
           attributionControl={false}
         >
           <MapEvents setCurrentZoom={setCurrentZoom} />
-          {console.log(
-            "DEBUG Map.jsx: currentZoom =",
-            currentZoom,
-            "| focusedListId =",
-            focusedListId,
-          )}
           <MapLayers
             isSatelliteView={isSatelliteView}
             currentZoom={currentZoom}
@@ -823,6 +916,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
             userToPoiRoute={userToPoiRoute}
             currentUser={currentUser}
             t={t}
+            routeProfile={routeProfile}
           />
 
           {/* Location Focus Circle */}
@@ -842,7 +936,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
 
         {/* DESKTOP ROUTE PANEL (Right side or floating) */}
         <AnimatePresence>
-          {focusedListId && (
+          {focusedListId && isRouteDetailsVisible && (
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
@@ -868,19 +962,38 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
                 <div className="flex-1 overflow-y-auto no-scrollbar px-8 pb-8 space-y-6">
                   <div className="space-y-2">
                     <h2 className="text-3xl font-black italic uppercase tracking-tighter leading-tight">
-                      {userLists.find((l) => l.id_lista === focusedListId)
-                        ?.nombre ||
-                        discoverLists.find((l) => l.id_lista === focusedListId)
-                          ?.nombre}
+                      {activeListInfo?.nombre}
                     </h2>
+                    {isSavedList && (
+                      <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest bg-emerald-500/10 inline-block px-2 py-1 rounded-full">
+                        Guardada de {originalOwnerName}
+                      </p>
+                    )}
                     <p className="text-sm opacity-60 italic">
-                      {userLists.find((l) => l.id_lista === focusedListId)
-                        ?.descripcion ||
-                        "Explora aquest itinerari seleccionat."}
+                      {cleanDescription || "Explora aquest itinerari seleccionat."}
                     </p>
                   </div>
 
-                  <div className="flex gap-3">
+                  <div className="space-y-4">
+                    {/* Route Profile Toggle Desktop */}
+                    <div className="flex bg-gray-100 dark:bg-white/5 p-1 rounded-full">
+                      <button
+                        onClick={() => setRouteProfile("foot")}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-full text-xs font-bold transition-all ${routeProfile === "foot" ? "bg-white dark:bg-slate-800 text-black dark:text-white shadow-md" : "text-gray-400 hover:text-black dark:hover:text-white"}`}
+                      >
+                        <span className="material-symbols-outlined text-[16px]">directions_walk</span>
+                        A pie
+                      </button>
+                      <button
+                        onClick={() => setRouteProfile("driving")}
+                        className={`flex-1 flex items-center justify-center gap-2 py-2 rounded-full text-xs font-bold transition-all ${routeProfile === "driving" ? "bg-white dark:bg-slate-800 text-black dark:text-white shadow-md" : "text-gray-400 hover:text-black dark:hover:text-white"}`}
+                      >
+                        <span className="material-symbols-outlined text-[16px]">directions_car</span>
+                        En coche
+                      </button>
+                    </div>
+
+                    <div className="flex gap-3">
                     <div className="flex-1 bg-gray-50 dark:bg-white/5 p-4 rounded-3xl border border-gray-100 dark:border-white/5">
                       <p className="text-[10px] font-bold uppercase opacity-40 mb-1">
                         Distància
@@ -907,6 +1020,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
                       </p>
                     </div>
                   </div>
+                  </div>
 
                   <div className="space-y-4">
                     <button
@@ -916,26 +1030,36 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
                       <span className="material-symbols-outlined">
                         navigation
                       </span>
-                      Començar Ruta
+                      {t("map.goToRoute", "Ir a la ruta")}
                     </button>
 
 
                     {!userLists.find((l) => l.id_lista === focusedListId) && (
-                      <button
-                        onClick={() =>
-                          handleIncludeInMyLists(
-                            discoverLists.find(
-                              (l) => l.id_lista === focusedListId,
-                            ),
-                          )
-                        }
-                        className="w-full bg-white dark:bg-white/5 text-black dark:text-white py-4 rounded-[2rem] font-bold border border-gray-100 dark:border-white/10 hover:bg-gray-50 dark:hover:bg-white/10 transition-all flex items-center justify-center gap-2"
-                      >
-                        <span className="material-symbols-outlined">
-                          add_circle
-                        </span>
-                        Guardar a les meves llistes
-                      </button>
+                      <>
+                        {!savedUserListForFocused ? (
+                          <button
+                            onClick={() => handleIncludeInMyLists(focusedCommunityList)}
+                            disabled={isProcessingList}
+                            className={`w-full bg-white dark:bg-white/5 text-black dark:text-white py-4 rounded-[2rem] font-bold border border-gray-100 dark:border-white/10 transition-all flex items-center justify-center gap-2 ${isProcessingList ? 'opacity-50 cursor-not-allowed' : 'hover:bg-gray-50 dark:hover:bg-white/10'}`}
+                          >
+                            <span className="material-symbols-outlined">
+                              {isProcessingList ? 'hourglass_empty' : 'add_circle'}
+                            </span>
+                            Guardar a les meves llistes
+                          </button>
+                        ) : (
+                          <button
+                            onClick={() => handleRemoveFromMyLists(savedUserListForFocused.id_lista)}
+                            disabled={isProcessingList}
+                            className={`w-full bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 py-4 rounded-[2rem] font-bold border border-red-200 dark:border-red-500/20 transition-all flex items-center justify-center gap-2 ${isProcessingList ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-100 dark:hover:bg-red-500/20'}`}
+                          >
+                            <span className="material-symbols-outlined">
+                              {isProcessingList ? 'hourglass_empty' : 'delete'}
+                            </span>
+                            Eliminar de les meves llistes
+                          </button>
+                        )}
+                      </>
                     )}
                   </div>
 
@@ -977,7 +1101,7 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
           {focusedListId && (
             <motion.div
               initial={{ y: "100%" }}
-              animate={{ y: 0 }}
+              animate={{ y: isRouteDetailsVisible ? 0 : "calc(100% - 30px)" }}
               exit={{ y: "100%" }}
               transition={{ duration: 0.5, ease: [0.4, 0, 0.2, 1] }}
               className="md:hidden fixed bottom-[76px] left-0 right-0 z-[1900] pointer-events-auto"
@@ -987,29 +1111,30 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
                 {/* Minimal Drag Handle Header */}
                 <div
                   className="flex flex-col items-center py-2 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-                  onClick={() => {
-                    setFocusedListId(null);
-                    setUserToPoiRoute(null);
-                  }}
+                  onClick={() => setIsRouteDetailsVisible(!isRouteDetailsVisible)}
                 >
                   <div className="w-12 h-1.5 bg-black/10 dark:bg-white/20 rounded-full"></div>
                 </div>
 
                 <div className="px-6 pb-6 overflow-y-auto no-scrollbar max-h-[55vh] mt-2">
                   <div className="flex items-center justify-between mb-3 px-1">
-                    <h3 className="text-[10px] font-black text-slate-500 dark:text-white tracking-widest font-display">
-                      {t("map.navigating", "Navegando ruta")}
-                    </h3>
-                    <div
-                      onClick={() => {
-                        setFocusedListId(null);
-                        setUserToPoiRoute(null);
-                      }}
-                      className="text-slate-400 hover:text-red-500 transition-colors"
-                    >
-                      <span className="material-symbols-outlined text-lg">
-                        close
-                      </span>
+                    <div className="flex items-center gap-2">
+                      <div
+                        onClick={() => {
+                          setFocusedListId(null);
+                          setUserToPoiRoute(null);
+                          setIsRouteDetailsVisible(false);
+                          setIsSheetExpanded(true);
+                        }}
+                        className="text-slate-400 hover:text-primary transition-colors cursor-pointer"
+                      >
+                        <span className="material-symbols-outlined text-xl">
+                          arrow_back
+                        </span>
+                      </div>
+                      <h3 className="text-[10px] font-black text-slate-500 dark:text-white tracking-widest font-display">
+                        {t("map.navigating", "Navegando ruta")}
+                      </h3>
                     </div>
                   </div>
 
@@ -1018,20 +1143,34 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
                     <div className="space-y-3">
                       <div className="p-5 bg-black/5 dark:bg-white/5 rounded-2xl border border-black/5 dark:border-white/10 group">
                         <h4 className="text-xl font-black text-black dark:text-white italic mb-1 leading-tight">
-                          {userLists.find((l) => l.id_lista === focusedListId)
-                            ?.nombre ||
-                            discoverLists.find(
-                              (l) => l.id_lista === focusedListId,
-                            )?.nombre}
+                          {activeListInfo?.nombre}
                         </h4>
+                        {isSavedList && (
+                          <p className="text-[10px] font-bold text-emerald-500 uppercase tracking-widest bg-emerald-500/10 inline-block px-2 py-1 rounded-full mb-2">
+                            Guardada de {originalOwnerName}
+                          </p>
+                        )}
                         <p className="text-[10px] text-slate-500 dark:text-white/40 leading-relaxed italic mb-4">
-                          {userLists.find((l) => l.id_lista === focusedListId)
-                            ?.descripcion ||
-                            discoverLists.find(
-                              (l) => l.id_lista === focusedListId,
-                            )?.descripcion ||
-                            "Explora este itinerario."}
+                          {cleanDescription || "Explora este itinerario."}
                         </p>
+
+                        {/* Route Profile Toggle Mobile */}
+                        <div className="flex bg-black/5 dark:bg-white/5 p-1 rounded-full mb-3">
+                          <button
+                            onClick={() => setRouteProfile("foot")}
+                            className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-full text-[10px] font-bold transition-all ${routeProfile === "foot" ? "bg-white dark:bg-slate-800 text-black dark:text-white shadow-sm" : "text-slate-400 hover:text-black dark:hover:text-white"}`}
+                          >
+                            <span className="material-symbols-outlined text-[14px]">directions_walk</span>
+                            A pie
+                          </button>
+                          <button
+                            onClick={() => setRouteProfile("driving")}
+                            className={`flex-1 flex items-center justify-center gap-2 py-1.5 rounded-full text-[10px] font-bold transition-all ${routeProfile === "driving" ? "bg-white dark:bg-slate-800 text-black dark:text-white shadow-sm" : "text-slate-400 hover:text-black dark:hover:text-white"}`}
+                          >
+                            <span className="material-symbols-outlined text-[14px]">directions_car</span>
+                            En coche
+                          </button>
+                        </div>
 
                         <div className="flex gap-3">
                           <div className="flex-1 bg-white/50 dark:bg-white/5 p-3 rounded-xl border border-black/5 dark:border-white/5">
@@ -1093,48 +1232,38 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
                           {t("map.goToRoute", "Ir a la ruta")}
                         </button>
 
-                        {/* Navigation to first POI */}
-                        <button
-                          onClick={() =>
-                            handleGoToFirstPoi(
-                              userLists.find(
-                                (l) => l.id_lista === focusedListId,
-                              ) ||
-                                discoverLists.find(
-                                  (l) => l.id_lista === focusedListId,
-                                ),
-                            )
-                          }
-                          className="w-full bg-slate-100 dark:bg-white/5 text-slate-700 dark:text-white py-3 rounded-xl text-[9px] font-black uppercase flex items-center justify-center gap-2 hover:bg-slate-200 dark:hover:bg-white/10 transition-all border border-black/5 dark:border-white/5"
-                        >
-                          <span className="material-symbols-outlined text-sm">
-                            directions
-                          </span>
-                          {t("map.howToGet", "Cómo llegar")}
-                        </button>
+
 
                         {/* Share to Community (only for owned lists) */}
 
 
                         {/* Include in My Lists (if not already owned) */}
-                        {!userLists.find(
-                          (l) => l.id_lista === focusedListId,
-                        ) && (
-                          <button
-                            onClick={() =>
-                              handleIncludeInMyLists(
-                                discoverLists.find(
-                                  (l) => l.id_lista === focusedListId,
-                                ),
-                              )
-                            }
-                            className="w-full bg-white dark:bg-white/5 text-black dark:text-white py-3 rounded-xl text-[9px] font-black uppercase border border-black/10 dark:border-white/10 flex items-center justify-center gap-2 hover:bg-slate-50 dark:hover:bg-white/10 transition-all"
-                          >
-                            <span className="material-symbols-outlined text-sm">
-                              add_circle
-                            </span>
-                            {t("map.saveToList", "Incluir en mis listas")}
-                          </button>
+                        {!userLists.find((l) => l.id_lista === focusedListId) && (
+                          <>
+                            {!savedUserListForFocused ? (
+                              <button
+                                onClick={() => handleIncludeInMyLists(focusedCommunityList)}
+                                disabled={isProcessingList}
+                                className={`w-full bg-white dark:bg-white/5 text-black dark:text-white py-3 rounded-xl text-[9px] font-black uppercase border border-black/10 dark:border-white/10 flex items-center justify-center gap-2 transition-all ${isProcessingList ? 'opacity-50 cursor-not-allowed' : 'hover:bg-slate-50 dark:hover:bg-white/10'}`}
+                              >
+                                <span className="material-symbols-outlined text-sm">
+                                  {isProcessingList ? 'hourglass_empty' : 'add_circle'}
+                                </span>
+                                {t("map.saveToList", "Incluir en mis listas")}
+                              </button>
+                            ) : (
+                              <button
+                                onClick={() => handleRemoveFromMyLists(savedUserListForFocused.id_lista)}
+                                disabled={isProcessingList}
+                                className={`w-full bg-red-50 dark:bg-red-500/10 text-red-600 dark:text-red-400 py-3 rounded-xl text-[9px] font-black uppercase border border-red-200 dark:border-red-500/20 flex items-center justify-center gap-2 transition-all ${isProcessingList ? 'opacity-50 cursor-not-allowed' : 'hover:bg-red-100 dark:hover:bg-red-500/20'}`}
+                              >
+                                <span className="material-symbols-outlined text-sm">
+                                  {isProcessingList ? 'hourglass_empty' : 'delete'}
+                                </span>
+                                Eliminar de mis listas
+                              </button>
+                            )}
+                          </>
                         )}
                       </div>
                     </div>
@@ -1186,17 +1315,26 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
       )}
       <Header />
 
-      {/* DESKTOP CONTROLS: Top corners */}
-      <div className="hidden md:flex fixed top-24 right-6 left-96 z-[1001] pointer-events-none flex-col items-end gap-3">
+      {/* DESKTOP CONTROLS: Bottom right */}
+      <div className="hidden md:flex fixed bottom-8 right-6 z-[1001] pointer-events-none flex-col items-end gap-3">
+        <button
+          onClick={() => setRouteProfile(prev => prev === "foot" ? "driving" : "foot")}
+          className="pointer-events-auto w-14 h-14 bg-white dark:bg-slate-900 text-black dark:text-white rounded-2xl shadow-2xl border border-gray-100 dark:border-white/5 flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+          title={routeProfile === "foot" ? t("map.switchToCar", "Cambiar a coche") : t("map.switchToFoot", "Cambiar a pie")}
+        >
+          <span className="material-symbols-outlined text-2xl">
+            {routeProfile === "foot" ? "directions_walk" : "directions_car"}
+          </span>
+        </button>
         <button
           onClick={handleLocate}
-          className="pointer-events-auto w-12 h-12 bg-white dark:bg-slate-900 text-black dark:text-white rounded-2xl shadow-2xl border border-gray-100 dark:border-white/5 flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+          className="pointer-events-auto w-14 h-14 bg-white dark:bg-slate-900 text-black dark:text-white rounded-2xl shadow-2xl border border-gray-100 dark:border-white/5 flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
         >
           <span className="material-symbols-outlined">my_location</span>
         </button>
         <Link
           to="/create-list"
-          className="pointer-events-auto w-12 h-12 bg-primary text-primary-text rounded-2xl shadow-primary-glow flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
+          className="pointer-events-auto w-14 h-14 bg-primary text-primary-text rounded-2xl shadow-primary-glow flex items-center justify-center hover:scale-110 active:scale-95 transition-all"
         >
           <span className="material-symbols-outlined text-2xl font-bold">
             add
@@ -1207,7 +1345,15 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
       <div className="fixed inset-x-0 bottom-[76px] z-[1900] pointer-events-auto md:hidden">
         {/* Floating Pill Buttons Centered Above Drawer */}
         {!focusedListId && !isSheetExpanded && (
-          <div className="flex justify-center gap-2 px-5 mb-4 translate-y-2">
+          <div className="flex justify-center gap-2 px-5 mb-2">
+            <button
+              onClick={() => setRouteProfile(prev => prev === "foot" ? "driving" : "foot")}
+              className="pointer-events-auto w-12 h-12 bg-white dark:bg-slate-900 text-black dark:text-white rounded-full shadow-2xl border border-black/5 dark:border-white/5 flex items-center justify-center active:scale-95 transition-transform"
+            >
+              <span className="material-symbols-outlined text-xl">
+                {routeProfile === "foot" ? "directions_walk" : "directions_car"}
+              </span>
+            </button>
             <button
               onClick={handleLocate}
               className="pointer-events-auto flex items-center gap-2 bg-white dark:bg-slate-900 text-black dark:text-white px-5 py-2.5 rounded-full shadow-2xl border border-black/5 dark:border-white/5 active:scale-95 transition-transform"
@@ -1231,75 +1377,77 @@ const API_URL = import.meta.env.VITE_API_URL || "http://localhost:3000";
         )}
 
         {/* Drawer Content - Bottom Sheet Style */}
-        <div className="w-full bg-white/95 dark:bg-[#0a0a0a]/95 rounded-t-[2rem] shadow-[0_-20px_60px_rgba(0,0,0,0.3)] backdrop-blur-lg border-t border-white/10 overflow-hidden font-display">
-          {/* Minimal Drag Handle Header */}
-          <div
-            className="w-full flex flex-col items-center py-2 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
-            onClick={() => setIsSheetExpanded(!isSheetExpanded)}
-          >
-            <div className="w-12 h-1.5 bg-black/10 dark:bg-white/20 rounded-full"></div>
-          </div>
+        {!focusedListId && (
+          <div className="w-full bg-white/95 dark:bg-[#0a0a0a]/95 rounded-t-[2rem] shadow-[0_-20px_60px_rgba(0,0,0,0.3)] backdrop-blur-lg border-t border-white/10 overflow-hidden font-display">
+            {/* Minimal Drag Handle Header */}
+            <div
+              className="w-full flex flex-col items-center py-2 cursor-pointer hover:bg-black/5 dark:hover:bg-white/5 transition-colors"
+              onClick={() => setIsSheetExpanded(!isSheetExpanded)}
+            >
+              <div className="w-12 h-1.5 bg-black/10 dark:bg-white/20 rounded-full"></div>
+            </div>
 
-          <div
-            className={`transition-all duration-500 ease-in-out overflow-hidden ${isSheetExpanded ? "max-h-[60vh] opacity-100 mt-2" : "max-h-0 opacity-0"}`}
-          >
-            <div className="px-6 pb-6 no-scrollbar overflow-y-auto max-h-[60vh]">
-              {/* My Lists Section */}
-              <section className="mb-6 mt-2">
-                <div className="flex items-center justify-between mb-4 px-1">
-                  <h2 className="text-[13px] font-black text-black dark:text-white tracking-tight font-display">
-                    {t("map.myLists", "Mis listas")}
-                  </h2>
-                  <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full text-[9px] font-bold">
-                    {userLists.length}
-                  </span>
-                </div>
-                <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-2 px-2">
-                  {userLists.length > 0 ? (
-                    userLists.map((route) => (
-                      <MiniRouteCard
-                        key={route.id_lista}
-                        route={route}
-                        onFocus={handleFocusList}
-                      />
-                    ))
-                  ) : (
-                    <p className="text-[10px] opacity-40 italic py-4 font-display">
-                      {t("map.noLists", "No has creado ninguna lista todavía.")}
-                    </p>
-                  )}
-                </div>
-              </section>
+            <div
+              className={`transition-all duration-500 ease-in-out overflow-hidden ${isSheetExpanded ? "max-h-[60vh] opacity-100 mt-2" : "max-h-0 opacity-0"}`}
+            >
+              <div className="px-6 pb-6 no-scrollbar overflow-y-auto max-h-[60vh]">
+                {/* My Lists Section */}
+                <section className="mb-6 mt-2">
+                  <div className="flex items-center justify-between mb-4 px-1">
+                    <h2 className="text-[13px] font-black text-black dark:text-white tracking-tight font-display">
+                      {t("map.myLists", "Mis listas")}
+                    </h2>
+                    <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full text-[9px] font-bold">
+                      {userLists.length}
+                    </span>
+                  </div>
+                  <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-2 px-2">
+                    {userLists.length > 0 ? (
+                      [...userLists].sort((a, b) => b.id_lista - a.id_lista).map((route) => (
+                        <MiniRouteCard
+                          key={route.id_lista}
+                          route={route}
+                          onFocus={handleFocusList}
+                        />
+                      ))
+                    ) : (
+                      <p className="text-[10px] opacity-40 italic py-4 font-display">
+                        {t("map.noLists", "No has creado ninguna lista todavía.")}
+                      </p>
+                    )}
+                  </div>
+                </section>
 
-              {/* Discover Section */}
-              <section className="mb-4">
-                <div className="flex items-center justify-between mb-4 px-1">
-                  <h2 className="text-[13px] font-black text-black dark:text-white tracking-tight font-display">
-                    {t("map.discover", "Listas para descubrir")}
-                  </h2>
-                  <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full text-[9px] font-bold">
-                    {discoverLists.length}
-                  </span>
-                </div>
-                <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-2 px-2">
-                  {discoverLists.length > 0 ? (
-                    discoverLists.map((col) => (
-                      <MiniDiscoverCard
-                        key={col.id_lista}
-                        col={col}
-                        onFocus={handleFocusList}
-                      />
-                    ))
-                  ) : (
-                    <p className="text-[10px] opacity-40 italic py-4 font-display">
-                      {t("map.noDiscover", "No hay listas públicas todavía.")}
-                    </p>
-                  )}
-                </div>
-              </section>
+                {/* Discover Section */}
+                <section className="mb-4">
+                  <div className="flex items-center justify-between mb-4 px-1">
+                    <h2 className="text-[13px] font-black text-black dark:text-white tracking-tight font-display">
+                      {t("map.discover", "Listas para descubrir")}
+                    </h2>
+                    <span className="bg-primary/10 text-primary px-2 py-0.5 rounded-full text-[9px] font-bold">
+                      {discoverLists.length}
+                    </span>
+                  </div>
+                  <div className="flex gap-4 overflow-x-auto no-scrollbar -mx-2 px-2">
+                    {discoverLists.length > 0 ? (
+                      discoverLists.map((col) => (
+                        <MiniDiscoverCard
+                          key={col.id_lista}
+                          col={col}
+                          onFocus={handleFocusList}
+                        />
+                      ))
+                    ) : (
+                      <p className="text-[10px] opacity-40 italic py-4 font-display">
+                        {t("map.noDiscover", "No hay listas públicas todavía.")}
+                      </p>
+                    )}
+                  </div>
+                </section>
+              </div>
             </div>
           </div>
-        </div>
+        )}
       </div>
 
       <Navbar />

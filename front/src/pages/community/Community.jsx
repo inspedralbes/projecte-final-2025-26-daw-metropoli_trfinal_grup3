@@ -1,6 +1,7 @@
 import React, { useState, useEffect, useRef } from "react";
 import { Link, useNavigate } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useSearch } from "../../context/SearchContext";
 import Navbar from "../../layouts/Navbar";
 import Header from "../../layouts/Header";
 import {
@@ -17,6 +18,9 @@ import {
   getListaById,
   createLista,
   toggleLikeLista,
+  guardarLista,
+  getListas,
+  getFriendsListas
 } from "../../services/communicationManager";
 import socket from "../../services/socketManager";
 import ChatModal from "../../components/community/ChatModal";
@@ -78,11 +82,15 @@ const compressImage = (file, maxPx = 1024, quality = 0.8) =>
 
 // ─── Sub-componente: Card de una publicación ─────────────────────────────────
 const PostCard = ({ pub, onComentarioCreado, userLists = [] }) => {
+  const { t } = useTranslation();
   const [showComments, setShowComments] = useState(false);
   const [liked, setLiked] = useState(false);
   const [likesCount, setLikesCount] = useState(pub.likes ?? 0);
   const [isLikeLoading, setIsLikeLoading] = useState(false);
   const [textoComentario, setTextoComentario] = useState("");
+  const [comentarioFile, setComentarioFile] = useState(null);
+  const [comentarioPreview, setComentarioPreview] = useState("");
+  const fileInputRef = useRef(null);
   const [attachedLista, setAttachedLista] = useState(null);
   const [routeSaving, setRouteSaving] = useState(false);
   const [routeSaved, setRouteSaved] = useState(false);
@@ -137,15 +145,42 @@ const PostCard = ({ pub, onComentarioCreado, userLists = [] }) => {
   const handleComentario = async (e) => {
     e.preventDefault();
     if (!usuarioLogged) { navigate("/login"); return; }
-    if (!textoComentario.trim()) return;
+    if (!textoComentario.trim() && !comentarioFile) return;
+
+    // Filtro de palabras restringidas
+    const restrictedWords = [
+      "mierda", "puta", "puto", "gilipollas", "cabron", "cabrón", "cojones", "joder", "hostia", "follar",
+      "pendejo", "zorra", "maricon", "maricón", "idiota", "estupido", "estúpido", "imbecil", "imbécil",
+      "basura", "asco", "fuck", "shit", "bitch"
+    ];
+
+    const foundWord = restrictedWords.find(word =>
+      textoComentario.toLowerCase().includes(word.toLowerCase())
+    );
+
+    if (foundWord) {
+      alert(t("community.alerts.restricted_word", "Opa! El teu missatge conté paraules no permeses (ex: \"{{word}}\"). Per favor, mantingues el respecte a la comunitat.", { word: foundWord }));
+      return;
+    }
+
     try {
+      let fotoUrl = null;
+      if (comentarioFile) {
+        const fileToUpload = await compressImage(comentarioFile);
+        const uploadRes = await uploadFotoComunidad(fileToUpload);
+        fotoUrl = `${import.meta.env.VITE_API_URL || ""}${uploadRes.url}`;
+      }
+
       await createComentario(pub._id, {
         id_usuario: usuarioLogged.id_usuario,
         nombre_usuario: usuarioLogged.nombre,
         foto_perfil: usuarioLogged.foto_perfil || null,
-        texto: textoComentario.trim(),
+        texto: textoComentario.trim() || t("community.photo_comment", "📸 Foto"),
+        foto: fotoUrl,
       });
       setTextoComentario("");
+      setComentarioFile(null);
+      setComentarioPreview("");
       onComentarioCreado(pub._id);
     } catch (err) {
       console.error(err);
@@ -206,18 +241,20 @@ const PostCard = ({ pub, onComentarioCreado, userLists = [] }) => {
             e.stopPropagation();
             if (!usuarioLogged) { navigate("/login"); return; }
             if (alreadySaved) return;
-            setRouteSaving(true);
+            setRouteSaved(true);
             try {
               await createLista({
                 id_usuario: usuarioLogged.id_usuario,
                 nombre: attachedLista.nombre,
-                descripcion: attachedLista.descripcion || "Guardada des de la comunitat",
+                descripcion: `[GUARDADA de: ${attachedLista.usuario_nombre || 'Comunidad'}] ${attachedLista.descripcion || ""}`,
                 visibilidad: "private",
-                pois: (attachedLista.pois || []).map((p) => p.id_poi),
+                imagen_url: attachedLista.imagen_url || null,
+                pois: (attachedLista.pois || []).map((p) => p.id_poi || p.id),
               });
-              setRouteSaved(true);
-            } catch (err) { console.error(err); }
-            finally { setRouteSaving(false); }
+            } catch (err) { 
+              console.error(err); 
+              setRouteSaved(false);
+            }
           };
 
           return (
@@ -238,7 +275,7 @@ const PostCard = ({ pub, onComentarioCreado, userLists = [] }) => {
                   <div className="flex-1 min-w-0 pr-2">
                     <p className="text-white font-bold text-sm leading-tight truncate">{attachedLista.nombre}</p>
                     <p className="text-white/60 text-[10px] mt-0.5">
-                      {attachedLista.pois?.length || 0} punts
+                      {t("community.points_count", "{{count}} punts", { count: attachedLista.pois?.length || 0 })}
                       {attachedLista.usuario_nombre ? ` · ${attachedLista.usuario_nombre}` : ""}
                     </p>
                   </div>
@@ -253,12 +290,12 @@ const PostCard = ({ pub, onComentarioCreado, userLists = [] }) => {
                       <span className="material-symbols-outlined text-sm" style={{ fontVariationSettings: alreadySaved ? "'FILL' 1" : "'FILL' 0" }}>
                         bookmark
                       </span>
-                      {alreadySaved ? "Guardada" : routeSaving ? "..." : "Guardar"}
+                      {alreadySaved ? t("collections.saved", "Guardada") : routeSaving ? "..." : t("collections.save", "Guardar")}
                     </button>
                   )}
                   {isOwner && (
                     <span className="bg-emerald-500/80 backdrop-blur-sm text-white text-[9px] font-black uppercase px-2 py-1 rounded-full">
-                      La teva ruta
+                      {t("community.your_route", "La teva ruta")}
                     </span>
                   )}
                 </div>
@@ -266,7 +303,7 @@ const PostCard = ({ pub, onComentarioCreado, userLists = [] }) => {
               {/* Footer */}
               <div className="px-4 py-2.5 bg-white dark:bg-slate-900 flex items-center gap-2">
                 <span className="material-symbols-outlined text-primary text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>route</span>
-                <span className="text-[10px] text-slate-400 font-medium">Toca per veure la ruta al mapa</span>
+                <span className="text-[10px] text-slate-400 font-medium">{t("community.tap_to_view_route", "Toca per veure la ruta al mapa")}</span>
                 <span className="material-symbols-outlined text-slate-300 text-sm ml-auto">chevron_right</span>
               </div>
             </div>
@@ -277,7 +314,7 @@ const PostCard = ({ pub, onComentarioCreado, userLists = [] }) => {
         {listaId && !attachedLista && (
           <div className="mt-3 bg-gray-50 dark:bg-white/5 rounded-2xl h-36 flex items-center justify-center gap-3 border border-gray-100 dark:border-white/10 animate-pulse">
             <span className="material-symbols-outlined text-slate-300">route</span>
-            <span className="text-xs text-slate-400">Carregant ruta...</span>
+            <span className="text-xs text-slate-400">{t("community.loading_route", "Carregant ruta...")}</span>
           </div>
         )}
       </div>
@@ -309,26 +346,68 @@ const PostCard = ({ pub, onComentarioCreado, userLists = [] }) => {
                 <Link to={`/profile/${com.id_usuario}`}>
                   <UserAvatar user={{ foto_perfil: com.foto_perfil, nombre: com.nombre_usuario }} className="w-6 h-6" />
                 </Link>
-                <div className="bg-white dark:bg-slate-800 px-3 py-2 rounded-2xl rounded-tl-none border border-gray-100 dark:border-white/5">
+                <div className="bg-white dark:bg-slate-800 px-3 py-2 rounded-2xl rounded-tl-none border border-gray-100 dark:border-white/5 max-w-[85%]">
                   <Link to={`/profile/${com.id_usuario}`}>
                     <p className="text-[10px] font-bold text-slate-400 hover:text-primary transition-colors">{com.nombre_usuario}</p>
                   </Link>
                   <p className="text-xs text-slate-700 dark:text-slate-200">{com.texto}</p>
+                  {com.foto && (
+                    <div className="mt-2 rounded-xl overflow-hidden border border-gray-100 dark:border-white/5">
+                      <img src={com.foto} alt="Comentario" className="max-w-full max-h-32 object-contain" />
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
           </div>
-          <form onSubmit={handleComentario} className="flex gap-2">
-            <input
-              value={textoComentario}
-              onChange={(e) => setTextoComentario(e.target.value)}
-              placeholder="Escriu un comentari..."
-              className="flex-1 bg-white dark:bg-slate-800 text-xs rounded-xl px-4 py-2 focus:outline-none border border-gray-200 dark:border-white/5 shadow-sm"
-            />
-            <button type="submit" className="w-8 h-8 bg-primary text-white rounded-xl flex items-center justify-center shadow-md">
-              <span className="material-symbols-outlined text-sm">send</span>
-            </button>
-          </form>
+          <div className="flex flex-col gap-2">
+            {comentarioPreview && (
+              <div className="relative self-start mt-2">
+                <img src={comentarioPreview} className="h-16 w-16 object-cover rounded-xl border border-gray-200" alt="Preview" />
+                <button
+                  type="button"
+                  onClick={() => { setComentarioFile(null); setComentarioPreview(""); }}
+                  className="absolute -top-2 -right-2 bg-black/60 text-white w-5 h-5 rounded-full flex items-center justify-center"
+                >
+                  <span className="material-symbols-outlined text-[10px]">close</span>
+                </button>
+              </div>
+            )}
+            <form onSubmit={handleComentario} className="flex gap-2 items-center">
+              <input
+                type="file"
+                className="hidden"
+                ref={fileInputRef}
+                onChange={(e) => {
+                  const f = e.target.files[0];
+                  if (f) {
+                    setComentarioFile(f);
+                    setComentarioPreview(URL.createObjectURL(f));
+                  }
+                }}
+              />
+              <button
+                type="button"
+                onClick={() => fileInputRef.current.click()}
+                className={`w-8 h-8 rounded-xl flex items-center justify-center transition-colors ${comentarioFile ? "bg-primary/10 text-primary" : "bg-gray-100 dark:bg-slate-800 text-slate-400 hover:text-primary"}`}
+              >
+                <span className="material-symbols-outlined text-sm">image</span>
+              </button>
+              <input
+                value={textoComentario}
+                onChange={(e) => setTextoComentario(e.target.value)}
+                placeholder={t("community.write_comment", "Escriu un comentari...")}
+                className="flex-1 bg-white dark:bg-slate-800 text-xs rounded-xl px-4 py-2 focus:outline-none border border-gray-200 dark:border-white/5 shadow-sm"
+              />
+              <button 
+                type="submit" 
+                disabled={!textoComentario.trim() && !comentarioFile}
+                className="w-8 h-8 bg-primary text-white rounded-xl flex items-center justify-center shadow-md disabled:opacity-50 transition-opacity"
+              >
+                <span className="material-symbols-outlined text-sm">send</span>
+              </button>
+            </form>
+          </div>
         </div>
       )}
     </article>
@@ -337,6 +416,7 @@ const PostCard = ({ pub, onComentarioCreado, userLists = [] }) => {
 
 // ─── Sub-componente: Card de una lista ───────────────────────────────────────
 const ListaCard = ({ lista, userLists = [], onListaChanged }) => {
+  const { t } = useTranslation();
   const navigate = useNavigate();
   const usuarioInfo = localStorage.getItem("usuario");
   const usuarioLogged = usuarioInfo ? JSON.parse(usuarioInfo) : null;
@@ -350,6 +430,7 @@ const ListaCard = ({ lista, userLists = [], onListaChanged }) => {
       ul.nombre === lista.nombre &&
       (ul.pois?.length || 0) === (lista.pois?.length || 0),
   );
+  const [localSaved, setLocalSaved] = useState(false);
 
   const handleUnshare = async (e) => {
     e.preventDefault();
@@ -361,11 +442,11 @@ const ListaCard = ({ lista, userLists = [], onListaChanged }) => {
         visibilidad: "private",
         pois: lista.pois?.map((p) => ({ id_poi: p.id_poi })) || [],
       });
-      setToast({ message: "Ruta retirada de la Comunitat.", type: "info" });
+      setToast({ message: t("community.toast.unshared", "Ruta retirada de la Comunitat."), type: "info" });
       if (onListaChanged) onListaChanged();
     } catch (error) {
       console.error("Error unsharing list:", error);
-      setToast({ message: "Error al retirar la ruta.", type: "error" });
+      setToast({ message: t("community.toast.unshare_error", "Error al retirar la ruta."), type: "error" });
     }
   };
 
@@ -403,32 +484,36 @@ const ListaCard = ({ lista, userLists = [], onListaChanged }) => {
       return;
     }
 
-    if (isSaved) {
+    if (isSaved || localSaved) {
       setToast({
-        message: "Ja tens aquesta llista guardada!",
+        message: t("community.toast.already_saved", "Ja tens aquesta llista guardada!"),
         type: "warning",
       });
       return;
     }
 
+    setLocalSaved(true);
+
     try {
-      const newListData = {
+      const res = await createLista({
         id_usuario: usuarioLogged.id_usuario,
         nombre: lista.nombre,
-        descripcion: lista.descripcion || "Guardada des de la comunitat",
+        descripcion: `[GUARDADA de: ${lista.usuario_nombre || 'Comunidad'}] ${lista.descripcion || ""}`,
         visibilidad: "private",
-        pois: lista.pois?.map((p) => p.id_poi) || [],
-      };
-      const res = await createLista(newListData);
+        imagen_url: lista.imagen_url || null,
+        pois: (lista.pois || []).map((p) => p.id_poi || p.id),
+      });
       if (res.success) {
         setToast({
-          message: "Llista guardada a les teves rutes!",
+          message: t("community.toast.saved_to_routes", "Llista guardada a les teves rutes!"),
           type: "success",
         });
+        if (onListaChanged) onListaChanged();
       }
     } catch (error) {
       console.error("Error saving list:", error);
-      setToast({ message: "Error al guardar la llista", type: "error" });
+      setLocalSaved(false);
+      setToast({ message: t("community.toast.save_error", "Error al guardar la llista"), type: "error" });
     }
   };
 
@@ -470,7 +555,7 @@ const ListaCard = ({ lista, userLists = [], onListaChanged }) => {
                   className="w-5 h-5 border border-white/20"
                 />
                 <span className="text-white/70 text-[10px] font-medium tracking-tight">
-                  Per {lista.usuario_nombre}
+                  {t("community.by", "Per {{name}}", { name: lista.usuario_nombre })}
                 </span>
               </div>
             </div>
@@ -480,7 +565,7 @@ const ListaCard = ({ lista, userLists = [], onListaChanged }) => {
                 <button
                   onClick={handleUnshare}
                   className="flex items-center justify-center w-8 h-8 rounded-full backdrop-blur-md bg-emerald-500/80 text-white hover:bg-red-500/80 transition-all group"
-                  title="Retirar de la Comunitat"
+                  title={t("community.unshare", "Retirar de la Comunitat")}
                 >
                   <span className="material-symbols-outlined text-sm group-hover:hidden" style={{ fontVariationSettings: "'FILL' 1" }}>
                     public
@@ -494,15 +579,15 @@ const ListaCard = ({ lista, userLists = [], onListaChanged }) => {
               {!isOwner && (
                 <button
                   onClick={handleSaveList}
-                  className={`flex items-center justify-center w-8 h-8 rounded-full backdrop-blur-md transition-all ${isSaved ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20" : "bg-white/20 text-white hover:bg-white/30"}`}
+                  className={`flex items-center justify-center w-8 h-8 rounded-full backdrop-blur-md transition-all ${(isSaved || localSaved) ? "bg-amber-500 text-white shadow-lg shadow-amber-500/20" : "bg-white/20 text-white hover:bg-white/30"}`}
                   title={
-                    isSaved ? "Llista ja guardada" : "Guardar a les meves llistes"
+                    (isSaved || localSaved) ? t("community.toast.already_saved", "Llista ja guardada") : t("community.save_to_my_lists", "Guardar a les meves llistes")
                   }
                 >
                   <span
                     className="material-symbols-outlined text-sm"
                     style={{
-                      fontVariationSettings: isSaved ? "'FILL' 1" : "'FILL' 0",
+                      fontVariationSettings: (isSaved || localSaved) ? "'FILL' 1" : "'FILL' 0",
                     }}
                   >
                     bookmark
@@ -529,7 +614,7 @@ const ListaCard = ({ lista, userLists = [], onListaChanged }) => {
         <div className="p-6">
           <p className="text-slate-500 dark:text-slate-400 text-xs leading-relaxed line-clamp-2">
             {lista.descripcion ||
-              "Sense descripció disponible per aquesta ruta."}
+              t("community.no_description_available", "Sense descripció disponible per aquesta ruta.")}
           </p>
           <div className="mt-4 pt-4 border-t border-gray-50 dark:border-white/5 flex items-center justify-between">
             <div className="flex items-center gap-1 text-slate-400">
@@ -537,11 +622,11 @@ const ListaCard = ({ lista, userLists = [], onListaChanged }) => {
                 location_on
               </span>
               <span className="text-[10px] font-bold uppercase tracking-widest">
-                {lista.pois?.length || 0} Punts
+                {t("community.points_count", "{{count}} Punts", { count: lista.pois?.length || 0 })}
               </span>
             </div>
             <span className="text-pink-500 text-[10px] font-black uppercase tracking-widest group-hover:translate-x-1 transition-transform">
-              Veure mapa →
+              {t("community.view_map", "Veure mapa →")}
             </span>
           </div>
         </div>
@@ -557,16 +642,27 @@ const Community = () => {
   const usuarioInfo = localStorage.getItem("usuario");
   const usuarioLogged = usuarioInfo ? JSON.parse(usuarioInfo) : null;
 
+  // Desktop search from global SearchContext (Header)
+  const { searchQuery: desktopSearchQuery } = useSearch();
+
   const [view, setView] = useState("feed"); // feed, activity, search, lists
   const [publicaciones, setPublicaciones] = useState([]);
   const [actividad, setActividad] = useState([]);
   const [userLists, setUserLists] = useState([]);
   const [loading, setLoading] = useState(true);
-  const [searchQuery, setSearchQuery] = useState("");
+  // Local search query for mobile input
+  const [mobileSearchQuery, setMobileSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState([]);
   const [amigos, setAmigos] = useState([]);
   const [selectedFriend, setSelectedFriend] = useState(null);
   const [toast, setToast] = useState(null);
+  
+  const [publicListas, setPublicListas] = useState([]);
+  const [friendsListas, setFriendsListas] = useState([]);
+  const [loadingListas, setLoadingListas] = useState(false);
+
+  // Active query: desktop context or mobile local
+  const searchQuery = desktopSearchQuery || mobileSearchQuery;
 
   const [showPostModal, setShowPostModal] = useState(false);
   const [postAttachedRoute, setPostAttachedRoute] = useState(null); // lista object attached to post
@@ -598,10 +694,26 @@ const Community = () => {
     }
   };
 
+  const cargarListas = async () => {
+    setLoadingListas(true);
+    try {
+      const [pubRes, friendRes] = await Promise.all([
+        getListas(usuarioLogged?.id_usuario),
+        usuarioLogged ? getFriendsListas(usuarioLogged.id_usuario) : Promise.resolve({ data: [] })
+      ]);
+      if (pubRes.success) setPublicListas(pubRes.data || []);
+      if (friendRes.success) setFriendsListas(friendRes.data || []);
+    } catch (error) {
+      console.error("Error loading lists:", error);
+    } finally {
+      setLoadingListas(false);
+    }
+  };
+
 
 
   const handleSearch = async (q) => {
-    setSearchQuery(q);
+    setMobileSearchQuery(q);
     if (q.length < 2) {
       setSearchResults([]);
       if (view === "search") setView("feed");
@@ -617,9 +729,23 @@ const Community = () => {
     }
   };
 
+  // Also trigger search when desktopSearchQuery changes
+  useEffect(() => {
+    if (desktopSearchQuery.trim().length >= 2) {
+      setView("search");
+      searchUsers(desktopSearchQuery)
+        .then((res) => { if (res.success) setSearchResults(res.data); })
+        .catch(console.error);
+    } else if (!desktopSearchQuery && !mobileSearchQuery) {
+      setSearchResults([]);
+      if (view === "search") setView("feed");
+    }
+  }, [desktopSearchQuery]);
+
   useEffect(() => {
     cargarPublicaciones();
     cargarActividad();
+    cargarListas();
     if (usuarioLogged) {
       getAmigos(usuarioLogged.id_usuario).then((r) => setAmigos(r.data || []));
       getUsuarioListas(usuarioLogged.id_usuario).then((r) => setUserLists(r.data || []));
@@ -652,7 +778,7 @@ const Community = () => {
 
     if (foundWord) {
       setToast({
-        message: `Opa! El teu missatge conté paraules no permeses (ex: "${foundWord}"). Per favor, mantingues el respecte a la comunitat.`,
+        message: t("community.alerts.restricted_word", "Opa! El teu missatge conté paraules no permeses (ex: \"{{word}}\"). Per favor, mantingues el respecte a la comunitat.", { word: foundWord }),
         type: "warning"
       });
       return;
@@ -686,7 +812,7 @@ const Community = () => {
           );
         } catch (routeErr) {
           console.error("Error making route public:", routeErr);
-          setToast({ message: "Error al compartir la ruta. Intenta-ho de nou.", type: "error" });
+          setToast({ message: t("community.toast.share_error", "Error al compartir la ruta. Intenta-ho de nou."), type: "error" });
           return;
         }
       }
@@ -695,7 +821,7 @@ const Community = () => {
         newPost.texto,
         postAttachedRoute ? `[lista:${postAttachedRoute.id_lista}]` : "",
       ].filter(Boolean).join(" ") ||
-        (postAttachedRoute ? `He compartit la ruta "${postAttachedRoute.nombre}" a la comunitat! 🗺️ [lista:${postAttachedRoute.id_lista}]` : "");
+        (postAttachedRoute ? t("community.shared_route_post", "He compartit la ruta \"{{name}}\" a la comunitat! 🗺️ [lista:{{id}}]", { name: postAttachedRoute.nombre, id: postAttachedRoute.id_lista }) : "");
 
       await createPublicacion({
         id_usuario: usuarioLogged.id_usuario,
@@ -714,11 +840,11 @@ const Community = () => {
       setShowPostModal(false);
 
       if (routeName) {
-        setToast({ message: `Ruta "${routeName}" compartida a la Comunitat! 🎉`, type: "success" });
+        setToast({ message: t("community.toast.shared_success", "Ruta \"{{name}}\" compartida a la Comunitat! 🎉", { name: routeName }), type: "success" });
       }
     } catch (err) {
       console.error(err);
-      setToast({ message: "Error al publicar. Intenta-ho de nou.", type: "error" });
+      setToast({ message: t("community.toast.publish_error", "Error al publicar. Intenta-ho de nou."), type: "error" });
     }
   };
 
@@ -734,18 +860,18 @@ const Community = () => {
         />
       )}
 
-      <div className="sticky top-0 z-40 px-6 pt-4 pb-4 bg-[#f0f4f9]/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-gray-100 dark:border-white/5">
+      <div className="sticky top-0 md:top-[80px] z-40 px-6 pt-4 pb-4 bg-[#f0f4f9]/90 dark:bg-slate-950/90 backdrop-blur-xl border-b border-gray-100 dark:border-white/5 md:mt-[80px]">
         <div className="max-w-4xl mx-auto flex flex-col gap-6">
-          {/* Search Bar */}
-          <div className="relative group">
+          {/* Search Bar — mobile only, desktop uses the Header */}
+          <div className="relative group md:hidden">
             <span className="material-symbols-outlined absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 group-focus-within:text-primary transition-colors">
               search
             </span>
             <input
               type="text"
-              value={searchQuery}
+              value={mobileSearchQuery}
               onChange={(e) => handleSearch(e.target.value)}
-              placeholder={t("collections.search", "Busca amics o llistes...")}
+              placeholder={t("community.searchPlaceholder", "Busca amics o llistes...")}
               className="w-full bg-white dark:bg-slate-950 border border-gray-100 dark:border-white/5 rounded-2xl py-3.5 pl-12 pr-4 text-sm font-medium focus:ring-2 focus:ring-primary/20 outline-none transition-all shadow-sm group-focus-within:shadow-md font-display"
             />
           </div>
@@ -774,6 +900,20 @@ const Community = () => {
               </span>
               {t("community.tabs.recent", "Recents")}
             </button>
+            <button
+              onClick={() => setView("listas")}
+              className={`flex items-center gap-2 px-6 py-2 rounded-full text-sm font-medium tracking-tight transition-all border ${view === "listas" ? "bg-primary text-primary-text border-transparent shadow-md shadow-primary/20" : "bg-white dark:bg-slate-950 text-slate-400 border-gray-100 dark:border-white/5 hover:border-gray-200"}`}
+            >
+              <span
+                className="material-symbols-outlined text-sm"
+                style={{
+                  fontVariationSettings: view === "listas" ? "'FILL' 1" : "'FILL' 0",
+                }}
+              >
+                list_alt
+              </span>
+              {t("community.tabs.listas", "Llistes")}
+            </button>
           </div>
         </div>
       </div>
@@ -791,7 +931,7 @@ const Community = () => {
               {/* Posts */}
               {loading ? (
                 <div className="text-center py-20 opacity-30 font-bold uppercase tracking-widest text-xs">
-                  {t("common.loading", "Carregant publicacions...")}
+                  {t("community.loading_posts", "Carregant publicacions...")}
                 </div>
               ) : (
                 publicaciones.map((pub, idx) => (
@@ -807,6 +947,48 @@ const Community = () => {
           )}
 
 
+
+          {view === "listas" && (
+            <div className="animate-in fade-in slide-in-from-right-4 duration-500 space-y-8">
+              <div>
+                <h3 className="text-xl font-bold tracking-tight text-primary mb-6">
+                  {t("community.friends_lists", "Llistes dels amics")}
+                </h3>
+                {loadingListas ? (
+                  <div className="text-center py-10 opacity-30 font-bold uppercase tracking-widest text-xs">
+                    {t("community.loading_lists", "Carregant llistes...")}
+                  </div>
+                ) : friendsListas.length === 0 ? (
+                  <div className="text-center py-10 opacity-30">
+                    {t("community.no_friends_lists", "No hi ha llistes d'amics")}
+                  </div>
+                ) : (
+                  friendsListas.map((lista) => (
+                    <ListaCard key={lista.id_lista} lista={lista} userLists={userLists} onListaChanged={cargarListas} />
+                  ))
+                )}
+              </div>
+
+              <div>
+                <h3 className="text-xl font-bold tracking-tight text-primary mb-6">
+                  {t("community.public_lists", "Llistes Públiques")}
+                </h3>
+                {loadingListas ? (
+                  <div className="text-center py-10 opacity-30 font-bold uppercase tracking-widest text-xs">
+                    {t("community.loading_lists", "Carregant llistes...")}
+                  </div>
+                ) : publicListas.length === 0 ? (
+                  <div className="text-center py-10 opacity-30">
+                    {t("community.no_public_lists", "No hi ha llistes públiques")}
+                  </div>
+                ) : (
+                  publicListas.map((lista) => (
+                    <ListaCard key={lista.id_lista} lista={lista} userLists={userLists} onListaChanged={cargarListas} />
+                  ))
+                )}
+              </div>
+            </div>
+          )}
 
           {view === "activity" && (
             <div className="animate-in fade-in slide-in-from-right-4 duration-500 space-y-4">
@@ -831,7 +1013,7 @@ const Community = () => {
                           {act.usuario}
                         </span>
                       </Link>{" "}
-                      {t("profile.posts", "ha creat una nova publicació")}
+                      {t("community.activity.created_post", "ha creat una nova publicació")}
                     </p>
                     <p className="text-[10px] text-slate-400 mt-1">
                       {formatDate(act.fecha)}
@@ -849,11 +1031,11 @@ const Community = () => {
           {view === "search" && (
             <div className="animate-in fade-in zoom-in-95 duration-300 space-y-4">
               <h3 className="text-xs font-bold uppercase tracking-widest text-slate-400 mb-6">
-                {t("collections.search", "Resultats")} para "{searchQuery}"
+                {t("community.search_results", "Resultats per a \"{{query}}\"", { query: searchQuery })}
               </h3>
               {searchResults.length === 0 ? (
                 <div className="text-center py-20 opacity-30">
-                  {t("community.noFriends", "No s'han trobat usuaris")}
+                  {t("community.no_users_found", "No s'han trobat usuaris")}
                 </div>
               ) : (
                 searchResults.map((user, idx) => (
@@ -925,7 +1107,9 @@ const Community = () => {
                 <span className="material-symbols-outlined text-emerald-500" style={{ fontVariationSettings: "'FILL' 1" }}>route</span>
                 <div className="flex-1 min-w-0">
                   <p className="text-sm font-bold text-emerald-700 dark:text-emerald-300 truncate">{postAttachedRoute.nombre}</p>
-                  <p className="text-[10px] text-emerald-500">{postAttachedRoute.pois?.length || 0} punts · Es farà pública</p>
+                  <p className="text-[10px] text-emerald-500">
+                    {t("community.attach_route_info", "{{count}} punts · Es farà pública", { count: postAttachedRoute.pois?.length || 0 })}
+                  </p>
                 </div>
                 <button onClick={() => setPostAttachedRoute(null)} className="text-emerald-400 hover:text-emerald-600">
                   <span className="material-symbols-outlined text-sm">close</span>
@@ -936,7 +1120,7 @@ const Community = () => {
             <textarea
               value={newPost.texto}
               onChange={(e) => setNewPost({ ...newPost, texto: e.target.value })}
-              placeholder={postAttachedRoute ? `Afegeix un comentari sobre "${postAttachedRoute.nombre}"...` : t("editProfile.bioPlaceholder", "Explica algo...")}
+              placeholder={postAttachedRoute ? t("community.add_comment_on_route", "Afegeix un comentari sobre \"{{name}}\"...", { name: postAttachedRoute.nombre }) : t("community.explain_something", "Explica alguna cosa...")}
               className="w-full bg-gray-50 dark:bg-white/5 rounded-2xl p-4 text-sm focus:outline-none min-h-[200px] resize-none border border-gray-100 dark:border-white/5"
             />
 
@@ -953,7 +1137,7 @@ const Community = () => {
                   }`}
                 >
                   <span className="material-symbols-outlined text-lg">image</span>
-                  {selectedFile ? "Foto adjunta" : t("community.photo", "Foto")}
+                  {selectedFile ? t("community.photo_attached", "Foto adjunta") : t("community.photo", "Foto")}
                 </button>
               )}
 
@@ -970,7 +1154,7 @@ const Community = () => {
                   }`}
                 >
                   <span className="material-symbols-outlined text-lg">route</span>
-                  {postAttachedRoute ? "Ruta adjunta ✓" : "Adjuntar Ruta"}
+                  {postAttachedRoute ? t("community.route_attached", "Ruta adjunta ✓") : t("community.attach_route", "Adjuntar Ruta")}
                 </button>
               )}
             </div>
@@ -980,8 +1164,8 @@ const Community = () => {
               <div id="route-picker-dropdown" className="hidden mt-3 bg-gray-50 dark:bg-white/5 rounded-2xl border border-gray-100 dark:border-white/10 overflow-hidden">
                 {userLists.length === 0 ? (
                   <div className="p-4 text-center text-xs text-slate-400">
-                    No tens cap ruta creada.{" "}
-                    <button onClick={() => navigate("/create-list")} className="text-primary font-bold hover:underline">Crear ruta</button>
+                    {t("community.no_routes_created", "No tens cap ruta creada.")}{" "}
+                    <button onClick={() => navigate("/create-list")} className="text-primary font-bold hover:underline">{t("community.create_route", "Crear ruta")}</button>
                   </div>
                 ) : (
                   <div className="max-h-40 overflow-y-auto">
@@ -999,10 +1183,10 @@ const Community = () => {
                         <span className="material-symbols-outlined text-slate-400 text-sm" style={{ fontVariationSettings: "'FILL' 1" }}>route</span>
                         <div className="flex-1 min-w-0">
                           <p className="text-sm font-bold truncate text-slate-800 dark:text-white">{lista.nombre}</p>
-                          <p className="text-[10px] text-slate-400">{lista.pois?.length || 0} punts</p>
+                          <p className="text-[10px] text-slate-400">{t("community.points_count", "{{count}} punts", { count: lista.pois?.length || 0 })}</p>
                         </div>
                         {lista.visibilidad === "public" && (
-                          <span className="text-[9px] font-black uppercase text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">Pública</span>
+                          <span className="text-[9px] font-black uppercase text-emerald-500 bg-emerald-100 dark:bg-emerald-900/30 px-2 py-0.5 rounded-full">{t("collections.filterPublic", "Pública")}</span>
                         )}
                       </button>
                     ))}

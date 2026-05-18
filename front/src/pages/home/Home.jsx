@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { Link } from "react-router-dom";
 import { useTranslation } from "react-i18next";
+import { useSearch } from "../../context/SearchContext";
 import Navbar from "../../layouts/Navbar";
 import Header from "../../layouts/Header";
 import UserAvatar from "../../components/UserAvatar";
@@ -30,12 +31,24 @@ const Home = () => {
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
-  // Search State
-  const [searchQuery, setSearchQuery] = useState("");
+  // Desktop search comes from the global Header SearchContext
+  const { searchQuery: desktopSearchQuery, setSearchQuery: setDesktopSearchQuery } = useSearch();
+
+  // Mobile-only local search state
+  const [mobileSearchQuery, setMobileSearchQuery] = useState("");
   const [searchResults, setSearchResults] = useState({ usuarios: [], listas: [], lugares: [] });
   const [isSearching, setIsSearching] = useState(false);
   const [activeCategory, setActiveCategory] = useState(null);
   const [isSearchPanelOpen, setIsSearchPanelOpen] = useState(false);
+
+  // Active search query: desktop context on md+, local state on mobile
+  // We use desktopSearchQuery as the unified one (also drives mobile panel when set)
+  const searchQuery = desktopSearchQuery || mobileSearchQuery;
+  const setSearchQuery = (val) => {
+    setMobileSearchQuery(val);
+    // We don't override desktop context from mobile input;
+    // desktop context is only set from the Header input
+  };
 
   useEffect(() => {
     const fetchHomeData = async () => {
@@ -134,27 +147,27 @@ const Home = () => {
       {error && (
         <div className="fixed top-24 left-6 right-6 z-40 bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded-xl flex justify-between items-center shadow-lg animate-in slide-in-from-top duration-300">
           <span className="font-medium">{error}</span>
-          <button onClick={() => window.location.reload()} className="bg-red-700 text-white px-3 py-1 rounded-lg text-sm">Reintentar</button>
+          <button onClick={() => window.location.reload()} className="bg-red-700 text-white px-3 py-1 rounded-lg text-sm">{t("common.retry", "Reintentar")}</button>
         </div>
       )}
 
       <Header />
 
-      <div className="safe-container">
-        {/* Search Bar */}
-        <section className="mt-5 relative md:ml-48 md:mr-40">
+      <div className="safe-container page-top-offset">
+        {/* Search Bar — mobile only, hidden on desktop (Header handles it) */}
+        <section className="mt-5 relative md:hidden">
         <div className="flex items-center gap-3 border-b border-gray-300 dark:border-white/20 pb-2">
           <span className="material-symbols-outlined text-gray-400">search</span>
           <input 
             type="text" 
-            value={searchQuery}
-            onChange={(e) => setSearchQuery(e.target.value)}
-            onFocus={() => searchQuery.trim().length >= 2 && setIsSearchPanelOpen(true)}
-            placeholder={t("collections.search", "On t'agradaria anar?")}
+            value={mobileSearchQuery}
+            onChange={(e) => setMobileSearchQuery(e.target.value)}
+            onFocus={() => mobileSearchQuery.trim().length >= 2 && setIsSearchPanelOpen(true)}
+            placeholder={t("home.searchPlaceholder", "On t'agradaria anar?")}
             className="bg-transparent border-none outline-none text-lg placeholder-gray-400 w-full p-0 focus:ring-0 text-[#1a1a1a] dark:text-white"
           />
-          {searchQuery && (
-            <button onClick={() => setSearchQuery("")} className="material-symbols-outlined text-gray-400 hover:text-black dark:hover:text-white transition-colors">close</button>
+          {mobileSearchQuery && (
+            <button onClick={() => setMobileSearchQuery("")} className="material-symbols-outlined text-gray-400 hover:text-black dark:hover:text-white transition-colors">close</button>
           )}
         </div>
 
@@ -202,7 +215,7 @@ const Home = () => {
               {/* Card Content */}
               <div className="absolute inset-0 p-10 flex flex-col justify-between pointer-events-none">
                 <div className="space-y-1">
-                  <p className="text-white/70 text-lg uppercase tracking-widest font-light">Barcelona</p>
+                  <p className="text-white/70 text-lg uppercase tracking-widest font-light">{t("home.barcelona", "Barcelona")}</p>
                   <h3 className="text-white text-6xl font-medium tracking-tighter leading-none -ml-1">
                     {nearbyPlaces[currentPlaceIndex].nombre}
                   </h3>
@@ -227,8 +240,24 @@ const Home = () => {
               </div>
             </>
           ) : (
-            <div className="absolute inset-0 bg-gray-200 dark:bg-white/5 flex items-center justify-center">
-              <p className="opacity-40 italic">Encara no tens rutes pròpies</p>
+            <div className="absolute inset-0 bg-gradient-to-br from-slate-50 to-slate-200 dark:from-slate-900/90 dark:to-slate-950/90 flex flex-col items-center justify-center p-8 text-center">
+              <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mb-4 relative">
+                <div className="absolute inset-0 bg-primary/20 rounded-full blur-xl animate-pulse"></div>
+                <span className="material-symbols-outlined text-3xl text-primary relative z-10">route</span>
+              </div>
+              <h4 className="text-xl font-bold tracking-tight text-slate-800 dark:text-white mb-2">
+                {t("home.no_routes_title", "Crea la teva primera ruta")}
+              </h4>
+              <p className="text-xs text-slate-500 dark:text-slate-400 mb-6 max-w-[260px] leading-relaxed">
+                {t("home.no_own_routes_desc_home", "Encara no tens rutes pròpies. Comença a planificar el teu itinerari de manera senzilla.")}
+              </p>
+              <Link 
+                to="/create-list" 
+                className="px-6 py-3.5 rounded-full bg-black dark:bg-white text-white dark:text-black text-xs font-bold shadow-xl hover:scale-105 active:scale-95 transition-all flex items-center gap-2"
+              >
+                <span className="material-symbols-outlined text-sm font-bold">add</span>
+                {t("home.create_route_btn", "Crear ruta")}
+              </Link>
             </div>
           )}
               </div>
@@ -334,7 +363,7 @@ const Home = () => {
                   </Link>
                 ))
               ) : (
-                <p className="px-6 opacity-40 italic">No hi ha rutes públiques recents</p>
+                <p className="px-6 opacity-40 italic">{t("home.no_recent_routes", "No hi ha rutes públiques recents")}</p>
               )}
             </div>
           </div>
