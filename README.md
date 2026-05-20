@@ -1,63 +1,16 @@
-# METROPOLIS
+# WeMap (Grup Metropolis)
 
-<h1 align="center">
-  <img src="https://raw.githubusercontent.com/ABSphreak/ABSphreak/master/gifs/Hi.gif" width="30px" />
-  Bones! Som el Grup de Metropolis: Edson, Paula, Moises i Alvaro.
-</h1>
+## Integrants
 
-<div align="center">
-  <br>
-  Aquest projecte encara segueix en procés. Mentrestant, podeu veure al nostre GitHub l'estructura del codi dividida en diferents branques (frontend, backend, docker...) que finalment s'uniran a la branca <code>main</code>.
-  <br>
-  <br>
-  <i>Esperem que us agradi!</i>
-</div>
+- Edson
+- Paula
+- Moises
+- Alvaro
 
----
+## Descripcio del Projecte
 
-## 🎮 Concepte del Projecte
+WeMap és una plataforma social dissenyada per transformar la manera com els usuaris interactuen amb el seu entorn urbà. Facilita el descobriment i la creació de rutes personalitzades, permetent als usuaris unir els seus punts d'interès preferits en un itinerari i compartir-lo amb la comunitat. És una eina que combina la planificació de rutes al mapa amb la connexió social.
 
-La nostra **Proposta** és millorar l'experiència eliminant la frustració de no trobar serveis bàsics (banys, restauració) en un recinte de més de 600 hectàrees també utilitzant els logros com a motor per distribuir el públic per tot el circuit, evitant aglomeracions en un sol punt i fent que l'usuari descobreixi zones que no coneixia.
+## Documentació
 
-Aquest projecte té com a **Objectiu** principal millorar l'experiència de l'espectador al Circuit de Catalunya durant l'esdeveniment de Fórmula 1, mitjançant una solució tecnològica mòbil que resolgui els problemes de logística, orientació i interacció
-
-## Projecte en Producció
-
-Aquí podeu veure el projecte en producció:
-
-https://catcircuit.daw.inspedralbes.cat/
-
-## 🔗 Enllaços de Gestió del Projecte
-
-Aquí podeu trobar més informació sobre la nostra planificació i disseny del projecte:
-
-<div align="center">
-  <p>
-    <a href="https://github.com/inspedralbes/projecte-final-2025-26-daw-metropoli_trfinal_grup3" target="_blank"><img alt="Github" src="https://img.shields.io/badge/GitHub-%2312100E.svg?&style=for-the-badge&logo=Github&logoColor=white" width='100' height='33' /></a>
-    <a href="https://tree.taiga.io/project/varitoo9-tr-final-metropolis/timeline" target="_blank"><img alt="Taiga" src="https://docs.taiga.io/imgs/logo.png" width='80' height='30' /></a>
-    <a href="https://www.figma.com/design/wRyC7cI7kPlNjkv4fzZvT6/ESQUEMA-PANTALLES-METR%C3%93POLIS?node-id=0-1&t=UPwO8UdS16RXq2Uv-1" target="_blank"><img alt="Figma" src="https://wptavern.com/wp-content/uploads/2018/11/Screen-Shot-2018-11-19-at-8.43.27-PM.png" width='80' height='40' /></a>
-  </p>
-</div>
-
-## 🚀 Desarrollo y Despliegue
-
-Ahora puedes gestionar el proyecto fácilmente usando scripts de Node/NPM desde la raíz:
-
-- **`npm run dev`**: Realiza un ciclo completo (apaga contenedores, reconstruye imágenes, levanta en segundo plano y muestra logs).
-- **`npm run up`**: Levanta los contenedores existentes.
-- **`npm run down`**: Detiene y elimina los contenedores.
-- **`npm run build`**: Reconstruye las imágenes de Docker.
-- **`npm run logs`**: Muestra los logs en tiempo real.
-- **`npm run clean`**: Limpieza total (elimina imágenes y volúmenes/base de datos).
-
-### Requisitos
-
-- Tener instalado Node.js y Docker.
-- Los scripts se encargan de ejecutar `docker compose` internamente.
-
----
-
-# Aquest fitxer ha de contenir com a mínim:
-
-- Petita descripció
-- URL de producció (quan la tingueu).
+Tota la documentació es troba a la carpeta [doc](./doc).
